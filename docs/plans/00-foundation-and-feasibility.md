@@ -100,7 +100,7 @@ Outcome: Prove the encrypted probability, stake, allocation, and Brier-score
 arithmetic primitives against Ethereum Sepolia NoxCompute before a production pool
 or token flow exists.
 
-Status: `blocked`
+Status: `in_progress`
 
 Prerequisite gates: G0 passed at source commit
 `6f562e2f6811aa5ab117f3163480a40b4750f755`. The pinned NoxCompute mapping has
@@ -141,7 +141,7 @@ sanitized ledger, retain the failure report, and stop G1-dependent work rather
 than adding a local or plaintext substitute.
 
 Commands/checks: `npm run test:model`, `npm run test:nox:sepolia -- FND-02`,
-`npm run budget:status`, `npm run check:offline`,
+`npm run doctor -- --assert-missing-nox-runtime`, `npm run budget:status`, `npm run check:offline`,
 `npm run check:sepolia:read`, `npm run scan:secrets`, and `git diff --check`.
 
 Evidence path: `evidence/offline/G1/FND-02.json`,

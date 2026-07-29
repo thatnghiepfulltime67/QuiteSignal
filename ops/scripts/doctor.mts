@@ -5,6 +5,7 @@ const EXPECTED_CHAIN_ID = '0xaa36a7';
 const EXPECTED_NODE_VERSION = 'v24.18.0';
 const EXPECTED_NPM_VERSION = '11.16.0';
 const NOX_COMPUTE_ADDRESS = '0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF';
+const MISSING_RUNTIME_PROBE_ADDRESS = '0x0000000000000000000000000000000000000001';
 const PUBLIC_SEPOLIA_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 
 interface RpcReply {
@@ -36,13 +37,14 @@ function rootPackage(): { devDependencies: Record<string, string> } {
 
 async function rpcPreflight(
   rpcUrl: string,
+  noxComputeAddress = NOX_COMPUTE_ADDRESS,
 ): Promise<{ chainId: string; runtimeByteLength: number }> {
   const response = await fetch(rpcUrl, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify([
       { jsonrpc: '2.0', id: 1, method: 'eth_chainId', params: [] },
-      { jsonrpc: '2.0', id: 2, method: 'eth_getCode', params: [NOX_COMPUTE_ADDRESS, 'latest'] },
+      { jsonrpc: '2.0', id: 2, method: 'eth_getCode', params: [noxComputeAddress, 'latest'] },
     ]),
   });
 
@@ -91,6 +93,7 @@ async function main(): Promise<void> {
   }
 
   const requireConfiguredRpc = process.argv.includes('--require-configured-rpc');
+  const assertMissingRuntime = process.argv.includes('--assert-missing-nox-runtime');
   const configuredRpc = process.env.SEPOLIA_RPC_URL;
   if (requireConfiguredRpc && !configuredRpc) {
     fail('SEPOLIA_RPC_URL is required for this preflight mode.');
@@ -98,12 +101,36 @@ async function main(): Promise<void> {
 
   const packageJson = rootPackage();
   const rpcSource = configuredRpc ? 'configured' : 'public-fallback';
-  const rpc = await rpcPreflight(configuredRpc || PUBLIC_SEPOLIA_RPC);
+  const rpcUrl = configuredRpc || PUBLIC_SEPOLIA_RPC;
+  const rpc = await rpcPreflight(rpcUrl);
   const ledgerPath = resolve('evidence/sepolia/spend-ledger.json');
   const ledger = JSON.parse(readFileSync(ledgerPath, 'utf8')) as { entries?: unknown[] };
 
   if (!Array.isArray(ledger.entries)) {
     fail('The Sepolia spend ledger is invalid.');
+  }
+
+  if (assertMissingRuntime) {
+    try {
+      await rpcPreflight(rpcUrl, MISSING_RUNTIME_PROBE_ADDRESS);
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === 'The configured NoxCompute address has no runtime code on Sepolia.'
+      ) {
+        console.log(
+          JSON.stringify({
+            chainId: Number.parseInt(rpc.chainId, 16),
+            negativeCase: 'missing-nox-runtime',
+            result: 'rejected-by-shared-runtime-preflight',
+            status: 'passed',
+          }),
+        );
+        return;
+      }
+      throw error;
+    }
+    fail('The missing-runtime Sepolia probe unexpectedly reported runtime code.');
   }
 
   console.log(
