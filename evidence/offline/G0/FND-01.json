@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "gate": "G0",
+  "workItem": "FND-01",
+  "phase": "P0",
+  "timestampUtc": "2026-07-29T19:12:19Z",
+  "sourceCommit": "6f562e2f6811aa5ab117f3163480a40b4750f755",
+  "environment": {
+    "classes": ["offline", "sepolia-read"],
+    "chainId": 11155111,
+    "blockNumber": 11377462
+  },
+  "packageVersions": {
+    "node": "24.18.0",
+    "npm": "11.16.0",
+    "hardhat": "3.11.1",
+    "typescript": "6.0.2",
+    "noxProtocolContracts": "0.2.4",
+    "noxConfidentialContracts": "0.2.2",
+    "noxHandle": "0.1.0-beta.13"
+  },
+  "checks": [
+    {
+      "command": "npm ci",
+      "runs": 2,
+      "result": "passed",
+      "summary": "Two clean npm installs completed with the committed lockfile."
+    },
+    {
+      "command": "npm exec hardhat -- --version",
+      "result": "passed",
+      "summary": "Hardhat reported 3.11.1 under the pinned Node runtime."
+    },
+    {
+      "command": "npm run check:offline",
+      "result": "passed",
+      "summary": "Formatting, strict TypeScript compilation, and tracked-file/history secret scanning passed."
+    },
+    {
+      "command": "npm run check:sepolia:read",
+      "result": "passed",
+      "summary": "The RPC reported chain 11155111 and runtime code at the pinned NoxCompute address."
+    },
+    {
+      "command": "npm run scan:dependencies",
+      "result": "passed-with-tracked-high-risk",
+      "summary": "All installed packages exposed license metadata and npm reported zero critical advisories."
+    },
+    {
+      "command": "git check-ignore --quiet --no-index <secret-and-cache-paths>",
+      "result": "passed",
+      "summary": "Environment, wallet-material, cache, and unsanitized-evidence paths are ignored."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "summary": "The FND-01 source diff has no whitespace errors."
+    }
+  ],
+  "observed": {
+    "noxComputeAddress": "0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF",
+    "noxComputeRuntimeByteLength": 89,
+    "spendLedgerEntries": 0,
+    "spentGasWei": "0",
+    "npmAudit": {
+      "critical": 0,
+      "high": 2
+    }
+  },
+  "requirementsCovered": ["NFR-02", "NFR-04", "NFR-05"],
+  "knownLimitations": [
+    "R-16 tracks the current high-severity Hardhat transitive advisory. It is not a contract or privacy conclusion and must be closed or explicitly accepted where permitted before G8."
+  ],
+  "reproduction": [
+    "Use Node 24.18.0 and npm 11.16.0.",
+    "Run npm ci twice from a clean process.",
+    "Run npm run check:offline.",
+    "Run npm run check:sepolia:read.",
+    "Run npm run scan:dependencies."
+  ]
+}

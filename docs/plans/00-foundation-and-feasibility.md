@@ -36,7 +36,7 @@ Outcome: Establish a reproducible npm-workspace toolchain that can perform
 sanitized Ethereum Sepolia read preflight checks without creating application or
 protocol modules.
 
-Status: `in_progress`
+Status: `complete`
 
 Prerequisite gates: None. The architecture, privacy, protocol, operations, and
 work-package documents were reconciled on 2026-07-30. Official Nox release
@@ -87,6 +87,10 @@ Intended commit: `build: pin verified workspace toolchain`.
 Rollback/failure action: Revert only the FND-01 commit and retain the sanitized
 failure report. A failed Nox runtime, package, license, or deterministic-build
 check blocks FND-02 through FND-07 and creates no product-code fallback.
+
+Completion: Source commit `6f562e2f6811aa5ab117f3163480a40b4750f755` and
+sanitized evidence at `evidence/offline/G0/FND-01.json` passed the recorded G0
+checks. No Sepolia write occurred. The next eligible item is FND-02.
 
 ## FND-01 — Toolchain lock
 
