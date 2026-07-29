@@ -54,15 +54,16 @@ contract AssetLifecycleSpike is IERC7984Receiver {
   function onConfidentialTransferReceived(
     address operator,
     address from,
-    euint256 amount,
+    euint256,
     bytes calldata
   ) external returns (ebool) {
     if (msg.sender != address(wrapper)) revert WrongWrapper(msg.sender);
     if (operator != from) revert WrongCallbackOperator();
     _requireState(LifecycleState.Empty);
-    if (!Nox.isAllowed(amount, address(this))) revert MissingTransientAccess();
+    euint256 poolBalance = wrapper.confidentialBalanceOf(address(this));
+    if (!Nox.isAllowed(poolBalance, address(this))) revert MissingTransientAccess();
 
-    heldAmount = amount;
+    heldAmount = poolBalance;
     owner = from;
     Nox.allowThis(heldAmount);
     Nox.addViewer(heldAmount, owner);

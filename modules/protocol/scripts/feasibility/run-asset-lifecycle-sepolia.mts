@@ -68,6 +68,11 @@ interface ContractSet {
   recoverySpike: Address;
 }
 
+interface CoreContractSet {
+  fixture: Address;
+  wrapper: Address;
+}
+
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const protocolRoot = resolve(scriptDirectory, '../..');
 const repositoryRoot = resolve(protocolRoot, '../..');
@@ -199,6 +204,18 @@ function contractSet(): ContractSet | undefined {
   return { fixture, wrapper, directSpike, recoverySpike };
 }
 
+function reusableCoreSet(): CoreContractSet | undefined {
+  const argument = process.argv.find((value) => value.startsWith('--reuse-core='));
+  if (!argument) {
+    return undefined;
+  }
+  const values = argument.slice('--reuse-core='.length).split(',');
+  if (values.length !== 2 || values.some((value) => !isAddress(value))) {
+    fail('Two comma-separated fixture and wrapper addresses are required for core reuse.');
+  }
+  return { fixture: values[0] as Address, wrapper: values[1] as Address };
+}
+
 async function assertRejected(action: () => Promise<unknown>, scenario: string): Promise<void> {
   try {
     await action();
@@ -269,10 +286,14 @@ async function main(): Promise<void> {
   const dryRun = process.argv.includes('--dry-run');
   const requestedCase = process.argv.find((argument) => argument === 'FND-04');
   const verifiedContracts = contractSet();
+  const reusableCore = reusableCoreSet();
   if (!requestedCase) {
     fail('The FND-04 case identifier is required.');
   }
-  if (dryRun && verifiedContracts) {
+  if (verifiedContracts && reusableCore) {
+    fail('Read-only verification and reusable-core options cannot be combined.');
+  }
+  if (dryRun && (verifiedContracts || reusableCore)) {
     fail('Read-only verification cannot be combined with the deployment dry-run.');
   }
 
@@ -330,6 +351,93 @@ async function main(): Promise<void> {
       fail('An existing FND-04 harness runtime does not match the compiled artifact.');
     }
     contracts = verifiedContracts;
+  } else if (reusableCore) {
+    failureStage = 'reusable asset core runtime verification';
+    const [fixtureRuntime, wrapperRuntime] = await Promise.all([
+      publicClient.getCode({ address: reusableCore.fixture }),
+      publicClient.getCode({ address: reusableCore.wrapper }),
+    ]);
+    if (
+      !fixtureRuntime ||
+      !wrapperRuntime ||
+      fixtureRuntime.toLowerCase() !== fixtureArtifact.deployedBytecode.toLowerCase() ||
+      wrapperRuntime.toLowerCase() !== wrapperArtifact.deployedBytecode.toLowerCase()
+    ) {
+      fail('A reusable FND-04 core runtime does not match the compiled artifact.');
+    }
+
+    const directData = encodeDeployData({
+      abi: spikeArtifact.abi,
+      bytecode: spikeArtifact.bytecode,
+      args: [reusableCore.wrapper, reusableCore.fixture, RECOVERY_DELAY_SECONDS],
+    } as never);
+    const recoveryData = encodeDeployData({
+      abi: spikeArtifact.abi,
+      bytecode: spikeArtifact.bytecode,
+      args: [reusableCore.wrapper, reusableCore.fixture, RECOVERY_DELAY_SECONDS],
+    } as never);
+    const [directGas, recoveryGas] = await Promise.all([
+      publicClient.estimateGas({ account: deployer.address, data: directData }),
+      publicClient.estimateGas({ account: deployer.address, data: recoveryData }),
+    ]);
+    const fees = await publicClient.estimateFeesPerGas();
+    const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
+    const deploymentMaximumCost = (directGas + recoveryGas) * maxFeePerGas;
+    assertBudget(ledger, deploymentMaximumCost);
+    assertSingleTransactionBudget(directGas * maxFeePerGas, singleTransactionCapWei);
+    assertSingleTransactionBudget(recoveryGas * maxFeePerGas, singleTransactionCapWei);
+    console.log(
+      JSON.stringify({
+        mode: 'confirmed-write',
+        workItem: 'FND-04',
+        firstAction:
+          'deploy two corrected lifecycle spikes against the bytecode-matched reusable core',
+        deployments: 2,
+        estimatedMaximumDeploymentGasCostWei: deploymentMaximumCost.toString(),
+        singleTransactionCapWei: singleTransactionCapWei.toString(),
+        remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
+      }),
+    );
+    assertCleanSourceTree();
+    const deploySpike = async (gas: bigint, action: string): Promise<Address> => {
+      failureStage = action;
+      const currentFees = await publicClient.estimateFeesPerGas();
+      const currentMaxFeePerGas = currentFees.maxFeePerGas ?? (await publicClient.getGasPrice());
+      const maximumCost = gas * currentMaxFeePerGas;
+      assertBudget(ledger, maximumCost);
+      assertSingleTransactionBudget(maximumCost, singleTransactionCapWei);
+      const hash = await deployerWallet.deployContract({
+        account: deployer,
+        abi: spikeArtifact.abi,
+        bytecode: spikeArtifact.bytecode,
+        args: [reusableCore.wrapper, reusableCore.fixture, RECOVERY_DELAY_SECONDS] as never,
+        gas,
+        maxFeePerGas: currentMaxFeePerGas,
+      });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash });
+      appendSpend(ledger, {
+        workItemId: 'FND-04',
+        phase: 'P0',
+        sender: deployer.address,
+        transactionHash: hash,
+        blockNumber: receipt.blockNumber.toString(),
+        gasUsed: receipt.gasUsed.toString(),
+        effectiveGasPrice: receipt.effectiveGasPrice.toString(),
+        actualGasCostWei: (receipt.gasUsed * receipt.effectiveGasPrice).toString(),
+      });
+      if (receipt.status !== 'success' || !receipt.contractAddress) {
+        fail('A corrected FND-04 lifecycle spike deployment did not succeed.');
+      }
+      return receipt.contractAddress;
+    };
+    const directSpike = await deploySpike(directGas, 'corrected direct return spike deployment');
+    const recoverySpike = await deploySpike(recoveryGas, 'corrected recovery spike deployment');
+    contracts = {
+      fixture: reusableCore.fixture,
+      wrapper: reusableCore.wrapper,
+      directSpike,
+      recoverySpike,
+    };
   } else {
     failureStage = 'deployment dry-run planning';
     const nonce = BigInt(await publicClient.getTransactionCount({ address: deployer.address }));
@@ -553,22 +661,24 @@ async function main(): Promise<void> {
     return;
   }
 
-  failureStage = 'fixture collateral mint';
-  await send(
-    contracts.fixture,
-    fixtureData('mint', [deployer.address, FIXTURE_MINT]),
-    'mint fixture collateral',
-  );
-  await send(
-    contracts.fixture,
-    fixtureData('approve', [contracts.wrapper, FIXTURE_MINT]),
-    'approve fixture collateral wrapper',
-  );
-  await send(
-    contracts.wrapper,
-    wrapperData('wrap', [deployer.address, FIXTURE_AMOUNT]),
-    'wrap direct-return collateral',
-  );
+  if (!reusableCore) {
+    failureStage = 'fixture collateral mint';
+    await send(
+      contracts.fixture,
+      fixtureData('mint', [deployer.address, FIXTURE_MINT]),
+      'mint fixture collateral',
+    );
+    await send(
+      contracts.fixture,
+      fixtureData('approve', [contracts.wrapper, FIXTURE_MINT]),
+      'approve fixture collateral wrapper',
+    );
+    await send(
+      contracts.wrapper,
+      wrapperData('wrap', [deployer.address, FIXTURE_AMOUNT]),
+      'wrap direct-return collateral',
+    );
+  }
 
   failureStage = 'direct encrypted transfer preparation';
   const directInput = (await ownerHandleClient.encryptInput(
