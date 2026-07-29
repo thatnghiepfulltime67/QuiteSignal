@@ -214,7 +214,7 @@ function assertSingleTransactionBudget(
 }
 
 function contractSet(
-  option: '--reuse-contracts=' | '--verify-contracts=',
+  option: '--reuse-contracts=' | '--resume-contracts=' | '--verify-contracts=',
 ): readonly [Address, Address, Address] | undefined {
   const argument = process.argv.find((value) => value.startsWith(option));
   if (!argument) {
@@ -353,6 +353,23 @@ async function assertRejected(action: () => Promise<unknown>, scenario: string):
   fail(`${scenario} did not fail on Sepolia.`);
 }
 
+async function estimateNoxOperationWhenReady(
+  estimate: () => Promise<bigint>,
+  operation: string,
+): Promise<bigint> {
+  for (let attempt = 1; attempt <= PUBLIC_DECRYPT_MAX_ATTEMPTS; ++attempt) {
+    try {
+      return await estimate();
+    } catch {
+      if (attempt === PUBLIC_DECRYPT_MAX_ATTEMPTS) {
+        fail(`${operation} was unavailable after the bounded Nox readiness retry window.`);
+      }
+      await delay(PUBLIC_DECRYPT_RETRY_DELAY_MS);
+    }
+  }
+  fail(`${operation} did not produce a Sepolia gas estimate.`);
+}
+
 function withDifferentChainId(handle: Hex): Hex {
   const differentChainId = EXPECTED_CHAIN_ID - 1;
   const encodedChainId = differentChainId.toString(16).padStart(8, '0');
@@ -366,13 +383,14 @@ async function main(): Promise<void> {
   const requestedCase = process.argv.find((argument) => argument === 'FND-03');
   const verifiedContracts = contractSet('--verify-contracts=');
   const reusableContracts = contractSet('--reuse-contracts=');
+  const resumableContracts = contractSet('--resume-contracts=');
   if (!requestedCase) {
     fail('The FND-03 case identifier is required.');
   }
-  if (verifiedContracts && reusableContracts) {
-    fail('Read-only verification and reusable-write contract options cannot be combined.');
+  if ([verifiedContracts, reusableContracts, resumableContracts].filter(Boolean).length > 1) {
+    fail('Only one ACL feasibility contract mode can be selected.');
   }
-  if (dryRun && (verifiedContracts || reusableContracts)) {
+  if (dryRun && (verifiedContracts || reusableContracts || resumableContracts)) {
     fail('Read-only verification cannot be combined with the deployment dry-run.');
   }
 
@@ -421,7 +439,7 @@ async function main(): Promise<void> {
   let negativeAddress: Address;
   let transientRecipientAddress: Address;
 
-  const selectedContracts = verifiedContracts ?? reusableContracts;
+  const selectedContracts = verifiedContracts ?? reusableContracts ?? resumableContracts;
   if (selectedContracts) {
     failureStage = 'existing ACL runtime verification';
     const [primaryRuntime, negativeRuntime, transientRecipientRuntime] = await Promise.all(
@@ -538,6 +556,15 @@ async function main(): Promise<void> {
     transientRecipientAddress = transientRecipientReceipt.contractAddress;
   }
 
+  if (resumableContracts) {
+    failureStage = 'ACL resume state validation';
+    await publicClient.readContract({
+      address: primaryAddress,
+      abi: aclArtifact.abi,
+      functionName: 'derivedHandle',
+    } as never);
+  }
+
   failureStage = 'Nox gateway encryption';
   const ownerHandleClient = await createViemHandleClient(deployerWallet);
   const unrelatedHandleClient = await createViemHandleClient(unrelatedWallet);
@@ -548,60 +575,68 @@ async function main(): Promise<void> {
   )) as EncryptedValue;
 
   if (!verifiedContracts) {
-    failureStage = 'ACL materialization dry-run planning';
-    const materializeData = encodeFunctionData({
-      abi: aclArtifact.abi,
-      functionName: 'materialize',
-      args: [ownerInput.handle, ownerInput.handleProof, actors.owner],
-    } as never);
-    const materializeGas = await publicClient.estimateGas({
-      account: deployer.address,
-      to: primaryAddress,
-      data: materializeData,
-    });
-    const materializeMaximumGasCost = materializeGas * maxFeePerGas;
-    assertBudget(ledger, materializeMaximumGasCost);
-    assertSingleTransactionBudget(materializeMaximumGasCost, singleTransactionCapWei);
-    console.log(
-      JSON.stringify({
-        mode: 'confirmed-write',
-        workItem: 'FND-03',
-        secondAction: 'submit encrypted owner input and persist minimal ACL',
-        estimatedMaximumGasCostWei: materializeMaximumGasCost.toString(),
-        singleTransactionCapWei: singleTransactionCapWei.toString(),
-        remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
-      }),
-    );
+    if (!resumableContracts) {
+      failureStage = 'ACL materialization dry-run planning';
+      const materializeData = encodeFunctionData({
+        abi: aclArtifact.abi,
+        functionName: 'materialize',
+        args: [ownerInput.handle, ownerInput.handleProof, actors.owner],
+      } as never);
+      const materializeGas = await publicClient.estimateGas({
+        account: deployer.address,
+        to: primaryAddress,
+        data: materializeData,
+      });
+      const materializeMaximumGasCost = materializeGas * maxFeePerGas;
+      assertBudget(ledger, materializeMaximumGasCost);
+      assertSingleTransactionBudget(materializeMaximumGasCost, singleTransactionCapWei);
+      console.log(
+        JSON.stringify({
+          mode: 'confirmed-write',
+          workItem: 'FND-03',
+          secondAction: 'submit encrypted owner input and persist minimal ACL',
+          estimatedMaximumGasCostWei: materializeMaximumGasCost.toString(),
+          singleTransactionCapWei: singleTransactionCapWei.toString(),
+          remainingAllowanceWei: (
+            BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)
+          ).toString(),
+        }),
+      );
 
-    if (reusableContracts) {
-      assertCleanSourceTree();
+      if (reusableContracts) {
+        assertCleanSourceTree();
+      }
+
+      failureStage = 'ACL materialization';
+      const materializeHash = await deployerWallet.sendTransaction({
+        account: deployer,
+        to: primaryAddress,
+        data: materializeData,
+        gas: materializeGas,
+        maxFeePerGas,
+      });
+      const materializeReceipt = await publicClient.waitForTransactionReceipt({
+        hash: materializeHash,
+      });
+      appendSpend(ledger, {
+        workItemId: 'FND-03',
+        phase: 'P0',
+        sender: deployer.address,
+        transactionHash: materializeHash,
+        blockNumber: materializeReceipt.blockNumber.toString(),
+        gasUsed: materializeReceipt.gasUsed.toString(),
+        effectiveGasPrice: materializeReceipt.effectiveGasPrice.toString(),
+        actualGasCostWei: (
+          materializeReceipt.gasUsed * materializeReceipt.effectiveGasPrice
+        ).toString(),
+      });
+      if (materializeReceipt.status !== 'success') {
+        fail('The ACL materialization transaction did not succeed.');
+      }
     }
 
-    failureStage = 'ACL materialization';
-    const materializeHash = await deployerWallet.sendTransaction({
-      account: deployer,
-      to: primaryAddress,
-      data: materializeData,
-      gas: materializeGas,
-      maxFeePerGas,
-    });
-    const materializeReceipt = await publicClient.waitForTransactionReceipt({
-      hash: materializeHash,
-    });
-    appendSpend(ledger, {
-      workItemId: 'FND-03',
-      phase: 'P0',
-      sender: deployer.address,
-      transactionHash: materializeHash,
-      blockNumber: materializeReceipt.blockNumber.toString(),
-      gasUsed: materializeReceipt.gasUsed.toString(),
-      effectiveGasPrice: materializeReceipt.effectiveGasPrice.toString(),
-      actualGasCostWei: (
-        materializeReceipt.gasUsed * materializeReceipt.effectiveGasPrice
-      ).toString(),
-    });
-    if (materializeReceipt.status !== 'success') {
-      fail('The ACL materialization transaction did not succeed.');
+    if (resumableContracts) {
+      assertCleanSourceTree();
     }
 
     failureStage = 'persistence proof dry-run planning';
@@ -609,12 +644,19 @@ async function main(): Promise<void> {
       abi: aclArtifact.abi,
       functionName: 'provePersistence',
     } as never);
-    const persistenceGas = await publicClient.estimateGas({
-      account: deployer.address,
-      to: primaryAddress,
-      data: persistenceData,
-    });
-    const persistenceMaximumGasCost = persistenceGas * maxFeePerGas;
+    const persistenceFees = await publicClient.estimateFeesPerGas();
+    const persistenceMaxFeePerGas =
+      persistenceFees.maxFeePerGas ?? (await publicClient.getGasPrice());
+    const persistenceGas = await estimateNoxOperationWhenReady(
+      () =>
+        publicClient.estimateGas({
+          account: deployer.address,
+          to: primaryAddress,
+          data: persistenceData,
+        }),
+      'Persistent ACL computation gas estimate',
+    );
+    const persistenceMaximumGasCost = persistenceGas * persistenceMaxFeePerGas;
     assertBudget(ledger, persistenceMaximumGasCost);
     assertSingleTransactionBudget(persistenceMaximumGasCost, singleTransactionCapWei);
     console.log(
@@ -634,7 +676,7 @@ async function main(): Promise<void> {
       to: primaryAddress,
       data: persistenceData,
       gas: persistenceGas,
-      maxFeePerGas,
+      maxFeePerGas: persistenceMaxFeePerGas,
     });
     const persistenceReceipt = await publicClient.waitForTransactionReceipt({
       hash: persistenceHash,
@@ -661,12 +703,19 @@ async function main(): Promise<void> {
       functionName: 'proveTransientAccess',
       args: [transientRecipientAddress],
     } as never);
-    const transientAccessGas = await publicClient.estimateGas({
-      account: deployer.address,
-      to: primaryAddress,
-      data: transientAccessData,
-    });
-    const transientAccessMaximumGasCost = transientAccessGas * maxFeePerGas;
+    const transientAccessFees = await publicClient.estimateFeesPerGas();
+    const transientAccessMaxFeePerGas =
+      transientAccessFees.maxFeePerGas ?? (await publicClient.getGasPrice());
+    const transientAccessGas = await estimateNoxOperationWhenReady(
+      () =>
+        publicClient.estimateGas({
+          account: deployer.address,
+          to: primaryAddress,
+          data: transientAccessData,
+        }),
+      'Transient ACL computation gas estimate',
+    );
+    const transientAccessMaximumGasCost = transientAccessGas * transientAccessMaxFeePerGas;
     assertBudget(ledger, transientAccessMaximumGasCost);
     assertSingleTransactionBudget(transientAccessMaximumGasCost, singleTransactionCapWei);
     console.log(
@@ -686,7 +735,7 @@ async function main(): Promise<void> {
       to: primaryAddress,
       data: transientAccessData,
       gas: transientAccessGas,
-      maxFeePerGas,
+      maxFeePerGas: transientAccessMaxFeePerGas,
     });
     const transientAccessReceipt = await publicClient.waitForTransactionReceipt({
       hash: transientAccessHash,

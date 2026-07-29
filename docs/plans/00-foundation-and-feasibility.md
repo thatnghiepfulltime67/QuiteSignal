@@ -215,6 +215,12 @@ are accepted; a failed ACL proof leaves no funds to recover. Record every confir
 receipt in the spend ledger and stop dependent work if the owner-shaped handle can
 be public-decrypted or a non-pool actor receives persistent compute authority.
 
+Resume behavior: A partial no-custody run may resume only with the three
+bytecode-matched deployed harness addresses after a clean-source and fresh-budget
+preflight. The runner first confirms that the primary spike has a materialized
+derived handle, skips import, and begins the persistence and transient-access proof
+steps. It refreshes the fee estimate for each such write.
+
 Commands/checks: `npm run compile`, `npm run test:nox:sepolia -- FND-03 --dry-run`,
 `npm run test:nox:sepolia -- FND-03`, `npm run budget:status`,
 `npm run check:offline`, `npm run check:sepolia:read`, `npm run scan:secrets`, and
