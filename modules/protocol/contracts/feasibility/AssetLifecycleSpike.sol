@@ -5,7 +5,12 @@ import {IERC20} from '@openzeppelin/contracts/interfaces/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {IERC7984Receiver} from '@iexec-nox/nox-confidential-contracts/contracts/interfaces/IERC7984Receiver.sol';
 import {IERC20ToERC7984Wrapper} from '@iexec-nox/nox-confidential-contracts/contracts/interfaces/IERC20ToERC7984Wrapper.sol';
-import {Nox, ebool, euint256} from '@iexec-nox/nox-protocol-contracts/contracts/sdk/Nox.sol';
+import {
+  Nox,
+  ebool,
+  euint256,
+  externalEuint256
+} from '@iexec-nox/nox-protocol-contracts/contracts/sdk/Nox.sol';
 
 /// @notice Isolated FND-04 receiver and recovery harness. It has no production or real-asset custody.
 contract AssetLifecycleSpike is IERC7984Receiver {
@@ -14,12 +19,17 @@ contract AssetLifecycleSpike is IERC7984Receiver {
 
   enum LifecycleState {
     Empty,
+    IntentRegistered,
+    DepositPending,
     Held,
     UnwrapPending,
     Rewrapped,
-    Returned
+    Returned,
+    Rejected
   }
 
+  error CallbackOwnerMismatch(address expected, address actual);
+  error DepositAcceptanceMismatch();
   error EarlyRecovery(uint48 availableAt);
   error MissingTransientAccess();
   error OwnerOnly(address caller);
@@ -40,6 +50,9 @@ contract AssetLifecycleSpike is IERC7984Receiver {
   LifecycleState public state;
   uint48 public recoveryAvailableAt;
   uint256 public observedReleasedAmount;
+  ebool private depositAccepted;
+  euint256 private balanceBeforeTransfer;
+  euint256 private expectedAmount;
   euint256 private heldAmount;
   euint256 private unwrapRequest;
 
@@ -51,6 +64,21 @@ contract AssetLifecycleSpike is IERC7984Receiver {
     recoveryDelay = recoveryDelay_;
   }
 
+  function registerExpectedStake(
+    externalEuint256 encryptedAmount,
+    bytes calldata inputProof
+  ) external {
+    _requireState(LifecycleState.Empty);
+    expectedAmount = Nox.fromExternal(encryptedAmount, inputProof);
+    balanceBeforeTransfer = wrapper.confidentialBalanceOf(address(this));
+    if (!Nox.isAllowed(balanceBeforeTransfer, address(this))) revert MissingTransientAccess();
+
+    owner = msg.sender;
+    Nox.allowThis(expectedAmount);
+    Nox.allowThis(balanceBeforeTransfer);
+    state = LifecycleState.IntentRegistered;
+  }
+
   function onConfidentialTransferReceived(
     address operator,
     address from,
@@ -59,16 +87,32 @@ contract AssetLifecycleSpike is IERC7984Receiver {
   ) external returns (ebool) {
     if (msg.sender != address(wrapper)) revert WrongWrapper(msg.sender);
     if (operator != from) revert WrongCallbackOperator();
-    _requireState(LifecycleState.Empty);
+    if (from != owner) revert CallbackOwnerMismatch(owner, from);
+    _requireState(LifecycleState.IntentRegistered);
     euint256 poolBalance = wrapper.confidentialBalanceOf(address(this));
     if (!Nox.isAllowed(poolBalance, address(this))) revert MissingTransientAccess();
 
-    heldAmount = poolBalance;
-    owner = from;
+    euint256 receivedAmount = Nox.sub(poolBalance, balanceBeforeTransfer);
+    depositAccepted = Nox.eq(receivedAmount, expectedAmount);
+    heldAmount = Nox.select(depositAccepted, receivedAmount, Nox.toEuint256(0));
+    Nox.allowThis(depositAccepted);
     Nox.allowThis(heldAmount);
     Nox.addViewer(heldAmount, owner);
+    Nox.allowPublicDecryption(depositAccepted);
+    state = LifecycleState.DepositPending;
+    return depositAccepted;
+  }
+
+  function finalizeDepositAcceptance(bytes calldata acceptanceProof) external {
+    _requireState(LifecycleState.DepositPending);
+    if (!Nox.publicDecrypt(depositAccepted, acceptanceProof)) revert DepositAcceptanceMismatch();
     state = LifecycleState.Held;
-    return Nox.toEbool(true);
+  }
+
+  function rejectDeposit(bytes calldata acceptanceProof) external {
+    _requireState(LifecycleState.DepositPending);
+    if (Nox.publicDecrypt(depositAccepted, acceptanceProof)) revert DepositAcceptanceMismatch();
+    state = LifecycleState.Rejected;
   }
 
   function returnToOwner(address recipient) external {
@@ -78,8 +122,7 @@ contract AssetLifecycleSpike is IERC7984Receiver {
       revert UnexpectedLifecycleState(LifecycleState.Held, state);
     }
 
-    euint256 poolBalance = wrapper.confidentialBalanceOf(address(this));
-    wrapper.confidentialTransfer(recipient, poolBalance);
+    wrapper.confidentialTransfer(recipient, heldAmount);
     state = LifecycleState.Returned;
   }
 
@@ -111,6 +154,8 @@ contract AssetLifecycleSpike is IERC7984Receiver {
 
     underlying.forceApprove(address(wrapper), expectedReleasedAmount);
     wrapper.wrap(address(this), expectedReleasedAmount);
+    heldAmount = wrapper.confidentialBalanceOf(address(this));
+    Nox.allowThis(heldAmount);
     observedReleasedAmount = expectedReleasedAmount;
     state = LifecycleState.Rewrapped;
   }
@@ -118,6 +163,11 @@ contract AssetLifecycleSpike is IERC7984Receiver {
   function unwrapRequestHandle() external view returns (bytes32) {
     _requireState(LifecycleState.UnwrapPending);
     return euint256.unwrap(unwrapRequest);
+  }
+
+  function depositAcceptanceHandle() external view returns (bytes32) {
+    _requireState(LifecycleState.DepositPending);
+    return ebool.unwrap(depositAccepted);
   }
 
   function probeMissingAccess(bytes32 handle) external {

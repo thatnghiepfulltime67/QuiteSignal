@@ -67,6 +67,7 @@ interface ContractSet {
   wrapper: Address;
   directSpike: Address;
   recoverySpike: Address;
+  mismatchSpike: Address;
 }
 
 interface CoreContractSet {
@@ -215,14 +216,15 @@ function contractSet(): ContractSet | undefined {
     return undefined;
   }
   const values = argument.slice('--verify-contracts='.length).split(',');
-  if (values.length !== 4 || values.some((value) => !isAddress(value))) {
-    fail('Four comma-separated FND-04 contract addresses are required for verification.');
+  if (values.length !== 5 || values.some((value) => !isAddress(value))) {
+    fail('Five comma-separated FND-04 contract addresses are required for verification.');
   }
   const fixture = values[0] as Address;
   const wrapper = values[1] as Address;
   const directSpike = values[2] as Address;
   const recoverySpike = values[3] as Address;
-  return { fixture, wrapper, directSpike, recoverySpike };
+  const mismatchSpike = values[4] as Address;
+  return { fixture, wrapper, directSpike, recoverySpike, mismatchSpike };
 }
 
 function reusableCoreSet(): CoreContractSet | undefined {
@@ -267,6 +269,29 @@ async function waitForPublicDecrypt(
     }
   }
   fail('The public unwrap decryption did not produce a result.');
+}
+
+async function waitForPublicBoolean(
+  handleClient: Awaited<ReturnType<typeof createViemHandleClient>>,
+  handle: Hex,
+): Promise<{ value: boolean; decryptionProof: Hex }> {
+  for (let attempt = 1; attempt <= PUBLIC_DECRYPT_MAX_ATTEMPTS; ++attempt) {
+    try {
+      const result = await handleClient.publicDecrypt(handle);
+      if (typeof result.value !== 'boolean') {
+        fail('The deposit acceptance result did not decode as a boolean.');
+      }
+      return { value: result.value, decryptionProof: result.decryptionProof as Hex };
+    } catch {
+      if (attempt === PUBLIC_DECRYPT_MAX_ATTEMPTS) {
+        fail(
+          'The deposit acceptance proof was unavailable after the bounded gateway retry window.',
+        );
+      }
+      await delay(PUBLIC_DECRYPT_RETRY_DELAY_MS);
+    }
+  }
+  fail('The deposit acceptance proof did not produce a result.');
 }
 
 async function assertOwnerDecrypt(
@@ -353,21 +378,25 @@ async function main(): Promise<void> {
   let contracts: ContractSet;
   if (verifiedContracts) {
     failureStage = 'existing asset harness runtime verification';
-    const [fixtureRuntime, wrapperRuntime, directRuntime, recoveryRuntime] = await Promise.all([
-      publicClient.getCode({ address: verifiedContracts.fixture }),
-      publicClient.getCode({ address: verifiedContracts.wrapper }),
-      publicClient.getCode({ address: verifiedContracts.directSpike }),
-      publicClient.getCode({ address: verifiedContracts.recoverySpike }),
-    ]);
+    const [fixtureRuntime, wrapperRuntime, directRuntime, recoveryRuntime, mismatchRuntime] =
+      await Promise.all([
+        publicClient.getCode({ address: verifiedContracts.fixture }),
+        publicClient.getCode({ address: verifiedContracts.wrapper }),
+        publicClient.getCode({ address: verifiedContracts.directSpike }),
+        publicClient.getCode({ address: verifiedContracts.recoverySpike }),
+        publicClient.getCode({ address: verifiedContracts.mismatchSpike }),
+      ]);
     if (
       !fixtureRuntime ||
       !wrapperRuntime ||
       !directRuntime ||
       !recoveryRuntime ||
+      !mismatchRuntime ||
       !runtimeMatchesArtifact(fixtureRuntime, fixtureArtifact) ||
       !runtimeMatchesArtifact(wrapperRuntime, wrapperArtifact) ||
       !runtimeMatchesArtifact(directRuntime, spikeArtifact) ||
-      !runtimeMatchesArtifact(recoveryRuntime, spikeArtifact)
+      !runtimeMatchesArtifact(recoveryRuntime, spikeArtifact) ||
+      !runtimeMatchesArtifact(mismatchRuntime, spikeArtifact)
     ) {
       fail('An existing FND-04 harness runtime does not match the compiled artifact.');
     }
@@ -397,23 +426,30 @@ async function main(): Promise<void> {
       bytecode: spikeArtifact.bytecode,
       args: [reusableCore.wrapper, reusableCore.fixture, RECOVERY_DELAY_SECONDS],
     } as never);
-    const [directGas, recoveryGas] = await Promise.all([
+    const mismatchData = encodeDeployData({
+      abi: spikeArtifact.abi,
+      bytecode: spikeArtifact.bytecode,
+      args: [reusableCore.wrapper, reusableCore.fixture, RECOVERY_DELAY_SECONDS],
+    } as never);
+    const [directGas, recoveryGas, mismatchGas] = await Promise.all([
       publicClient.estimateGas({ account: deployer.address, data: directData }),
       publicClient.estimateGas({ account: deployer.address, data: recoveryData }),
+      publicClient.estimateGas({ account: deployer.address, data: mismatchData }),
     ]);
     const fees = await publicClient.estimateFeesPerGas();
     const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
-    const deploymentMaximumCost = (directGas + recoveryGas) * maxFeePerGas;
+    const deploymentMaximumCost = (directGas + recoveryGas + mismatchGas) * maxFeePerGas;
     assertBudget(ledger, deploymentMaximumCost);
     assertSingleTransactionBudget(directGas * maxFeePerGas, singleTransactionCapWei);
     assertSingleTransactionBudget(recoveryGas * maxFeePerGas, singleTransactionCapWei);
+    assertSingleTransactionBudget(mismatchGas * maxFeePerGas, singleTransactionCapWei);
     console.log(
       JSON.stringify({
         mode: 'confirmed-write',
         workItem: 'FND-04',
         firstAction:
-          'deploy two corrected lifecycle spikes against the bytecode-matched reusable core',
-        deployments: 2,
+          'deploy three intent-bound lifecycle spikes against the bytecode-matched reusable core',
+        deployments: 3,
         estimatedMaximumDeploymentGasCostWei: deploymentMaximumCost.toString(),
         singleTransactionCapWei: singleTransactionCapWei.toString(),
         remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
@@ -453,11 +489,16 @@ async function main(): Promise<void> {
     };
     const directSpike = await deploySpike(directGas, 'corrected direct return spike deployment');
     const recoverySpike = await deploySpike(recoveryGas, 'corrected recovery spike deployment');
+    const mismatchSpike = await deploySpike(
+      mismatchGas,
+      'encrypted intent mismatch spike deployment',
+    );
     contracts = {
       fixture: reusableCore.fixture,
       wrapper: reusableCore.wrapper,
       directSpike,
       recoverySpike,
+      mismatchSpike,
     };
   } else {
     failureStage = 'deployment dry-run planning';
@@ -466,6 +507,7 @@ async function main(): Promise<void> {
     const wrapperAddress = getContractAddress({ from: deployer.address, nonce: nonce + 1n });
     const directSpikeAddress = getContractAddress({ from: deployer.address, nonce: nonce + 2n });
     const recoverySpikeAddress = getContractAddress({ from: deployer.address, nonce: nonce + 3n });
+    const mismatchSpikeAddress = getContractAddress({ from: deployer.address, nonce: nonce + 4n });
     const fixtureData = encodeDeployData({
       abi: fixtureArtifact.abi,
       bytecode: fixtureArtifact.bytecode,
@@ -481,6 +523,11 @@ async function main(): Promise<void> {
       args: [wrapperAddress, fixtureAddress, RECOVERY_DELAY_SECONDS],
     } as never);
     const recoveryData = encodeDeployData({
+      abi: spikeArtifact.abi,
+      bytecode: spikeArtifact.bytecode,
+      args: [wrapperAddress, fixtureAddress, RECOVERY_DELAY_SECONDS],
+    } as never);
+    const mismatchData = encodeDeployData({
       abi: spikeArtifact.abi,
       bytecode: spikeArtifact.bytecode,
       args: [wrapperAddress, fixtureAddress, RECOVERY_DELAY_SECONDS],
@@ -501,12 +548,16 @@ async function main(): Promise<void> {
       account: deployer.address,
       data: recoveryData,
     });
+    const mismatchGas = await publicClient.estimateGas({
+      account: deployer.address,
+      data: mismatchData,
+    });
     const fees = await publicClient.estimateFeesPerGas();
     const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
     const deploymentMaximumCost =
-      (fixtureGas + wrapperGas + directGas + recoveryGas) * maxFeePerGas;
+      (fixtureGas + wrapperGas + directGas + recoveryGas + mismatchGas) * maxFeePerGas;
     assertBudget(ledger, deploymentMaximumCost);
-    for (const gas of [fixtureGas, wrapperGas, directGas, recoveryGas]) {
+    for (const gas of [fixtureGas, wrapperGas, directGas, recoveryGas, mismatchGas]) {
       assertSingleTransactionBudget(gas * maxFeePerGas, singleTransactionCapWei);
     }
     console.log(
@@ -514,8 +565,8 @@ async function main(): Promise<void> {
         mode: dryRun ? 'dry-run' : 'confirmed-write',
         workItem: 'FND-04',
         firstAction:
-          'deploy isolated fixture collateral, confidential wrapper, and two lifecycle spikes',
-        deployments: 4,
+          'deploy isolated fixture collateral, confidential wrapper, and three intent-bound lifecycle spikes',
+        deployments: 5,
         estimatedMaximumDeploymentGasCostWei: deploymentMaximumCost.toString(),
         singleTransactionCapWei: singleTransactionCapWei.toString(),
         remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
@@ -582,7 +633,13 @@ async function main(): Promise<void> {
       recoveryGas,
       'recovery spike deployment',
     );
-    contracts = { fixture, wrapper, directSpike, recoverySpike };
+    const mismatchSpike = await deploy(
+      spikeArtifact,
+      [wrapper, fixture, RECOVERY_DELAY_SECONDS],
+      mismatchGas,
+      'encrypted intent mismatch spike deployment',
+    );
+    contracts = { fixture, wrapper, directSpike, recoverySpike, mismatchSpike };
   }
 
   failureStage = 'wrapper collateral binding verification';
@@ -594,7 +651,14 @@ async function main(): Promise<void> {
   if (configuredUnderlying.toLowerCase() !== contracts.fixture.toLowerCase()) {
     fail('The confidential wrapper does not bind the expected fixture collateral.');
   }
-  const [directWrapper, directUnderlying, recoveryWrapper, recoveryUnderlying] = await Promise.all([
+  const [
+    directWrapper,
+    directUnderlying,
+    recoveryWrapper,
+    recoveryUnderlying,
+    mismatchWrapper,
+    mismatchUnderlying,
+  ] = await Promise.all([
     publicClient.readContract({
       address: contracts.directSpike,
       abi: spikeArtifact.abi,
@@ -612,6 +676,16 @@ async function main(): Promise<void> {
     } as never),
     publicClient.readContract({
       address: contracts.recoverySpike,
+      abi: spikeArtifact.abi,
+      functionName: 'underlying',
+    } as never),
+    publicClient.readContract({
+      address: contracts.mismatchSpike,
+      abi: spikeArtifact.abi,
+      functionName: 'wrapper',
+    } as never),
+    publicClient.readContract({
+      address: contracts.mismatchSpike,
       abi: spikeArtifact.abi,
       functionName: 'underlying',
     } as never),
@@ -620,7 +694,9 @@ async function main(): Promise<void> {
     (directWrapper as Address).toLowerCase() !== contracts.wrapper.toLowerCase() ||
     (recoveryWrapper as Address).toLowerCase() !== contracts.wrapper.toLowerCase() ||
     (directUnderlying as Address).toLowerCase() !== contracts.fixture.toLowerCase() ||
-    (recoveryUnderlying as Address).toLowerCase() !== contracts.fixture.toLowerCase()
+    (recoveryUnderlying as Address).toLowerCase() !== contracts.fixture.toLowerCase() ||
+    (mismatchWrapper as Address).toLowerCase() !== contracts.wrapper.toLowerCase() ||
+    (mismatchUnderlying as Address).toLowerCase() !== contracts.fixture.toLowerCase()
   ) {
     fail('An asset lifecycle spike does not bind the expected wrapper and fixture collateral.');
   }
@@ -686,15 +762,18 @@ async function main(): Promise<void> {
 
   if (verifiedContracts) {
     failureStage = 'FND-04 final read-only verification';
-    const [directState, recoveryState, observedReleasedAmount, ownerBalance] = await Promise.all([
-      read(contracts.directSpike, spikeArtifact, 'state'),
-      read(contracts.recoverySpike, spikeArtifact, 'state'),
-      read(contracts.recoverySpike, spikeArtifact, 'observedReleasedAmount'),
-      read(contracts.wrapper, wrapperArtifact, 'confidentialBalanceOf', [deployer.address]),
-    ]);
+    const [directState, recoveryState, mismatchState, observedReleasedAmount, ownerBalance] =
+      await Promise.all([
+        read(contracts.directSpike, spikeArtifact, 'state'),
+        read(contracts.recoverySpike, spikeArtifact, 'state'),
+        read(contracts.mismatchSpike, spikeArtifact, 'state'),
+        read(contracts.recoverySpike, spikeArtifact, 'observedReleasedAmount'),
+        read(contracts.wrapper, wrapperArtifact, 'confidentialBalanceOf', [deployer.address]),
+      ]);
     if (
-      directState !== 4 ||
-      recoveryState !== 4 ||
+      directState !== 6 ||
+      recoveryState !== 6 ||
+      mismatchState !== 7 ||
       observedReleasedAmount !== FIXTURE_AMOUNT ||
       typeof ownerBalance !== 'string'
     ) {
@@ -704,8 +783,8 @@ async function main(): Promise<void> {
     console.log(
       JSON.stringify({
         workItem: 'FND-04',
-        contractsVerified: 4,
-        terminalLifecycleAssertionsVerified: 4,
+        contractsVerified: 5,
+        terminalLifecycleAssertionsVerified: 5,
         status: 'passed',
       }),
     );
@@ -731,21 +810,81 @@ async function main(): Promise<void> {
     );
   }
 
-  failureStage = 'direct encrypted transfer preparation';
-  const directInput = (await ownerHandleClient.encryptInput(
+  const registerIntent = async (spike: Address, action: string): Promise<EncryptedValue> => {
+    failureStage = `${action} encryption`;
+    const intent = (await ownerHandleClient.encryptInput(
+      FIXTURE_AMOUNT,
+      'uint256',
+      spike,
+    )) as EncryptedValue;
+    await send(
+      spike,
+      spikeData('registerExpectedStake', [intent.handle, intent.handleProof]),
+      action,
+    );
+    return intent;
+  };
+
+  const transferAndReadAcceptance = async (
+    spike: Address,
+    amount: bigint,
+    action: string,
+  ): Promise<{ value: boolean; decryptionProof: Hex }> => {
+    failureStage = `${action} encryption`;
+    const transferInput = (await ownerHandleClient.encryptInput(
+      amount,
+      'uint256',
+      contracts.wrapper,
+    )) as EncryptedValue;
+    await send(
+      contracts.wrapper,
+      wrapperData('confidentialTransferAndCall', [
+        spike,
+        transferInput.handle,
+        transferInput.handleProof,
+        '0x',
+      ]),
+      action,
+    );
+    const acceptanceHandle = (await read(spike, spikeArtifact, 'depositAcceptanceHandle')) as Hex;
+    return waitForPublicBoolean(ownerHandleClient, acceptanceHandle);
+  };
+
+  failureStage = 'direct encrypted intent registration';
+  const directIntent = await registerIntent(
+    contracts.directSpike,
+    'register direct encrypted stake intent',
+  );
+  await assertRejected(
+    () =>
+      publicClient.call({
+        account: deployer.address,
+        to: contracts.directSpike,
+        data: spikeData('registerExpectedStake', [directIntent.handle, directIntent.handleProof]),
+      }),
+    'Replayed encrypted stake intent',
+  );
+  const directAcceptance = await transferAndReadAcceptance(
+    contracts.directSpike,
     FIXTURE_AMOUNT,
-    'uint256',
-    contracts.wrapper,
-  )) as EncryptedValue;
-  await send(
-    contracts.wrapper,
-    wrapperData('confidentialTransferAndCall', [
-      contracts.directSpike,
-      directInput.handle,
-      directInput.handleProof,
-      '0x',
-    ]),
     'encrypted direct-return collateral pull',
+  );
+  if (!directAcceptance.value) {
+    fail('The matching direct encrypted stake intent was not accepted.');
+  }
+  await assertRejected(
+    () =>
+      publicClient.call({
+        account: deployer.address,
+        to: contracts.directSpike,
+        data: spikeData('finalizeDepositAcceptance', ['0x']),
+      }),
+    'Malformed direct deposit acceptance proof',
+  );
+  await send(
+    contracts.directSpike,
+    spikeData('finalizeDepositAcceptance', [directAcceptance.decryptionProof]),
+    'finalize matching direct encrypted stake intent',
   );
 
   failureStage = 'direct return negative checks';
@@ -816,32 +955,107 @@ async function main(): Promise<void> {
     'confidentialBalanceOf',
     [deployer.address],
   )) as Hex;
-  await assertOwnerDecrypt(ownerHandleClient, directOwnerBalance, FIXTURE_AMOUNT);
+  await assertOwnerDecrypt(
+    ownerHandleClient,
+    directOwnerBalance,
+    reusableCore ? FIXTURE_MINT : FIXTURE_AMOUNT,
+  );
   await assertRejected(
     () => ownerHandleClient.publicDecrypt(directOwnerBalance),
     'Public decryption of owner confidential balance',
   );
 
-  await send(
-    contracts.wrapper,
-    wrapperData('wrap', [deployer.address, FIXTURE_AMOUNT]),
-    'wrap recovery collateral',
+  await registerIntent(contracts.mismatchSpike, 'register mismatch encrypted stake intent');
+  const mismatchAcceptance = await transferAndReadAcceptance(
+    contracts.mismatchSpike,
+    FIXTURE_AMOUNT / 2n,
+    'submit mismatched encrypted stake for wrapper refund',
   );
-  failureStage = 'recovery encrypted transfer preparation';
-  const recoveryInput = (await ownerHandleClient.encryptInput(
+  if (mismatchAcceptance.value) {
+    fail('The mismatched encrypted stake intent was unexpectedly accepted.');
+  }
+  await assertRejected(
+    () =>
+      publicClient.call({
+        account: deployer.address,
+        to: contracts.mismatchSpike,
+        data: spikeData('finalizeDepositAcceptance', [mismatchAcceptance.decryptionProof]),
+      }),
+    'Mismatched deposit acceptance finalization',
+  );
+  await assertRejected(
+    () =>
+      publicClient.call({
+        account: deployer.address,
+        to: contracts.mismatchSpike,
+        data: spikeData('rejectDeposit', ['0x']),
+      }),
+    'Malformed mismatched deposit rejection proof',
+  );
+  await send(
+    contracts.mismatchSpike,
+    spikeData('rejectDeposit', [mismatchAcceptance.decryptionProof]),
+    'record refunded mismatched encrypted stake',
+  );
+  await assertRejected(
+    () =>
+      publicClient.call({
+        account: deployer.address,
+        to: contracts.mismatchSpike,
+        data: spikeData('rejectDeposit', [mismatchAcceptance.decryptionProof]),
+      }),
+    'Repeated mismatched deposit rejection',
+  );
+
+  if (!reusableCore) {
+    await send(
+      contracts.wrapper,
+      wrapperData('wrap', [deployer.address, FIXTURE_AMOUNT]),
+      'wrap recovery collateral',
+    );
+  }
+  failureStage = 'missing recovery intent rejection';
+  const missingIntentInput = (await ownerHandleClient.encryptInput(
     FIXTURE_AMOUNT,
     'uint256',
     contracts.wrapper,
   )) as EncryptedValue;
-  await send(
-    contracts.wrapper,
-    wrapperData('confidentialTransferAndCall', [
-      contracts.recoverySpike,
-      recoveryInput.handle,
-      recoveryInput.handleProof,
-      '0x',
-    ]),
+  await assertRejected(
+    () =>
+      publicClient.call({
+        account: deployer.address,
+        to: contracts.wrapper,
+        data: wrapperData('confidentialTransferAndCall', [
+          contracts.recoverySpike,
+          missingIntentInput.handle,
+          missingIntentInput.handleProof,
+          '0x',
+        ]),
+      }),
+    'Encrypted callback without a registered intent',
+  );
+  await registerIntent(contracts.recoverySpike, 'register recovery encrypted stake intent');
+  const recoveryAcceptance = await transferAndReadAcceptance(
+    contracts.recoverySpike,
+    FIXTURE_AMOUNT,
     'encrypted recovery collateral pull',
+  );
+  if (!recoveryAcceptance.value) {
+    fail('The matching recovery encrypted stake intent was not accepted.');
+  }
+  await assertRejected(
+    () =>
+      publicClient.call({
+        account: deployer.address,
+        to: contracts.recoverySpike,
+        data: spikeData('finalizeDepositAcceptance', ['0x']),
+      }),
+    'Malformed recovery deposit acceptance proof',
+  );
+  await send(
+    contracts.recoverySpike,
+    spikeData('finalizeDepositAcceptance', [recoveryAcceptance.decryptionProof]),
+    'finalize matching recovery encrypted stake intent',
   );
   await send(
     contracts.recoverySpike,
@@ -927,21 +1141,27 @@ async function main(): Promise<void> {
     [deployer.address],
   )) as Hex;
   await assertOwnerDecrypt(ownerHandleClient, finalOwnerBalance, FIXTURE_MINT);
-  const [directState, recoveryState, observedReleasedAmount] = await Promise.all([
+  const [directState, recoveryState, mismatchState, observedReleasedAmount] = await Promise.all([
     read(contracts.directSpike, spikeArtifact, 'state'),
     read(contracts.recoverySpike, spikeArtifact, 'state'),
+    read(contracts.mismatchSpike, spikeArtifact, 'state'),
     read(contracts.recoverySpike, spikeArtifact, 'observedReleasedAmount'),
   ]);
-  if (directState !== 4 || recoveryState !== 4 || observedReleasedAmount !== FIXTURE_AMOUNT) {
+  if (
+    directState !== 6 ||
+    recoveryState !== 6 ||
+    mismatchState !== 7 ||
+    observedReleasedAmount !== FIXTURE_AMOUNT
+  ) {
     fail('The final FND-04 lifecycle state did not match the required recovery result.');
   }
 
   console.log(
     JSON.stringify({
       workItem: 'FND-04',
-      contractsVerified: 4,
-      lifecycleAssertionsVerified: 8,
-      negativeAssertionsVerified: 9,
+      contractsVerified: 5,
+      lifecycleAssertionsVerified: 13,
+      negativeAssertionsVerified: 18,
       status: 'passed',
     }),
   );
