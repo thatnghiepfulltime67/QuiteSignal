@@ -13,18 +13,19 @@ Required artifacts:
 - `.nvmrc`, root npm-workspace `package.json`, `package-lock.json`, and strict base TypeScript config.
 - Exact Node, npm, Hardhat, Solidity, Nox, wallet, and frontend versions.
 - A generated environment doctor that reports versions and missing public configuration.
-- A local Nox stack health check using the official integration plugin.
+- A Sepolia read preflight that verifies chain id, pinned Nox mapping, live bytecode,
+  RPC health, and the configured spend ledger without printing secrets.
 
 Pass criteria:
 
 - Clean install from the lockfile succeeds twice.
-- Compile and a Nox hello-world test pass on a clean process.
+- Compile and Sepolia read-only protocol checks pass from a clean process.
 - Tool versions and license metadata are captured without secrets.
 
 Kill conditions:
 
 - Required Nox modules cannot coexist on one supported npm workspace toolchain.
-- The official local stack cannot start deterministically after documented retries.
+- The pinned toolchain cannot compile or read the required Sepolia protocol facts deterministically.
 - A required dependency has an unacceptable license or unresolved critical advisory.
 
 ## G1 — Confidential computation and ACL
@@ -39,8 +40,7 @@ Required cases:
 
 Pass criteria:
 
-- Cases pass on the official local stack and minimally on Sepolia.
-- Local and live behavior agree on every load-bearing ACL decision.
+- Every case passes directly on Sepolia; offline models supply expected arithmetic only.
 - No plaintext shadow state is used to make a test pass.
 
 Kill conditions:
@@ -84,7 +84,7 @@ Required cases:
 
 Pass criteria:
 
-- P1–P7 and I1–I4, I7, I8, and I10 have named passing tests.
+- P1–P7 and I1–I4, I7, I8, and I10 have named Sepolia contract tests.
 - Every state has a tested funds location and recovery transition.
 
 Kill conditions:
@@ -117,14 +117,14 @@ Kill conditions:
 - Execution cannot enforce a hard spend bound or slippage bound.
 - Resolution cannot be normalized deterministically and audited.
 
-## G5 — Local protocol correctness
+## G5 — Sepolia protocol correctness
 
 Pass criteria:
 
 - Full success, below-k refund, pre-unwrap timeout, unwrap recovery, slippage revert,
   replay, invalid state, zero winning pool, payout rounding, and ACL paths pass.
 - I1–I10 have named tests; verifier code is independent of pool accounting helpers.
-- Fuzz/property bounds and static analysis meet the verification matrix.
+- Offline fuzz/property models and Sepolia boundary/adversarial cases meet the verification matrix.
 
 Kill conditions:
 
@@ -142,7 +142,7 @@ Pass criteria:
 
 Kill conditions:
 
-- Live behavior diverges from the local gate in custody or privacy semantics.
+- Canonical lifecycle behavior diverges from the G5 Sepolia test deployment in custody or privacy semantics.
 - The lifecycle requires manually editing chain state or substituting fixture data.
 
 ## G7 — Real application journey

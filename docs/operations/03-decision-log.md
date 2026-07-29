@@ -49,12 +49,14 @@ from public chain data and documented proof outputs.
 Plaintext may exist only in the browser and attested Nox boundary. Relayer and
 indexer schemas cannot represent confidential input fields.
 
-## ADR-008 — Official local Nox stack
+## ADR-008 — Sepolia-only contract validation
 
 **Status:** Accepted
 
-ACL and decryption evidence uses the official Nox Hardhat integration stack. Pure
-fakes are limited to domain tests.
+Every contract, Nox, ACL, confidential-asset, adapter, lifecycle, recovery, and
+browser acceptance test runs on Ethereum Sepolia. Offline execution is limited to
+pure reference models, schemas, static checks, and deterministic data validation.
+No local blockchain result is accepted as contract or privacy evidence.
 
 ## ADR-009 — Encrypted probability as canonical input
 

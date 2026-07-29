@@ -57,8 +57,8 @@ ops/scripts/doctor.mts
 ops/scripts/check-secrets.mts
 ```
 
-Acceptance: clean frozen install, doctor, format check, compile smoke, and local Nox
-health pass. Exact versions are outputs of G0, not guessed in advance.
+Acceptance: clean frozen install, doctor, format check, compile smoke, and Sepolia
+read/version preflight pass. Exact versions are outputs of G0, not guessed in advance.
 
 ## B01 — Feasibility outputs
 
@@ -66,7 +66,7 @@ health pass. Exact versions are outputs of G0, not guessed in advance.
 modules/protocol/contracts/feasibility/
 modules/protocol/test/feasibility/
 modules/protocol/scripts/feasibility/
-evidence/{local,sepolia}/G1-G4/
+evidence/{offline,sepolia}/G1-G4/
 docs/operations/nox-feedback.md
 ```
 

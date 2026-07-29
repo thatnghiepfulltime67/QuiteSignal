@@ -63,5 +63,5 @@ Evidence files use:
 <gate>-<work-item>-<requirement-or-invariant>-<environment>.json
 ```
 
-Example shape: `G5-P1-EXEC-03-I4-local.json`. Names describe evidence only; they
+Example shape: `G5-P1-EXEC-03-I4-offline.json`. Names describe evidence only; they
 must not contain wallet addresses, handles, proofs, or confidential values.

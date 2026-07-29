@@ -21,7 +21,7 @@ deployment, public claims, evidence, dependencies, and recovery procedures agree
 | REL-01 | Reproducible build freeze | Engines, lockfile, compiler/settings, generated bindings | clean `npm ci`, compile/build twice, artifact hashes | `build: freeze release toolchain and artifacts` |
 | REL-02 | Verified deployment | Canonical manifest, verified sources, runtime/ABI hashes | RPC re-read, constructor args, target provenance | `docs: publish verified sepolia manifest` |
 | REL-03 | Security/quality closure | Static, dependency, license, secret, fuzz, coverage reports | no unresolved stop-ship/high-critical issue | `test: close release security gates` |
-| REL-04 | Clean reproduction | Fresh-checkout run record and deterministic outputs | install, doctor, all local checks, Sepolia reads | `test: prove clean release reproduction` |
+| REL-04 | Clean reproduction | Fresh-checkout run record and deterministic outputs | install, doctor, offline checks, Sepolia reads and named live cases | `test: prove clean release reproduction` |
 | REL-05 | Recovery operations | Recovery, automation, indexer, RPC/gateway outage runbooks | live/read rehearsals and funds-location audit | `docs: add operational recovery runbooks` |
 | REL-06 | Documentation/claims sync | Setup, usage, deployment, security, verification, feedback | link/command check, P1–P7 claim audit | `docs: finalize release documentation` |
 | REL-07 | Risk and exception closure | Risk register, ADRs, accepted limitations | owner/date/evidence for every residual risk | `docs: close release risks and limitations` |
@@ -85,16 +85,18 @@ Reproduction sequence:
 clean checkout
 → npm ci
 → npm run doctor
-→ npm run check:all
+→ npm run check:offline
+→ npm run check:sepolia:read
 → npm run test:web
 → npm run scan:secrets
 → npm run verify:deployment
 → npm run verify:evidence
-→ npm run test:sepolia:read
+→ required named Sepolia write cases under the release budget
 ```
 
 Record exact duration, environment facts, commit, and sanitized output summaries.
-No ignored local artifact may be copied into the clean checkout.
+No ignored developer artifact may be copied into the clean checkout. The Sepolia
+write cases must deploy or target only the canonical test manifest and record receipts.
 
 ## REL-05 — Operations and recovery
 

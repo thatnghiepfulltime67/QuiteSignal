@@ -4,7 +4,7 @@ Status: `not_started`
 
 ## Objective
 
-Implement a locally complete protocol whose state, custody, ACL, recovery, payout,
+Implement a Sepolia-tested protocol whose state, custody, ACL, recovery, payout,
 and score behavior satisfies I1–I10 without plaintext shadow accounting.
 
 ## Prerequisites
@@ -78,10 +78,11 @@ No SDK, relayer, indexer, or web implementation begins in P1.
 - Every allowed and forbidden transition has a named test.
 - Every stable error has at least one direct assertion.
 - I1–I10 map to named test families in the traceability matrix.
-- PR fuzz floor: 1,000 cases/invariant; G5 floor: 10,000 cases/invariant.
+- Offline reference-model fuzz floor: 1,000 cases/invariant during development and
+  10,000 at G5; representative boundary/adversarial contract vectors run on Sepolia.
 - Independent verifier rejects at least one mutation for every observable invariant.
 - Static analysis has no unresolved high/critical issue.
-- Full official-local-stack paths pass:
+- Dedicated Sepolia test deployments pass:
   - success → settle → score → claim;
   - below-k → refund;
   - aggregate timeout → refund;
@@ -100,10 +101,10 @@ No SDK, relayer, indexer, or web implementation begins in P1.
 ## Exit checklist
 
 - [ ] PK-01 through PK-09 are independently committed.
-- [ ] `npm run check:all` passes from a clean local process.
+- [ ] `npm run check:offline` and all required named G5 Sepolia cases pass.
 - [ ] G5 is `passed` in the evidence ledger.
 - [ ] Protocol spec, events/API, risks, ADRs, manifest schema, and tests agree.
-- [ ] No production package imports feasibility spike code.
+- [ ] No production module imports feasibility spike code.
 - [ ] Worktree is clean and P2 prerequisites are documented.
 
 ## Stop conditions

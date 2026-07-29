@@ -3,7 +3,7 @@
 | ID | Risk | Likelihood | Impact | Mitigation / gate | Owner |
 |---|---|---:|---:|---|---|
 | R-01 | Nox package or address changes | Medium | High | Pin version; verify network mapping before every deploy | Protocol |
-| R-02 | Local stack and Sepolia ACL behavior diverge | Medium | Critical | Official Nox Hardhat stack plus Phase 0 live ACL matrix | Protocol |
+| R-02 | Sepolia Nox/SDK/contract versions or ACL semantics diverge | Medium | Critical | Pin versions and prove every load-bearing ACL path directly on Sepolia | Protocol |
 | R-03 | Public zero or malformed handle leaks side | Medium | Critical | Both sides externally encrypted; fixed shape; static rule | SDK |
 | R-04 | Tiny cohort permits inference | Medium | High | k-gate blocks aggregate reveal; honest UI wording | Product |
 | R-05 | Keeper stalls async lifecycle | Medium | High | Permissionless pokes, monitoring, timeout refund | Operations |

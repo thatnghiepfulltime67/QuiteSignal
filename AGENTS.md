@@ -62,9 +62,13 @@ application code until the Phase 0 feasibility gate is explicitly accepted.
 
 ## Verification rules
 
-- Use the official Nox local integration stack for ACL and decryption evidence.
-- Pure fakes are acceptable for domain tests but never as privacy evidence.
-- Require a real Ethereum Sepolia path for release readiness.
+- Run every contract, Nox, ACL, confidential-asset, adapter, lifecycle, recovery,
+  and browser acceptance test on Ethereum Sepolia. Do not use a local blockchain
+  or local Nox stack as contract evidence.
+- Offline tests are limited to pure domain/reference models, schemas, formatting,
+  typechecking, static analysis, and deterministic data validation.
+- Pure fakes may support offline domain tests but never contract/privacy evidence.
+- Enforce the committed Sepolia budget and spend-ledger rules before every write.
 - Test happy paths, invalid states, replay, timeout, recovery, rounding, ACL, and
   conservation properties.
 - Stop work and record a blocker if a stop-ship condition in the risk register is met.

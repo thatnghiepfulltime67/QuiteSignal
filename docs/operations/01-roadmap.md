@@ -21,10 +21,12 @@ safe alternative.
 
 - Implement pure epoch state machine and error taxonomy.
 - Implement pool, adapter interface, deterministic test adapter, and token boundary.
-- Add invariants I1–I10, property tests, fuzz tests, and the official Nox Hardhat integration stack.
+- Add invariants I1–I10 and offline reference-model/property tests; run all contract,
+  Nox, ACL, lifecycle, and recovery cases directly on Sepolia.
 - Build read-only verifier before the frontend.
 
-Exit: full local commit → aggregate → execute → settle → claim/refund cycle passes.
+Exit: a dedicated Sepolia test deployment completes commit → aggregate → execute →
+settle → claim/refund and recovery paths within the phase budget.
 
 ## Phase 2 — Real integration and SDK
 

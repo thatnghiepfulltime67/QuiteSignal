@@ -35,7 +35,7 @@ Each evidence artifact must include:
 
 ```text
 evidence/
-├── local/<gate>/<work-item>.json
+├── offline/<gate>/<work-item>.json
 ├── sepolia/<gate>/<work-item>.json
 └── reports/<gate>-summary.md
 ```

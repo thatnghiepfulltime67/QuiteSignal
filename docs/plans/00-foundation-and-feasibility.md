@@ -4,8 +4,8 @@ Status: `not_started`
 
 ## Objective
 
-Replace every load-bearing technical assumption with reproducible local and Sepolia
-evidence before production modules are created.
+Replace every load-bearing technical assumption with direct Sepolia evidence before
+production modules are created. Pure arithmetic/reference expectations are tested offline.
 
 ## Prerequisites
 
@@ -17,8 +17,8 @@ evidence before production modules are created.
 
 | ID | Outcome | Planned artifacts | Checks/evidence | Gate | Intended commit |
 |---|---|---|---|---|---|
-| FND-01 | Reproducible toolchain | Root workspace, lockfile, doctor, local Nox health | Frozen install ×2, compile smoke, license/advisory capture | G0 | `build: pin verified workspace toolchain` |
-| FND-02 | Encrypted signal math proven | Isolated arithmetic spike/tests | Clamp, allocation, abs, square, Brier, boundary vectors local + Sepolia | G1 | `test: prove encrypted signal arithmetic` |
+| FND-01 | Reproducible toolchain | Root workspace, lockfile, doctor, Sepolia read preflight | Frozen install ×2, compile smoke, RPC/network/version capture | G0 | `build: pin verified workspace toolchain` |
+| FND-02 | Encrypted signal math proven | Isolated arithmetic spike/tests | Offline reference vectors plus matching Sepolia contract cases | G1 | `test: prove encrypted signal arithmetic` |
 | FND-03 | ACL lifecycle proven | Isolated ACL spike/tests | Context binding, persistent handle, viewer-only, unauthorized, public scope | G1 | `test: prove handle binding and acl lifecycle` |
 | FND-04 | Asset lifecycle proven | Isolated confidential-asset spike/tests | Pull, payout, refund, unwrap, finalize, rewrap, replay | G2 | `test: prove confidential asset recovery` |
 | FND-05 | Aggregate/recovery proven | Isolated cohort/aggregate spike | Below-k, aggregate-only reveal, proof binding, timeout, rewrap | G3 | `test: prove aggregate disclosure and recovery` |
@@ -39,7 +39,7 @@ Acceptance:
 
 - Exact direct versions are pinned; transitive versions are frozen by lockfile.
 - `npm run doctor` prints versions and public health only, never secret values.
-- Clean frozen install succeeds twice and local Nox hello-world is deterministic.
+- Clean `npm ci` succeeds twice; compile is deterministic; Sepolia read preflight verifies chain and required live addresses.
 - `.gitignore` rejects environment files, wallet material, local evidence, and caches.
 
 Failure action: apply G0 kill conditions. Do not create application workspaces.
@@ -54,7 +54,7 @@ Required vectors:
 - Brier scores for both outcomes, including exact endpoints and rounding;
 - overflow/underflow behavior and division-by-zero guards.
 
-Acceptance: official local stack and minimal Sepolia cases match a pure bigint model.
+Acceptance: Sepolia contract results match the offline pure bigint reference model.
 
 ## FND-03 — ACL and persistence
 
@@ -109,7 +109,7 @@ that misses any minimum is rejected even if its aggregate score is highest.
 ## Required evidence
 
 ```text
-evidence/local/G0-G4/
+evidence/offline/G0-G4/
 evidence/sepolia/G1-G4/
 evidence/reports/G0-G4-summary.md
 docs/operations/nox-feedback.md
@@ -119,8 +119,8 @@ docs/operations/03-decision-log.md
 
 ## Exit checklist
 
-- [ ] G0 passed: frozen toolchain and official local Nox stack are reproducible.
-- [ ] G1 passed: arithmetic, context binding, ACL, and persistence agree locally/live.
+- [ ] G0 passed: frozen npm toolchain and Sepolia read preflight are reproducible.
+- [ ] G1 passed: arithmetic, context binding, ACL, and persistence pass directly on Sepolia.
 - [ ] G2 passed: confidential asset success and recovery conserve funds.
 - [ ] G3 passed: aggregate-only disclosure and proof/recovery semantics pass.
 - [ ] G4 passed: one unchanged public protocol and adapter boundary are selected.

@@ -39,7 +39,8 @@ IDX-01 ───────────────────┘
 ```
 
 AUT-01 and IDX-01 may start after ABI freeze but cannot be used as evidence for
-contract correctness. Deployment begins only after all local package checks pass.
+contract correctness. Deployment begins only after offline checks and required P1
+Sepolia suites pass.
 
 ## SDK contract
 
@@ -93,7 +94,7 @@ contract correctness. Deployment begins only after all local package checks pass
 
 ## Verification
 
-- Strict typecheck, unit, encoding-vector, ABI, reducer, relayer race, and local e2e tests.
+- Strict typecheck plus offline unit, encoding-vector, ABI, reducer, and relayer race tests.
 - Secret/plaintext structured-log scan across all package tests.
 - Clean Sepolia deployment from documented public configuration.
 - All LIVE cases pass without fixture substitution or chain-state editing.
@@ -110,5 +111,5 @@ contract correctness. Deployment begins only after all local package checks pass
 
 ## Stop conditions
 
-Stop for any local/live divergence in ACL or custody, any required plaintext service
-path, any unverifiable target bytecode, or any lifecycle that needs manual chain edits.
+Stop for any Sepolia ACL/custody failure, any required plaintext service path, any
+unverifiable target bytecode, or any lifecycle that needs manual chain edits.

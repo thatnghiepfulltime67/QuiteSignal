@@ -16,9 +16,8 @@ Last reviewed: 2026-07-30
 - [iExec documentation](https://docs.iex.ec/) describes Nox confidential computation.
 - [Nox npm organization](https://www.npmjs.com/org/iexec-nox?activeTab=packages)
   is the release source for the handle SDK, protocol contracts, confidential
-  contracts, and Hardhat plugin.
-- [Nox Hardhat plugin](https://www.npmjs.com/package/@iexec-nox/nox-hardhat-plugin)
-  provides the preferred local integration stack for ACL and decryption tests.
+  contracts, and supported development tooling. Package presence does not prove
+  Sepolia compatibility; P0 pins exact versions and verifies live behavior.
 
 ## Assumptions requiring P0 evidence
 

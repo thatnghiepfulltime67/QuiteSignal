@@ -65,6 +65,6 @@ exports; deep relative imports across workspaces are forbidden.
 
 ## Quality gates
 
-Pull requests must pass formatting, strict TypeScript, Solidity compile, unit and
-invariant tests, secret/license/dependency scans, frontend accessibility, official
-local Nox integration, and the gate-specific checks in the verification matrix.
+Pull requests must pass formatting, strict TypeScript, Solidity compile, offline
+reference-model tests, secret/license/dependency scans, and frontend accessibility.
+Contract/privacy gates pass only through the named Sepolia suites in the verification matrix.

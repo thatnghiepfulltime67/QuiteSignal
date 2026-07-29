@@ -35,7 +35,7 @@ P0 Foundation/feasibility
  └─ G3 aggregate proof + recovery
  └─ G4 public-protocol adapter
       ↓ explicit approval
-P1 Protocol kernel ── G5 local protocol correctness
+P1 Protocol kernel ── G5 Sepolia protocol correctness
       ↓
 P2 Integration/SDK ── G6 live Sepolia protocol evidence
       ↓
@@ -50,8 +50,8 @@ No downstream package may hide or compensate for a failed upstream gate.
 
 | ID | Work package | Status | Required gates | Exit gate |
 |---|---|---|---|---|
-| P0 | [Foundation and feasibility](docs/plans/00-foundation-and-feasibility.md) | `not_started` | G0–G4 | Load-bearing primitives proven on official local stack and Sepolia |
-| P1 | [Protocol kernel](docs/plans/01-protocol-kernel.md) | `not_started` | G0–G4 | G5: local lifecycle and I1–I10 pass |
+| P0 | [Foundation and feasibility](docs/plans/00-foundation-and-feasibility.md) | `not_started` | G0–G4 | Load-bearing primitives proven on Sepolia; pure models pass offline |
+| P1 | [Protocol kernel](docs/plans/01-protocol-kernel.md) | `not_started` | G0–G4 | G5: Sepolia contract lifecycle and I1–I10 pass |
 | P2 | [Integration and SDK](docs/plans/02-integration-and-sdk.md) | `not_started` | G5 | G6: repeatable multi-user Sepolia lifecycle |
 | P3 | [Web and read model](docs/plans/03-web-and-read-model.md) | `not_started` | G6 | G7: real primary flow without mock state |
 | P4 | [Sepolia hardening](docs/plans/04-sepolia-hardening.md) | `not_started` | G7 | G8: clean-environment release verification |
@@ -102,7 +102,8 @@ A work item is complete only when:
 - P1–P7 and I1–I10 have named tests and traceable evidence.
 - Target protocol addresses, runtime code hashes, ABI hashes, and deployment inputs
   are recorded and independently verifiable.
-- Official local Nox behavior agrees with live Sepolia for load-bearing ACL paths.
+- Every load-bearing Nox/ACL/asset behavior is proven directly on Sepolia.
+- Cumulative Sepolia writes remain within the committed 0.5 ETH ceiling and phase budgets.
 - The primary application path reads real chain state and has no mock branch.
 - No privileged backend, keeper, indexer, or relayer is required for correctness.
 
