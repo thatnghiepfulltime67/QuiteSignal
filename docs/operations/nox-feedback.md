@@ -116,3 +116,23 @@ Do not include keys, confidential plaintext, handles, proofs, or wallet signatur
 - Upstream reference: `ERC7984Base._transferAndCall`, which refunds when the
   receiver returns an encrypted false result, and `Nox.publicDecrypt` proof
   verification in the pinned package.
+
+### F-006 — Wrapper needs transient access to an encrypted callback result
+
+- Date: 2026-07-30
+- Package/network: `@iexec-nox/nox-confidential-contracts@0.2.2` and
+  `@iexec-nox/nox-protocol-contracts@0.2.4`, Ethereum Sepolia
+- Reproduction: Return a receiver-computed encrypted acceptance boolean from
+  `onConfidentialTransferReceived` without granting the wrapper access to it.
+- Expected: The wrapper can consume the callback result to choose transfer or refund.
+- Actual: Sepolia gas simulation reverted with Nox `NotAllowed` for the wrapper
+  address when it consumed the returned boolean after the callback.
+- Impact: A receiver cannot rely on an encrypted acceptance/refund branch unless it
+  grants the wrapper only the required one-transaction authority on that result.
+- Workaround: Immediately before returning the encrypted equality boolean, grant
+  `Nox.allowTransient` to `msg.sender` after verifying that `msg.sender` is the
+  configured wrapper. The permission expires with the callback transaction and does
+  not grant persistent compute authority.
+- Upstream reference: `ERC7984Base._transferAndCall` consumes the receiver result
+  after the callback; Nox ACL transient access semantics are implemented by the
+  pinned `ACL.allowTransient` module.

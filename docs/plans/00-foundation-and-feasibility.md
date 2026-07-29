@@ -337,7 +337,12 @@ whole post-callback balance without a registered encrypted intent can let an
 unrelated direct transfer contaminate the recorded stake. G2 remains running. The
 next hardened slice must prove encrypted intent/delta equality, wrapper refund on a
 mismatch, amount-free acceptance proof, and the existing lifecycle directly on
-Sepolia. The confirmed receipts are in the append-only Sepolia spend ledger.
+Sepolia. The first hardened run deployed three intent-bound spikes at blocks
+`11378064` through `11378067` and registered its first intent at block `11378069`,
+but its callback simulation exposed F-006: the wrapper needs transient access to
+the encrypted acceptance boolean it consumes for its atomic refund. The corrected
+receiver must grant that one-transaction ACL explicitly before returning the boolean.
+The confirmed receipts are in the append-only Sepolia spend ledger.
 
 ## FND-01 — Toolchain lock
 

@@ -95,4 +95,6 @@ This preserves the wrapper's real ACL behavior and has no backend or relayer tru
 role. The decision is valid only if FND-04 proves the flow, exact balance delta,
 recovery rewrap, and unauthorized cases on Ethereum Sepolia. F-005 further requires
 the delta to be bound to a caller-registered encrypted intent and confirmed only by
-an amount-free equality proof; the wrapper must refund a mismatch atomically.
+an amount-free equality proof; the wrapper must refund a mismatch atomically. F-006
+requires the receiver to grant the verified wrapper transient access to that result
+for the callback transaction only; no persistent wrapper compute authority is allowed.

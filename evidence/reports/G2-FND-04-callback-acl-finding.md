@@ -32,3 +32,11 @@ mismatch in the same transaction. Only an amount-free equality boolean may be
 public-decrypted to finalize acceptance. G2 remains incomplete until this hardened
 wrap, accepted pull, rejected mismatch, one-time return, unwrap proof, balance
 delta, delayed rewrap, and replay set all pass on Ethereum Sepolia.
+
+The first intent-bound run deployed three new spikes at blocks `11378064` through
+`11378067` and registered a caller-bound expected stake at block `11378069`. Its
+callback gas simulation then exposed F-006: the unchanged wrapper consumes the
+receiver's encrypted result after the callback, so the receiver must grant that
+verified wrapper transient access to the result before returning it. No callback
+transfer was sent. The next slice adds only this transaction-scoped ACL grant and
+repeats the complete intent-bound lifecycle on Sepolia.
