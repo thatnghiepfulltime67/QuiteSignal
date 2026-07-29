@@ -79,6 +79,7 @@ const artifactPath = resolve(
   'artifacts/contracts/feasibility/ArithmeticSpike.sol/ArithmeticSpike.json',
 );
 const spendLedgerPath = resolve(repositoryRoot, 'evidence/sepolia/spend-ledger.json');
+let failureStage = 'configuration validation';
 
 function fail(message: string): never {
   throw new Error(message);
@@ -233,6 +234,7 @@ async function main(): Promise<void> {
   const artifact = loadArtifact();
   const ledger = loadLedger();
 
+  failureStage = 'Ethereum Sepolia preflight';
   const chainId = await publicClient.getChainId();
   if (chainId !== EXPECTED_CHAIN_ID) {
     fail('The configured RPC is not Ethereum Sepolia.');
@@ -241,6 +243,7 @@ async function main(): Promise<void> {
     fail('The configured throwaway Sepolia wallet has no balance.');
   }
 
+  failureStage = 'deployment dry-run planning';
   const deploymentGas = await publicClient.estimateGas({
     account: account.address,
     data: artifact.bytecode,
@@ -265,6 +268,7 @@ async function main(): Promise<void> {
   }
 
   assertCleanSourceTree();
+  failureStage = 'isolated harness deployment';
   const deploymentHash = await walletClient.deployContract({
     account,
     abi: artifact.abi,
@@ -286,10 +290,12 @@ async function main(): Promise<void> {
   }
 
   const contractAddress = deploymentReceipt.contractAddress;
+  failureStage = 'Nox gateway encryption';
   const handleClient = await createViemHandleClient(walletClient);
   const encryptedVectors = await Promise.all(
     REQUIRED_VECTORS.map((vector) => encryptVector(handleClient, vector, contractAddress)),
   );
+  failureStage = 'encrypted batch dry-run planning';
   const batchData = encodeFunctionData({
     abi: artifact.abi,
     functionName: 'evaluateBatch',
@@ -312,6 +318,7 @@ async function main(): Promise<void> {
     }),
   );
 
+  failureStage = 'encrypted batch submission';
   const batchHash = await walletClient.sendTransaction({
     account,
     to: contractAddress,
@@ -332,6 +339,7 @@ async function main(): Promise<void> {
     fail('The encrypted arithmetic vector batch did not succeed.');
   }
 
+  failureStage = 'public boolean decryption';
   for (const vector of REQUIRED_VECTORS) {
     const handles = (await publicClient.readContract({
       address: contractAddress,
@@ -353,6 +361,7 @@ async function main(): Promise<void> {
     await assertPublicBoolean(handleClient, handle, false);
   }
 
+  failureStage = 'negative proof and context checks';
   const assertRejected = async (data: Hex, scenario: string): Promise<void> => {
     try {
       await publicClient.call({ account: account.address, to: contractAddress, data });
@@ -415,7 +424,7 @@ async function main(): Promise<void> {
 
 main().catch(() => {
   console.error(
-    'FND-02 failed: inspect the sanitized receipt, spend ledger, and Nox feedback report.',
+    `FND-02 failed during ${failureStage}: inspect the sanitized receipt, spend ledger, and Nox feedback report.`,
   );
   process.exitCode = 1;
 });

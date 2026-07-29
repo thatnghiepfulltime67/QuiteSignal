@@ -34,6 +34,7 @@
     "@iexec-nox/nox-confidential-contracts": "0.2.2",
     "@iexec-nox/nox-protocol-contracts": "0.2.4",
     "@types/node": "24.13.3",
+    "ethers": "6.17.0",
     "hardhat": "3.11.1",
     "prettier": "3.9.6",
     "prettier-plugin-solidity": "2.3.1",
