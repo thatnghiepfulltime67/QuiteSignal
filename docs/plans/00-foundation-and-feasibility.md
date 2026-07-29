@@ -342,7 +342,11 @@ Sepolia. The first hardened run deployed three intent-bound spikes at blocks
 but its callback simulation exposed F-006: the wrapper needs transient access to
 the encrypted acceptance boolean it consumes for its atomic refund. The corrected
 receiver must grant that one-transaction ACL explicitly before returning the boolean.
-The confirmed receipts are in the append-only Sepolia spend ledger.
+The next run passed the callback and acceptance proof at blocks `11378095` through
+`11378098`, then exposed F-007 during return simulation: the wrapper also needs
+one-transaction access to the encrypted held amount whenever it transfers or burns
+that amount. The corrected receiver must grant this scoped access immediately before
+each wrapper call. The confirmed receipts are in the append-only Sepolia spend ledger.
 
 ## FND-01 — Toolchain lock
 

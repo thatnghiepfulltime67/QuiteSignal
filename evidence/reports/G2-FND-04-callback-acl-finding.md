@@ -40,3 +40,9 @@ receiver's encrypted result after the callback, so the receiver must grant that
 verified wrapper transient access to the result before returning it. No callback
 transfer was sent. The next slice adds only this transaction-scoped ACL grant and
 repeats the complete intent-bound lifecycle on Sepolia.
+
+The next attempt passed the callback and acceptance proof, but its first return
+simulation exposed F-007: the wrapper also needs transient access to the
+receiver-held encrypted amount supplied to its transfer and unwrap operations. No
+return transaction was sent. The next slice grants that access only immediately
+before each unchanged wrapper operation and repeats the complete lifecycle.

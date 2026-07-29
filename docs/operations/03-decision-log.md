@@ -97,4 +97,6 @@ recovery rewrap, and unauthorized cases on Ethereum Sepolia. F-005 further requi
 the delta to be bound to a caller-registered encrypted intent and confirmed only by
 an amount-free equality proof; the wrapper must refund a mismatch atomically. F-006
 requires the receiver to grant the verified wrapper transient access to that result
-for the callback transaction only; no persistent wrapper compute authority is allowed.
+for the callback transaction only; F-007 applies the same transaction-scoped grant
+to a receiver-held amount immediately before wrapper transfer or unwrap. No persistent
+wrapper compute authority is allowed.

@@ -136,3 +136,22 @@ Do not include keys, confidential plaintext, handles, proofs, or wallet signatur
 - Upstream reference: `ERC7984Base._transferAndCall` consumes the receiver result
   after the callback; Nox ACL transient access semantics are implemented by the
   pinned `ACL.allowTransient` module.
+
+### F-007 — Wrapper needs transient access to a receiver-held encrypted amount
+
+- Date: 2026-07-30
+- Package/network: `@iexec-nox/nox-confidential-contracts@0.2.2` and
+  `@iexec-nox/nox-protocol-contracts@0.2.4`, Ethereum Sepolia
+- Reproduction: Have a receiver call wrapper `confidentialTransfer` or `unwrap`
+  with a receiver-derived encrypted amount while granting access only to itself.
+- Expected: The wrapper can consume the amount to update encrypted balances or burn
+  it for an unwrap request.
+- Actual: Sepolia gas simulation reverted with Nox `NotAllowed` for the wrapper
+  address at the receiver's one-time return path.
+- Impact: Receiver-held encrypted values cannot cross back into unchanged wrapper
+  operations without explicitly scoped wrapper access.
+- Workaround: Immediately before each wrapper transfer or unwrap that consumes a
+  receiver-held encrypted amount, grant `Nox.allowTransient` to the configured
+  wrapper. The grant applies only to that transaction and must not be persisted.
+- Upstream reference: The pinned wrapper's `confidentialTransfer` and `unwrap`
+  paths call Nox computation primitives with the supplied amount.
