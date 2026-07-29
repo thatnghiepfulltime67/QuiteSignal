@@ -14,7 +14,7 @@
 
 | ID | Requirement | Acceptance |
 |---|---|---|
-| FR-01 | Open epoch | Operator opens an epoch with deadline and `kMin` |
+| FR-01 | Create pool | Factory deploys one immutable market/epoch pool in `OPEN` with deadline and `kMin` |
 | FR-02 | Commit signal | User commits encrypted stake and probability; no plaintext |
 | FR-03 | Cohort gate | No aggregate public decryption below `kMin` |
 | FR-04 | Batch execution | Only aggregate plaintext is routed through the adapter |
@@ -26,11 +26,13 @@
 
 ## Non-functional requirements
 
-- Explicit, guarded, idempotent contract transitions.
-- Framework-independent TypeScript SDK with test vectors for every encoding.
-- Mobile-friendly, keyboard-navigable frontend with clear transaction states.
-- No plaintext in browser, relayer, CI, or analytics logs.
-- Every release includes a deployment manifest, ABI checksum, and reproducible-build metadata.
+| ID | Requirement |
+|---|---|
+| NFR-01 | Contract transitions are explicit, guarded, monotonic, and idempotent where retry is allowed |
+| NFR-02 | Framework-independent TypeScript SDK has branded types and test vectors for every encoding |
+| NFR-03 | Frontend is mobile-friendly, keyboard navigable, and exposes clear transaction/recovery states |
+| NFR-04 | No confidential plaintext enters application servers, relayer, indexer, CI, analytics, or committed logs |
+| NFR-05 | Every release includes a manifest, ABI/code hashes, reproducible metadata, and sanitized evidence |
 
 ## MVP verification metrics
 
