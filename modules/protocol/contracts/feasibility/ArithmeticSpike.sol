@@ -13,6 +13,7 @@ contract ArithmeticSpike {
 
   error DuplicateVector(uint256 vectorId);
   error EmptyBatch();
+  error UninitializedExternalHandle();
   error UnknownVector(uint256 vectorId);
 
   struct VectorInput {
@@ -79,6 +80,16 @@ contract ArithmeticSpike {
 
   function _evaluate(VectorInput calldata input) private {
     if (hasResult[input.vectorId]) revert DuplicateVector(input.vectorId);
+    if (
+      externalEuint256.unwrap(input.stake) == bytes32(0) ||
+      externalEuint256.unwrap(input.probabilityBps) == bytes32(0) ||
+      externalEuint256.unwrap(input.outcomeBps) == bytes32(0) ||
+      externalEuint256.unwrap(input.expectedYes) == bytes32(0) ||
+      externalEuint256.unwrap(input.expectedNo) == bytes32(0) ||
+      externalEuint256.unwrap(input.expectedScore) == bytes32(0)
+    ) {
+      revert UninitializedExternalHandle();
+    }
 
     euint256 stake = Nox.fromExternal(input.stake, input.stakeProof);
     euint256 probability = Nox.fromExternal(input.probabilityBps, input.probabilityProof);

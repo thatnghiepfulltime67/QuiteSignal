@@ -9,6 +9,7 @@ import {
   createWalletClient,
   encodeFunctionData,
   http,
+  parseEther,
   type Abi,
   type Address,
   type Hex,
@@ -153,6 +154,31 @@ function assertBudget(ledger: SpendLedger, estimatedGasCostWei: bigint): void {
   }
 }
 
+function configuredSingleTransactionCapWei(ledger: SpendLedger): bigint {
+  const configuredCap = process.env.SEPOLIA_MAX_SINGLE_TX_ETH;
+  if (!configuredCap) {
+    return BigInt(ledger.maxTotalSpendWei);
+  }
+  if (!/^\d+(?:\.\d{1,18})?$/.test(configuredCap)) {
+    fail('The configured single-transaction Sepolia gas cap is malformed.');
+  }
+
+  const cap = parseEther(configuredCap);
+  if (cap === 0n || cap > BigInt(ledger.maxTotalSpendWei)) {
+    fail('The configured single-transaction Sepolia gas cap is outside the allowed range.');
+  }
+  return cap;
+}
+
+function assertSingleTransactionBudget(
+  estimatedGasCostWei: bigint,
+  singleTransactionCapWei: bigint,
+): void {
+  if (estimatedGasCostWei > singleTransactionCapWei) {
+    fail('The proposed Sepolia write exceeds the single-transaction gas allowance.');
+  }
+}
+
 async function encryptField(
   handleClient: Awaited<ReturnType<typeof createViemHandleClient>>,
   value: bigint,
@@ -233,6 +259,7 @@ async function main(): Promise<void> {
   });
   const artifact = loadArtifact();
   const ledger = loadLedger();
+  const singleTransactionCapWei = configuredSingleTransactionCapWei(ledger);
 
   failureStage = 'Ethereum Sepolia preflight';
   const chainId = await publicClient.getChainId();
@@ -252,6 +279,7 @@ async function main(): Promise<void> {
   const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
   const deploymentMaximumGasCost = deploymentGas * maxFeePerGas;
   assertBudget(ledger, deploymentMaximumGasCost);
+  assertSingleTransactionBudget(deploymentMaximumGasCost, singleTransactionCapWei);
 
   console.log(
     JSON.stringify({
@@ -259,6 +287,7 @@ async function main(): Promise<void> {
       workItem: 'FND-02',
       firstAction: 'deploy isolated arithmetic feasibility harness',
       estimatedMaximumGasCostWei: deploymentMaximumGasCost.toString(),
+      singleTransactionCapWei: singleTransactionCapWei.toString(),
       remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
     }),
   );
@@ -273,6 +302,8 @@ async function main(): Promise<void> {
     account,
     abi: artifact.abi,
     bytecode: artifact.bytecode,
+    gas: deploymentGas,
+    maxFeePerGas,
   });
   const deploymentReceipt = await publicClient.waitForTransactionReceipt({ hash: deploymentHash });
   appendSpend(ledger, {
@@ -308,12 +339,14 @@ async function main(): Promise<void> {
   });
   const batchMaximumGasCost = batchGas * maxFeePerGas;
   assertBudget(ledger, batchMaximumGasCost);
+  assertSingleTransactionBudget(batchMaximumGasCost, singleTransactionCapWei);
   console.log(
     JSON.stringify({
       mode: 'confirmed-write',
       workItem: 'FND-02',
       secondAction: 'submit encrypted arithmetic vector batch',
       estimatedMaximumGasCostWei: batchMaximumGasCost.toString(),
+      singleTransactionCapWei: singleTransactionCapWei.toString(),
       remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
     }),
   );
@@ -323,6 +356,8 @@ async function main(): Promise<void> {
     account,
     to: contractAddress,
     data: batchData,
+    gas: batchGas,
+    maxFeePerGas,
   });
   const batchReceipt = await publicClient.waitForTransactionReceipt({ hash: batchHash });
   appendSpend(ledger, {
@@ -411,12 +446,26 @@ async function main(): Promise<void> {
     'Wrong encrypted input type',
   );
 
+  const uninitializedVector = {
+    ...encryptedVectors[0]!,
+    vectorId: 10_003n,
+    stake: `0x${'00'.repeat(32)}` as Hex,
+  };
+  await assertRejected(
+    encodeFunctionData({
+      abi: artifact.abi,
+      functionName: 'evaluateBatch',
+      args: [[uninitializedVector]],
+    } as never),
+    'Uninitialized encrypted input handle',
+  );
+
   console.log(
     JSON.stringify({
       workItem: 'FND-02',
       vectorsVerified: REQUIRED_VECTORS.length,
       publicAssertionsVerified: REQUIRED_VECTORS.length * 3 + 3,
-      negativeAssertionsVerified: 3,
+      negativeAssertionsVerified: 4,
       status: 'passed',
     }),
   );

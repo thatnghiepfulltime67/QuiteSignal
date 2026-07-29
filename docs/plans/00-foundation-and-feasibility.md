@@ -1,6 +1,6 @@
 # P0 — Foundation and feasibility
 
-Status: `blocked`
+Status: `in_progress`
 
 ## Objective
 
@@ -15,15 +15,15 @@ production modules are created. Pure arithmetic/reference expectations are teste
 
 ## Work-item register
 
-| ID | Outcome | Planned artifacts | Checks/evidence | Gate | Intended commit |
-|---|---|---|---|---|---|
-| FND-01 | Reproducible toolchain | Root workspace, lockfile, doctor, Sepolia read preflight | Frozen install ×2, compile smoke, RPC/network/version capture | G0 | `build: pin verified workspace toolchain` |
-| FND-02 | Encrypted signal math proven | Isolated arithmetic spike/tests | Offline reference vectors plus matching Sepolia contract cases | G1 | `test: prove encrypted signal arithmetic` |
-| FND-03 | ACL lifecycle proven | Isolated ACL spike/tests | Context binding, persistent handle, viewer-only, unauthorized, public scope | G1 | `test: prove handle binding and acl lifecycle` |
-| FND-04 | Asset lifecycle proven | Isolated confidential-asset spike/tests | Pull, payout, refund, unwrap, finalize, rewrap, replay | G2 | `test: prove confidential asset recovery` |
-| FND-05 | Aggregate/recovery proven | Isolated cohort/aggregate spike | Below-k, aggregate-only reveal, proof binding, timeout, rewrap | G3 | `test: prove aggregate disclosure and recovery` |
-| FND-06 | Public protocol selected | Decision matrix + minimal adapter spike | License, unchanged target, code hash, execution, slippage, redemption | G4 | `test: prove open protocol adapter boundary` |
-| FND-07 | Feasibility decision recorded | Evidence JSON/reports, feedback, risks, ADR updates | Evidence validator and full G0–G4 review | G0–G4 | `docs: record feasibility gates and decisions` |
+| ID     | Outcome                       | Planned artifacts                                        | Checks/evidence                                                             | Gate  | Intended commit                                 |
+| ------ | ----------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------- | ----- | ----------------------------------------------- |
+| FND-01 | Reproducible toolchain        | Root workspace, lockfile, doctor, Sepolia read preflight | Frozen install ×2, compile smoke, RPC/network/version capture               | G0    | `build: pin verified workspace toolchain`       |
+| FND-02 | Encrypted signal math proven  | Isolated arithmetic spike/tests                          | Offline reference vectors plus matching Sepolia contract cases              | G1    | `test: prove encrypted signal arithmetic`       |
+| FND-03 | ACL lifecycle proven          | Isolated ACL spike/tests                                 | Context binding, persistent handle, viewer-only, unauthorized, public scope | G1    | `test: prove handle binding and acl lifecycle`  |
+| FND-04 | Asset lifecycle proven        | Isolated confidential-asset spike/tests                  | Pull, payout, refund, unwrap, finalize, rewrap, replay                      | G2    | `test: prove confidential asset recovery`       |
+| FND-05 | Aggregate/recovery proven     | Isolated cohort/aggregate spike                          | Below-k, aggregate-only reveal, proof binding, timeout, rewrap              | G3    | `test: prove aggregate disclosure and recovery` |
+| FND-06 | Public protocol selected      | Decision matrix + minimal adapter spike                  | License, unchanged target, code hash, execution, slippage, redemption       | G4    | `test: prove open protocol adapter boundary`    |
+| FND-07 | Feasibility decision recorded | Evidence JSON/reports, feedback, risks, ADR updates      | Evidence validator and full G0–G4 review                                    | G0–G4 | `docs: record feasibility gates and decisions`  |
 
 Only one FND item may be in progress. Each item must be committed before the next
 item begins; feasibility spikes never share a commit with production contracts.
@@ -115,6 +115,7 @@ Files/modules allowed: `package.json`, `package-lock.json`,
 `evidence/offline/G1/`, `evidence/sepolia/G1/`,
 `evidence/sepolia/spend-ledger.json`, `evidence/reports/`,
 `docs/plans/00-foundation-and-feasibility.md`,
+`docs/setup-sepolia.md`,
 `docs/plans/evidence-ledger.md`, `docs/operations/nox-feedback.md`,
 `docs/operations/02-risk-register.md`, and
 `docs/operations/04-source-and-assumption-register.md`.
@@ -154,13 +155,10 @@ failed required primitive, proof binding, or runtime behavior is a G1 failure;
 FND-03 through FND-07 and P1 remain blocked until an ADR-approved redesign passes
 the complete G1 gate.
 
-Blocker: The required local Sepolia test key fails EVM encoding validation during
-the committed dry-run. Reproduce with
-`npm run test:nox:sepolia -- FND-02 --dry-run`; the result is recorded at
-`evidence/reports/G1-FND-02-preflight-blocker.md`. No chain write was attempted,
-the spend ledger remains at zero, and no custody exists. Resume only after a
-valid funded throwaway Sepolia key is configured directly in ignored `.env`; never
-provide that key in chat, source, logs, or evidence.
+Resumption: The local throwaway Sepolia key and dry-run preflight passed on
+2026-07-30 with no chain write. Before the confirmed run, the harness enforces the
+documented per-transaction cap and rejects uninitialized external handles. The
+spend ledger remains at zero and no custody exists.
 
 ## FND-01 — Toolchain lock
 
@@ -227,15 +225,15 @@ Acceptance:
 
 Selection scorecard:
 
-| Dimension | Weight | Minimum |
-|---|---:|---|
-| Unchanged open-source protocol and license clarity | 20 | Pass |
-| Sepolia deployability/availability | 15 | Pass |
-| Atomic spend/slippage bound | 20 | Pass |
-| Deterministic resolution/redemption | 15 | Pass |
-| No between-call adapter custody | 15 | Pass |
-| Verifiable runtime bytecode/provenance | 10 | Pass |
-| Demo/read-model clarity | 5 | ≥3/5 |
+| Dimension                                          | Weight | Minimum |
+| -------------------------------------------------- | -----: | ------- |
+| Unchanged open-source protocol and license clarity |     20 | Pass    |
+| Sepolia deployability/availability                 |     15 | Pass    |
+| Atomic spend/slippage bound                        |     20 | Pass    |
+| Deterministic resolution/redemption                |     15 | Pass    |
+| No between-call adapter custody                    |     15 | Pass    |
+| Verifiable runtime bytecode/provenance             |     10 | Pass    |
+| Demo/read-model clarity                            |      5 | ≥3/5    |
 
 Document all candidates evaluated, but implement only the selected adapter. A target
 that misses any minimum is rejected even if its aggregate score is highest.

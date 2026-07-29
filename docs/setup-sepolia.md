@@ -13,6 +13,8 @@ to `.env`:
 SEPOLIA_RPC_URL=<your Sepolia RPC URL>
 SEPOLIA_PRIVATE_KEY=<0x-prefixed test-only private key>
 CONFIRM_SEPOLIA_WRITE=yes
+# Optional: defaults to the 0.5 ETH total allowance and may set a lower per-write cap.
+SEPOLIA_MAX_SINGLE_TX_ETH=0.05
 ```
 
 Use a dedicated Sepolia-only key. Never reuse a mainnet, production, exchange,
@@ -49,15 +51,15 @@ are defined in [`plans/sepolia-spend-ledger.md`](plans/sepolia-spend-ledger.md).
 
 ## Planning forecast
 
-| Phase | Forecast ETH | Purpose |
-|---|---:|---|
-| P0 / G1–G4 | 0.08 | Feasibility arithmetic, ACL, asset, proof/recovery, adapter spikes |
-| P1 / G5 | 0.14 | Protocol deployments, invariants, adversarial and recovery cases |
-| P2 / G6 | 0.12 | Canonical deployment and multi-wallet live lifecycle |
-| P3 / G7 | 0.05 | Real browser success and refund/recovery journeys |
-| P4 / G8 | 0.06 | Clean reproduction, verification, final read/write regressions |
-| Unallocated | 0.05 | Retries, redeployment, or any phase that needs it |
-| **Initial allowance** | **0.50** | Stop and report before exceeding it |
+| Phase                 | Forecast ETH | Purpose                                                            |
+| --------------------- | -----------: | ------------------------------------------------------------------ |
+| P0 / G1–G4            |         0.08 | Feasibility arithmetic, ACL, asset, proof/recovery, adapter spikes |
+| P1 / G5               |         0.14 | Protocol deployments, invariants, adversarial and recovery cases   |
+| P2 / G6               |         0.12 | Canonical deployment and multi-wallet live lifecycle               |
+| P3 / G7               |         0.05 | Real browser success and refund/recovery journeys                  |
+| P4 / G8               |         0.06 | Clean reproduction, verification, final read/write regressions     |
+| Unallocated           |         0.05 | Retries, redeployment, or any phase that needs it                  |
+| **Initial allowance** |     **0.50** | Stop and report before exceeding it                                |
 
 These are visibility estimates, not phase limits. The full allowance is available to
 any required Sepolia test. When it is nearly exhausted, stop and report to the user.
