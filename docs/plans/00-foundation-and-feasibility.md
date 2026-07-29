@@ -164,7 +164,7 @@ is recorded at `evidence/offline/G1/FND-02.json`,
 harness has no asset custody. G1 remained running until FND-03 proved ACL and
 persistence behavior; the combined gate is now passed.
 
-## Active work item
+## FND-03 work item record
 
 ID: `FND-03`
 
@@ -245,6 +245,77 @@ negative assertions. Sanitized evidence is recorded at
 `evidence/offline/G1/FND-03.json`, `evidence/sepolia/G1/FND-03.json`, and
 `evidence/reports/G1-summary.md`. The isolated harness has no asset custody. G1 is
 passed; FND-04 is the next eligible work item.
+
+## Active work item
+
+ID: `FND-04`
+
+Outcome: Prove the real Nox `ERC20ToERC7984Wrapper` confidential-asset lifecycle
+on Ethereum Sepolia, including encrypted pull, owner-only return, proof-gated
+unwrap finalization, and delayed rewrap recovery before any production collateral
+path exists.
+
+Status: `in_progress`
+
+Prerequisite gates: G0 and G1 passed. The feasibility harness must use the pinned
+`@iexec-nox/nox-confidential-contracts@0.2.2` wrapper implementation unchanged.
+An isolated mintable ERC-20 fixture may supply valueless test collateral only; it
+cannot replace wrapper, Nox, proof, ACL, or Sepolia evidence requirements.
+
+Files/modules allowed: `modules/protocol/contracts/feasibility/`,
+`modules/protocol/scripts/feasibility/`, `modules/protocol/test/feasibility/`,
+`ops/scripts/`, `package.json`, `package-lock.json`, `evidence/offline/G2/`,
+`evidence/sepolia/G2/`, `evidence/sepolia/spend-ledger.json`,
+`evidence/reports/`, `docs/plans/00-foundation-and-feasibility.md`,
+`docs/plans/evidence-ledger.md`, `docs/operations/nox-feedback.md`,
+`docs/operations/02-risk-register.md`, and
+`docs/operations/04-source-and-assumption-register.md`.
+
+Acceptance criteria: A bytecode-matched Sepolia spike deploys an isolated public
+ERC-20 fixture, an unchanged inherited Nox ERC20-to-ERC7984 wrapper, and a
+receiver/recovery spike. The owner wraps fixture collateral, sends an encrypted
+amount through the real wrapper callback, and only the recorded owner can receive
+the returned confidential amount once. The spike burns the confidential amount into
+a public-decryptable unwrap request; a gateway proof finalizes the release and the
+observed public ERC-20 balance delta equals the released amount. A delayed recovery
+path rewraps the released balance into confidential custody before a one-time owner
+refund.
+
+Negative cases: Missing callback ACL, unauthorized caller, wrong token callback,
+wrong recipient, repeated return/refund, stale or duplicate unwrap finalization,
+early recovery, malformed or unavailable unwrap proof, and an unwrap whose observed
+underlying balance delta differs from the requested public amount must fail directly
+on Sepolia. The test must prove that public decryption is limited to the
+protocol-required unwrap request and never exposes the owner-shaped stake handle.
+
+Privacy/custody impact: Test values, raw handles, proofs, calldata, signatures,
+and environment material remain process-local and are never logged or committed.
+The fixture ERC-20 has no external value. The wrapper and all confidential transfer,
+burn, public-decryption proof, finalization, and rewrap behavior are live Sepolia
+operations; no local chain or fake confidential-token substitute is evidence.
+
+Funds location/recovery impact: The only real expenditure is bounded Sepolia gas.
+Fixture collateral moves among the owner, wrapper, and isolated spike. During an
+unwrap request the underlying remains in the wrapper; after valid finalization it is
+at the recovery spike until rewrapped; after return/refund it is in the owner's
+confidential wrapper balance. Every confirmed receipt is appended to the spend
+ledger. If wrapper semantics, proof finalization, or recovery cannot be proven,
+record the sanitized evidence and stop G2-dependent work.
+
+Commands/checks: `npm run compile`, `npm run test:nox:sepolia -- FND-04 --dry-run`,
+`npm run test:nox:sepolia -- FND-04`, `npm run budget:status`,
+`npm run check:offline`, `npm run check:sepolia:read`, `npm run scan:secrets`, and
+`git diff --check`.
+
+Evidence path: `evidence/offline/G2/FND-04.json`,
+`evidence/sepolia/G2/FND-04.json`, and `evidence/reports/G2-summary.md`.
+
+Intended commit: `test: prove confidential asset recovery`.
+
+Rollback/failure action: Revert only isolated FND-04 source commits. The fixture
+token and wrapper have no real asset custody; no recovery beyond the recorded
+fixture-balance location is required. Any failed proof-finalization, ACL, balance
+delta, or rewrap condition fails G2 and blocks FND-05 through FND-07 and P1.
 
 ## FND-01 — Toolchain lock
 
