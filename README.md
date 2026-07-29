@@ -7,6 +7,7 @@ size, and personal score remain decryptable only by the wallet owner.
 
 This is a greenfield build. Execution starts at [`Plan.md`](Plan.md); product,
 architecture, engineering, operations, and work-package documents live under `docs/`.
+The visual and interaction system is defined in [`DESIGN.md`](DESIGN.md).
 
 ## Status
 

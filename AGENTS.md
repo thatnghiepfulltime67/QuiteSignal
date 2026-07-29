@@ -11,6 +11,8 @@ explicitly narrows them.
   from, or preserve naming from any external legacy or benchmark project.
 - Use [`Plan.md`](Plan.md) as the execution source of truth. Product, architecture,
   engineering, operations, and work-package documents live under `docs/`.
+- Use [`DESIGN.md`](DESIGN.md) as the source of truth for visual semantics,
+  responsive behavior, accessibility, and motion in user-facing interfaces.
 
 ## Planning workflow
 
