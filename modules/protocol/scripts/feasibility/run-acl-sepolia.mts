@@ -353,6 +353,12 @@ async function assertRejected(action: () => Promise<unknown>, scenario: string):
   fail(`${scenario} did not fail on Sepolia.`);
 }
 
+function withDifferentChainId(handle: Hex): Hex {
+  const differentChainId = EXPECTED_CHAIN_ID - 1;
+  const encodedChainId = differentChainId.toString(16).padStart(8, '0');
+  return `0x${handle.slice(2, 4)}${encodedChainId}${handle.slice(12)}` as Hex;
+}
+
 async function main(): Promise<void> {
   loadEnvironment();
 
@@ -831,6 +837,19 @@ async function main(): Promise<void> {
       }),
     'Cross-spike encrypted input context',
   );
+  const wrongChainInput: EncryptedValue = {
+    ...ownerInput,
+    handle: withDifferentChainId(ownerInput.handle),
+  };
+  await assertRejected(
+    () =>
+      publicClient.call({
+        account: deployer.address,
+        to: negativeAddress,
+        data: materialize(wrongChainInput, actors.owner),
+      }),
+    'Cross-chain encrypted input context',
+  );
   const wrongTypeInput = (await ownerHandleClient.encryptInput(
     2n,
     'uint16',
@@ -864,7 +883,7 @@ async function main(): Promise<void> {
       contractsVerified: 3,
       authorityAssertionsVerified: 18,
       decryptionScopeAssertionsVerified: 5,
-      negativeAssertionsVerified: 10,
+      negativeAssertionsVerified: 11,
       status: 'passed',
     }),
   );
