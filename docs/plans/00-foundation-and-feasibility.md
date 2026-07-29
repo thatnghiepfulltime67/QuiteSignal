@@ -375,8 +375,9 @@ Prerequisites: G1 and G2 are passed. The harness must use a fresh Sepolia fixtur
 collateral deployment and a bytecode-matched, unchanged inherited Nox
 `ERC20ToERC7984Wrapper`; it must not reuse the documented pre-fix FND-04 residue.
 The second cohort member is a newly generated local test account that receives only
-the bounded Sepolia gas needed to sign and submit its own inputs. Its key is
-process-local and is neither printed, committed, nor included in evidence.
+the bounded Sepolia gas needed to sign and submit its own inputs. Its key is stored
+only in an owner-readable, Git-ignored local recovery record until terminal refunds
+are verified, then deleted; it is never printed, committed, or included in evidence.
 
 Output files: `modules/protocol/contracts/feasibility/AggregateRecoverySpike.sol`,
 `modules/protocol/scripts/feasibility/run-aggregate-recovery-sepolia.mts`,
@@ -436,6 +437,29 @@ Evidence path: `evidence/offline/G3/FND-05.json`,
 `evidence/sepolia/G3/FND-05.json`, and `evidence/reports/G3-summary.md`.
 
 Intended commit: `test: prove aggregate disclosure and recovery`.
+
+Checkpoint: The first FND-05 Sepolia attempt from source commit `e4ad2bf` deployed a
+fresh fixture at `0x63d3dd9dfce5c3e8daec5dbc4420df9d1e39e50e`, an unchanged wrapper
+at `0x86af5b01f0165afda75f4d93c5974c8bd7f275c5`, and isolated below-k, timeout, and
+recovery spikes at `0x3b72756b9325f3eadd045f6d729ee1227575da38`,
+`0x4fdeb45b1e6ff87cd60c71967ced0e78b32d7414`, and
+`0xf9721a2615b099f7aaafd65770f0e48338565c11`. The below-k branch reached refund
+and returned its fixture collateral. The timeout spike reached
+`AGGREGATE_PENDING` with the expected two accepted fixture commitments and only its
+YES/NO aggregate handles public. The original 45-second timeout expired between the
+aggregate request and the intended negative call because Sepolia block cadence made
+the requested early-timeout check non-deterministic. The runner stopped before a
+timeout cancellation or refund write; G3 remains running, not passed.
+
+The timeout spike holds only deterministic, valueless fixture collateral. The
+deployer-owned portion remains refund-recoverable after permissionless cancellation;
+the independent test actor used a process-local key that was discarded when the
+failed process exited, so its owner-authorized fixture refund is unavailable. This
+is not product custody and none of these contracts may be reused. The location,
+exclusion, and runner correction are recorded in
+`evidence/reports/G3-FND-05-timeout-retry-finding.md`. The retry must use a longer
+timeout and a local ignored recovery record for its generated test actor, deleting
+that record only after terminal refunds have been independently verified.
 
 ## FND-01 — Toolchain lock
 

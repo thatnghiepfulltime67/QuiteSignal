@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
@@ -34,7 +34,7 @@ const FIXTURE_MINT = EXPECTED_AGGREGATE_TOTAL * 3n;
 const SECONDARY_ACTOR_FUNDING = parseEther('0.01');
 const K_MIN = 2n;
 const OPEN_DURATION_SECONDS = 120n;
-const AGGREGATE_TIMEOUT_SECONDS = 45n;
+const AGGREGATE_TIMEOUT_SECONDS = 120n;
 const RECOVERY_DELAY_SECONDS = 45n;
 const PENDING_COMMIT_TIMEOUT_SECONDS = 45n;
 const PUBLIC_DECRYPT_MAX_ATTEMPTS = 8;
@@ -80,6 +80,11 @@ interface ContractSet {
   recoverySpike: Address;
 }
 
+interface StoredSecondaryActor {
+  schemaVersion: 1;
+  privateKey: Hex;
+}
+
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const protocolRoot = resolve(scriptDirectory, '../..');
 const repositoryRoot = resolve(protocolRoot, '../..');
@@ -97,6 +102,7 @@ const spikeArtifactPath = resolve(
   'AggregateRecoverySpike.sol/AggregateRecoverySpike.json',
 );
 const spendLedgerPath = resolve(repositoryRoot, 'evidence/sepolia/spend-ledger.json');
+const secondaryActorPath = resolve(repositoryRoot, 'evidence/local/fnd-05-secondary-actor.json');
 let failureStage = 'configuration validation';
 
 function fail(message: string): never {
@@ -222,6 +228,34 @@ function contractSet(): ContractSet | undefined {
   };
 }
 
+function loadOrCreateSecondaryPrivateKey(): Hex {
+  if (existsSync(secondaryActorPath)) {
+    const stored = JSON.parse(
+      readFileSync(secondaryActorPath, 'utf8'),
+    ) as Partial<StoredSecondaryActor>;
+    if (
+      stored.schemaVersion !== 1 ||
+      typeof stored.privateKey !== 'string' ||
+      !/^0x[0-9a-fA-F]{64}$/.test(stored.privateKey)
+    ) {
+      fail('The local FND-05 secondary-actor recovery record is malformed.');
+    }
+    chmodSync(secondaryActorPath, 0o600);
+    return stored.privateKey as Hex;
+  }
+  mkdirSync(dirname(secondaryActorPath), { recursive: true, mode: 0o700 });
+  const privateKey = generatePrivateKey();
+  writeFileSync(secondaryActorPath, `${JSON.stringify({ schemaVersion: 1, privateKey })}\n`, {
+    mode: 0o600,
+  });
+  chmodSync(secondaryActorPath, 0o600);
+  return privateKey;
+}
+
+function clearSecondaryPrivateKey(): void {
+  if (existsSync(secondaryActorPath)) unlinkSync(secondaryActorPath);
+}
+
 async function assertRejected(action: () => Promise<unknown>, scenario: string): Promise<void> {
   try {
     await action();
@@ -319,20 +353,13 @@ async function main(): Promise<void> {
   }
 
   const deployer = privateKeyToAccount(privateKey as Hex);
-  const secondary = privateKeyToAccount(generatePrivateKey());
   const publicClient = createPublicClient({ chain: sepolia, transport: http(rpcUrl) });
   const deployerWallet = createWalletClient({
     account: deployer,
     chain: sepolia,
     transport: http(rpcUrl),
   });
-  const secondaryWallet = createWalletClient({
-    account: secondary,
-    chain: sepolia,
-    transport: http(rpcUrl),
-  });
   const deployerHandleClient = await createViemHandleClient(deployerWallet);
-  const secondaryHandleClient = await createViemHandleClient(secondaryWallet);
   const fixtureArtifact = loadArtifact(fixtureArtifactPath, 'ERC-20 fixture');
   const wrapperArtifact = loadArtifact(wrapperArtifactPath, 'confidential wrapper');
   const spikeArtifact = loadArtifact(spikeArtifactPath, 'aggregate recovery spike');
@@ -547,6 +574,14 @@ async function main(): Promise<void> {
     console.log(JSON.stringify({ workItem: 'FND-05', contractsVerified: 5, status: 'passed' }));
     return;
   }
+
+  const secondary = privateKeyToAccount(loadOrCreateSecondaryPrivateKey());
+  const secondaryWallet = createWalletClient({
+    account: secondary,
+    chain: sepolia,
+    transport: http(rpcUrl),
+  });
+  const secondaryHandleClient = await createViemHandleClient(secondaryWallet);
 
   const send = async (
     account: typeof deployer,
@@ -1083,6 +1118,7 @@ async function main(): Promise<void> {
     initialSecondaryBalance,
     'refund recovered independent member',
   );
+  clearSecondaryPrivateKey();
 
   console.log(
     JSON.stringify({
