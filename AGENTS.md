@@ -9,18 +9,21 @@ explicitly narrows them.
   user-facing copy in English.
 - Treat this repository as a greenfield product. Do not mention, link to, import
   from, or preserve naming from any external legacy or benchmark project.
-- Use [`INDEX.md`](INDEX.md) as the documentation entry point and [`Plan.md`](Plan.md)
-  as the execution source of truth.
+- Use [`Plan.md`](Plan.md) as the execution source of truth. Product, architecture,
+  engineering, operations, and work-package documents live under `docs/`.
 
 ## Planning workflow
 
 1. Select the smallest incomplete work package in `docs/plans/`.
-2. Mark only one package or task as in progress.
+2. Give the slice a stable work-item ID and mark only one package or task in progress.
 3. Confirm its prerequisites, acceptance criteria, tests, and privacy impact.
 4. Implement one independently reviewable slice.
 5. Run the narrowest relevant checks, then the broader gate required by the plan.
 6. Update documentation and plan status in the same slice when behavior changed.
 7. Commit the slice before starting an unrelated change.
+
+Every active work item must name its output files, checks, evidence location, privacy
+impact, rollback/recovery behavior, and intended commit message before implementation.
 
 Do not implement stretch scope while an MVP gate is incomplete. Do not start
 application code until the Phase 0 feasibility gate is explicitly accepted.
