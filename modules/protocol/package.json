@@ -7,7 +7,7 @@
   "scripts": {
     "compile": "hardhat build",
     "test:model": "tsx --test test/feasibility/reference-model.test.ts",
-    "test:nox:sepolia": "tsx scripts/feasibility/run-arithmetic-sepolia.mts"
+    "test:nox:sepolia": "tsx scripts/feasibility/run-nox-sepolia.mts"
   },
   "devDependencies": {
     "@iexec-nox/handle": "0.1.0-beta.13",

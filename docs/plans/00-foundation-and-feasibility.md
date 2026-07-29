@@ -174,9 +174,10 @@ on Ethereum Sepolia before any confidential asset or pool lifecycle exists.
 Status: `in_progress`
 
 Prerequisite gates: G0 passed and FND-02 arithmetic evidence is recorded. G1
-remains running. The configured actor mnemonic is test-only and remains only in
-ignored `.env`; its derived private material must never enter output, source,
-evidence, or Git.
+remains running. A configured actor mnemonic is test-only and remains only in
+ignored `.env`; when it is absent, the runner creates test-only actor keys under
+ignored `.secrets/`. In either mode, private material must never enter output,
+source, evidence, or Git.
 
 Files/modules allowed: `modules/protocol/contracts/feasibility/`,
 `modules/protocol/scripts/feasibility/`, `modules/protocol/test/feasibility/`,
