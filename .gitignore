@@ -16,7 +16,7 @@ cache/
 .next/
 out/
 
-# Local Nox/Hardhat/runtime state
+# Tool and generated runtime state
 .openzeppelin/
 typechain-types/
 

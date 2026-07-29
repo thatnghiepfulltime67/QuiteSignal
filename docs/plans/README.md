@@ -80,6 +80,8 @@ checks, or commit cannot be reviewed as one concern.
 - Required commands and suites are in [`verification-matrix.md`](verification-matrix.md).
 - Requirements/invariants are mapped in [`traceability-matrix.md`](traceability-matrix.md).
 - Evidence is recorded in [`evidence-ledger.md`](evidence-ledger.md).
+- Every Sepolia write follows the budget and reconciliation contract in
+  [`sepolia-spend-ledger.md`](sepolia-spend-ledger.md).
 - File outputs and dependency order are in
   [`deliverables-and-build-order.md`](deliverables-and-build-order.md).
 

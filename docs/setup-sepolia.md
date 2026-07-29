@@ -39,26 +39,28 @@ hard ceiling, not a target. Write tooling must:
 - assert chain id `11155111`;
 - require `CONFIRM_SEPOLIA_WRITE=yes`;
 - produce a read-only dry-run plan first;
-- estimate gas/cost and show remaining phase/total budget;
+- estimate gas/cost and show the remaining total allowance;
 - refuse a single transaction above `SEPOLIA_MAX_SINGLE_TX_ETH`;
-- preserve `SEPOLIA_MIN_RESERVE_ETH`;
 - record actual gas spend in the sanitized spend ledger;
 - refuse writes when ledger plus estimate would exceed the total cap.
 
-## Planned allocation
+The normative accounting formula, schema, reconciliation rules, and required commands
+are defined in [`plans/sepolia-spend-ledger.md`](plans/sepolia-spend-ledger.md).
 
-| Phase | Maximum ETH | Purpose |
+## Planning forecast
+
+| Phase | Forecast ETH | Purpose |
 |---|---:|---|
 | P0 / G1–G4 | 0.08 | Feasibility arithmetic, ACL, asset, proof/recovery, adapter spikes |
 | P1 / G5 | 0.14 | Protocol deployments, invariants, adversarial and recovery cases |
 | P2 / G6 | 0.12 | Canonical deployment and multi-wallet live lifecycle |
 | P3 / G7 | 0.05 | Real browser success and refund/recovery journeys |
 | P4 / G8 | 0.06 | Clean reproduction, verification, final read/write regressions |
-| Contingency | 0.05 | Explicitly approved retries or redeployment |
-| **Total ceiling** | **0.50** | Never exceed |
+| Unallocated | 0.05 | Retries, redeployment, or any phase that needs it |
+| **Initial allowance** | **0.50** | Stop and report before exceeding it |
 
-Unused phase budget rolls into contingency only; it does not automatically expand a
-later phase. Any reallocation updates the plan and is committed before the spend.
+These are visibility estimates, not phase limits. The full allowance is available to
+any required Sepolia test. When it is nearly exhausted, stop and report to the user.
 
 ## Preflight checks
 

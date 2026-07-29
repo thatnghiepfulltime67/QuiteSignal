@@ -44,6 +44,10 @@ Machine-readable JSON uses a versioned schema from `modules/config`. Reports may
 summarize JSON but cannot replace it. Transaction receipts are referenced by hash,
 not copied with raw confidential call data.
 
+Sepolia write evidence references the append-only budget records defined in
+[`sepolia-spend-ledger.md`](sepolia-spend-ledger.md). Gate evidence and spend evidence
+are separate artifacts and both are required after a write.
+
 ## Review rule
 
 The implementer records evidence; a separate verifier command validates schema,

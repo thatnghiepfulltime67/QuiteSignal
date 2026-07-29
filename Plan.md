@@ -66,6 +66,8 @@ P0 requires explicit acceptance before product implementation starts.
 - [Verification command matrix](docs/plans/verification-matrix.md)
 - [Requirement traceability](docs/plans/traceability-matrix.md)
 - [Evidence ledger](docs/plans/evidence-ledger.md)
+- [Sepolia spend ledger contract](docs/plans/sepolia-spend-ledger.md)
+- [Sepolia environment and wallet safety](docs/setup-sepolia.md)
 - [Work-package rules](docs/plans/README.md)
 
 ## 6. Definition of Ready for a work item
@@ -103,7 +105,7 @@ A work item is complete only when:
 - Target protocol addresses, runtime code hashes, ABI hashes, and deployment inputs
   are recorded and independently verifiable.
 - Every load-bearing Nox/ACL/asset behavior is proven directly on Sepolia.
-- Cumulative Sepolia writes remain within the committed 0.5 ETH ceiling and phase budgets.
+- Cumulative Sepolia gas remains within the current user-authorized 0.5 ETH allowance.
 - The primary application path reads real chain state and has no mock branch.
 - No privileged backend, keeper, indexer, or relayer is required for correctness.
 
