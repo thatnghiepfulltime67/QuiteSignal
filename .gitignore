@@ -1,0 +1,34 @@
+# Local secrets and wallet material
+.env
+.env.*
+!.env.example
+.secrets/
+*.pem
+*.key
+
+# Dependencies and build outputs
+node_modules/
+dist/
+build/
+coverage/
+artifacts/
+cache/
+.next/
+out/
+
+# Local Nox/Hardhat/runtime state
+.openzeppelin/
+typechain-types/
+
+# Private or unsanitized evidence
+evidence/private/
+evidence/raw/
+test-results/
+playwright-report/
+*.trace.zip
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
