@@ -39,6 +39,16 @@ const NOX_COMPUTE_ABI = [
     ],
     outputs: [{ name: 'result', type: 'bytes32' }],
   },
+  {
+    type: 'function',
+    name: 'isAllowed',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'handle', type: 'bytes32' },
+      { name: 'account', type: 'address' },
+    ],
+    outputs: [{ name: 'allowed', type: 'bool' }],
+  },
 ] as const satisfies Abi;
 
 interface Artifact {
@@ -94,6 +104,10 @@ const artifactPath = resolve(
   protocolRoot,
   'artifacts/contracts/feasibility/AclSpike.sol/AclSpike.json',
 );
+const transientRecipientArtifactPath = resolve(
+  protocolRoot,
+  'artifacts/contracts/feasibility/TransientAccessRecipient.sol/TransientAccessRecipient.json',
+);
 const spendLedgerPath = resolve(repositoryRoot, 'evidence/sepolia/spend-ledger.json');
 const actorSecretPath = resolve(repositoryRoot, '.secrets/fnd-03-actors.json');
 let failureStage = 'configuration validation';
@@ -109,14 +123,14 @@ function loadEnvironment(): void {
   }
 }
 
-function loadArtifact(): Artifact {
-  const artifact = JSON.parse(readFileSync(artifactPath, 'utf8')) as Partial<Artifact>;
+function loadArtifact(path: string, description: string): Artifact {
+  const artifact = JSON.parse(readFileSync(path, 'utf8')) as Partial<Artifact>;
   if (
     !Array.isArray(artifact.abi) ||
     typeof artifact.bytecode !== 'string' ||
     typeof artifact.deployedBytecode !== 'string'
   ) {
-    fail('The compiled ACL spike artifact is unavailable or malformed.');
+    fail(`The compiled ${description} artifact is unavailable or malformed.`);
   }
   return artifact as Artifact;
 }
@@ -199,23 +213,26 @@ function assertSingleTransactionBudget(
   }
 }
 
-function existingContracts(): readonly [Address, Address] | undefined {
+function existingContracts(): readonly [Address, Address, Address] | undefined {
   const argument = process.argv.find((value) => value.startsWith('--verify-contracts='));
   if (!argument) {
     return undefined;
   }
   const values = argument.slice('--verify-contracts='.length).split(',');
   const [primaryAddress, negativeAddress] = values;
+  const recipientAddress = values[2];
   if (
-    values.length !== 2 ||
+    values.length !== 3 ||
     !primaryAddress ||
     !negativeAddress ||
+    !recipientAddress ||
     !isAddress(primaryAddress) ||
-    !isAddress(negativeAddress)
+    !isAddress(negativeAddress) ||
+    !isAddress(recipientAddress)
   ) {
-    fail('Two comma-separated ACL feasibility contract addresses are required for verification.');
+    fail('Three comma-separated ACL feasibility contract addresses are required for verification.');
   }
-  return [primaryAddress, negativeAddress] as const;
+  return [primaryAddress, negativeAddress, recipientAddress] as const;
 }
 
 function loadOrCreateActorSecrets(): StoredActorSecrets {
@@ -383,7 +400,11 @@ async function main(): Promise<void> {
     chain: sepolia,
     transport: http(rpcUrl),
   });
-  const artifact = loadArtifact();
+  const aclArtifact = loadArtifact(artifactPath, 'ACL spike');
+  const transientRecipientArtifact = loadArtifact(
+    transientRecipientArtifactPath,
+    'transient access recipient',
+  );
   const ledger = loadLedger();
   const singleTransactionCapWei = configuredSingleTransactionCapWei(ledger);
 
@@ -399,37 +420,56 @@ async function main(): Promise<void> {
   const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
   let primaryAddress: Address;
   let negativeAddress: Address;
+  let transientRecipientAddress: Address;
 
   if (verifiedContracts) {
     failureStage = 'existing ACL runtime verification';
-    const [primaryRuntime, negativeRuntime] = await Promise.all(
+    const [primaryRuntime, negativeRuntime, transientRecipientRuntime] = await Promise.all(
       verifiedContracts.map((address) => publicClient.getCode({ address })),
     );
     if (
       !primaryRuntime ||
       !negativeRuntime ||
-      primaryRuntime.toLowerCase() !== artifact.deployedBytecode.toLowerCase() ||
-      negativeRuntime.toLowerCase() !== artifact.deployedBytecode.toLowerCase()
+      !transientRecipientRuntime ||
+      primaryRuntime.toLowerCase() !== aclArtifact.deployedBytecode.toLowerCase() ||
+      negativeRuntime.toLowerCase() !== aclArtifact.deployedBytecode.toLowerCase() ||
+      transientRecipientRuntime.toLowerCase() !==
+        transientRecipientArtifact.deployedBytecode.toLowerCase()
     ) {
       fail('An existing ACL feasibility contract runtime does not match the compiled harness.');
     }
-    [primaryAddress, negativeAddress] = verifiedContracts;
+    [primaryAddress, negativeAddress, transientRecipientAddress] = verifiedContracts;
   } else {
     failureStage = 'deployment dry-run planning';
-    const deploymentGas = await publicClient.estimateGas({
+    const aclDeploymentGas = await publicClient.estimateGas({
       account: deployer.address,
-      data: artifact.bytecode,
+      data: aclArtifact.bytecode,
     });
-    const deploymentMaximumGasCost = deploymentGas * maxFeePerGas;
-    assertBudget(ledger, deploymentMaximumGasCost * 2n);
-    assertSingleTransactionBudget(deploymentMaximumGasCost, singleTransactionCapWei);
+    const transientRecipientDeploymentGas = await publicClient.estimateGas({
+      account: deployer.address,
+      data: transientRecipientArtifact.bytecode,
+    });
+    const aclDeploymentMaximumGasCost = aclDeploymentGas * maxFeePerGas;
+    const transientRecipientDeploymentMaximumGasCost =
+      transientRecipientDeploymentGas * maxFeePerGas;
+    assertBudget(
+      ledger,
+      aclDeploymentMaximumGasCost * 2n + transientRecipientDeploymentMaximumGasCost,
+    );
+    assertSingleTransactionBudget(aclDeploymentMaximumGasCost, singleTransactionCapWei);
+    assertSingleTransactionBudget(
+      transientRecipientDeploymentMaximumGasCost,
+      singleTransactionCapWei,
+    );
     console.log(
       JSON.stringify({
         mode: dryRun ? 'dry-run' : 'confirmed-write',
         workItem: 'FND-03',
-        firstAction: 'deploy two isolated ACL feasibility harnesses',
-        deployments: 2,
-        estimatedMaximumGasCostWeiPerDeployment: deploymentMaximumGasCost.toString(),
+        firstAction: 'deploy two isolated ACL spikes and one transient recipient',
+        deployments: 3,
+        estimatedMaximumGasCostWeiPerAclSpike: aclDeploymentMaximumGasCost.toString(),
+        estimatedMaximumGasCostWeiTransientRecipient:
+          transientRecipientDeploymentMaximumGasCost.toString(),
         singleTransactionCapWei: singleTransactionCapWei.toString(),
         remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
       }),
@@ -444,9 +484,9 @@ async function main(): Promise<void> {
       failureStage = 'isolated ACL harness deployment';
       const hash = await deployerWallet.deployContract({
         account: deployer,
-        abi: artifact.abi,
-        bytecode: artifact.bytecode,
-        gas: deploymentGas,
+        abi: aclArtifact.abi,
+        bytecode: aclArtifact.bytecode,
+        gas: aclDeploymentGas,
         maxFeePerGas,
       });
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
@@ -465,7 +505,37 @@ async function main(): Promise<void> {
       }
       deployedAddresses.push(receipt.contractAddress);
     }
+    failureStage = 'transient access recipient deployment';
+    const transientRecipientHash = await deployerWallet.deployContract({
+      account: deployer,
+      abi: transientRecipientArtifact.abi,
+      bytecode: transientRecipientArtifact.bytecode,
+      gas: transientRecipientDeploymentGas,
+      maxFeePerGas,
+    });
+    const transientRecipientReceipt = await publicClient.waitForTransactionReceipt({
+      hash: transientRecipientHash,
+    });
+    appendSpend(ledger, {
+      workItemId: 'FND-03',
+      phase: 'P0',
+      sender: deployer.address,
+      transactionHash: transientRecipientHash,
+      blockNumber: transientRecipientReceipt.blockNumber.toString(),
+      gasUsed: transientRecipientReceipt.gasUsed.toString(),
+      effectiveGasPrice: transientRecipientReceipt.effectiveGasPrice.toString(),
+      actualGasCostWei: (
+        transientRecipientReceipt.gasUsed * transientRecipientReceipt.effectiveGasPrice
+      ).toString(),
+    });
+    if (
+      transientRecipientReceipt.status !== 'success' ||
+      !transientRecipientReceipt.contractAddress
+    ) {
+      fail('The transient access recipient deployment did not succeed.');
+    }
     [primaryAddress, negativeAddress] = deployedAddresses as [Address, Address];
+    transientRecipientAddress = transientRecipientReceipt.contractAddress;
   }
 
   failureStage = 'Nox gateway encryption';
@@ -480,7 +550,7 @@ async function main(): Promise<void> {
   if (!verifiedContracts) {
     failureStage = 'ACL materialization dry-run planning';
     const materializeData = encodeFunctionData({
-      abi: artifact.abi,
+      abi: aclArtifact.abi,
       functionName: 'materialize',
       args: [ownerInput.handle, ownerInput.handleProof, actors.owner],
     } as never);
@@ -532,7 +602,7 @@ async function main(): Promise<void> {
 
     failureStage = 'persistence proof dry-run planning';
     const persistenceData = encodeFunctionData({
-      abi: artifact.abi,
+      abi: aclArtifact.abi,
       functionName: 'provePersistence',
     } as never);
     const persistenceGas = await publicClient.estimateGas({
@@ -580,23 +650,80 @@ async function main(): Promise<void> {
     if (persistenceReceipt.status !== 'success') {
       fail('The persistent ACL computation transaction did not succeed.');
     }
+
+    failureStage = 'transient access proof dry-run planning';
+    const transientAccessData = encodeFunctionData({
+      abi: aclArtifact.abi,
+      functionName: 'proveTransientAccess',
+      args: [transientRecipientAddress],
+    } as never);
+    const transientAccessGas = await publicClient.estimateGas({
+      account: deployer.address,
+      to: primaryAddress,
+      data: transientAccessData,
+    });
+    const transientAccessMaximumGasCost = transientAccessGas * maxFeePerGas;
+    assertBudget(ledger, transientAccessMaximumGasCost);
+    assertSingleTransactionBudget(transientAccessMaximumGasCost, singleTransactionCapWei);
+    console.log(
+      JSON.stringify({
+        mode: 'confirmed-write',
+        workItem: 'FND-03',
+        fourthAction: 'prove one-transaction transient access and expiry',
+        estimatedMaximumGasCostWei: transientAccessMaximumGasCost.toString(),
+        singleTransactionCapWei: singleTransactionCapWei.toString(),
+        remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
+      }),
+    );
+
+    failureStage = 'transient access proof';
+    const transientAccessHash = await deployerWallet.sendTransaction({
+      account: deployer,
+      to: primaryAddress,
+      data: transientAccessData,
+      gas: transientAccessGas,
+      maxFeePerGas,
+    });
+    const transientAccessReceipt = await publicClient.waitForTransactionReceipt({
+      hash: transientAccessHash,
+    });
+    appendSpend(ledger, {
+      workItemId: 'FND-03',
+      phase: 'P0',
+      sender: deployer.address,
+      transactionHash: transientAccessHash,
+      blockNumber: transientAccessReceipt.blockNumber.toString(),
+      gasUsed: transientAccessReceipt.gasUsed.toString(),
+      effectiveGasPrice: transientAccessReceipt.effectiveGasPrice.toString(),
+      actualGasCostWei: (
+        transientAccessReceipt.gasUsed * transientAccessReceipt.effectiveGasPrice
+      ).toString(),
+    });
+    if (transientAccessReceipt.status !== 'success') {
+      fail('The transient ACL access transaction did not succeed.');
+    }
   }
 
   failureStage = 'ACL authority matrix';
   const derivedHandle = (await publicClient.readContract({
     address: primaryAddress,
-    abi: artifact.abi,
+    abi: aclArtifact.abi,
     functionName: 'derivedHandle',
   } as never)) as Hex;
   const persistenceHandle = (await publicClient.readContract({
     address: primaryAddress,
-    abi: artifact.abi,
+    abi: aclArtifact.abi,
     functionName: 'persistenceHandle',
+  } as never)) as Hex;
+  const transientAccessHandle = (await publicClient.readContract({
+    address: primaryAddress,
+    abi: aclArtifact.abi,
+    functionName: 'transientAccessHandle',
   } as never)) as Hex;
   const authorityOf = async (actor: Address): Promise<readonly [boolean, boolean, boolean]> =>
     (await publicClient.readContract({
       address: primaryAddress,
-      abi: artifact.abi,
+      abi: aclArtifact.abi,
       functionName: 'authorityOf',
       args: [actor],
     } as never)) as readonly [boolean, boolean, boolean];
@@ -640,6 +767,16 @@ async function main(): Promise<void> {
     'Public decryption of the owner-shaped handle',
   );
   await assertPublicBoolean(ownerHandleClient, persistenceHandle, true);
+  await assertPublicBoolean(ownerHandleClient, transientAccessHandle, true);
+  const transientAccessPersisted = await publicClient.readContract({
+    address: NOX_COMPUTE_ADDRESS,
+    abi: NOX_COMPUTE_ABI,
+    functionName: 'isAllowed',
+    args: [derivedHandle, transientRecipientAddress],
+  });
+  if (transientAccessPersisted) {
+    fail('Transient recipient access persisted beyond its proving transaction.');
+  }
 
   failureStage = 'direct compute authority';
   const directComputeData = encodeFunctionData({
@@ -658,6 +795,7 @@ async function main(): Promise<void> {
     actors.keeper,
     actors.adapter,
     actors.token,
+    transientRecipientAddress,
   ]) {
     await assertRejected(
       () => publicClient.call({ account: actor, to: NOX_COMPUTE_ADDRESS, data: directComputeData }),
@@ -668,7 +806,7 @@ async function main(): Promise<void> {
   failureStage = 'input context and replay checks';
   const materialize = (value: EncryptedValue, ownerAddress: Address): Hex =>
     encodeFunctionData({
-      abi: artifact.abi,
+      abi: aclArtifact.abi,
       functionName: 'materialize',
       args: [value.handle, value.handleProof, ownerAddress],
     } as never);
@@ -725,10 +863,10 @@ async function main(): Promise<void> {
   console.log(
     JSON.stringify({
       workItem: 'FND-03',
-      contractsVerified: 2,
+      contractsVerified: 3,
       authorityAssertionsVerified: 18,
-      decryptionScopeAssertionsVerified: 3,
-      negativeAssertionsVerified: 9,
+      decryptionScopeAssertionsVerified: 5,
+      negativeAssertionsVerified: 10,
       status: 'passed',
     }),
   );

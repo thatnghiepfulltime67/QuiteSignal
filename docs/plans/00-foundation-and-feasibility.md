@@ -191,10 +191,11 @@ Files/modules allowed: `modules/protocol/contracts/feasibility/`,
 
 Acceptance criteria: An isolated Sepolia ACL spike imports an encrypted owner
 input bound to its own address, stores only a derived encrypted handle, grants the
-owner viewer access without compute access, and proves in a later transaction that
-only the spike retains the compute authority needed for its next operation. The
-owner client can decrypt its own derived test value without the value being logged;
-the stored owner-shaped handle is never publicly decryptable.
+owner viewer access without compute access, and proves in later transactions that
+only the spike retains the compute authority needed for its next operation. A
+separate transient recipient must use delegated access inside one transaction and
+lose it afterwards. The owner client can decrypt its own derived test value without
+the value being logged; the stored owner-shaped handle is never publicly decryptable.
 
 Negative cases: A replayed import, input encrypted for another spike, wrong
 encrypted type, uninitialized external handle, unrelated viewer decrypt, keeper,

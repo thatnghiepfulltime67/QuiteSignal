@@ -4,6 +4,10 @@ pragma solidity ^0.8.35;
 import {ebool, euint256, externalEuint256} from 'encrypted-types/EncryptedTypes.sol';
 import {Nox} from '@iexec-nox/nox-protocol-contracts/contracts/sdk/Nox.sol';
 
+interface ITransientAccessRecipient {
+  function verifyTransientAccess(bytes32 encryptedHandle) external returns (bytes32);
+}
+
 /// @notice Isolated P0 ACL feasibility harness. It has no asset custody or production imports.
 contract AclSpike {
   using Nox for ebool;
@@ -17,8 +21,10 @@ contract AclSpike {
   address public owner;
   euint256 private derivedValue;
   ebool private persistenceMatches;
+  bytes32 private transientAccessMatches;
   bool private materialized;
   bool private persistenceProven;
+  bool private transientAccessProven;
 
   function materialize(
     externalEuint256 encryptedOwnerValue,
@@ -49,6 +55,16 @@ contract AclSpike {
     persistenceProven = true;
   }
 
+  function proveTransientAccess(address recipient) external {
+    if (!materialized) revert MissingDerivedHandle();
+
+    Nox.allowTransient(derivedValue, recipient);
+    transientAccessMatches = ITransientAccessRecipient(recipient).verifyTransientAccess(
+      euint256.unwrap(derivedValue)
+    );
+    transientAccessProven = true;
+  }
+
   function derivedHandle() external view returns (bytes32) {
     if (!materialized) revert MissingDerivedHandle();
     return euint256.unwrap(derivedValue);
@@ -57,6 +73,11 @@ contract AclSpike {
   function persistenceHandle() external view returns (bytes32) {
     if (!persistenceProven) revert MissingDerivedHandle();
     return ebool.unwrap(persistenceMatches);
+  }
+
+  function transientAccessHandle() external view returns (bytes32) {
+    if (!transientAccessProven) revert MissingDerivedHandle();
+    return transientAccessMatches;
   }
 
   function authorityOf(
