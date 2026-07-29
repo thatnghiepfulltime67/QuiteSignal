@@ -55,3 +55,8 @@ retained the prior timeout behavior. The compile command now forces every Solidi
 rebuild. The third attempt's independent test actor recovery record remains local
 and ignored, enabling its legacy timeout spike to be cancelled and both fixture
 stakes to be returned before another fresh attempt starts.
+
+The third-attempt legacy recovery completed at blocks `11378471` through
+`11378474` using the same permissionless cancellation and owner-refund checks. Its
+local secondary-actor recovery record was deleted only after both terminal owner
+balances were verified. The third attempt has no remaining fixture custody.

@@ -495,6 +495,11 @@ two fixture stakes are recoverable through the persisted ignored actor record. T
 compile command now forces rebuilds, and the next attempt may begin only after that
 legacy recovery passes and fresh runtime bytecode is confirmed.
 
+That third-attempt legacy recovery passed at blocks `11378471` through `11378474`,
+returned both fixture stakes, verified terminal owner balances locally, and deleted
+the ignored actor recovery record. The third attempt therefore has no remaining
+fixture custody.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:
