@@ -174,10 +174,11 @@ on Ethereum Sepolia before any confidential asset or pool lifecycle exists.
 Status: `in_progress`
 
 Prerequisite gates: G0 passed and FND-02 arithmetic evidence is recorded. G1
-remains running. A configured actor mnemonic is test-only and remains only in
-ignored `.env`; when it is absent, the runner creates test-only actor keys under
-ignored `.secrets/`. In either mode, private material must never enter output,
-source, evidence, or Git.
+remains running. The throwaway deployer both encrypts and submits the owner input,
+because Nox verifies the input proof against the application caller. Other
+test-only actor keys come from an ignored mnemonic when configured, or from
+ignored `.secrets/` otherwise. Private material must never enter output, source,
+evidence, or Git.
 
 Files/modules allowed: `modules/protocol/contracts/feasibility/`,
 `modules/protocol/scripts/feasibility/`, `modules/protocol/test/feasibility/`,

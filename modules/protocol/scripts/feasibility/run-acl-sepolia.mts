@@ -213,12 +213,14 @@ function assertSingleTransactionBudget(
   }
 }
 
-function existingContracts(): readonly [Address, Address, Address] | undefined {
-  const argument = process.argv.find((value) => value.startsWith('--verify-contracts='));
+function contractSet(
+  option: '--reuse-contracts=' | '--verify-contracts=',
+): readonly [Address, Address, Address] | undefined {
+  const argument = process.argv.find((value) => value.startsWith(option));
   if (!argument) {
     return undefined;
   }
-  const values = argument.slice('--verify-contracts='.length).split(',');
+  const values = argument.slice(option.length).split(',');
   const [primaryAddress, negativeAddress] = values;
   const recipientAddress = values[2];
   if (
@@ -230,7 +232,7 @@ function existingContracts(): readonly [Address, Address, Address] | undefined {
     !isAddress(negativeAddress) ||
     !isAddress(recipientAddress)
   ) {
-    fail('Three comma-separated ACL feasibility contract addresses are required for verification.');
+    fail('Three comma-separated ACL feasibility contract addresses are required.');
   }
   return [primaryAddress, negativeAddress, recipientAddress] as const;
 }
@@ -270,7 +272,6 @@ function deriveActors(
   deployer: Address,
 ): {
   actors: ActorSet;
-  ownerAccount: ActorAccount;
   unrelatedAccount: ActorAccount;
 } {
   const accounts: Record<keyof ActorSet, ActorAccount> = mnemonic
@@ -288,20 +289,16 @@ function deriveActors(
         ]),
       ) as Record<keyof ActorSet, ActorAccount>);
   const actors = {
-    owner: accounts.owner.address,
+    owner: deployer,
     unrelated: accounts.unrelated.address,
     keeper: accounts.keeper.address,
     adapter: accounts.adapter.address,
     token: accounts.token.address,
   };
-  if (
-    new Set([deployer, ...Object.values(actors)].map((address) => address.toLowerCase())).size !== 6
-  ) {
-    fail(
-      'The configured ACL feasibility actors must be distinct from each other and the deployer.',
-    );
+  if (new Set(Object.values(actors).map((address) => address.toLowerCase())).size !== 5) {
+    fail('The configured ACL feasibility actors must have distinct roles.');
   }
-  return { actors, ownerAccount: accounts.owner, unrelatedAccount: accounts.unrelated };
+  return { actors, unrelatedAccount: accounts.unrelated };
 }
 
 async function assertPublicBoolean(
@@ -361,11 +358,15 @@ async function main(): Promise<void> {
 
   const dryRun = process.argv.includes('--dry-run');
   const requestedCase = process.argv.find((argument) => argument === 'FND-03');
-  const verifiedContracts = existingContracts();
+  const verifiedContracts = contractSet('--verify-contracts=');
+  const reusableContracts = contractSet('--reuse-contracts=');
   if (!requestedCase) {
     fail('The FND-03 case identifier is required.');
   }
-  if (dryRun && verifiedContracts) {
+  if (verifiedContracts && reusableContracts) {
+    fail('Read-only verification and reusable-write contract options cannot be combined.');
+  }
+  if (dryRun && (verifiedContracts || reusableContracts)) {
     fail('Read-only verification cannot be combined with the deployment dry-run.');
   }
 
@@ -386,15 +387,7 @@ async function main(): Promise<void> {
     chain: sepolia,
     transport: http(rpcUrl),
   });
-  const { actors, ownerAccount, unrelatedAccount } = deriveActors(
-    actorMnemonic || undefined,
-    deployer.address,
-  );
-  const ownerWallet = createWalletClient({
-    account: ownerAccount,
-    chain: sepolia,
-    transport: http(rpcUrl),
-  });
+  const { actors, unrelatedAccount } = deriveActors(actorMnemonic || undefined, deployer.address);
   const unrelatedWallet = createWalletClient({
     account: unrelatedAccount,
     chain: sepolia,
@@ -422,10 +415,11 @@ async function main(): Promise<void> {
   let negativeAddress: Address;
   let transientRecipientAddress: Address;
 
-  if (verifiedContracts) {
+  const selectedContracts = verifiedContracts ?? reusableContracts;
+  if (selectedContracts) {
     failureStage = 'existing ACL runtime verification';
     const [primaryRuntime, negativeRuntime, transientRecipientRuntime] = await Promise.all(
-      verifiedContracts.map((address) => publicClient.getCode({ address })),
+      selectedContracts.map((address) => publicClient.getCode({ address })),
     );
     if (
       !primaryRuntime ||
@@ -438,7 +432,7 @@ async function main(): Promise<void> {
     ) {
       fail('An existing ACL feasibility contract runtime does not match the compiled harness.');
     }
-    [primaryAddress, negativeAddress, transientRecipientAddress] = verifiedContracts;
+    [primaryAddress, negativeAddress, transientRecipientAddress] = selectedContracts;
   } else {
     failureStage = 'deployment dry-run planning';
     const aclDeploymentGas = await publicClient.estimateGas({
@@ -539,7 +533,7 @@ async function main(): Promise<void> {
   }
 
   failureStage = 'Nox gateway encryption';
-  const ownerHandleClient = await createViemHandleClient(ownerWallet);
+  const ownerHandleClient = await createViemHandleClient(deployerWallet);
   const unrelatedHandleClient = await createViemHandleClient(unrelatedWallet);
   const ownerInput = (await ownerHandleClient.encryptInput(
     OWNER_INPUT,
@@ -572,6 +566,10 @@ async function main(): Promise<void> {
         remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
       }),
     );
+
+    if (reusableContracts) {
+      assertCleanSourceTree();
+    }
 
     failureStage = 'ACL materialization';
     const materializeHash = await deployerWallet.sendTransaction({
