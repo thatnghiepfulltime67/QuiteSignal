@@ -359,6 +359,81 @@ evidence is recorded at `evidence/offline/G2/FND-04.json`,
 passed; FND-05 is the next eligible work item. The confirmed receipts are in the
 append-only Sepolia spend ledger.
 
+## FND-05 work item record
+
+ID: `FND-05`
+
+Status: `in_progress`
+
+Outcome: Prove an isolated, real Nox confidential-cohort lifecycle on Ethereum
+Sepolia: distinct-address commits with confidential collateral, below-k refund with
+no aggregate disclosure, aggregate-only public decryption at k, a context-bound
+single-use aggregate proof, pre-unwrap timeout, and delayed unwrap finalization plus
+rewrap recovery. This is a feasibility harness, not a production pool or adapter.
+
+Prerequisites: G1 and G2 are passed. The harness must use a fresh Sepolia fixture
+collateral deployment and a bytecode-matched, unchanged inherited Nox
+`ERC20ToERC7984Wrapper`; it must not reuse the documented pre-fix FND-04 residue.
+The second cohort member is a newly generated local test account that receives only
+the bounded Sepolia gas needed to sign and submit its own inputs. Its key is
+process-local and is neither printed, committed, nor included in evidence.
+
+Output files: `modules/protocol/contracts/feasibility/AggregateRecoverySpike.sol`,
+`modules/protocol/scripts/feasibility/run-aggregate-recovery-sepolia.mts`,
+`modules/protocol/scripts/feasibility/run-nox-sepolia.mts`, the narrowly required
+protocol test/model files, `evidence/offline/G3/FND-05.json`,
+`evidence/sepolia/G3/FND-05.json`, `evidence/reports/G3-summary.md`,
+`evidence/sepolia/spend-ledger.json`, `docs/plans/evidence-ledger.md`, and this
+work-package record. Findings, risk, source, or decision records are added only if
+the live behavior changes an existing conclusion.
+
+Acceptance and test plan:
+
+- `T-FND-05-BELOW-K-01`: one real sender commits confidential collateral, deadline
+  closes below k, aggregate handles remain non-public, and the recorded owner can
+  refund once from confidential custody.
+- `T-FND-05-AGGREGATE-01`: two independently signing Sepolia senders commit and
+  transfer confidential collateral; only encrypted YES/NO cohort aggregates acquire
+  public-decrypt permission after the k-gate. Individual stake, probability, and
+  aggregate total do not.
+- `T-FND-05-PROOF-01`: aggregate finalization accepts only its derived
+  `(chainId, pool, epochId, requestId)` context, rejects cross-pool, wrong-chain,
+  wrong-epoch, and replayed requests, and rejects a substituted aggregate plaintext
+  against the valid gateway proof.
+- `T-FND-05-TIMEOUT-01`: an aggregate-pending epoch cancels before unwrap only after
+  the timeout and returns each committed confidential stake through the refund path.
+- `T-FND-05-RECOVERY-01`: after an aggregate proof requests unwrap, a delayed,
+  permissionless finalization measures the real underlying balance delta, requires
+  `publicYes + publicNo == releasedCollateral` before any execution boundary, wraps
+  all released fixture collateral back into confidential custody, and enables each
+  owner refund exactly once.
+
+Privacy impact: artificial test values are encrypted before submission and no
+owner-shaped handle is marked publicly decryptable. Public permission is granted
+only to cohort YES/NO aggregates after the threshold; public identities, membership,
+transaction timing, aggregate totals, and the isolated fixture addresses remain
+public as documented. This slice does not make an anonymity claim.
+
+Funds location and rollback: during `OPEN`, `AGGREGATE_PENDING`, and `REFUNDABLE`,
+accepted valueless fixture collateral is in the harness's confidential wrapper
+balance; during `UNWRAP_PENDING`, it is a wrapper burn awaiting proof; recovery
+finalizes into the harness public balance only long enough to measure the delta and
+immediately rewraps it before refunds. A failed or reverted path leaves the wrapper
+state unchanged. Failed feasibility means record sanitized evidence, preserve any
+known fixture location, and block G3/P1; do not introduce a mock adapter or trusted
+recovery service. Reverting this isolated source is the code rollback; deployed
+fixture contracts have no product custody.
+
+Commands/checks: `npm run compile`, `npm run test:nox:sepolia -- FND-05 --dry-run`,
+`npm run test:nox:sepolia -- FND-05`, `npm run budget:status`,
+`npm run check:offline`, `npm run check:sepolia:read`, `npm run scan:secrets`, and
+`git diff --check`.
+
+Evidence path: `evidence/offline/G3/FND-05.json`,
+`evidence/sepolia/G3/FND-05.json`, and `evidence/reports/G3-summary.md`.
+
+Intended commit: `test: prove aggregate disclosure and recovery`.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:
