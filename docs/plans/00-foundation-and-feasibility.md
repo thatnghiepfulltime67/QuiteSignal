@@ -28,7 +28,7 @@ production modules are created. Pure arithmetic/reference expectations are teste
 Only one FND item may be in progress. Each item must be committed before the next
 item begins; feasibility spikes never share a commit with production contracts.
 
-## Active work item
+## FND-01 work item record
 
 ID: `FND-01`
 
@@ -91,6 +91,68 @@ check blocks FND-02 through FND-07 and creates no product-code fallback.
 Completion: Source commit `6f562e2f6811aa5ab117f3163480a40b4750f755` and
 sanitized evidence at `evidence/offline/G0/FND-01.json` passed the recorded G0
 checks. No Sepolia write occurred. The next eligible item is FND-02.
+
+## Active work item
+
+ID: `FND-02`
+
+Outcome: Prove the encrypted probability, stake, allocation, and Brier-score
+arithmetic primitives against Ethereum Sepolia NoxCompute before a production pool
+or token flow exists.
+
+Status: `in_progress`
+
+Prerequisite gates: G0 passed at source commit
+`6f562e2f6811aa5ab117f3163480a40b4750f755`. The pinned NoxCompute mapping has
+runtime code on Ethereum Sepolia. Every write must still pass the committed chain,
+budget, and throwaway-wallet preflight without printing configuration values.
+
+Files/modules allowed: `package.json`, `package-lock.json`,
+`modules/protocol/package.json`, `modules/protocol/hardhat.config.ts`,
+`modules/protocol/contracts/feasibility/`,
+`modules/protocol/scripts/feasibility/`,
+`modules/protocol/test/feasibility/`, `ops/scripts/`,
+`evidence/offline/G1/`, `evidence/sepolia/G1/`,
+`evidence/sepolia/spend-ledger.json`, `evidence/reports/`,
+`docs/plans/00-foundation-and-feasibility.md`,
+`docs/plans/evidence-ledger.md`, `docs/operations/nox-feedback.md`,
+`docs/operations/02-risk-register.md`, and
+`docs/operations/04-source-and-assumption-register.md`.
+
+Acceptance criteria: An isolated Sepolia contract imports externally encrypted
+unsigned values, performs compare/select clamp, multiply, divide, subtract,
+absolute difference, and square operations, and makes the resulting public test
+output match the pure bigint reference model for every required boundary vector.
+The test proves no production module or plaintext shadow state is used.
+
+Negative cases: Invalid input proof, wrong input type, uninitialized handle,
+division by zero, overflow/underflow, wrong chain or contract context, and a
+missing Nox runtime must fail without an ambiguous success report.
+
+Privacy/custody impact: Test input is encrypted before the write and no plaintext
+value, handle, proof, calldata, or environment value may enter logs, evidence, or
+committed fixtures. This spike has no token, adapter, payout, or user-custody path.
+
+Funds location/recovery impact: The only permitted spend is bounded Sepolia gas
+for an isolated feasibility deployment and calls. No collateral is accepted. If a
+write fails or the primitive is unsupported, record the receipt and spend in the
+sanitized ledger, retain the failure report, and stop G1-dependent work rather
+than adding a local or plaintext substitute.
+
+Commands/checks: `npm run test:model`, `npm run test:nox:sepolia -- FND-02`,
+`npm run budget:status`, `npm run check:offline`,
+`npm run check:sepolia:read`, `npm run scan:secrets`, and `git diff --check`.
+
+Evidence path: `evidence/offline/G1/FND-02.json`,
+`evidence/sepolia/G1/FND-02.json`, and `evidence/reports/G1-summary.md`.
+
+Intended commit: `test: prove encrypted signal arithmetic`.
+
+Rollback/failure action: Revert only the isolated FND-02 source commit. The
+deployed Sepolia spike has no asset custody and needs no on-chain recovery. A
+failed required primitive, proof binding, or runtime behavior is a G1 failure;
+FND-03 through FND-07 and P1 remain blocked until an ADR-approved redesign passes
+the complete G1 gate.
 
 ## FND-01 — Toolchain lock
 

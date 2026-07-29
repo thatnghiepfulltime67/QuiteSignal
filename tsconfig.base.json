@@ -12,6 +12,6 @@
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["ops/scripts/**/*.mts"],
+  "include": ["ops/scripts/**/*.mts", "modules/*/**/*.ts", "modules/*/**/*.mts"],
   "exclude": ["node_modules", "coverage", "dist"]
 }

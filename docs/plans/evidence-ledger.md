@@ -9,7 +9,7 @@ seed phrases, environment dumps, or unsanitized terminal history.
 | Gate | Status | Environment | Evidence artifact | Commit | Chain/block | Public tx/address references | Verified checks | Notes |
 |---|---|---|---|---|---|---|---|---|
 | G0 | `passed` | offline / Sepolia read | `evidence/offline/G0/FND-01.json`, `evidence/reports/G0-summary.md` | `6f562e2` | `11155111` / `11377462` | NoxCompute `0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF` | Frozen installs ×2, compile, format, secret/dependency scans, budget validation, Sepolia read preflight | No write; R-16 remains open for G8 closure |
-| G1 | `not_run` | — | — | — | — | — | — | — |
+| G1 | `running` | offline / Sepolia write | FND-02 pending | — | — | — | Encrypted arithmetic feasibility in progress | No custody or token flow permitted |
 | G2 | `not_run` | — | — | — | — | — | — | — |
 | G3 | `not_run` | — | — | — | — | — | — | — |
 | G4 | `not_run` | — | — | — | — | — | — | — |

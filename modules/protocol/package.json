@@ -1,0 +1,19 @@
+{
+  "name": "@quitesignal/protocol",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "compile": "hardhat build",
+    "test:model": "tsx --test test/feasibility/reference-model.test.ts",
+    "test:nox:sepolia": "tsx scripts/feasibility/run-arithmetic-sepolia.mts"
+  },
+  "devDependencies": {
+    "@iexec-nox/handle": "0.1.0-beta.13",
+    "@iexec-nox/nox-protocol-contracts": "0.2.4",
+    "hardhat": "3.11.1",
+    "tsx": "4.23.1",
+    "viem": "2.55.10"
+  }
+}

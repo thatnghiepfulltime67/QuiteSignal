@@ -38,7 +38,8 @@ lockfile:
 - `@iexec-nox/nox-protocol-contracts@0.2.4`;
 - `@iexec-nox/nox-confidential-contracts@0.2.2`;
 - `@iexec-nox/handle@0.1.0-beta.13`;
-- Hardhat `3.11.1`, TypeScript `6.0.2`, Prettier `3.9.6`, and
+- Hardhat `3.11.1`, Solidity `0.8.35` with the Cancún EVM target and `viaIR`,
+  TypeScript `6.0.2`, Viem `2.55.10`, Prettier `3.9.6`, and
   `prettier-plugin-solidity@2.3.1`.
 
 The Nox protocol SDK maps Ethereum Sepolia (`11155111`) to
