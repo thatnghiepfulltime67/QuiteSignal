@@ -416,13 +416,16 @@ public as documented. This slice does not make an anonymity claim.
 
 Funds location and rollback: during `OPEN`, `AGGREGATE_PENDING`, and `REFUNDABLE`,
 accepted valueless fixture collateral is in the harness's confidential wrapper
-balance; during `UNWRAP_PENDING`, it is a wrapper burn awaiting proof; recovery
-finalizes into the harness public balance only long enough to measure the delta and
-immediately rewraps it before refunds. A failed or reverted path leaves the wrapper
-state unchanged. Failed feasibility means record sanitized evidence, preserve any
-known fixture location, and block G3/P1; do not introduce a mock adapter or trusted
-recovery service. Reverting this isolated source is the code rollback; deployed
-fixture contracts have no product custody.
+balance. During `CommitPending` before a callback, it remains with the committing
+owner; after a callback it is either accepted into the harness or atomically refunded
+by the wrapper until the public acceptance proof resolves that outcome. During
+`UNWRAP_PENDING`, it is a wrapper burn awaiting proof; recovery finalizes into the
+harness public balance only long enough to measure the delta and immediately rewraps
+it before refunds. A failed or reverted path leaves the wrapper state unchanged.
+Failed feasibility means record sanitized evidence, preserve any known fixture
+location, and block G3/P1; do not introduce a mock adapter or trusted recovery
+service. Reverting this isolated source is the code rollback; deployed fixture
+contracts have no product custody.
 
 Commands/checks: `npm run compile`, `npm run test:nox:sepolia -- FND-05 --dry-run`,
 `npm run test:nox:sepolia -- FND-05`, `npm run budget:status`,
