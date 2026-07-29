@@ -92,7 +92,7 @@ Completion: Source commit `6f562e2f6811aa5ab117f3163480a40b4750f755` and
 sanitized evidence at `evidence/offline/G0/FND-01.json` passed the recorded G0
 checks. No Sepolia write occurred. The next eligible item is FND-02.
 
-## Active work item
+## FND-02 work item record
 
 ID: `FND-02`
 
@@ -163,6 +163,69 @@ is recorded at `evidence/offline/G1/FND-02.json`,
 `evidence/sepolia/G1/FND-02.json`, and `evidence/reports/G1-summary.md`. The
 harness has no asset custody. G1 remains running until FND-03 proves ACL and
 persistence behavior.
+
+## Active work item
+
+ID: `FND-03`
+
+Outcome: Prove persistent Nox handle authority and minimal viewer access directly
+on Ethereum Sepolia before any confidential asset or pool lifecycle exists.
+
+Status: `in_progress`
+
+Prerequisite gates: G0 passed and FND-02 arithmetic evidence is recorded. G1
+remains running. The configured actor mnemonic is test-only and remains only in
+ignored `.env`; its derived private material must never enter output, source,
+evidence, or Git.
+
+Files/modules allowed: `modules/protocol/contracts/feasibility/`,
+`modules/protocol/scripts/feasibility/`, `modules/protocol/test/feasibility/`,
+`ops/scripts/`, `package.json`, `package-lock.json`,
+`evidence/offline/G1/`, `evidence/sepolia/G1/`,
+`evidence/sepolia/spend-ledger.json`, `evidence/reports/`,
+`docs/plans/00-foundation-and-feasibility.md`,
+`docs/plans/evidence-ledger.md`, `docs/operations/nox-feedback.md`,
+`docs/operations/02-risk-register.md`, and
+`docs/operations/04-source-and-assumption-register.md`.
+
+Acceptance criteria: An isolated Sepolia ACL spike imports an encrypted owner
+input bound to its own address, stores only a derived encrypted handle, grants the
+owner viewer access without compute access, and proves in a later transaction that
+only the spike retains the compute authority needed for its next operation. The
+owner client can decrypt its own derived test value without the value being logged;
+the stored owner-shaped handle is never publicly decryptable.
+
+Negative cases: A replayed import, input encrypted for another spike, wrong
+encrypted type, uninitialized external handle, unrelated viewer decrypt, keeper,
+adapter, and token compute/view attempts, and a public-decrypt attempt on the
+owner-shaped handle must fail or report denied authority on Sepolia. The actor
+matrix must cover the pool spike, owner, unrelated wallet, keeper, adapter, and
+token identities without exposing their private material.
+
+Privacy/custody impact: The runner may compare an owner decryption to an expected
+test value only in process memory. No test plaintext, handle, proof, calldata,
+signature, mnemonic, or environment value may appear in logs, evidence, or
+committed fixtures. This spike has no token or collateral path.
+
+Funds location/recovery impact: Only bounded Sepolia gas is permitted. No assets
+are accepted; a failed ACL proof leaves no funds to recover. Record every confirmed
+receipt in the spend ledger and stop dependent work if the owner-shaped handle can
+be public-decrypted or a non-pool actor receives persistent compute authority.
+
+Commands/checks: `npm run compile`, `npm run test:nox:sepolia -- FND-03 --dry-run`,
+`npm run test:nox:sepolia -- FND-03`, `npm run budget:status`,
+`npm run check:offline`, `npm run check:sepolia:read`, `npm run scan:secrets`, and
+`git diff --check`.
+
+Evidence path: `evidence/offline/G1/FND-03.json`,
+`evidence/sepolia/G1/FND-03.json`, and `evidence/reports/G1-summary.md`.
+
+Intended commit: `test: prove handle binding and acl lifecycle`.
+
+Rollback/failure action: Revert only the isolated FND-03 source commit. Deployed
+spikes have no custody. If a required ACL condition cannot be proven on Sepolia,
+record the sanitized receipt and authority matrix, mark G1 failed, and do not
+replace the result with a trusted backend or a local-chain substitute.
 
 ## FND-01 — Toolchain lock
 
