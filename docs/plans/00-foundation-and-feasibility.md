@@ -461,6 +461,21 @@ exclusion, and runner correction are recorded in
 timeout and a local ignored recovery record for its generated test actor, deleting
 that record only after terminal refunds have been independently verified.
 
+The second fresh attempt from source commit `2ce876f` deployed fixture
+`0xf78a45a3386537f439bd8c3a38d8947a3e835ac6`, wrapper
+`0xc8306a034c4a0724ab0e426924b62006d2acf693`, and isolated spikes
+`0xbbc754d76e94d9e34e2aaea753a2a6997b56aa8d`,
+`0x36e1addccf167fc094c404de877a5cc45fb9ac8d`, and
+`0x5211fa15c33ba0f7b0d4c964be7a10936e81200c` at blocks `11378338` through
+`11378377`. It again passed the below-k refund and reached
+`AGGREGATE_PENDING` with two accepted members. It then proved that increasing the
+duration alone was insufficient: the harness measured aggregate timeout from the
+commit deadline, allowing a long multi-user commit sequence to consume it before
+the state transition. It stopped before cancellation or refunds. The persisted
+ignored actor recovery record permits a dedicated legacy recovery to return both
+fixture stakes. The next fresh attempt starts that timeout on the on-chain
+`AGGREGATE_PENDING` transition, which matches the normative state machine.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

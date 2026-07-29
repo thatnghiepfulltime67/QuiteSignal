@@ -900,7 +900,10 @@ async function main(): Promise<void> {
       }),
     'Pre-unwrap timeout before the recovery window',
   );
-  await waitUntil(publicClient, timeoutDeadline + AGGREGATE_TIMEOUT_SECONDS);
+  const timeoutAvailableAt =
+    ((await read(contracts.timeoutSpike, spikeArtifact, 'aggregatePendingSince')) as bigint) +
+    AGGREGATE_TIMEOUT_SECONDS;
+  await waitUntil(publicClient, timeoutAvailableAt);
   await send(
     secondary,
     secondaryWallet,

@@ -83,6 +83,7 @@ contract AggregateRecoverySpike is IERC7984Receiver {
   uint256 public immutable kMin;
 
   LifecycleState public state;
+  uint48 public aggregatePendingSince;
   uint48 public deadline;
   uint48 public pendingCommitAvailableAt;
   uint48 public recoveryAvailableAt;
@@ -254,6 +255,7 @@ contract AggregateRecoverySpike is IERC7984Receiver {
       state = LifecycleState.Refundable;
       return;
     }
+    aggregatePendingSince = uint48(block.timestamp);
     state = LifecycleState.AggregatePending;
   }
 
@@ -294,7 +296,7 @@ contract AggregateRecoverySpike is IERC7984Receiver {
 
   function cancelBeforeUnwrap() external {
     _requireState(LifecycleState.AggregatePending);
-    uint48 availableAt = deadline + aggregateTimeout;
+    uint48 availableAt = aggregatePendingSince + aggregateTimeout;
     if (block.timestamp < availableAt) revert EarlyTimeout(availableAt);
     state = LifecycleState.Refundable;
   }

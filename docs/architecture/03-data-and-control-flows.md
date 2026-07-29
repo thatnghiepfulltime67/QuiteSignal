@@ -2,12 +2,12 @@
 
 ## Contract components
 
-| Component | Responsibility | Authority |
-|---|---|---|
-| `QuietSignalFactory` | Validate immutable configuration and deploy pools | No custody or lifecycle role |
-| `QuietSignalPool` | Confidential ledger, epoch state, custody, payout, score receipt | Owns pool handles; no oracle authority |
-| `IMarketAdapter` | Convert public aggregate into protocol calls, normalize resolution, and redeem outcomes | Permissionless; returns all assets to the caller atomically |
-| Confidential asset wrapper | Move between confidential and public collateral | External protocol dependency |
+| Component                  | Responsibility                                                                          | Authority                                                   |
+| -------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `QuietSignalFactory`       | Validate immutable configuration and deploy pools                                       | No custody or lifecycle role                                |
+| `QuietSignalPool`          | Confidential ledger, epoch state, custody, payout, score receipt                        | Owns pool handles; no oracle authority                      |
+| `IMarketAdapter`           | Convert public aggregate into protocol calls, normalize resolution, and redeem outcomes | Permissionless; returns all assets to the caller atomically |
+| Confidential asset wrapper | Move between confidential and public collateral                                         | External protocol dependency                                |
 
 The MVP deployment unit is one pool, one public market, and one epoch. Creating a
 new cohort deploys a new pool through the factory. This deliberately removes
@@ -39,10 +39,12 @@ credential or bond policy is a future, separate module.
    `publicYes + publicNo == releasedCollateral`, and calls the adapter.
 
 If adapter execution reverts, the entire finalization transaction reverts and the
-epoch remains `UNWRAP_PENDING`. After a recovery delay, `recoverUnwrap` finalizes the
-same proof, rewraps the released collateral, and enters `REFUNDABLE`. If the Nox
-proof service never produces a valid unwrap proof, recovery is unavailable; this is
-an explicit protocol-liveness dependency and a stop-ship feasibility gate.
+epoch remains `UNWRAP_PENDING`. The pre-unwrap timeout begins only when the epoch
+enters `AGGREGATE_PENDING`, not at the commit deadline. After a recovery delay,
+`recoverUnwrap` finalizes the same proof, rewraps the released collateral, and enters
+`REFUNDABLE`. If the Nox proof service never produces a valid unwrap proof, recovery
+is unavailable; this is an explicit protocol-liveness dependency and a stop-ship
+feasibility gate.
 
 ## Settlement and private score
 
@@ -61,24 +63,24 @@ checked as public non-zero values before confidential arithmetic.
 
 ## State-specific recovery
 
-| State | Funds location | Recovery |
-|---|---|---|
-| `OPEN` | Confidential pool | Refund only after deadline/cancellation policy |
-| `AGGREGATE_PENDING` | Confidential pool | Timeout to `REFUNDABLE` |
-| `UNWRAP_PENDING` | Burn pending proof | Finalize and execute, or delayed finalize-and-rewrap |
-| `EXECUTED` | Public market positions | Await normalized resolution; no original-stake refund |
-| `SETTLED` | Confidential payout pot | Owner claims once; dust handled by immutable policy |
-| `REFUNDABLE` | Confidential pool | Owner refund once |
+| State               | Funds location          | Recovery                                              |
+| ------------------- | ----------------------- | ----------------------------------------------------- |
+| `OPEN`              | Confidential pool       | Refund only after deadline/cancellation policy        |
+| `AGGREGATE_PENDING` | Confidential pool       | Timeout to `REFUNDABLE`                               |
+| `UNWRAP_PENDING`    | Burn pending proof      | Finalize and execute, or delayed finalize-and-rewrap  |
+| `EXECUTED`          | Public market positions | Await normalized resolution; no original-stake refund |
+| `SETTLED`           | Confidential payout pot | Owner claims once; dust handled by immutable policy   |
+| `REFUNDABLE`        | Confidential pool       | Owner refund once                                     |
 
 ## ACL matrix
 
-| Handle class | Pool admin | Owner viewer | Token transient | Public decrypt |
-|---|---:|---:|---:|---:|
-| Imported stake/probability | Required during computation | No | No | Never |
-| Owner position/score | Required | Yes | No | Never |
-| Epoch aggregates | Required | No | No | After k only |
-| Transfer/payout/refund | Required | Recipient after transfer | For one call | Never |
-| Unwrap request/burn | Required as protocol requires | No | For unwrap only | Protocol-required only |
+| Handle class               |                    Pool admin |             Owner viewer | Token transient |         Public decrypt |
+| -------------------------- | ----------------------------: | -----------------------: | --------------: | ---------------------: |
+| Imported stake/probability |   Required during computation |                       No |              No |                  Never |
+| Owner position/score       |                      Required |                      Yes |              No |                  Never |
+| Epoch aggregates           |                      Required |                       No |              No |           After k only |
+| Transfer/payout/refund     |                      Required | Recipient after transfer |    For one call |                  Never |
+| Unwrap request/burn        | Required as protocol requires |                       No | For unwrap only | Protocol-required only |
 
 Every ACL grant is explicit in code and asserted by integration tests. No module may
 grant persistent admin rights to a user, relayer, indexer, adapter, or keeper.

@@ -19,15 +19,15 @@ deployment. The pool has no upgrade proxy in the MVP; a new version deploys a ne
 
 ```solidity
 interface IMarketAdapter {
-    function collateral() external view returns (address);
-    function executeBatch(
-        uint256 amountYes,
-        uint256 amountNo,
-        uint256 minYes,
-        uint256 minNo
-    ) external returns (uint256 acquiredYes, uint256 acquiredNo);
-    function resolution() external view returns (bool resolved, uint8 winner);
-    function redeem() external returns (uint256 redeemedCollateral);
+  function collateral() external view returns (address);
+  function executeBatch(
+    uint256 amountYes,
+    uint256 amountNo,
+    uint256 minYes,
+    uint256 minNo
+  ) external returns (uint256 acquiredYes, uint256 acquiredNo);
+  function resolution() external view returns (bool resolved, uint8 winner);
+  function redeem() external returns (uint256 redeemedCollateral);
 }
 ```
 
@@ -75,19 +75,19 @@ No transition moves backward. Individual claim/refund flags are monotonic.
 
 ## Transitions and guards
 
-| Function | Required state and guards | Result |
-|---|---|---|
-| `commitSignal` | `OPEN`, before deadline, one commit/address, valid bound proofs | Pull encrypted stake; update position and aggregates |
-| `closeEpoch` | Deadline reached | Below k: `REFUNDABLE`; otherwise `AGGREGATE_PENDING` |
-| `requestAggregateDecrypt` | `AGGREGATE_PENDING`, request not created | Public-decrypt YES/NO aggregate handles only |
-| `finalizeAggregate` | Matching request context and valid proof | Store public totals, request total unwrap, enter `UNWRAP_PENDING` |
-| `finalizeExecution` | Matching unwrap proof; conservation and slippage checks | Atomically finalize unwrap and call adapter; enter `EXECUTED` |
-| `recoverUnwrap` | `UNWRAP_PENDING`, recovery delay elapsed, valid unwrap proof | Finalize, rewrap all released collateral, enter `REFUNDABLE` |
-| `cancelBeforeUnwrap` | `AGGREGATE_PENDING`, timeout elapsed | Enter `REFUNDABLE`; revealable aggregate remains public |
-| `settle` | `EXECUTED`, adapter reports resolved | Redeem, verify balance delta, wrap pot, store winner; enter `SETTLED` |
-| `materializeScore` | `SETTLED`, caller committed | Create/update owner-only encrypted Brier score |
-| `claim` | `SETTLED`, caller committed and not claimed/refunded | Confidential payout once |
-| `refund` | `REFUNDABLE`, caller committed and not claimed/refunded | Confidential stake return once |
+| Function                  | Required state and guards                                               | Result                                                                |
+| ------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `commitSignal`            | `OPEN`, before deadline, one commit/address, valid bound proofs         | Pull encrypted stake; update position and aggregates                  |
+| `closeEpoch`              | Deadline reached                                                        | Below k: `REFUNDABLE`; otherwise `AGGREGATE_PENDING`                  |
+| `requestAggregateDecrypt` | `AGGREGATE_PENDING`, request not created                                | Public-decrypt YES/NO aggregate handles only                          |
+| `finalizeAggregate`       | Matching request context and valid proof                                | Store public totals, request total unwrap, enter `UNWRAP_PENDING`     |
+| `finalizeExecution`       | Matching unwrap proof; conservation and slippage checks                 | Atomically finalize unwrap and call adapter; enter `EXECUTED`         |
+| `recoverUnwrap`           | `UNWRAP_PENDING`, recovery delay elapsed, valid unwrap proof            | Finalize, rewrap all released collateral, enter `REFUNDABLE`          |
+| `cancelBeforeUnwrap`      | `AGGREGATE_PENDING`, aggregate timeout elapsed from entry to that state | Enter `REFUNDABLE`; revealable aggregate remains public               |
+| `settle`                  | `EXECUTED`, adapter reports resolved                                    | Redeem, verify balance delta, wrap pot, store winner; enter `SETTLED` |
+| `materializeScore`        | `SETTLED`, caller committed                                             | Create/update owner-only encrypted Brier score                        |
+| `claim`                   | `SETTLED`, caller committed and not claimed/refunded                    | Confidential payout once                                              |
+| `refund`                  | `REFUNDABLE`, caller committed and not claimed/refunded                 | Confidential stake return once                                        |
 
 `recoverUnwrap` requires the same proof whose absence caused the liveness failure.
 It protects against adapter/slippage failure, not total gateway unavailability.

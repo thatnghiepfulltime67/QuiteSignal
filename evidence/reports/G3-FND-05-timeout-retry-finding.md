@@ -26,7 +26,15 @@ fixture portion is therefore excluded permanently. There is no product asset,
 customer key, or production deployment at these addresses, and none of these
 contracts may be reused by a retry.
 
-The retry increases the aggregate timeout enough to make the negative case stable
-on Sepolia and stores the generated secondary test key only in a local ignored,
-owner-readable recovery record until both owner refunds are verified. The record is
-deleted on terminal success and is never included in Git, evidence, logs, or chat.
+The first retry increased the timeout, but exposed the deeper cause: the harness
+started that timeout at the commit deadline rather than when the epoch entered
+`AGGREGATE_PENDING`. A multi-user live sequence can therefore consume the entire
+window before any aggregate request. The retry stopped at `AGGREGATE_PENDING` before
+executing cancellation or refund. The correction records the aggregate-pending entry
+time on-chain and starts the timeout there, matching the documented state machine.
+
+The current retry's secondary actor key is retained only in a local ignored,
+owner-readable recovery record. A dedicated recovery run will cancel its legacy
+timeout spike and return both deterministic fixture stakes before the fresh retry is
+started. The record is deleted only after terminal refunds are verified and is never
+included in Git, evidence, logs, or chat.
