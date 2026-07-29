@@ -476,6 +476,13 @@ ignored actor recovery record permits a dedicated legacy recovery to return both
 fixture stakes. The next fresh attempt starts that timeout on the on-chain
 `AGGREGATE_PENDING` transition, which matches the normative state machine.
 
+The dedicated legacy recovery then passed at blocks `11378407` through `11378410`:
+it cancelled the second attempt permissionlessly and completed both confidential
+owner refunds. The runner verified the two terminal owner balances locally and
+deleted its ignored secondary-actor recovery record. The second attempt therefore
+has no remaining fixture custody; only the separately documented first-attempt
+process-local-key residue remains excluded.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

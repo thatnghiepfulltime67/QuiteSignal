@@ -38,3 +38,12 @@ owner-readable recovery record. A dedicated recovery run will cancel its legacy
 timeout spike and return both deterministic fixture stakes before the fresh retry is
 started. The record is deleted only after terminal refunds are verified and is never
 included in Git, evidence, logs, or chat.
+
+Legacy recovery completed on Ethereum Sepolia at blocks `11378407` through
+`11378410`. A permissionless caller cancelled the second attempt's timeout spike,
+then both recorded owners refunded their deterministic fixture stakes. The recovery
+runner decrypted each resulting owner balance locally, verified the planned terminal
+balances, and deleted the ignored secondary-actor recovery record only after those
+checks passed. The three receipts are recorded in the append-only spend ledger. The
+first attempt's separately documented process-local-key residue remains excluded;
+the recovered second attempt has no remaining fixture custody.
