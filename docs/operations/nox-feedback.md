@@ -91,3 +91,28 @@ Do not include keys, confidential plaintext, handles, proofs, or wallet signatur
   prior balance. This remains subject to the complete FND-04 Sepolia lifecycle test.
 - Upstream reference: `ERC7984Base._transferAndCall` and
   `ERC7984Utils.checkOnTransferReceived` in the pinned package.
+
+### F-005 — Recipient balance requires encrypted intent binding
+
+- Date: 2026-07-30
+- Package/network: `@iexec-nox/nox-confidential-contracts@0.2.2` and
+  `@iexec-nox/nox-protocol-contracts@0.2.4`, Ethereum Sepolia
+- Reproduction: Let a receiver record its entire post-callback confidential wrapper
+  balance as a stake after a real `confidentialTransferAndCall`.
+- Expected: Only the transfer that invoked the callback can become the recorded
+  stake, even if an unrelated confidential transfer reached the receiver earlier.
+- Actual: The callback amount handle is not usable by the receiver (F-004), while
+  the receiver can compute on its aggregate confidential balance. Recording that
+  aggregate without a pre-registered encrypted intent would conflate unrelated
+  balance with the callback transfer.
+- Impact: A direct transfer could contaminate a later position and violate exact
+  stake conservation. The happy-path FND-04 run is therefore not sufficient G2
+  evidence.
+- Workaround: The receiver registers a caller-bound encrypted expected stake and a
+  pre-callback balance snapshot. It returns encrypted `delta == expected` from the
+  callback, so the unchanged wrapper refunds a mismatch in the same transaction.
+  A gateway proof may reveal only that equality boolean before the receiver enters
+  the held state; no amount is public-decrypted.
+- Upstream reference: `ERC7984Base._transferAndCall`, which refunds when the
+  receiver returns an encrypted false result, and `Nox.publicDecrypt` proof
+  verification in the pinned package.

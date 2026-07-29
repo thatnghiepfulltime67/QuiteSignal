@@ -70,3 +70,14 @@ cross-spike, cross-chain, wrong-type, and uninitialized encrypted inputs. F-003
 records the mandatory proof-owner/application-caller binding. This result has no
 asset custody and does not replace the required FND-04 asset-lifecycle feasibility
 evidence.
+
+## FND-04 partial confidential-asset feasibility
+
+The isolated FND-04 Sepolia run proved that the unchanged wrapper can complete an
+encrypted pull, one-time owner return, unwrap proof finalization, measured public
+balance delta, delayed rewrap, and terminal read-only verification. It also proved
+that the callback amount is not receiver-computable (F-004). This is partial
+evidence only: F-005 identifies that a receiver must bind its post-callback balance
+delta to a caller-registered encrypted intent before recording a stake. G2 remains
+open until the wrapper's encrypted-false refund and the amount-free acceptance proof
+are proven directly on Sepolia. R-17 tracks this custody-critical condition.

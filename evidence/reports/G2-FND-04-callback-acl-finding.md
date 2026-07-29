@@ -1,6 +1,6 @@
 # G2 FND-04 callback ACL finding
 
-Status: `running; corrected lifecycle verification pending`
+Status: `running; intent-bound lifecycle verification pending`
 
 The first FND-04 Sepolia run deployed an isolated public ERC-20 fixture, an
 unchanged inherited Nox ERC20-to-ERC7984 wrapper, and two no-custody lifecycle
@@ -17,6 +17,18 @@ The pinned wrapper has already updated the receiver's confidential balance befor
 the callback. ADR-012 therefore requires the isolated receiver to read that
 recipient balance and derive the encrypted received delta rather than using the
 unusable callback argument. This preserves live ACL semantics and introduces no
-plaintext or trusted service. FND-04/G2 remain incomplete until the corrected
-wrap, encrypted pull, one-time return, unwrap proof, balance-delta, delayed rewrap,
-and replay checks all pass on Ethereum Sepolia.
+plaintext or trusted service.
+
+The corrected balance-read harness then completed its happy-path lifecycle at blocks
+`11377980` through `11377995`, including one-time return, unwrap, delayed rewrap,
+replay rejection, and terminal read-only verification. That result is deliberately
+not a G2 pass: F-005 identifies that recording the whole post-callback balance does
+not bind the stake to the callback when an unrelated direct transfer already exists.
+
+The next FND-04 slice registers a caller-bound encrypted expected stake and a
+pre-callback balance snapshot. The callback must return encrypted equality between
+the received delta and expected stake to the unchanged wrapper, which refunds a
+mismatch in the same transaction. Only an amount-free equality boolean may be
+public-decrypted to finalize acceptance. G2 remains incomplete until this hardened
+wrap, accepted pull, rejected mismatch, one-time return, unwrap proof, balance
+delta, delayed rewrap, and replay set all pass on Ethereum Sepolia.

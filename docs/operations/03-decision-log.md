@@ -93,4 +93,6 @@ balance and derive the received encrypted delta from the post-transfer recipient
 balance; it must not use the callback argument or introduce a plaintext amount.
 This preserves the wrapper's real ACL behavior and has no backend or relayer trust
 role. The decision is valid only if FND-04 proves the flow, exact balance delta,
-recovery rewrap, and unauthorized cases on Ethereum Sepolia.
+recovery rewrap, and unauthorized cases on Ethereum Sepolia. F-005 further requires
+the delta to be bound to a caller-registered encrypted intent and confirmed only by
+an amount-free equality proof; the wrapper must refund a mismatch atomically.

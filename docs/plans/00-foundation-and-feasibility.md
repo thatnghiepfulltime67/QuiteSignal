@@ -273,26 +273,35 @@ Files/modules allowed: `modules/protocol/contracts/feasibility/`,
 
 Acceptance criteria: A bytecode-matched Sepolia spike deploys an isolated public
 ERC-20 fixture, an unchanged inherited Nox ERC20-to-ERC7984 wrapper, and a
-receiver/recovery spike. The owner wraps fixture collateral, sends an encrypted
-amount through the real wrapper callback, and only the recorded owner can receive
-the returned confidential amount once. The spike burns the confidential amount into
-a public-decryptable unwrap request; a gateway proof finalizes the release and the
+receiver/recovery spike. Before the callback, the owner registers a context-bound
+encrypted expected stake and the receiver snapshots its permitted wrapper balance.
+The callback derives the encrypted post-transfer delta, compares it to the expected
+stake, and returns that encrypted equality result to the unchanged wrapper. A false
+result must make the wrapper refund the transfer in the same transaction; only a
+public-decrypt proof for the equality boolean, never an amount, can finalize an
+accepted deposit. Only the recorded owner can receive the accepted confidential
+amount once. The spike burns the accepted confidential amount into a
+public-decryptable unwrap request; a gateway proof finalizes the release and the
 observed public ERC-20 balance delta equals the released amount. A delayed recovery
 path rewraps the released balance into confidential custody before a one-time owner
 refund.
 
-Negative cases: Missing callback ACL, unauthorized caller, wrong token callback,
-wrong recipient, repeated return/refund, stale or duplicate unwrap finalization,
-early recovery, malformed or unavailable unwrap proof, and an unwrap whose observed
-underlying balance delta differs from the requested public amount must fail directly
-on Sepolia. The test must prove that public decryption is limited to the
-protocol-required unwrap request and never exposes the owner-shaped stake handle.
+Negative cases: Missing callback ACL, absent or replayed intent, callback amount
+that differs from the registered encrypted intent, unauthorized caller, wrong token
+callback, wrong recipient, repeated return/refund, stale or duplicate unwrap
+finalization, early recovery, malformed or unavailable unwrap proof, and an unwrap
+whose observed underlying balance delta differs from the requested public amount
+must fail directly on Sepolia. The test must prove that public decryption is limited
+to the protocol-required unwrap request and an amount-free deposit-acceptance
+boolean; it must never expose the owner-shaped stake handle.
 
 Privacy/custody impact: Test values, raw handles, proofs, calldata, signatures,
 and environment material remain process-local and are never logged or committed.
-The fixture ERC-20 has no external value. The wrapper and all confidential transfer,
-burn, public-decryption proof, finalization, and rewrap behavior are live Sepolia
-operations; no local chain or fake confidential-token substitute is evidence.
+The only added public-decryption surface is an encrypted equality boolean that
+reveals acceptance, not a stake amount. The fixture ERC-20 has no external value.
+The wrapper and all confidential transfer, wrapper refund, burn, public-decryption
+proof, finalization, and rewrap behavior are live Sepolia operations; no local chain
+or fake confidential-token substitute is evidence.
 
 Funds location/recovery impact: The only real expenditure is bounded Sepolia gas.
 Fixture collateral moves among the owner, wrapper, and isolated spike. During an
@@ -321,9 +330,14 @@ Checkpoint: The first live run deployed the fixture collateral, unchanged wrappe
 and two isolated spikes at blocks `11377909` through `11377913`, then completed
 fixture mint, approval, and first wrap. A read-only `confidentialTransferAndCall`
 probe proved that its callback amount lacks receiver compute access; F-004 and
-ADR-012 record the required recipient-balance-delta design. The confirmed receipts
-are in the Sepolia spend ledger. G2 remains running until the corrected complete
-lifecycle passes directly on Sepolia.
+ADR-012 record the required recipient-balance-delta design. A corrected happy-path
+run then passed at blocks `11377980` through `11377995`, including return, unwrap,
+rewrap, and terminal read-only verification. That run exposed F-005: using the
+whole post-callback balance without a registered encrypted intent can let an
+unrelated direct transfer contaminate the recorded stake. G2 remains running. The
+next hardened slice must prove encrypted intent/delta equality, wrapper refund on a
+mismatch, amount-free acceptance proof, and the existing lifecycle directly on
+Sepolia. The confirmed receipts are in the append-only Sepolia spend ledger.
 
 ## FND-01 — Toolchain lock
 
