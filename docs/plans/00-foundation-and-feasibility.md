@@ -346,7 +346,14 @@ The next run passed the callback and acceptance proof at blocks `11378095` throu
 `11378098`, then exposed F-007 during return simulation: the wrapper also needs
 one-transaction access to the encrypted held amount whenever it transfers or burns
 that amount. The corrected receiver must grant this scoped access immediately before
-each wrapper call. The confirmed receipts are in the append-only Sepolia spend ledger.
+each wrapper call. The old isolated direct spike at
+`0x5a6cd68e2ee9aef073e7f95354fa9d0b7d7cb210` now holds valueless fixture
+collateral from that accepted test transfer and cannot execute its missing ACL grant;
+it is permanently excluded from all subsequent runs. Its location and lack of
+recovery are recorded in F-007. The harness now snapshots the encrypted owner
+balance in memory at the beginning of each clean retry and proves exact return
+relative to that baseline. The confirmed receipts are in the append-only Sepolia
+spend ledger.
 
 ## FND-01 — Toolchain lock
 

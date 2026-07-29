@@ -45,4 +45,8 @@ The next attempt passed the callback and acceptance proof, but its first return
 simulation exposed F-007: the wrapper also needs transient access to the
 receiver-held encrypted amount supplied to its transfer and unwrap operations. No
 return transaction was sent. The next slice grants that access only immediately
-before each unchanged wrapper operation and repeats the complete lifecycle.
+before each unchanged wrapper operation and repeats the complete lifecycle. The
+accepted valueless fixture collateral remains at the old direct spike
+`0x5a6cd68e2ee9aef073e7f95354fa9d0b7d7cb210`; that immutable isolated harness
+cannot add the newly required ACL, so it is not reused. This is an explicitly
+documented test-fixture residue, not a product custody state.

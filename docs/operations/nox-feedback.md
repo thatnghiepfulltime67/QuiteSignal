@@ -149,9 +149,14 @@ Do not include keys, confidential plaintext, handles, proofs, or wallet signatur
 - Actual: Sepolia gas simulation reverted with Nox `NotAllowed` for the wrapper
   address at the receiver's one-time return path.
 - Impact: Receiver-held encrypted values cannot cross back into unchanged wrapper
-  operations without explicitly scoped wrapper access.
+  operations without explicitly scoped wrapper access. The isolated direct spike at
+  `0x5a6cd68e2ee9aef073e7f95354fa9d0b7d7cb210` accepted valueless fixture
+  collateral before its return simulation exposed this condition; its immutable old
+  bytecode cannot add the required ACL, so that test-only collateral is stranded.
 - Workaround: Immediately before each wrapper transfer or unwrap that consumes a
   receiver-held encrypted amount, grant `Nox.allowTransient` to the configured
   wrapper. The grant applies only to that transaction and must not be persisted.
+  Exclude the failed isolated spike from all later tests and baseline each retry from
+  the owner's live encrypted balance without logging its value.
 - Upstream reference: The pinned wrapper's `confidentialTransfer` and `unwrap`
   paths call Nox computation primitives with the supplied amount.

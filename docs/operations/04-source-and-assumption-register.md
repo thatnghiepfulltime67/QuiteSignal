@@ -81,3 +81,10 @@ evidence only: F-005 identifies that a receiver must bind its post-callback bala
 delta to a caller-registered encrypted intent before recording a stake. G2 remains
 open until the wrapper's encrypted-false refund and the amount-free acceptance proof
 are proven directly on Sepolia. R-17 tracks this custody-critical condition.
+
+F-007 records one isolated, valueless fixture residue at
+`0x5a6cd68e2ee9aef073e7f95354fa9d0b7d7cb210`: a pre-fix feasibility spike
+accepted fixture collateral but cannot call the wrapper without the subsequently
+identified transient ACL grant. It is not a product contract, has no external value,
+and is excluded from all future runs. The live runner snapshots the remaining owner
+balance in memory and proves subsequent conservation relative to that baseline.
