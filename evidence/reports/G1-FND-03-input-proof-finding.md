@@ -1,6 +1,6 @@
 # G1 FND-03 input-proof binding finding
 
-Status: `resolved in the harness; full ACL verification pending`
+Status: `completed finding; ACL verification passed`
 
 The first FND-03 Sepolia run deployed three isolated no-custody contracts:
 
@@ -20,12 +20,11 @@ application caller. This is intended input binding, not an arithmetic or ACL
 failure.
 
 The corrected harness used the throwaway deployer as both input encryptor and
-transaction sender, and materialized the primary spike at block `11377788` in
-transaction `0x2061cd6dea98c82b271ce08e73ddc21aa7a2a24806fb2400061fd5559c876bc7`.
-The receipt is in the spend ledger. The subsequent persistence submission did not
-produce a receipt, so it is not treated as evidence.
+transaction sender. It materialized the primary spike at block `11377788`, then
+confirmed the later persistence and transient-access transactions at blocks
+`11377790` and `11377791`. All receipts are in the spend ledger.
 
-The harness will resume the bytecode-matched no-custody spike only after a new
-clean-source and budget preflight. FND-03 and G1 remain incomplete until the
-complete authority, decryption-scope, persistence, transient-access, and
-negative-case suite passes on Ethereum Sepolia.
+Read-only verification at block `11377822` passed the complete authority matrix,
+owner decryption scope, transient-expiry check, and eleven negative assertions.
+FND-03 and G1 are complete. The owner/caller relationship remains a mandatory
+constraint for future production external-input flows.

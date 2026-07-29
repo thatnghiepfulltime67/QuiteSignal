@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "gate": "G1",
+  "workItem": "FND-03",
+  "phase": "P0",
+  "timestampUtc": "2026-07-29T20:27:31Z",
+  "sourceCommits": {
+    "aclHarness": "21acef7237dd1112c669f1e06413d09aaaa8b728",
+    "inputProofBinding": "ee243ec8a8e60238312181e2da601adc68b466ec",
+    "wrongChainNegative": "f13bfb66a14c0c4b606424401909f593038f23f8",
+    "resumeAndVerifier": "09cecd5f215d0114e0aeba1bcbd238819711259f"
+  },
+  "environment": {
+    "class": "offline-static-and-read-preflight",
+    "node": "24.18.0",
+    "npm": "11.16.0",
+    "hardhat": "3.11.1",
+    "solidity": "0.8.35",
+    "noxProtocolContracts": "0.2.4",
+    "noxHandle": "0.1.0-beta.13"
+  },
+  "checks": [
+    {
+      "command": "npm run compile",
+      "result": "passed",
+      "summary": "Strict TypeScript compilation and the isolated Solidity ACL harness build passed."
+    },
+    {
+      "command": "npm run test:nox:sepolia -- FND-03 --dry-run",
+      "result": "passed",
+      "summary": "The live Sepolia chain, Nox runtime, signer balance, cumulative ledger, and bounded deployment estimates passed without a write."
+    },
+    {
+      "command": "npm run scan:secrets",
+      "result": "passed",
+      "summary": "Tracked files and history contained no detected secrets."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "summary": "The FND-03 source and evidence slice has no whitespace errors."
+    }
+  ],
+  "requirementsCovered": ["P3", "P6", "I3", "I10"],
+  "knownLimitations": [
+    "The isolated harness has no confidential asset, pool, adapter, or recovery path; FND-04 through FND-06 remain required P0 work.",
+    "F-003 records that an owner-bound external input must be submitted by the importing application caller; production flows must retain that binding.",
+    "R-16 remains open for the pinned Hardhat transitive advisory and must be re-evaluated before G8."
+  ],
+  "reproduction": [
+    "Use Node 24.18.0 and npm 11.16.0 with the committed lockfile.",
+    "Run npm run compile.",
+    "Run npm run test:nox:sepolia -- FND-03 --dry-run.",
+    "Run npm run scan:secrets."
+  ]
+}

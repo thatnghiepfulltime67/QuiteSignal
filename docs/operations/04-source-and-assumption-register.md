@@ -58,3 +58,15 @@ absolute-difference, square, and Brier-score comparisons without committed
 plaintext or asset custody. Public decryption was limited to test equality and
 safety booleans. This result does not prove persistent ACL behavior; FND-03 remains
 the required G1 follow-up.
+
+## FND-03 verified ACL feasibility
+
+The isolated ACL spike passed direct Ethereum Sepolia verification for persistent
+pool-only compute authority, owner viewer-only decryption across transactions, and
+one-transaction transient recipient access. The owner-shaped derived handle could
+not be public-decrypted; unauthorized wallet, keeper, adapter, token, and transient
+recipient compute attempts were rejected. The runner also rejected replayed,
+cross-spike, cross-chain, wrong-type, and uninitialized encrypted inputs. F-003
+records the mandatory proof-owner/application-caller binding. This result has no
+asset custody and does not replace the required FND-04 asset-lifecycle feasibility
+evidence.

@@ -161,8 +161,8 @@ verification passed ten vectors, 33 public feasibility assertions, four encrypte
 input negative cases, and the missing-runtime Sepolia preflight. Sanitized evidence
 is recorded at `evidence/offline/G1/FND-02.json`,
 `evidence/sepolia/G1/FND-02.json`, and `evidence/reports/G1-summary.md`. The
-harness has no asset custody. G1 remains running until FND-03 proves ACL and
-persistence behavior.
+harness has no asset custody. G1 remained running until FND-03 proved ACL and
+persistence behavior; the combined gate is now passed.
 
 ## Active work item
 
@@ -171,14 +171,14 @@ ID: `FND-03`
 Outcome: Prove persistent Nox handle authority and minimal viewer access directly
 on Ethereum Sepolia before any confidential asset or pool lifecycle exists.
 
-Status: `in_progress`
+Status: `complete`
 
-Prerequisite gates: G0 passed and FND-02 arithmetic evidence is recorded. G1
-remains running. The throwaway deployer both encrypts and submits the owner input,
-because Nox verifies the input proof against the application caller. Other
-test-only actor keys come from an ignored mnemonic when configured, or from
-ignored `.secrets/` otherwise. Private material must never enter output, source,
-evidence, or Git.
+Prerequisite gates: G0 passed and FND-02 arithmetic evidence is recorded. G1 passed
+after the recorded FND-03 Sepolia verification. The throwaway deployer both encrypts
+and submits the owner input, because Nox verifies the input proof against the
+application caller. Other test-only actor keys come from an ignored mnemonic when
+configured, or from ignored `.secrets/` otherwise. Private material must never
+enter output, source, evidence, or Git.
 
 Files/modules allowed: `modules/protocol/contracts/feasibility/`,
 `modules/protocol/scripts/feasibility/`, `modules/protocol/test/feasibility/`,
@@ -235,6 +235,16 @@ Rollback/failure action: Revert only the isolated FND-03 source commit. Deployed
 spikes have no custody. If a required ACL condition cannot be proven on Sepolia,
 record the sanitized receipt and authority matrix, mark G1 failed, and do not
 replace the result with a trusted backend or a local-chain substitute.
+
+Completion: Three bytecode-matched isolated contracts were deployed at Sepolia
+blocks `11377738` through `11377741`. The primary spike imported the encrypted
+owner input at block `11377788`, proved persistent computation at `11377790`, and
+proved transient-recipient expiry at `11377791`. A read-only verification at block
+`11377822` passed the full authority matrix, owner decryption scope, and eleven
+negative assertions. Sanitized evidence is recorded at
+`evidence/offline/G1/FND-03.json`, `evidence/sepolia/G1/FND-03.json`, and
+`evidence/reports/G1-summary.md`. The isolated harness has no asset custody. G1 is
+passed; FND-04 is the next eligible work item.
 
 ## FND-01 — Toolchain lock
 
@@ -328,7 +338,7 @@ docs/operations/03-decision-log.md
 ## Exit checklist
 
 - [ ] G0 passed: frozen npm toolchain and Sepolia read preflight are reproducible.
-- [ ] G1 passed: arithmetic, context binding, ACL, and persistence pass directly on Sepolia.
+- [x] G1 passed: arithmetic, context binding, ACL, and persistence pass directly on Sepolia.
 - [ ] G2 passed: confidential asset success and recovery conserve funds.
 - [ ] G3 passed: aggregate-only disclosure and proof/recovery semantics pass.
 - [ ] G4 passed: one unchanged public protocol and adapter boundary are selected.

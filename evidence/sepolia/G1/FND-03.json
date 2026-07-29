@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "gate": "G1",
+  "workItem": "FND-03",
+  "phase": "P0",
+  "timestampUtc": "2026-07-29T20:27:31Z",
+  "sourceCommits": {
+    "harness": "21acef7237dd1112c669f1e06413d09aaaa8b728",
+    "inputProofBinding": "ee243ec8a8e60238312181e2da601adc68b466ec",
+    "wrongChainNegative": "f13bfb66a14c0c4b606424401909f593038f23f8",
+    "verification": "09cecd5f215d0114e0aeba1bcbd238819711259f"
+  },
+  "environment": {
+    "class": "sepolia-write-and-read",
+    "chainId": 11155111,
+    "deploymentBlockRange": "11377738-11377741",
+    "materializationBlock": 11377788,
+    "persistenceBlock": 11377790,
+    "transientAccessBlock": 11377791,
+    "verificationBlock": 11377822,
+    "noxComputeAddress": "0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF",
+    "noxProtocolContracts": "0.2.4",
+    "noxHandle": "0.1.0-beta.13"
+  },
+  "contracts": {
+    "primaryAclSpike": {
+      "address": "0x28a969018975fb40aed0bfa98f6d1c3023b6a7da",
+      "runtimeBytecodeHash": "0x80e7218541b0b5d84c1e5e12d401c5af6787da4dfda3973eb6d17ea86c998ba7",
+      "abiHash": "0x1f803ad151c0ca02f204c9474714a68602484561fb62752297bf93234b8930b9",
+      "runtimeMatchesCompiledArtifact": true
+    },
+    "negativeAclSpike": {
+      "address": "0xe6acccbddd77c9bcd7e7286f837d70c4e9b77222",
+      "runtimeBytecodeHash": "0x80e7218541b0b5d84c1e5e12d401c5af6787da4dfda3973eb6d17ea86c998ba7",
+      "runtimeMatchesCompiledArtifact": true
+    },
+    "transientRecipient": {
+      "address": "0x9ff509452e3acd6c01a9b1238214f94f75df86a3",
+      "runtimeBytecodeHash": "0x5e39bbaa6d01b8b2ef6bb9023ff08c45b4997b9f49f42e9d221f5730cb389fec",
+      "abiHash": "0xdbae71f41c75b3a666e1dd0bac588ba3932da568ba03c77075c87f78193b4cb9",
+      "runtimeMatchesCompiledArtifact": true
+    }
+  },
+  "transactions": [
+    {
+      "purpose": "primary isolated ACL spike deployment",
+      "hash": "0x0319d937828ff03385b93c10924978f936e2a673a62fc7a89a3540dd9205bb78",
+      "blockNumber": 11377738,
+      "gasUsed": "649085",
+      "actualGasCostWei": "651940021792305"
+    },
+    {
+      "purpose": "negative-case isolated ACL spike deployment",
+      "hash": "0x417763c2238c171f4a2392b77691b2fb385390d56871048074111ca8a3616c68",
+      "blockNumber": 11377740,
+      "gasUsed": "649085",
+      "actualGasCostWei": "701278721926380"
+    },
+    {
+      "purpose": "transient access recipient deployment",
+      "hash": "0xe29c78b7cbfd20b099b7437230696521b5394c45c07c3f120a360529ef3decdb",
+      "blockNumber": 11377741,
+      "gasUsed": "237568",
+      "actualGasCostWei": "248777558892544"
+    },
+    {
+      "purpose": "encrypted owner input materialization",
+      "hash": "0x2061cd6dea98c82b271ce08e73ddc21aa7a2a24806fb2400061fd5559c876bc7",
+      "blockNumber": 11377788,
+      "gasUsed": "176566",
+      "actualGasCostWei": "186448922185058"
+    },
+    {
+      "purpose": "persistent derived-handle computation",
+      "hash": "0x985c6e5b549b6cc5a7ad2353f2157640de4635b13b5cdca2502d798fe8498d82",
+      "blockNumber": 11377790,
+      "gasUsed": "107100",
+      "actualGasCostWei": "119805208847100"
+    },
+    {
+      "purpose": "one-transaction transient access proof",
+      "hash": "0xed40924cbc3fd6ab4b9feead10b7e245098899e63a034e7aee86b94d41f734a7",
+      "blockNumber": 11377791,
+      "gasUsed": "92831",
+      "actualGasCostWei": "99851707158548"
+    }
+  ],
+  "checks": [
+    {
+      "command": "npm run test:nox:sepolia -- FND-03 --reuse-contracts=<recorded-addresses>",
+      "result": "write-receipts-passed",
+      "summary": "The bytecode-matched no-custody spikes materialized an encrypted owner input, performed a later persistent computation, and proved transient access in one transaction."
+    },
+    {
+      "command": "npm run test:nox:sepolia -- FND-03 --verify-contracts=<recorded-addresses>",
+      "result": "passed",
+      "summary": "Three runtime bytecodes matched the compiled artifacts; 18 authority assertions, five decryption-scope assertions, and 11 negative assertions passed without another write."
+    },
+    {
+      "command": "npm run check:sepolia:read",
+      "result": "passed",
+      "summary": "The configured RPC reported chain 11155111, live NoxCompute runtime, and an in-budget eight-entry ledger."
+    }
+  ],
+  "observed": {
+    "authorityAssertionsVerified": 18,
+    "decryptionScopeAssertionsVerified": 5,
+    "negativeAssertionsVerified": 11,
+    "authorityMatrix": {
+      "poolSpike": [true, true, false],
+      "owner": [false, true, false],
+      "unrelatedWallet": [false, false, false],
+      "keeper": [false, false, false],
+      "adapter": [false, false, false],
+      "confidentialToken": [false, false, false]
+    },
+    "negativeCases": [
+      "replayed encrypted import",
+      "cross-spike encrypted input",
+      "cross-chain encrypted input",
+      "wrong encrypted input type",
+      "uninitialized external handle",
+      "non-pool compute attempts by owner, unrelated wallet, keeper, adapter, token, and transient recipient"
+    ],
+    "decryptionScope": {
+      "ownerCanDecryptDerivedHandle": true,
+      "unrelatedViewerDecryptRejected": true,
+      "ownerShapedHandlePublicDecryptRejected": true,
+      "persistentEqualityBooleanPublicDecrypt": true,
+      "transientEqualityBooleanPublicDecrypt": true,
+      "transientRecipientHasPersistentComputeAuthorityAfterTransaction": false
+    },
+    "totalRecordedGasWei": "6681697863388837",
+    "remainingGasWei": "493318302136611163"
+  },
+  "privacyAndCustody": {
+    "plaintextCommitted": false,
+    "rawHandlesCommitted": false,
+    "proofsOrCalldataCommitted": false,
+    "assetCustodyCreated": false,
+    "publicDecryptionScope": "Only isolated persistence and transient equality booleans were public-decrypted; the owner-shaped derived handle was not."
+  },
+  "knownLimitations": [
+    "This isolated ACL spike proves no confidential asset movement, market accounting, adapter boundary, or recovery path.",
+    "F-003 input-proof caller binding applies to all future production external-input flows.",
+    "The reused spikes are feasibility-only contracts and are not a product deployment."
+  ],
+  "reproduction": [
+    "Run npm run check:sepolia:read.",
+    "Run npm run test:nox:sepolia -- FND-03 --verify-contracts=0x28a969018975fb40aed0bfa98f6d1c3023b6a7da,0xe6acccbddd77c9bcd7e7286f837d70c4e9b77222,0x9ff509452e3acd6c01a9b1238214f94f75df86a3.",
+    "Run npm run budget:status."
+  ]
+}
