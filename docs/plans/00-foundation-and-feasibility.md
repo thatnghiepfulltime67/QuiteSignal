@@ -117,7 +117,7 @@ Files/modules allowed: `package.json`, `package-lock.json`,
 `docs/plans/00-foundation-and-feasibility.md`,
 `docs/setup-sepolia.md`,
 `docs/plans/evidence-ledger.md`, `docs/operations/nox-feedback.md`,
-`docs/operations/02-risk-register.md`, and
+`docs/operations/02-risk-register.md`, `docs/operations/03-decision-log.md`, and
 `docs/operations/04-source-and-assumption-register.md`.
 
 Acceptance criteria: An isolated Sepolia contract imports externally encrypted
@@ -316,6 +316,14 @@ Rollback/failure action: Revert only isolated FND-04 source commits. The fixture
 token and wrapper have no real asset custody; no recovery beyond the recorded
 fixture-balance location is required. Any failed proof-finalization, ACL, balance
 delta, or rewrap condition fails G2 and blocks FND-05 through FND-07 and P1.
+
+Checkpoint: The first live run deployed the fixture collateral, unchanged wrapper,
+and two isolated spikes at blocks `11377909` through `11377913`, then completed
+fixture mint, approval, and first wrap. A read-only `confidentialTransferAndCall`
+probe proved that its callback amount lacks receiver compute access; F-004 and
+ADR-012 record the required recipient-balance-delta design. The confirmed receipts
+are in the Sepolia spend ledger. G2 remains running until the corrected complete
+lifecycle passes directly on Sepolia.
 
 ## FND-01 — Toolchain lock
 

@@ -68,3 +68,26 @@ Do not include keys, confidential plaintext, handles, proofs, or wallet signatur
   throwaway account, then separately proves the owner has viewer-only access to the
   derived handle. The production design remains subject to the same constraint.
 - Upstream reference: `Compute.validateInputProof` in the pinned Nox contracts.
+
+### F-004 — ERC-7984 callback amount lacks receiver compute access
+
+- Date: 2026-07-30
+- Package/network: `@iexec-nox/nox-confidential-contracts@0.2.2` and
+  `@iexec-nox/nox-protocol-contracts@0.2.4`, Ethereum Sepolia
+- Reproduction: Wrap isolated fixture collateral, then call
+  `confidentialTransferAndCall` with an encrypted amount to a receiver that performs
+  a Nox operation on the callback's `amount` handle.
+- Expected: The documented callback amount is accessible to the receiver during the
+  callback.
+- Actual: Sepolia gas simulation reverted with the receiver's
+  `MissingTransientAccess` error. The wrapper updates the recipient's confidential
+  balance before the callback, but does not grant compute access to the callback
+  `amount` handle.
+- Impact: A pool cannot use the callback argument itself as its encrypted stake
+  record. Treating it as usable would fail live and could tempt an unsafe plaintext
+  fallback.
+- Workaround: The receiver reads its confidential wrapper balance, for which the
+  wrapper grants recipient access, and derives the received encrypted delta from its
+  prior balance. This remains subject to the complete FND-04 Sepolia lifecycle test.
+- Upstream reference: `ERC7984Base._transferAndCall` and
+  `ERC7984Utils.checkOnTransferReceived` in the pinned package.

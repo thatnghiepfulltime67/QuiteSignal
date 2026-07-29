@@ -81,3 +81,16 @@ The repository uses npm workspaces with `apps/` for user-facing applications,
 protocol/domain/client/verifier/config code, and `ops/` for non-runtime orchestration.
 Exact Node/npm versions are pinned by G0. Cross-workspace imports use declared exports;
 deep relative imports and circular dependencies are forbidden.
+
+## ADR-012 — Derive received confidential collateral from recipient balance
+
+**Status:** Accepted with FND-04 feasibility gate
+
+The pinned ERC-7984 wrapper updates the recipient confidential balance before its
+transfer callback but does not grant the callback receiver compute access to the
+callback `amount` handle. A pool must therefore snapshot its permitted confidential
+balance and derive the received encrypted delta from the post-transfer recipient
+balance; it must not use the callback argument or introduce a plaintext amount.
+This preserves the wrapper's real ACL behavior and has no backend or relayer trust
+role. The decision is valid only if FND-04 proves the flow, exact balance delta,
+recovery rewrap, and unauthorized cases on Ethereum Sepolia.
