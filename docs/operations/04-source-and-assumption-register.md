@@ -21,13 +21,13 @@ Last reviewed: 2026-07-30
 
 ## Assumptions requiring P0 evidence
 
-| Assumption | Verification | Decision if false |
-|---|---|---|
-| Sepolia protocol mapping is current | Pinned SDK source and live bytecode | Stop deployment and update config |
-| Owner viewer ACL survives settlement | Cross-transaction live test | Remove private score or redesign receipt |
-| Aggregate public decrypt is reliable | Multi-user Sepolia spike | Reject the batching model |
-| Confidential collateral can cross the adapter boundary | Exact unwrap/proof conservation test | Select a supported asset boundary |
-| Target protocol is deployable and callable | Minimal adapter test | Select another open protocol |
+| Assumption                                             | Verification                         | Decision if false                        |
+| ------------------------------------------------------ | ------------------------------------ | ---------------------------------------- |
+| Sepolia protocol mapping is current                    | Pinned SDK source and live bytecode  | Stop deployment and update config        |
+| Owner viewer ACL survives settlement                   | Cross-transaction live test          | Remove private score or redesign receipt |
+| Aggregate public decrypt is reliable                   | Multi-user Sepolia spike             | Reject the batching model                |
+| Confidential collateral can cross the adapter boundary | Exact unwrap/proof conservation test | Select a supported asset boundary        |
+| Target protocol is deployable and callable             | Minimal adapter test                 | Select another open protocol             |
 
 ## FND-01 verified toolchain baseline
 
@@ -49,3 +49,12 @@ printing RPC configuration values.
 
 The baseline contains no critical npm advisory. Its current high-severity Hardhat
 transitive advisory is tracked as R-16 and must be re-evaluated before G8.
+
+## FND-02 verified arithmetic feasibility
+
+The isolated arithmetic spike passed direct Ethereum Sepolia verification for the
+pinned Nox runtime. The encrypted vector batch covered clamp, allocation,
+absolute-difference, square, and Brier-score comparisons without committed
+plaintext or asset custody. Public decryption was limited to test equality and
+safety booleans. This result does not prove persistent ACL behavior; FND-03 remains
+the required G1 follow-up.

@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "gate": "G1",
+  "workItem": "FND-02",
+  "phase": "P0",
+  "timestampUtc": "2026-07-29T19:48:19Z",
+  "sourceCommits": {
+    "deployment": "bd3217a01db70f98d9183e32f65f15ca8c6bb405",
+    "verification": "a7c66c3",
+    "runtimeNegativeProbe": "02365db0bf6bc2beddecdeb5b18f550d42a3a031"
+  },
+  "environment": {
+    "class": "sepolia-write-and-read",
+    "chainId": 11155111,
+    "deploymentBlock": 11377593,
+    "batchBlock": 11377594,
+    "verificationBlock": 11377636,
+    "noxComputeAddress": "0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF",
+    "noxProtocolContracts": "0.2.4",
+    "noxHandle": "0.1.0-beta.13"
+  },
+  "contract": {
+    "address": "0x8dfb2d7d7a2608ee7cd78983fbe28cce00e1d4a4",
+    "runtimeBytecodeHash": "0xe1020af4a77253b793ffb8d1c8990a88c474a1e3dd592f941c5da42eec1cd904",
+    "abiHash": "0x25752a4e78134ad8f7016c19c837a6c42ed4b18412843da85437757958c115b1",
+    "runtimeMatchesCompiledArtifact": true
+  },
+  "transactions": [
+    {
+      "purpose": "isolated arithmetic harness deployment",
+      "hash": "0x9bf895222f2e1e3374b320875eba5fb4415157783cf6e015874d96ac8e275e64",
+      "blockNumber": 11377593,
+      "gasUsed": "716170",
+      "actualGasCostWei": "743769688559170"
+    },
+    {
+      "purpose": "encrypted arithmetic vector batch",
+      "hash": "0x17df72de7da39cb3c33f8b09541740cf262e76828c94da08fd69ca1f052a3f9e",
+      "blockNumber": 11377594,
+      "gasUsed": "3863374",
+      "actualGasCostWei": "3929826034027732"
+    }
+  ],
+  "checks": [
+    {
+      "command": "npm run test:nox:sepolia -- FND-02 --dry-run",
+      "result": "passed",
+      "summary": "The Sepolia chain, funded throwaway signer, cumulative ledger, and deployment estimate passed before the confirmed write."
+    },
+    {
+      "command": "npm run test:nox:sepolia -- FND-02",
+      "result": "write-receipts-passed",
+      "summary": "The isolated deployment and encrypted batch both confirmed successfully on Sepolia."
+    },
+    {
+      "command": "npm run test:nox:sepolia -- FND-02 --verify-contract=<recorded-address>",
+      "result": "passed",
+      "summary": "Runtime bytecode matched the compiled artifact; ten vectors, 33 public boolean assertions, and four encrypted-input negative cases passed without another write."
+    },
+    {
+      "command": "npm run doctor -- --assert-missing-nox-runtime",
+      "result": "passed",
+      "summary": "The shared Sepolia runtime preflight rejected a live address with no runtime code."
+    },
+    {
+      "command": "npm run check:sepolia:read",
+      "result": "passed",
+      "summary": "The configured RPC reported chain 11155111, live NoxCompute runtime, and an in-budget two-entry ledger."
+    }
+  ],
+  "observed": {
+    "vectorsVerified": 10,
+    "publicAssertionsVerified": 33,
+    "negativeAssertionsVerified": 4,
+    "negativeCases": [
+      "malformed encrypted input proof",
+      "wrong application-contract context",
+      "wrong encrypted input type",
+      "uninitialized external handle",
+      "missing Nox runtime preflight"
+    ],
+    "arithmeticSafetyAssertions": [
+      "overflow-safe multiplication reported false",
+      "underflow-safe subtraction reported false",
+      "division-by-zero-safe division reported false"
+    ],
+    "totalRecordedGasWei": "4673595722586902",
+    "remainingGasWei": "495326404277413098"
+  },
+  "privacyAndCustody": {
+    "plaintextCommitted": false,
+    "rawHandlesCommitted": false,
+    "proofsOrCalldataCommitted": false,
+    "assetCustodyCreated": false,
+    "publicDecryptionScope": "Only feasibility equality and safety booleans were public-decrypted."
+  },
+  "knownLimitations": [
+    "The first immediate public-decryption attempt exceeded the Handle SDK default retry window; F-002 records the observed gateway delay and the bounded retry workaround.",
+    "This arithmetic spike does not prove persistent ACL or owner-viewer behavior; FND-03 remains required before G1 can pass."
+  ],
+  "reproduction": [
+    "Run npm run check:sepolia:read.",
+    "Run npm run doctor -- --assert-missing-nox-runtime.",
+    "Run npm run test:nox:sepolia -- FND-02 --verify-contract=0x8dfb2d7d7a2608ee7cd78983fbe28cce00e1d4a4.",
+    "Run npm run budget:status."
+  ]
+}

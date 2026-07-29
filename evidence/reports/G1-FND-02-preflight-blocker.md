@@ -1,6 +1,13 @@
-# G1 FND-02 Sepolia preflight blocker
+# G1 FND-02 Sepolia preflight blocker (historical)
 
-Status: `blocked`
+Status: `superseded`
+
+The local configuration issue was resolved without disclosing the key. The
+successful evidence is recorded in `evidence/offline/G1/FND-02.json`,
+`evidence/sepolia/G1/FND-02.json`, and `evidence/reports/G1-summary.md`. The
+following record is retained as the sanitized historical reproduction.
+
+Historical status: `blocked`
 
 The isolated encrypted-arithmetic harness compiles and its pure bigint model
 passes offline. The required Ethereum Sepolia dry-run cannot create a signer:

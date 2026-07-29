@@ -100,7 +100,7 @@ Outcome: Prove the encrypted probability, stake, allocation, and Brier-score
 arithmetic primitives against Ethereum Sepolia NoxCompute before a production pool
 or token flow exists.
 
-Status: `in_progress`
+Status: `complete`
 
 Prerequisite gates: G0 passed at source commit
 `6f562e2f6811aa5ab117f3163480a40b4750f755`. The pinned NoxCompute mapping has
@@ -155,10 +155,14 @@ failed required primitive, proof binding, or runtime behavior is a G1 failure;
 FND-03 through FND-07 and P1 remain blocked until an ADR-approved redesign passes
 the complete G1 gate.
 
-Resumption: The local throwaway Sepolia key and dry-run preflight passed on
-2026-07-30 with no chain write. Before the confirmed run, the harness enforces the
-documented per-transaction cap and rejects uninitialized external handles. The
-spend ledger remains at zero and no custody exists.
+Completion: The isolated arithmetic harness and encrypted vector batch confirmed
+at Sepolia blocks `11377593` and `11377594`. A bytecode-matched read-only
+verification passed ten vectors, 33 public feasibility assertions, four encrypted
+input negative cases, and the missing-runtime Sepolia preflight. Sanitized evidence
+is recorded at `evidence/offline/G1/FND-02.json`,
+`evidence/sepolia/G1/FND-02.json`, and `evidence/reports/G1-summary.md`. The
+harness has no asset custody. G1 remains running until FND-03 proves ACL and
+persistence behavior.
 
 ## FND-01 — Toolchain lock
 
