@@ -126,7 +126,7 @@ function runtimeMatchesArtifact(runtime: Hex, artifact: Artifact): boolean {
         if (offset + span > normalized.length) {
           return undefined;
         }
-        normalized = `${normalized.slice(0, offset)}${'00'.repeat(span)}${normalized.slice(
+        normalized = `${normalized.slice(0, offset)}${'0'.repeat(span)}${normalized.slice(
           offset + span,
         )}`;
       }
