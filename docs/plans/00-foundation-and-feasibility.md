@@ -1,6 +1,6 @@
 # P0 — Foundation and feasibility
 
-Status: `in_progress`
+Status: `blocked`
 
 ## Objective
 
@@ -100,7 +100,7 @@ Outcome: Prove the encrypted probability, stake, allocation, and Brier-score
 arithmetic primitives against Ethereum Sepolia NoxCompute before a production pool
 or token flow exists.
 
-Status: `in_progress`
+Status: `blocked`
 
 Prerequisite gates: G0 passed at source commit
 `6f562e2f6811aa5ab117f3163480a40b4750f755`. The pinned NoxCompute mapping has
@@ -153,6 +153,14 @@ deployed Sepolia spike has no asset custody and needs no on-chain recovery. A
 failed required primitive, proof binding, or runtime behavior is a G1 failure;
 FND-03 through FND-07 and P1 remain blocked until an ADR-approved redesign passes
 the complete G1 gate.
+
+Blocker: The required local Sepolia test key fails EVM encoding validation during
+the committed dry-run. Reproduce with
+`npm run test:nox:sepolia -- FND-02 --dry-run`; the result is recorded at
+`evidence/reports/G1-FND-02-preflight-blocker.md`. No chain write was attempted,
+the spend ledger remains at zero, and no custody exists. Resume only after a
+valid funded throwaway Sepolia key is configured directly in ignored `.env`; never
+provide that key in chat, source, logs, or evidence.
 
 ## FND-01 — Toolchain lock
 
