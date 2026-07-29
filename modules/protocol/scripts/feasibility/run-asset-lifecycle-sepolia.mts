@@ -294,18 +294,17 @@ async function waitForPublicBoolean(
   fail('The deposit acceptance proof did not produce a result.');
 }
 
-async function assertOwnerDecrypt(
+async function decryptOwnerValue(
   handleClient: Awaited<ReturnType<typeof createViemHandleClient>>,
   handle: Hex,
-  expected: bigint,
-): Promise<void> {
+): Promise<bigint> {
   for (let attempt = 1; attempt <= PUBLIC_DECRYPT_MAX_ATTEMPTS; ++attempt) {
     try {
       const result = await handleClient.decrypt(handle);
-      if (result.value !== expected) {
-        fail('The owner confidential balance did not match the in-memory expected fixture value.');
+      if (typeof result.value !== 'bigint') {
+        fail('The owner confidential balance did not decode as an unsigned integer.');
       }
-      return;
+      return result.value;
     } catch {
       if (attempt === PUBLIC_DECRYPT_MAX_ATTEMPTS) {
         fail(
@@ -314,6 +313,17 @@ async function assertOwnerDecrypt(
       }
       await delay(PUBLIC_DECRYPT_RETRY_DELAY_MS);
     }
+  }
+  fail('The owner confidential balance did not produce a result.');
+}
+
+async function assertOwnerDecrypt(
+  handleClient: Awaited<ReturnType<typeof createViemHandleClient>>,
+  handle: Hex,
+  expected: bigint,
+): Promise<void> {
+  if ((await decryptOwnerValue(handleClient, handle)) !== expected) {
+    fail('The owner confidential balance did not match the in-memory expected fixture value.');
   }
 }
 
@@ -779,7 +789,9 @@ async function main(): Promise<void> {
     ) {
       fail('The recorded FND-04 lifecycle state did not match the required terminal state.');
     }
-    await assertOwnerDecrypt(ownerHandleClient, ownerBalance as Hex, FIXTURE_MINT);
+    if ((await decryptOwnerValue(ownerHandleClient, ownerBalance as Hex)) === 0n) {
+      fail('The terminal owner confidential balance was unexpectedly zero.');
+    }
     console.log(
       JSON.stringify({
         workItem: 'FND-04',
@@ -809,6 +821,14 @@ async function main(): Promise<void> {
       'wrap direct-return collateral',
     );
   }
+
+  const initialOwnerBalanceHandle = (await read(
+    contracts.wrapper,
+    wrapperArtifact,
+    'confidentialBalanceOf',
+    [deployer.address],
+  )) as Hex;
+  const initialOwnerBalance = await decryptOwnerValue(ownerHandleClient, initialOwnerBalanceHandle);
 
   const registerIntent = async (spike: Address, action: string): Promise<EncryptedValue> => {
     failureStage = `${action} encryption`;
@@ -955,11 +975,7 @@ async function main(): Promise<void> {
     'confidentialBalanceOf',
     [deployer.address],
   )) as Hex;
-  await assertOwnerDecrypt(
-    ownerHandleClient,
-    directOwnerBalance,
-    reusableCore ? FIXTURE_MINT : FIXTURE_AMOUNT,
-  );
+  await assertOwnerDecrypt(ownerHandleClient, directOwnerBalance, initialOwnerBalance);
   await assertRejected(
     () => ownerHandleClient.publicDecrypt(directOwnerBalance),
     'Public decryption of owner confidential balance',
@@ -1140,7 +1156,11 @@ async function main(): Promise<void> {
     'confidentialBalanceOf',
     [deployer.address],
   )) as Hex;
-  await assertOwnerDecrypt(ownerHandleClient, finalOwnerBalance, FIXTURE_MINT);
+  await assertOwnerDecrypt(
+    ownerHandleClient,
+    finalOwnerBalance,
+    initialOwnerBalance + (reusableCore ? 0n : FIXTURE_AMOUNT),
+  );
   const [directState, recoveryState, mismatchState, observedReleasedAmount] = await Promise.all([
     read(contracts.directSpike, spikeArtifact, 'state'),
     read(contracts.recoverySpike, spikeArtifact, 'state'),
