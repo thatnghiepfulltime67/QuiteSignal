@@ -99,6 +99,7 @@ contract AssetLifecycleSpike is IERC7984Receiver {
     Nox.allowThis(heldAmount);
     Nox.addViewer(heldAmount, owner);
     Nox.allowPublicDecryption(depositAccepted);
+    Nox.allowTransient(depositAccepted, msg.sender);
     state = LifecycleState.DepositPending;
     return depositAccepted;
   }
