@@ -483,6 +483,18 @@ deleted its ignored secondary-actor recovery record. The second attempt therefor
 has no remaining fixture custody; only the separately documented first-attempt
 process-local-key residue remains excluded.
 
+The third fresh attempt from source commit `76756cc` deployed fixture
+`0x7e6b7da523a1ac5ead6c74ca7463d5eb46d5a9e2`, wrapper
+`0x81af22666159e5c0fe0145345e429d855408e892`, and timeout spike
+`0x0d5a263352d4d6046e9eb1d471f4ce474599eab8` at blocks `11378423` through
+`11378459`. It stopped immediately after the aggregate request and before timeout
+cancellation or refunds. Investigation showed that Hardhat's incremental build had
+reported no Solidity work after the timeout-state source change, leaving the runner
+with stale compiled artifacts. The contracts in this attempt are excluded and their
+two fixture stakes are recoverable through the persisted ignored actor record. The
+compile command now forces rebuilds, and the next attempt may begin only after that
+legacy recovery passes and fresh runtime bytecode is confirmed.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

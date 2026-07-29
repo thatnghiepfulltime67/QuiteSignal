@@ -47,3 +47,11 @@ balances, and deleted the ignored secondary-actor recovery record only after tho
 checks passed. The three receipts are recorded in the append-only spend ledger. The
 first attempt's separately documented process-local-key residue remains excluded;
 the recovered second attempt has no remaining fixture custody.
+
+The third fresh attempt was stopped before cancellation or refunds after its
+aggregate request. Its source change had not reached the generated artifact because
+Hardhat's incremental build reported no Solidity work, so the deployed harness
+retained the prior timeout behavior. The compile command now forces every Solidity
+rebuild. The third attempt's independent test actor recovery record remains local
+and ignored, enabling its legacy timeout spike to be cancelled and both fixture
+stakes to be returned before another fresh attempt starts.
