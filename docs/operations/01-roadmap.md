@@ -1,5 +1,8 @@
 # Delivery roadmap
 
+This document describes strategic sequencing. Task status and executable slices are
+owned by [`Plan.md`](../../Plan.md) and the files under [`docs/plans/`](../plans/README.md).
+
 ## Phase 0 — Feasibility gates
 
 Exit criteria:

@@ -4,6 +4,9 @@ This is the greenfield source of truth for product, protocol, architecture, and
 delivery decisions. Implementation must conform to these documents or introduce an
 explicit architecture decision record.
 
+Execution is governed by [`AGENTS.md`](AGENTS.md), tracked in [`Plan.md`](Plan.md),
+and divided into reviewable work packages under [`docs/plans/`](docs/plans/README.md).
+
 ## Reading order
 
 1. [`docs/product/00-executive-brief.md`](docs/product/00-executive-brief.md)
