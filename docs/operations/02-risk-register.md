@@ -18,7 +18,7 @@
 | R-14 | Unwrap proof never becomes available | Low | Critical | Phase 0 live liveness test; stop-ship if no bounded operational recovery | Protocol |
 | R-15 | Encrypted score arithmetic is unsupported or unsafe | Medium | Medium | Sepolia arithmetic spike; private score remains gated | Protocol |
 | R-16 | The pinned Hardhat toolchain currently resolves a high-severity `adm-zip` advisory | Medium | High | Restrict Hardhat to developer-controlled protocol artifacts, do not process untrusted ZIP files, recheck on every dependency scan, and upgrade when a compatible patched release exists; G8 requires closure or explicit allowed acceptance | Toolchain |
-| R-17 | A receiver records an aggregate confidential balance rather than the callback's exact transfer | Medium | Critical | Register a caller-bound encrypted intent and balance snapshot, transiently grant the verified wrapper access only to the callback equality and amounts consumed by its current operation, and prove accepted/rejected paths on Sepolia before G2 | Protocol |
+| R-17 | A receiver records an aggregate confidential balance rather than the callback's exact transfer | Medium | Critical | FND-04 proved caller-bound encrypted intent, atomic mismatch refund, and transaction-scoped wrapper ACL on Sepolia; retain the same controls and reprove them in P1 before production use | Protocol |
 
 ## Stop-ship conditions
 

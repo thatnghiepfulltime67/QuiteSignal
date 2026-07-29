@@ -246,7 +246,7 @@ negative assertions. Sanitized evidence is recorded at
 `evidence/reports/G1-summary.md`. The isolated harness has no asset custody. G1 is
 passed; FND-04 is the next eligible work item.
 
-## Active work item
+## FND-04 work item record
 
 ID: `FND-04`
 
@@ -255,7 +255,7 @@ on Ethereum Sepolia, including encrypted pull, owner-only return, proof-gated
 unwrap finalization, and delayed rewrap recovery before any production collateral
 path exists.
 
-Status: `in_progress`
+Status: `complete`
 
 Prerequisite gates: G0 and G1 passed. The feasibility harness must use the pinned
 `@iexec-nox/nox-confidential-contracts@0.2.2` wrapper implementation unchanged.
@@ -352,8 +352,12 @@ collateral from that accepted test transfer and cannot execute its missing ACL g
 it is permanently excluded from all subsequent runs. Its location and lack of
 recovery are recorded in F-007. The harness now snapshots the encrypted owner
 balance in memory at the beginning of each clean retry and proves exact return
-relative to that baseline. The confirmed receipts are in the append-only Sepolia
-spend ledger.
+relative to that baseline. The final intent-bound run passed at blocks `11378127`
+through `11378152`; its read-only verifier passed at block `11378163`. Sanitized
+evidence is recorded at `evidence/offline/G2/FND-04.json`,
+`evidence/sepolia/G2/FND-04.json`, and `evidence/reports/G2-summary.md`. G2 is
+passed; FND-05 is the next eligible work item. The confirmed receipts are in the
+append-only Sepolia spend ledger.
 
 ## FND-01 — Toolchain lock
 
@@ -448,7 +452,7 @@ docs/operations/03-decision-log.md
 
 - [ ] G0 passed: frozen npm toolchain and Sepolia read preflight are reproducible.
 - [x] G1 passed: arithmetic, context binding, ACL, and persistence pass directly on Sepolia.
-- [ ] G2 passed: confidential asset success and recovery conserve funds.
+- [x] G2 passed: confidential asset success and recovery conserve funds.
 - [ ] G3 passed: aggregate-only disclosure and proof/recovery semantics pass.
 - [ ] G4 passed: one unchanged public protocol and adapter boundary are selected.
 - [ ] Evidence ledger contains validated, sanitized records for G0–G4.

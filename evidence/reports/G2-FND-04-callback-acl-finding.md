@@ -1,6 +1,6 @@
 # G2 FND-04 callback ACL finding
 
-Status: `running; intent-bound lifecycle verification pending`
+Status: `passed; final resolution recorded in G2 evidence`
 
 The first FND-04 Sepolia run deployed an isolated public ERC-20 fixture, an
 unchanged inherited Nox ERC20-to-ERC7984 wrapper, and two no-custody lifecycle
@@ -50,3 +50,9 @@ accepted valueless fixture collateral remains at the old direct spike
 `0x5a6cd68e2ee9aef073e7f95354fa9d0b7d7cb210`; that immutable isolated harness
 cannot add the newly required ACL, so it is not reused. This is an explicitly
 documented test-fixture residue, not a product custody state.
+
+The final intent-bound run passed at blocks `11378127` through `11378152`, and a
+read-only verifier passed at block `11378163`. It proved matching intent acceptance,
+atomic mismatch refund, amount-free acceptance proof, one-time return, unwrap,
+proof-gated finalization, delayed rewrap, and terminal recovery. The detailed
+sanitized record is `evidence/sepolia/G2/FND-04.json`; G2 is passed.

@@ -1,0 +1,253 @@
+{
+  "schemaVersion": 1,
+  "gate": "G2",
+  "workItem": "FND-04",
+  "phase": "P0",
+  "timestampUtc": "2026-07-29T21:35:13Z",
+  "sourceCommits": {
+    "fixtureAndWrapperHarness": "b8f677dfc83c68c164d708c1c2cd07e9ffc29e0a",
+    "intentBoundHarness": "9272afbfa71b3e2b2f1419f73e227c0ff6325e7f",
+    "callbackResultAcl": "8b22d20acbd89d2dfad130eb356c5db8840f408b",
+    "heldCollateralAcl": "d717cd3",
+    "baselineRecoveryRunner": "580bd4d7ffed53e996ba730a6aa93d214cd73d3f"
+  },
+  "environment": {
+    "class": "sepolia-write-and-read",
+    "chainId": 11155111,
+    "deploymentBlockRange": "11378127-11378130",
+    "lifecycleBlockRange": "11378132-11378152",
+    "verificationBlock": 11378163,
+    "noxComputeAddress": "0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF",
+    "noxProtocolContracts": "0.2.4",
+    "noxConfidentialContracts": "0.2.2",
+    "noxHandle": "0.1.0-beta.13"
+  },
+  "contracts": {
+    "fixture": {
+      "address": "0x6b086f12ed4b928583d0d7fd6b5fb4de78109a8a",
+      "runtimeBytecodeHash": "0x40efdca942810db15c5b9974def803a9bf1eb00145739b3effa2ce286ffd0de3",
+      "abiHash": "0x89a3e5366d9cb596052a15810ef88b20dd283b01f17c28c0b222b7b6ee945fed",
+      "runtimeMatchesCompiledArtifact": true
+    },
+    "wrapper": {
+      "address": "0x8b4fe02e95401e93ba99e63baee01eea0b4b3b17",
+      "runtimeBytecodeHash": "0xa727b8663257316881027894230d662d4687aca019d9c0762b7f92c708031e08",
+      "abiHash": "0x4f75eb14386d437548b100815181d244a1410b41d446faf890cfa74dded7dc96",
+      "runtimeMatchesCompiledArtifactTemplate": true,
+      "underlyingMatchesFixture": true
+    },
+    "directSpike": {
+      "address": "0x95641e6ce307ad326c204f693cab7fc3c6a66f62",
+      "runtimeBytecodeHash": "0xd238792fdbe35599848195996d79c78b497577581f8fe8ddd86fa1e3320f5db1",
+      "abiHash": "0x7953f3d56f600e86197fa8031e8accf4af8219ccf618d45283909f01239995de",
+      "runtimeMatchesCompiledArtifactTemplate": true,
+      "wrapperAndUnderlyingBindingsMatch": true
+    },
+    "recoverySpike": {
+      "address": "0xa06356982e89d4dc81f4c1191e864ee99d5b90c8",
+      "runtimeBytecodeHash": "0xd238792fdbe35599848195996d79c78b497577581f8fe8ddd86fa1e3320f5db1",
+      "abiHash": "0x7953f3d56f600e86197fa8031e8accf4af8219ccf618d45283909f01239995de",
+      "runtimeMatchesCompiledArtifactTemplate": true,
+      "wrapperAndUnderlyingBindingsMatch": true
+    },
+    "mismatchSpike": {
+      "address": "0x42387ac03ee2aa8a8ec0aac355e67bf76506704a",
+      "runtimeBytecodeHash": "0xd238792fdbe35599848195996d79c78b497577581f8fe8ddd86fa1e3320f5db1",
+      "abiHash": "0x7953f3d56f600e86197fa8031e8accf4af8219ccf618d45283909f01239995de",
+      "runtimeMatchesCompiledArtifactTemplate": true,
+      "wrapperAndUnderlyingBindingsMatch": true
+    }
+  },
+  "transactions": [
+    {
+      "purpose": "intent-bound direct spike deployment",
+      "hash": "0xfcd4166cbd55618989b07ab3113e4b7d6afd74f57fe2524b69b20561c78387bf",
+      "blockNumber": 11378127,
+      "gasUsed": "1461476",
+      "actualGasCostWei": "1465824354387892"
+    },
+    {
+      "purpose": "intent-bound recovery spike deployment",
+      "hash": "0x592e0b9a92fab280e39cb1b52687535a496e352c7a385ee968718c7a34f47cbc",
+      "blockNumber": 11378129,
+      "gasUsed": "1461476",
+      "actualGasCostWei": "1555743664587060"
+    },
+    {
+      "purpose": "intent-bound mismatch spike deployment",
+      "hash": "0xa9eadbcf07ea60da051a2fbdf5263fb262e230daf2de14944f240dafbee20b5c",
+      "blockNumber": 11378130,
+      "gasUsed": "1461476",
+      "actualGasCostWei": "1509199322291820"
+    },
+    {
+      "purpose": "register direct encrypted intent",
+      "hash": "0x646dcf4e5666ac579346e14808b976c08aaa00b378765d6204e4df990025fa45",
+      "blockNumber": 11378132,
+      "gasUsed": "124753",
+      "actualGasCostWei": "133509272099110"
+    },
+    {
+      "purpose": "accepted direct confidential callback",
+      "hash": "0x84cfeaedd4ac404e665eeee3e3bc9d0a67a9c3a0f5361f239eec3df9303bef85",
+      "blockNumber": 11378133,
+      "gasUsed": "576853",
+      "actualGasCostWei": "594478395572641"
+    },
+    {
+      "purpose": "finalize direct acceptance boolean",
+      "hash": "0x55e0c435be53c5687fd414abb28b421b9e36d3398a116b16e691a733eb8716df",
+      "blockNumber": 11378135,
+      "gasUsed": "46952",
+      "actualGasCostWei": "50656891420928"
+    },
+    {
+      "purpose": "one-time direct owner return",
+      "hash": "0x23196a88d0fd3313873d3bf763484fd7c4a24c6bef7669aff9a9890d971d983b",
+      "blockNumber": 11378136,
+      "gasUsed": "199463",
+      "actualGasCostWei": "205431760930913"
+    },
+    {
+      "purpose": "register mismatch encrypted intent",
+      "hash": "0xe27fae55a5693eb90d35612f014bed2d17db03c468e5185d6f750e1bcd01ea95",
+      "blockNumber": 11378138,
+      "gasUsed": "124753",
+      "actualGasCostWei": "136382046632457"
+    },
+    {
+      "purpose": "mismatched callback with atomic wrapper refund",
+      "hash": "0x5a15382c8c4392ba6023b72844c1727ee791a73e4296501f31bf0b0829ad3c42",
+      "blockNumber": 11378139,
+      "gasUsed": "576853",
+      "actualGasCostWei": "597279802561427"
+    },
+    {
+      "purpose": "record rejected mismatch boolean",
+      "hash": "0xb7330d8f58c82eb1362feaf69d7aa3d1bef6b8e3ffaa233b5f5096d0f670204b",
+      "blockNumber": 11378141,
+      "gasUsed": "46717",
+      "actualGasCostWei": "51467807110742"
+    },
+    {
+      "purpose": "register recovery encrypted intent",
+      "hash": "0xbc686e52c38767da8a2682766fc8eb86d8d22ec2feb15b1b7bcb57b8d3fa18a4",
+      "blockNumber": 11378142,
+      "gasUsed": "124753",
+      "actualGasCostWei": "131852990391646"
+    },
+    {
+      "purpose": "accepted recovery confidential callback",
+      "hash": "0x90f0a4834084a6200ece7f6135cea1c42613f8b6aefe7dc90afb680a45bc3137",
+      "blockNumber": 11378144,
+      "gasUsed": "576841",
+      "actualGasCostWei": "634046427531903"
+    },
+    {
+      "purpose": "finalize recovery acceptance boolean",
+      "hash": "0xb8cf338329bd8d53ed77cd03d471e6f146539dc83b0d73644c9b3efa2e4581a9",
+      "blockNumber": 11378145,
+      "gasUsed": "46952",
+      "actualGasCostWei": "49737624222784"
+    },
+    {
+      "purpose": "protocol-required unwrap request",
+      "hash": "0x0d66015b2d19d21ef15111a593dea2513965809d42bcbefc3d777c6d90f9c7e7",
+      "blockNumber": 11378146,
+      "gasUsed": "250126",
+      "actualGasCostWei": "253380285583710"
+    },
+    {
+      "purpose": "proof-gated unwrap finalization and rewrap",
+      "hash": "0xa968aad5d66e0259f6926cb3a524bbd787655c3b3c5d4f5502765a1474585acf",
+      "blockNumber": 11378151,
+      "gasUsed": "240069",
+      "actualGasCostWei": "259310854923288"
+    },
+    {
+      "purpose": "one-time recovered owner return",
+      "hash": "0xd5a503b93c977ebfab4818c7def0ccbc0f35f1d54c7a44e6b3fed66c87b63798",
+      "blockNumber": 11378152,
+      "gasUsed": "197238",
+      "actualGasCostWei": "201484450708326"
+    }
+  ],
+  "checks": [
+    {
+      "command": "npm run test:nox:sepolia -- FND-04 --reuse-core=<recorded-fixture-and-wrapper>",
+      "result": "write-receipts-passed",
+      "summary": "Three bytecode-matched intent-bound spikes proved accepted direct and recovery paths, atomic mismatch refund, proof-gated state acceptance, unwrap, rewrap, and one-time returns on Sepolia."
+    },
+    {
+      "command": "npm run test:nox:sepolia -- FND-04 --verify-contracts=<recorded-addresses>",
+      "result": "passed",
+      "summary": "Five runtime bytecodes and bindings matched the compiled artifacts; terminal direct and recovery returns, rejected mismatch, observed public release delta, and owner confidential balance access passed without a write."
+    },
+    {
+      "command": "npm run budget:status",
+      "result": "passed",
+      "summary": "FND-04 final run recorded sixteen successful receipts within the committed cumulative and per-transaction gas limits."
+    }
+  ],
+  "observed": {
+    "contractsVerified": 5,
+    "lifecycleAssertionsVerified": 13,
+    "negativeAssertionsVerified": 18,
+    "terminalStates": {
+      "directReturned": true,
+      "recoveryReturned": true,
+      "mismatchRejected": true
+    },
+    "intentDeltaBinding": {
+      "matchingIntentAccepted": true,
+      "mismatchedIntentRefundedAtomically": true,
+      "amountFreeAcceptanceBooleanVerified": true
+    },
+    "conservation": {
+      "directReturnMatchesInMemoryBaseline": true,
+      "unwrapReleaseDeltaMatchesExpected": true,
+      "rewrapReturnsReleasedCollateralToConfidentialCustody": true,
+      "recoveryReturnMatchesInMemoryBaseline": true
+    },
+    "negativeCases": [
+      "replayed intent",
+      "missing intent",
+      "mismatched intent finalization",
+      "malformed acceptance proof",
+      "malformed rejection proof",
+      "repeated mismatch rejection",
+      "unauthorized return",
+      "wrong return recipient",
+      "wrong wrapper callback",
+      "missing callback ACL",
+      "repeated direct return",
+      "public owner-balance decryption",
+      "early recovery",
+      "malformed unwrap proof",
+      "unwrap balance-delta mismatch",
+      "duplicate unwrap finalization",
+      "repeated recovered return"
+    ],
+    "finalRunRecordedGasWei": "7829785950956647",
+    "totalRecordedGasWei": "33843100191692968",
+    "remainingGasWei": "466156899808307032"
+  },
+  "privacyAndCustody": {
+    "plaintextCommitted": false,
+    "rawHandlesCommitted": false,
+    "proofsOrCalldataCommitted": false,
+    "walletSignaturesCommitted": false,
+    "fixtureHasExternalValue": false,
+    "publicDecryptionScope": "Only the wrapper-required unwrap request and amount-free intent equality booleans were public-decrypted. Owner-shaped balances and expected stake handles were not publicly decrypted.",
+    "wrapperAuthority": "The unchanged wrapper receives only transient access to callback equality or held collateral for the current wrapper operation; no persistent wrapper compute authority was granted."
+  },
+  "knownLimitations": [
+    "This isolated harness does not prove aggregate accounting, adapter behavior, market execution, or production recovery policy.",
+    "The earlier valueless fixture residue recorded by F-007 remains at a pre-fix isolated spike and is excluded from this verified lifecycle."
+  ],
+  "reproduction": [
+    "Run npm run check:sepolia:read.",
+    "Run npm run test:nox:sepolia -- FND-04 --verify-contracts=0x6b086f12ed4b928583d0d7fd6b5fb4de78109a8a,0x8b4fe02e95401e93ba99e63baee01eea0b4b3b17,0x95641e6ce307ad326c204f693cab7fc3c6a66f62,0xa06356982e89d4dc81f4c1191e864ee99d5b90c8,0x42387ac03ee2aa8a8ec0aac355e67bf76506704a.",
+    "Run npm run budget:status."
+  ]
+}

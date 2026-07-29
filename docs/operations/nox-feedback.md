@@ -160,3 +160,15 @@ Do not include keys, confidential plaintext, handles, proofs, or wallet signatur
   the owner's live encrypted balance without logging its value.
 - Upstream reference: The pinned wrapper's `confidentialTransfer` and `unwrap`
   paths call Nox computation primitives with the supplied amount.
+
+## FND-04 resolution
+
+F-004 through F-007 were resolved and verified by the final intent-bound FND-04
+Ethereum Sepolia run. The receiver derives a post-transfer encrypted delta from its
+permitted wrapper balance, binds it to a caller-registered encrypted intent, returns
+the encrypted equality to the unchanged wrapper for atomic refund, and relies only
+on a proof of that amount-free boolean to accept the deposit. The verified wrapper
+receives transient access only to the callback result or receiver-held amount it
+consumes in the same transaction. No persistent wrapper authority, plaintext amount,
+raw handle, or proof was recorded. G2 evidence names the successful receipts and
+the isolated pre-fix fixture residue separately.

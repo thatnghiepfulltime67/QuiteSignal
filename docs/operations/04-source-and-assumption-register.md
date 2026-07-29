@@ -71,16 +71,17 @@ records the mandatory proof-owner/application-caller binding. This result has no
 asset custody and does not replace the required FND-04 asset-lifecycle feasibility
 evidence.
 
-## FND-04 partial confidential-asset feasibility
+## FND-04 verified confidential-asset feasibility
 
 The isolated FND-04 Sepolia run proved that the unchanged wrapper can complete an
-encrypted pull, one-time owner return, unwrap proof finalization, measured public
-balance delta, delayed rewrap, and terminal read-only verification. It also proved
-that the callback amount is not receiver-computable (F-004). This is partial
-evidence only: F-005 identifies that a receiver must bind its post-callback balance
-delta to a caller-registered encrypted intent before recording a stake. G2 remains
-open until the wrapper's encrypted-false refund and the amount-free acceptance proof
-are proven directly on Sepolia. R-17 tracks this custody-critical condition.
+intent-bound encrypted pull, atomic refund for a mismatched encrypted intent,
+one-time owner return, unwrap proof finalization, measured public balance delta,
+delayed rewrap, and terminal read-only verification. The callback amount is not
+receiver-computable (F-004), so the receiver uses a caller-bound encrypted intent
+and post-transfer delta. The wrapper receives only transient access to the callback
+equality boolean (F-006) and a held amount while consuming it (F-007). Amount-free
+acceptance proof, owner-balance non-disclosure, replay rejection, and recovery all
+passed on Sepolia. G2 is passed; R-17 must be reapplied to the P1 product contract.
 
 F-007 records one isolated, valueless fixture residue at
 `0x5a6cd68e2ee9aef073e7f95354fa9d0b7d7cb210`: a pre-fix feasibility spike

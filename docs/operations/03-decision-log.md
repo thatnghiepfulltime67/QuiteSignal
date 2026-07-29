@@ -84,7 +84,7 @@ deep relative imports and circular dependencies are forbidden.
 
 ## ADR-012 — Derive received confidential collateral from recipient balance
 
-**Status:** Accepted with FND-04 feasibility gate
+**Status:** Accepted
 
 The pinned ERC-7984 wrapper updates the recipient confidential balance before its
 transfer callback but does not grant the callback receiver compute access to the

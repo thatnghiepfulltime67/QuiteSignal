@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "gate": "G2",
+  "workItem": "FND-04",
+  "phase": "P0",
+  "timestampUtc": "2026-07-29T21:35:13Z",
+  "sourceCommits": {
+    "fixtureAndWrapperHarness": "b8f677dfc83c68c164d708c1c2cd07e9ffc29e0a",
+    "intentBoundHarness": "9272afbfa71b3e2b2f1419f73e227c0ff6325e7f",
+    "callbackResultAcl": "8b22d20acbd89d2dfad130eb356c5db8840f408b",
+    "heldCollateralAcl": "d717cd3",
+    "baselineRecoveryRunner": "580bd4d7ffed53e996ba730a6aa93d214cd73d3f"
+  },
+  "environment": {
+    "class": "offline-static-and-sepolia-write-preflight",
+    "node": "24.18.0",
+    "npm": "11.16.0",
+    "hardhat": "3.11.1",
+    "solidity": "0.8.35",
+    "noxProtocolContracts": "0.2.4",
+    "noxConfidentialContracts": "0.2.2",
+    "noxHandle": "0.1.0-beta.13"
+  },
+  "checks": [
+    {
+      "command": "npm run check:offline",
+      "result": "passed",
+      "summary": "Formatting, linting, strict TypeScript, Solidity compilation, and tracked-history secret scanning passed."
+    },
+    {
+      "command": "npm run test:nox:sepolia -- FND-04 --dry-run",
+      "result": "passed",
+      "summary": "The live Sepolia chain, pinned Nox runtime, signer balance, cumulative ledger, and bounded deployment estimates passed without a write."
+    },
+    {
+      "command": "npm run check:sepolia:read",
+      "result": "passed",
+      "summary": "The configured RPC reported Ethereum Sepolia and live pinned Nox Compute runtime before the confirmed lifecycle run."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "summary": "The FND-04 source and evidence slice has no whitespace errors."
+    }
+  ],
+  "requirementsCovered": [
+    "FR-02",
+    "FR-04",
+    "FR-07",
+    "P1",
+    "P2",
+    "P3",
+    "I2",
+    "I4",
+    "I7",
+    "I8",
+    "I10"
+  ],
+  "knownLimitations": [
+    "This is an isolated valueless-fixture feasibility harness, not a pool, market, adapter, or product deployment.",
+    "One pre-fix isolated spike holds valueless fixture collateral because its immutable bytecode lacks the later-discovered wrapper ACL grant; its address, location, and exclusion are documented by F-007.",
+    "FND-05 and FND-06 remain required before P0 can pass."
+  ],
+  "reproduction": [
+    "Use Node 24.18.0 and npm 11.16.0 with the committed lockfile and local secret configuration.",
+    "Run npm run check:sepolia:read.",
+    "Run npm run budget:status.",
+    "Run npm run test:nox:sepolia -- FND-04 --verify-contracts=<fixture>,<wrapper>,<direct-spike>,<recovery-spike>,<mismatch-spike>."
+  ]
+}
