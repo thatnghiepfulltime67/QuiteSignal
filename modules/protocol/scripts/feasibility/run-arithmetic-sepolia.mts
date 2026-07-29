@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -9,6 +10,7 @@ import {
   createWalletClient,
   encodeFunctionData,
   http,
+  isAddress,
   parseEther,
   type Abi,
   type Address,
@@ -25,10 +27,13 @@ import {
 
 const EXPECTED_CHAIN_ID = 11_155_111;
 const CONFIRMATION_VALUE = 'yes';
+const PUBLIC_DECRYPT_MAX_ATTEMPTS = 8;
+const PUBLIC_DECRYPT_RETRY_DELAY_MS = 5_000;
 
 interface Artifact {
   abi: Abi;
   bytecode: Hex;
+  deployedBytecode: Hex;
 }
 
 interface SpendEntry {
@@ -95,7 +100,11 @@ function loadEnvironment(): void {
 
 function loadArtifact(): Artifact {
   const artifact = JSON.parse(readFileSync(artifactPath, 'utf8')) as Partial<Artifact>;
-  if (!Array.isArray(artifact.abi) || typeof artifact.bytecode !== 'string') {
+  if (
+    !Array.isArray(artifact.abi) ||
+    typeof artifact.bytecode !== 'string' ||
+    typeof artifact.deployedBytecode !== 'string'
+  ) {
     fail('The compiled arithmetic spike artifact is unavailable or malformed.');
   }
   return artifact as Artifact;
@@ -226,9 +235,21 @@ async function assertPublicBoolean(
   handle: Hex,
   expected: boolean,
 ): Promise<void> {
-  const result = await handleClient.publicDecrypt(handle);
-  if (result.value !== expected) {
-    fail('A public feasibility assertion did not match its expected boolean result.');
+  for (let attempt = 1; attempt <= PUBLIC_DECRYPT_MAX_ATTEMPTS; ++attempt) {
+    try {
+      const result = await handleClient.publicDecrypt(handle);
+      if (result.value !== expected) {
+        fail('A public feasibility assertion did not match its expected boolean result.');
+      }
+      return;
+    } catch {
+      if (attempt === PUBLIC_DECRYPT_MAX_ATTEMPTS) {
+        fail(
+          'A public feasibility assertion was unavailable after the bounded gateway retry window.',
+        );
+      }
+      await delay(PUBLIC_DECRYPT_RETRY_DELAY_MS);
+    }
   }
 }
 
@@ -236,17 +257,32 @@ async function main(): Promise<void> {
   loadEnvironment();
 
   const dryRun = process.argv.includes('--dry-run');
+  const verificationArgument = process.argv.find((argument) =>
+    argument.startsWith('--verify-contract='),
+  );
+  const existingContract = verificationArgument?.slice('--verify-contract='.length);
   const requestedCase = process.argv.find((argument) => argument === 'FND-02');
   if (!requestedCase) {
     fail('The FND-02 case identifier is required.');
   }
+  if (dryRun && existingContract) {
+    fail('Read-only verification cannot be combined with the deployment dry-run.');
+  }
+  if (existingContract && !isAddress(existingContract)) {
+    fail('The existing feasibility contract address is malformed.');
+  }
+  const existingContractAddress = existingContract as Address | undefined;
 
   const privateKey = process.env.SEPOLIA_PRIVATE_KEY;
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
   if (!privateKey || !rpcUrl) {
     fail('The local Sepolia test configuration is incomplete.');
   }
-  if (!dryRun && process.env.CONFIRM_SEPOLIA_WRITE !== CONFIRMATION_VALUE) {
+  if (
+    !dryRun &&
+    !existingContractAddress &&
+    process.env.CONFIRM_SEPOLIA_WRITE !== CONFIRMATION_VALUE
+  ) {
     fail('Set CONFIRM_SEPOLIA_WRITE=yes only after reviewing the dry-run plan.');
   }
 
@@ -270,108 +306,125 @@ async function main(): Promise<void> {
     fail('The configured throwaway Sepolia wallet has no balance.');
   }
 
-  failureStage = 'deployment dry-run planning';
-  const deploymentGas = await publicClient.estimateGas({
-    account: account.address,
-    data: artifact.bytecode,
-  });
   const fees = await publicClient.estimateFeesPerGas();
   const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
-  const deploymentMaximumGasCost = deploymentGas * maxFeePerGas;
-  assertBudget(ledger, deploymentMaximumGasCost);
-  assertSingleTransactionBudget(deploymentMaximumGasCost, singleTransactionCapWei);
+  let contractAddress: Address;
 
-  console.log(
-    JSON.stringify({
-      mode: dryRun ? 'dry-run' : 'confirmed-write',
-      workItem: 'FND-02',
-      firstAction: 'deploy isolated arithmetic feasibility harness',
-      estimatedMaximumGasCostWei: deploymentMaximumGasCost.toString(),
-      singleTransactionCapWei: singleTransactionCapWei.toString(),
-      remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
-    }),
-  );
+  if (existingContractAddress) {
+    failureStage = 'existing feasibility runtime verification';
+    const runtime = await publicClient.getCode({ address: existingContractAddress });
+    if (!runtime || runtime.toLowerCase() !== artifact.deployedBytecode.toLowerCase()) {
+      fail('The existing feasibility contract runtime does not match the compiled harness.');
+    }
+    contractAddress = existingContractAddress;
+  } else {
+    failureStage = 'deployment dry-run planning';
+    const deploymentGas = await publicClient.estimateGas({
+      account: account.address,
+      data: artifact.bytecode,
+    });
+    const deploymentMaximumGasCost = deploymentGas * maxFeePerGas;
+    assertBudget(ledger, deploymentMaximumGasCost);
+    assertSingleTransactionBudget(deploymentMaximumGasCost, singleTransactionCapWei);
 
-  if (dryRun) {
-    return;
+    console.log(
+      JSON.stringify({
+        mode: dryRun ? 'dry-run' : 'confirmed-write',
+        workItem: 'FND-02',
+        firstAction: 'deploy isolated arithmetic feasibility harness',
+        estimatedMaximumGasCostWei: deploymentMaximumGasCost.toString(),
+        singleTransactionCapWei: singleTransactionCapWei.toString(),
+        remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
+      }),
+    );
+
+    if (dryRun) {
+      return;
+    }
+
+    assertCleanSourceTree();
+    failureStage = 'isolated harness deployment';
+    const deploymentHash = await walletClient.deployContract({
+      account,
+      abi: artifact.abi,
+      bytecode: artifact.bytecode,
+      gas: deploymentGas,
+      maxFeePerGas,
+    });
+    const deploymentReceipt = await publicClient.waitForTransactionReceipt({
+      hash: deploymentHash,
+    });
+    appendSpend(ledger, {
+      workItemId: 'FND-02',
+      phase: 'P0',
+      sender: account.address,
+      transactionHash: deploymentHash,
+      blockNumber: deploymentReceipt.blockNumber.toString(),
+      gasUsed: deploymentReceipt.gasUsed.toString(),
+      effectiveGasPrice: deploymentReceipt.effectiveGasPrice.toString(),
+      actualGasCostWei: (
+        deploymentReceipt.gasUsed * deploymentReceipt.effectiveGasPrice
+      ).toString(),
+    });
+    if (deploymentReceipt.status !== 'success' || !deploymentReceipt.contractAddress) {
+      fail('The isolated arithmetic deployment did not succeed.');
+    }
+    contractAddress = deploymentReceipt.contractAddress;
   }
 
-  assertCleanSourceTree();
-  failureStage = 'isolated harness deployment';
-  const deploymentHash = await walletClient.deployContract({
-    account,
-    abi: artifact.abi,
-    bytecode: artifact.bytecode,
-    gas: deploymentGas,
-    maxFeePerGas,
-  });
-  const deploymentReceipt = await publicClient.waitForTransactionReceipt({ hash: deploymentHash });
-  appendSpend(ledger, {
-    workItemId: 'FND-02',
-    phase: 'P0',
-    sender: account.address,
-    transactionHash: deploymentHash,
-    blockNumber: deploymentReceipt.blockNumber.toString(),
-    gasUsed: deploymentReceipt.gasUsed.toString(),
-    effectiveGasPrice: deploymentReceipt.effectiveGasPrice.toString(),
-    actualGasCostWei: (deploymentReceipt.gasUsed * deploymentReceipt.effectiveGasPrice).toString(),
-  });
-  if (deploymentReceipt.status !== 'success' || !deploymentReceipt.contractAddress) {
-    fail('The isolated arithmetic deployment did not succeed.');
-  }
-
-  const contractAddress = deploymentReceipt.contractAddress;
   failureStage = 'Nox gateway encryption';
   const handleClient = await createViemHandleClient(walletClient);
   const encryptedVectors = await Promise.all(
     REQUIRED_VECTORS.map((vector) => encryptVector(handleClient, vector, contractAddress)),
   );
-  failureStage = 'encrypted batch dry-run planning';
-  const batchData = encodeFunctionData({
-    abi: artifact.abi,
-    functionName: 'evaluateBatch',
-    args: [encryptedVectors],
-  } as never);
-  const batchGas = await publicClient.estimateGas({
-    account: account.address,
-    to: contractAddress,
-    data: batchData,
-  });
-  const batchMaximumGasCost = batchGas * maxFeePerGas;
-  assertBudget(ledger, batchMaximumGasCost);
-  assertSingleTransactionBudget(batchMaximumGasCost, singleTransactionCapWei);
-  console.log(
-    JSON.stringify({
-      mode: 'confirmed-write',
-      workItem: 'FND-02',
-      secondAction: 'submit encrypted arithmetic vector batch',
-      estimatedMaximumGasCostWei: batchMaximumGasCost.toString(),
-      singleTransactionCapWei: singleTransactionCapWei.toString(),
-      remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
-    }),
-  );
+  if (!existingContractAddress) {
+    failureStage = 'encrypted batch dry-run planning';
+    const batchData = encodeFunctionData({
+      abi: artifact.abi,
+      functionName: 'evaluateBatch',
+      args: [encryptedVectors],
+    } as never);
+    const batchGas = await publicClient.estimateGas({
+      account: account.address,
+      to: contractAddress,
+      data: batchData,
+    });
+    const batchMaximumGasCost = batchGas * maxFeePerGas;
+    assertBudget(ledger, batchMaximumGasCost);
+    assertSingleTransactionBudget(batchMaximumGasCost, singleTransactionCapWei);
+    console.log(
+      JSON.stringify({
+        mode: 'confirmed-write',
+        workItem: 'FND-02',
+        secondAction: 'submit encrypted arithmetic vector batch',
+        estimatedMaximumGasCostWei: batchMaximumGasCost.toString(),
+        singleTransactionCapWei: singleTransactionCapWei.toString(),
+        remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
+      }),
+    );
 
-  failureStage = 'encrypted batch submission';
-  const batchHash = await walletClient.sendTransaction({
-    account,
-    to: contractAddress,
-    data: batchData,
-    gas: batchGas,
-    maxFeePerGas,
-  });
-  const batchReceipt = await publicClient.waitForTransactionReceipt({ hash: batchHash });
-  appendSpend(ledger, {
-    workItemId: 'FND-02',
-    phase: 'P0',
-    sender: account.address,
-    transactionHash: batchHash,
-    blockNumber: batchReceipt.blockNumber.toString(),
-    gasUsed: batchReceipt.gasUsed.toString(),
-    effectiveGasPrice: batchReceipt.effectiveGasPrice.toString(),
-    actualGasCostWei: (batchReceipt.gasUsed * batchReceipt.effectiveGasPrice).toString(),
-  });
-  if (batchReceipt.status !== 'success') {
-    fail('The encrypted arithmetic vector batch did not succeed.');
+    failureStage = 'encrypted batch submission';
+    const batchHash = await walletClient.sendTransaction({
+      account,
+      to: contractAddress,
+      data: batchData,
+      gas: batchGas,
+      maxFeePerGas,
+    });
+    const batchReceipt = await publicClient.waitForTransactionReceipt({ hash: batchHash });
+    appendSpend(ledger, {
+      workItemId: 'FND-02',
+      phase: 'P0',
+      sender: account.address,
+      transactionHash: batchHash,
+      blockNumber: batchReceipt.blockNumber.toString(),
+      gasUsed: batchReceipt.gasUsed.toString(),
+      effectiveGasPrice: batchReceipt.effectiveGasPrice.toString(),
+      actualGasCostWei: (batchReceipt.gasUsed * batchReceipt.effectiveGasPrice).toString(),
+    });
+    if (batchReceipt.status !== 'success') {
+      fail('The encrypted arithmetic vector batch did not succeed.');
+    }
   }
 
   failureStage = 'public boolean decryption';
