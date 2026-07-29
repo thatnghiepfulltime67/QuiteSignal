@@ -22,28 +22,28 @@ production-key configuration.
 
 | Command | Environment | Purpose | Required by |
 |---|---|---|---|
-| `pnpm install --frozen-lockfile` | network install | Reproducible dependencies | G0–G8 |
-| `pnpm doctor` | offline | Versions, Docker/plugin, public config, no secret values | G0 |
-| `pnpm format:check` | offline | Formatting and generated-file cleanliness | every commit/CI |
-| `pnpm lint` | offline | TS/Solidity/framework lint | G5–G8 |
-| `pnpm typecheck` | offline | Strict workspace type safety | G5–G8 |
-| `pnpm compile` | offline | Contracts and package build graph | G0–G8 |
-| `pnpm test:unit` | offline | Domain, SDK, reducer, component units | G5–G8 |
-| `pnpm test:contracts` | local-nox | Contract state and economic correctness | G5–G8 |
-| `pnpm test:nox` | local-nox | ACL, compute, proof, confidential asset integration | G1–G5/G8 |
-| `pnpm test:invariant` | local-nox | I1–I10, fuzz, property/reference model | G5/G8 |
-| `pnpm test:adversarial` | local-nox | Replay, unauthorized, timeout, slippage, reentrancy | G5/G8 |
-| `pnpm test:e2e:local` | local-nox | Full local lifecycle across packages | G5/G8 |
-| `pnpm test:web` | offline/local | Component, accessibility, browser journeys | G7/G8 |
-| `pnpm test:sepolia:read` | sepolia-read | Manifest, bytecode, events, public verifier | G6–G8 |
-| `pnpm deploy:sepolia:plan` | sepolia-read | Deterministic write plan, addresses, estimated cost | G6 |
-| `pnpm deploy:sepolia` | sepolia-write | Confirmed deployment only | G6 |
-| `pnpm test:sepolia:write:<case>` | sepolia-write | One named live gate case | G1–G6 |
-| `pnpm verify:deployment` | sepolia-read | Sources, runtime hashes, ABI/address sync | G6/G8 |
-| `pnpm verify:evidence` | sepolia-read | Evidence schema, receipts, commit/code context | every gate/G8 |
-| `pnpm scan:secrets` | offline | Repository/history/generated evidence scan | every commit/G8 |
-| `pnpm scan:dependencies` | network/read | Advisories and licenses | G0/G8 |
-| `pnpm check:all` | offline + local-nox | Complete non-live merge gate | G5–G8 |
+| `npm ci` | network install | Reproducible dependencies | G0–G8 |
+| `npm run doctor` | offline | Versions, Docker/plugin, public config, no secret values | G0 |
+| `npm run format:check` | offline | Formatting and generated-file cleanliness | every commit/CI |
+| `npm run lint` | offline | TS/Solidity/framework lint | G5–G8 |
+| `npm run typecheck` | offline | Strict workspace type safety | G5–G8 |
+| `npm run compile` | offline | Contracts and module build graph | G0–G8 |
+| `npm run test:unit` | offline | Domain, SDK, reducer, component units | G5–G8 |
+| `npm run test:contracts` | local-nox | Contract state and economic correctness | G5–G8 |
+| `npm run test:nox` | local-nox | ACL, compute, proof, confidential asset integration | G1–G5/G8 |
+| `npm run test:invariant` | local-nox | I1–I10, fuzz, property/reference model | G5/G8 |
+| `npm run test:adversarial` | local-nox | Replay, unauthorized, timeout, slippage, reentrancy | G5/G8 |
+| `npm run test:e2e:local` | local-nox | Full local lifecycle across modules | G5/G8 |
+| `npm run test:web` | offline/local | Component, accessibility, browser journeys | G7/G8 |
+| `npm run test:sepolia:read` | sepolia-read | Manifest, bytecode, events, public verifier | G6–G8 |
+| `npm run deploy:sepolia:plan` | sepolia-read | Deterministic write plan, addresses, estimated cost | G6 |
+| `npm run deploy:sepolia` | sepolia-write | Confirmed deployment only | G6 |
+| `npm run test:sepolia:write -- <case>` | sepolia-write | One named live gate case | G1–G6 |
+| `npm run verify:deployment` | sepolia-read | Sources, runtime hashes, ABI/address sync | G6/G8 |
+| `npm run verify:evidence` | sepolia-read | Evidence schema, receipts, commit/code context | every gate/G8 |
+| `npm run scan:secrets` | offline | Repository/history/generated evidence scan | every commit/G8 |
+| `npm run scan:dependencies` | network/read | Advisories and licenses | G0/G8 |
+| `npm run check:all` | offline + local-nox | Complete non-live merge gate | G5–G8 |
 
 ## Test-layer matrix
 

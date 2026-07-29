@@ -29,12 +29,12 @@ flowchart LR
 |---|---|---|
 | `contracts/core` | Epoch state, encrypted ledgers, ACL, settlement bounds | UI formatting, gateway calls |
 | `contracts/adapters` | Narrow interface to public market | Private input decryption |
-| `packages/nox-client` | Encryption, proof packing, ACL-safe helpers | Wallet custody, business policy |
-| `packages/domain` | Pure state machine, schemas, error taxonomy | RPC side effects |
-| `apps/relayer` | Permissionless lifecycle pokes, proof queue | Plaintext user signal, user key |
-| `apps/indexer` | Public events and chain-derived read model | Confidential-handle decryption |
+| `modules/confidential-client` | Encryption, proof packing, ACL-safe helpers | Wallet custody, business policy |
+| `modules/domain` | Pure state machine, schemas, error taxonomy | RPC side effects |
+| `services/automation` | Permissionless lifecycle pokes, proof queue | Plaintext user signal, user key |
+| `services/indexer` | Public events and chain-derived read model | Confidential-handle decryption |
 | `apps/web` | UX, wallet, client encryption, owner decryption | Trusted settlement decisions |
-| `packages/verifier` | Independent chain-data recomputation | Privileged contract calls |
+| `modules/verifier` | Independent chain-data recomputation | Privileged contract calls |
 
 ## On-chain lifecycle
 

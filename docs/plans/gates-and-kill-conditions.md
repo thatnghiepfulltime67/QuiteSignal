@@ -10,8 +10,8 @@ approval; no privacy or custody gate can be waived for release.
 
 Required artifacts:
 
-- `.nvmrc`, root `package.json`, workspace file, lockfile, and strict base TypeScript config.
-- Exact Node, package-manager, Hardhat, Solidity, Nox, wallet, and frontend versions.
+- `.nvmrc`, root npm-workspace `package.json`, `package-lock.json`, and strict base TypeScript config.
+- Exact Node, npm, Hardhat, Solidity, Nox, wallet, and frontend versions.
 - A generated environment doctor that reports versions and missing public configuration.
 - A local Nox stack health check using the official integration plugin.
 
@@ -23,7 +23,7 @@ Pass criteria:
 
 Kill conditions:
 
-- Required Nox packages cannot coexist on one supported toolchain.
+- Required Nox modules cannot coexist on one supported npm workspace toolchain.
 - The official local stack cannot start deterministically after documented retries.
 - A required dependency has an unacceptable license or unresolved critical advisory.
 

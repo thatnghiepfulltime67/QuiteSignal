@@ -8,24 +8,24 @@ work item; empty scaffolding does not count as progress.
 ```text
 .
 ├── apps/
-│   ├── web/                         # user journey and owner-only decryption
-│   ├── relayer/                     # permissionless lifecycle automation
+│   └── web/                         # user journey and owner-only decryption
+├── services/
+│   ├── automation/                  # permissionless lifecycle automation
 │   └── indexer/                     # rebuildable public read model
-├── packages/
-│   ├── contracts/                   # Hardhat project, contracts, tests, deploy
+├── modules/
+│   ├── protocol/                    # Hardhat project, contracts, tests, deploy
 │   ├── domain/                      # pure states, schemas, math, errors
-│   ├── nox-client/                  # branded handles, encrypt/decrypt, proof binding
+│   ├── confidential-client/         # branded handles, encrypt/decrypt, proof binding
 │   ├── verifier/                    # independent public invariant verifier
 │   └── config/                      # chains, schemas, manifests, generated bindings
+├── ops/scripts/                     # doctor, deploy, evidence, release orchestration
 ├── deployments/sepolia/             # public canonical deployment manifest
 ├── evidence/                        # sanitized gate evidence only
-├── scripts/                         # root orchestration and release checks
 ├── docs/                            # normative product/architecture/operations/plans
 ├── AGENTS.md
 ├── Plan.md
 ├── package.json
-├── pnpm-workspace.yaml
-└── pnpm-lock.yaml
+└── package-lock.json
 ```
 
 ## Build-order register
@@ -49,13 +49,12 @@ work item; empty scaffolding does not count as progress.
 ```text
 .nvmrc
 package.json
-pnpm-workspace.yaml
-pnpm-lock.yaml
+package-lock.json
 tsconfig.base.json
 .editorconfig
 .gitignore
-scripts/doctor.mts
-scripts/check-secrets.mts
+ops/scripts/doctor.mts
+ops/scripts/check-secrets.mts
 ```
 
 Acceptance: clean frozen install, doctor, format check, compile smoke, and local Nox
@@ -64,9 +63,9 @@ health pass. Exact versions are outputs of G0, not guessed in advance.
 ## B01 — Feasibility outputs
 
 ```text
-packages/contracts/contracts/feasibility/
-packages/contracts/test/feasibility/
-packages/contracts/scripts/feasibility/
+modules/protocol/contracts/feasibility/
+modules/protocol/test/feasibility/
+modules/protocol/scripts/feasibility/
 evidence/{local,sepolia}/G1-G4/
 docs/operations/nox-feedback.md
 ```
@@ -77,20 +76,20 @@ reuse proven patterns only through a reviewed implementation, never by importing
 ## B02–B06 — Protocol outputs
 
 ```text
-packages/domain/src/state.ts
-packages/domain/src/errors.ts
-packages/domain/src/schemas.ts
-packages/domain/src/reference-model.ts
-packages/contracts/contracts/core/QuietSignalFactory.sol
-packages/contracts/contracts/core/QuietSignalPool.sol
-packages/contracts/contracts/interfaces/IMarketAdapter.sol
-packages/contracts/contracts/adapters/<SelectedAdapter>.sol
-packages/contracts/test/unit/
-packages/contracts/test/invariant/
-packages/contracts/test/adversarial/
-packages/verifier/src/invariants/
-packages/verifier/src/cli.ts
-packages/config/src/deployment-schema.ts
+modules/domain/src/state.ts
+modules/domain/src/errors.ts
+modules/domain/src/schemas.ts
+modules/domain/src/reference-model.ts
+modules/protocol/contracts/core/QuietSignalFactory.sol
+modules/protocol/contracts/core/QuietSignalPool.sol
+modules/protocol/contracts/interfaces/IMarketAdapter.sol
+modules/protocol/contracts/adapters/<SelectedAdapter>.sol
+modules/protocol/test/unit/
+modules/protocol/test/invariant/
+modules/protocol/test/adversarial/
+modules/verifier/src/invariants/
+modules/verifier/src/cli.ts
+modules/config/src/deployment-schema.ts
 deployments/sepolia/manifest.json
 ```
 
@@ -101,13 +100,13 @@ implement UI bindings before ABI and event contracts pass G5.
 ## B07 — SDK outputs
 
 ```text
-packages/nox-client/src/types.ts
-packages/nox-client/src/domain.ts
-packages/nox-client/src/encrypt.ts
-packages/nox-client/src/decrypt.ts
-packages/nox-client/src/transactions.ts
-packages/nox-client/src/read.ts
-packages/nox-client/test/vectors/
+modules/confidential-client/src/types.ts
+modules/confidential-client/src/domain.ts
+modules/confidential-client/src/encrypt.ts
+modules/confidential-client/src/decrypt.ts
+modules/confidential-client/src/transactions.ts
+modules/confidential-client/src/read.ts
+modules/confidential-client/test/vectors/
 ```
 
 Acceptance: branded opaque types, decimal-safe parsing, mandatory domain binding,
@@ -116,12 +115,12 @@ replacement/retry semantics, ABI compatibility, and no plaintext-capable relayer
 ## B08 — Automation/read-model outputs
 
 ```text
-apps/relayer/src/jobs/
-apps/relayer/src/policy.ts
-apps/relayer/src/cli.ts
-apps/indexer/src/reducer.ts
-apps/indexer/src/checkpoint.ts
-apps/indexer/src/rebuild.ts
+services/automation/src/jobs/
+services/automation/src/policy.ts
+services/automation/src/cli.ts
+services/indexer/src/reducer.ts
+services/indexer/src/checkpoint.ts
+services/indexer/src/rebuild.ts
 ```
 
 The relayer supports dry-run, once, poll, and health modes with bounded action budgets.

@@ -100,7 +100,7 @@ No SDK, relayer, indexer, or web implementation begins in P1.
 ## Exit checklist
 
 - [ ] PK-01 through PK-09 are independently committed.
-- [ ] `pnpm check:all` passes from a clean local process.
+- [ ] `npm run check:all` passes from a clean local process.
 - [ ] G5 is `passed` in the evidence ledger.
 - [ ] Protocol spec, events/API, risks, ADRs, manifest schema, and tests agree.
 - [ ] No production package imports feasibility spike code.

@@ -69,3 +69,13 @@ points. This gives scoring a precise input and separates client input from execu
 
 Rounding dust and unclaimed payouts remain in the pool for the MVP. Any expiry or
 treasury policy requires a new immutable pool version and decision record.
+
+## ADR-011 — npm workspaces and functional repository zones
+
+**Status:** Accepted
+
+The repository uses npm workspaces with `apps/` for user-facing applications,
+`services/` for optional long-running automation/read models, `modules/` for reusable
+protocol/domain/client/verifier/config code, and `ops/` for non-runtime orchestration.
+Exact Node/npm versions are pinned by G0. Cross-workspace imports use declared exports;
+deep relative imports and circular dependencies are forbidden.

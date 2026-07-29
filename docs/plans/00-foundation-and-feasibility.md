@@ -33,12 +33,12 @@ item begins; feasibility spikes never share a commit with production contracts.
 Definition of Ready:
 
 - Official Nox package requirements and local plugin prerequisites have been inspected.
-- Candidate Node/package-manager/Hardhat/Solidity versions are listed with sources.
+- Candidate Node/npm/Hardhat/Solidity versions are listed with sources.
 
 Acceptance:
 
 - Exact direct versions are pinned; transitive versions are frozen by lockfile.
-- `pnpm doctor` prints versions and public health only, never secret values.
+- `npm run doctor` prints versions and public health only, never secret values.
 - Clean frozen install succeeds twice and local Nox hello-world is deterministic.
 - `.gitignore` rejects environment files, wallet material, local evidence, and caches.
 

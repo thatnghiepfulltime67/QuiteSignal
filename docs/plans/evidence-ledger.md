@@ -40,7 +40,7 @@ evidence/
 └── reports/<gate>-summary.md
 ```
 
-Machine-readable JSON uses a versioned schema from `packages/config`. Reports may
+Machine-readable JSON uses a versioned schema from `modules/config`. Reports may
 summarize JSON but cannot replace it. Transaction receipts are referenced by hash,
 not copied with raw confidential call data.
 
