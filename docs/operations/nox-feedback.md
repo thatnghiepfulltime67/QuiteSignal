@@ -48,3 +48,23 @@ Do not include keys, confidential plaintext, handles, proofs, or wallet signatur
 - Workaround: The FND-02 runner uses a bounded outer retry and can read-only verify
   an existing harness only when its runtime bytecode matches the compiled artifact.
 - Upstream reference: `publicDecrypt.ts` retry configuration in the pinned package.
+
+### F-003 — External input proof owner must be the application caller
+
+- Date: 2026-07-30
+- Package/network: `@iexec-nox/nox-protocol-contracts@0.2.4` and
+  `@iexec-nox/handle@0.1.0-beta.13`, Ethereum Sepolia
+- Reproduction: Encrypt an external input with test actor A for an isolated
+  application, then submit its import transaction from distinct test actor B.
+- Expected: The proof binding must make the permitted submitter explicit and reject
+  a mismatched owner/caller relationship.
+- Actual: Sepolia simulation reverted with Nox `InvalidProof` before state change.
+  The pinned Compute implementation verifies the proof owner against the caller of
+  the importing application function.
+- Impact: A relayer cannot directly submit an owner-bound encrypted input on the
+  owner's behalf. Product flows must have the owner submit the import transaction,
+  or use an explicitly designed protocol flow that preserves the required binding.
+- Workaround: The FND-03 harness encrypts and submits the owner input from the same
+  throwaway account, then separately proves the owner has viewer-only access to the
+  derived handle. The production design remains subject to the same constraint.
+- Upstream reference: `Compute.validateInputProof` in the pinned Nox contracts.
