@@ -123,6 +123,7 @@ contract AssetLifecycleSpike is IERC7984Receiver {
       revert UnexpectedLifecycleState(LifecycleState.Held, state);
     }
 
+    Nox.allowTransient(heldAmount, address(wrapper));
     wrapper.confidentialTransfer(recipient, heldAmount);
     state = LifecycleState.Returned;
   }
@@ -134,8 +135,8 @@ contract AssetLifecycleSpike is IERC7984Receiver {
       revert PublicBalanceNotEmpty(underlying.balanceOf(address(this)));
     }
 
-    euint256 poolBalance = wrapper.confidentialBalanceOf(address(this));
-    unwrapRequest = wrapper.unwrap(address(this), address(this), poolBalance);
+    Nox.allowTransient(heldAmount, address(wrapper));
+    unwrapRequest = wrapper.unwrap(address(this), address(this), heldAmount);
     recoveryAvailableAt = uint48(block.timestamp) + recoveryDelay;
     state = LifecycleState.UnwrapPending;
   }
