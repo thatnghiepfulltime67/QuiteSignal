@@ -1,0 +1,112 @@
+# P3 — Web product and public verification experience
+
+Status: `not_started`
+
+## Objective
+
+Deliver an accessible, recovery-aware application whose primary journey uses the
+real G6 Sepolia manifest and makes the privacy boundary understandable without
+depending on a mock, private database, or privileged backend.
+
+## Prerequisites
+
+- P2 is complete and G6 is passed.
+- SDK, event contract, manifest, verifier, and read-model schemas are stable.
+- A funded but disposable user-test strategy is documented without committed secrets.
+
+## Work-item register
+
+| ID | Outcome | Primary artifacts | Required checks | Intended commit |
+|---|---|---|---|---|
+| WEB-01 | Application/provider shell | Routes, providers, error boundaries, manifest loader | wrong chain, no wallet, provider discovery/reconnect | `feat: add application and wallet shell` |
+| WEB-02 | Market/privacy onboarding | Market list/detail, privacy legend, trust/limitation copy | public/private copy audit, empty/loading/error | `feat: add market privacy onboarding` |
+| WEB-03 | Sealed signal flow | Probability/stake form, encrypt, approve, commit progress | decimal boundaries, reject/retry/replacement/reload | `feat: add encrypted signal journey` |
+| WEB-04 | Public lifecycle view | Epoch timeline, aggregate, adapter execution, resolution | event/reorg refresh, direct-RPC fallback | `feat: add public lifecycle timeline` |
+| WEB-05 | Owner position/terminal flow | Owner decrypt, score materialize, claim/refund/recovery | account mismatch, ACL failure, duplicate, pending states | `feat: add private position and settlement` |
+| WEB-06 | Verification experience | Manifest/code hash/invariant/evidence view | stale manifest, wrong chain, verifier failure | `feat: add public verification view` |
+| WEB-07 | Accessibility/resilience | Keyboard, screen reader, mobile, offline/RPC/gateway states | automated a11y, console/log scan, responsive matrix | `test: harden accessible recovery ux` |
+| WEB-08 | Real browser lifecycle | Live browser e2e and sanitized result report | primary success plus one refund/recovery path | `test: prove live web user journey` |
+
+## Primary route contract
+
+Required routes or equivalent framework views:
+
+- `/markets`: chain-derived available pools with explicit network state.
+- `/pool/:address`: immutable market facts, deadline, k-status, public lifecycle.
+- `/pool/:address/signal`: encrypted probability/stake journey.
+- `/position`: connected-owner private decrypt, score, claim/refund status.
+- `/verify/:address`: manifest, code hashes, public invariants, evidence references.
+
+Route naming may change only with synchronized acceptance tests and documentation.
+Primary routes cannot import fixture, storybook, or runtime demo-mode modules.
+
+## UX state matrix
+
+| Surface | Required states |
+|---|---|
+| Wallet/network | no provider, disconnected, connecting, wrong chain, connected, account changed, chain changed |
+| Encryption | idle, validating, gateway pending, ready, timeout, retryable error, fatal context mismatch |
+| Transaction | approval required, wallet pending, submitted, replaced, confirming, finalized, reverted, dropped |
+| Epoch | open, deadline passed, below-k refundable, aggregate pending, unwrap pending, executed, settled, refundable |
+| Owner data | wrong owner, decrypt pending, viewer denied, position ready, score pending/ready, claimed/refunded |
+| External services | RPC degraded, gateway degraded, relayer absent, indexer rebuilding, direct-read fallback |
+
+Every asynchronous state must state: what happened, whether funds moved, what remains
+private, whether retry is safe, and the next user action.
+
+## Privacy UX contract
+
+- Before commit, show that probability/stake are confidential while wallet, timing,
+  market, transaction, and eventual aggregate are public.
+- Do not say anonymous, untraceable, private membership, or guaranteed Sybil resistance.
+- Never render confidential inputs into URL, query string, server component, analytics,
+  crash report, console log, persisted global store, or reusable public cache.
+- Clear ephemeral form plaintext after encryption/commit completion or explicit cancel.
+- Owner-decrypted values remain client-local and are masked on account/chain change.
+
+## Accessibility and responsive contract
+
+- All actions usable by keyboard with visible focus and logical order.
+- Status changes announced with non-disruptive live regions.
+- Form fields have programmatic labels, units, validation, and error association.
+- Color is not the only carrier of privacy, state, success, or error information.
+- Primary routes pass at 360px, 768px, 1280px, and 1440px viewports.
+- Reduced motion is respected; progress does not depend on animation.
+- Zero serious/critical automated a11y violations and manual keyboard path passes.
+
+## Browser e2e register
+
+| Case ID | Journey |
+|---|---|
+| E2E-WEB-01 | Connect → correct network → enter probability/stake → encrypt → approve → commit |
+| E2E-WEB-02 | Reload/reconnect → recover submitted transaction/position state |
+| E2E-WEB-03 | Observe aggregate/execution/resolution from chain-derived events |
+| E2E-WEB-04 | Owner decrypt → materialize score → claim confidential payout |
+| E2E-WEB-05 | Below-k or recovered epoch → owner refund |
+| E2E-WEB-06 | Wrong owner cannot decrypt and sees precise non-overclaiming explanation |
+| E2E-WEB-07 | Indexer/relayer unavailable → direct reads and permissionless action remain available |
+| E2E-WEB-08 | Verify route detects valid manifest and rejects stale/wrong-chain manifest |
+
+## Verification
+
+- Strict typecheck, lint, unit/component, browser, accessibility, and responsive checks.
+- Browser console has no unexpected error or unhandled rejection.
+- Structured scan finds no confidential input in logs, storage, network calls to app
+  servers, test artifacts, screenshots, or traces.
+- WEB-08 runs against the real G6 deployment manifest, not seeded runtime fixtures.
+- Read-model rebuild produces the same finalized public view.
+
+## Exit checklist
+
+- [ ] WEB-01 through WEB-08 are independently committed.
+- [ ] All UX state matrix entries have implementation and tests.
+- [ ] Primary route dependency scan proves no fixture/demo import.
+- [ ] Public/private language matches the threat model and traceability matrix.
+- [ ] G7 is passed with sanitized browser evidence.
+- [ ] An unfamiliar tester completes success and recovery paths using documentation only.
+- [ ] Worktree is clean and P4 prerequisites are recorded.
+
+## Stop conditions
+
+Stop if a primary journey requires server-side plaintext, private database truth,
+runtime mock state, privileged automation, or a privacy claim broader than evidence.

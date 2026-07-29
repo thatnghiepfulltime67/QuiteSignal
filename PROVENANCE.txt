@@ -1,0 +1,4 @@
+brief_commit=297ec0478a2714dbc4915de3cd01e8f28437c64c
+discord_context_commit=297ec0478a2714dbc4915de3cd01e8f28437c64c
+captured_at=2026-07-21_to_2026-07-25
+note=User-provided competition material; verify current official rules before submission.
