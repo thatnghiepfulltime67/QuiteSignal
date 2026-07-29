@@ -8,23 +8,27 @@
 
 # Dependencies and build outputs
 node_modules/
+.cache/
 dist/
 build/
-coverage/
-artifacts/
-cache/
 .next/
 out/
+coverage/
+*.tsbuildinfo
+artifacts/
+cache/
+typechain-types/
 
 # Tool and generated runtime state
 .openzeppelin/
-typechain-types/
 
 # Private or unsanitized evidence
 evidence/private/
 evidence/raw/
-test-results/
+evidence/local/
+evidence/tmp/
 playwright-report/
+test-results/
 *.trace.zip
 
 # Editor and OS files

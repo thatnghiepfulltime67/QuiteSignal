@@ -29,4 +29,22 @@ Last reviewed: 2026-07-30
 | Confidential collateral can cross the adapter boundary | Exact unwrap/proof conservation test | Select a supported asset boundary |
 | Target protocol is deployable and callable | Minimal adapter test | Select another open protocol |
 
-Package versions remain unspecified until P0 creates the verified lockfile.
+## FND-01 verified toolchain baseline
+
+Verified on 2026-07-30 from the official npm release metadata and the committed
+lockfile:
+
+- Node.js `24.18.0` and npm `11.16.0`;
+- `@iexec-nox/nox-protocol-contracts@0.2.4`;
+- `@iexec-nox/nox-confidential-contracts@0.2.2`;
+- `@iexec-nox/handle@0.1.0-beta.13`;
+- Hardhat `3.11.1`, TypeScript `6.0.2`, Prettier `3.9.6`, and
+  `prettier-plugin-solidity@2.3.1`.
+
+The Nox protocol SDK maps Ethereum Sepolia (`11155111`) to
+`0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF`. The committed doctor command
+rechecks the chain ID and confirms that this address has runtime code without
+printing RPC configuration values.
+
+The baseline contains no critical npm advisory. Its current high-severity Hardhat
+transitive advisory is tracked as R-16 and must be re-evaluated before G8.

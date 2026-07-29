@@ -1,6 +1,6 @@
 # P0 — Foundation and feasibility
 
-Status: `not_started`
+Status: `in_progress`
 
 ## Objective
 
@@ -27,6 +27,66 @@ production modules are created. Pure arithmetic/reference expectations are teste
 
 Only one FND item may be in progress. Each item must be committed before the next
 item begins; feasibility spikes never share a commit with production contracts.
+
+## Active work item
+
+ID: `FND-01`
+
+Outcome: Establish a reproducible npm-workspace toolchain that can perform
+sanitized Ethereum Sepolia read preflight checks without creating application or
+protocol modules.
+
+Status: `in_progress`
+
+Prerequisite gates: None. The architecture, privacy, protocol, operations, and
+work-package documents were reconciled on 2026-07-30. Official Nox release
+metadata was inspected: `@iexec-nox/nox-protocol-contracts@0.2.4`,
+`@iexec-nox/nox-confidential-contracts@0.2.2`, and
+`@iexec-nox/handle@0.1.0-beta.13`. The protocol SDK maps Ethereum Sepolia
+(`11155111`) to a deployed NoxCompute address; the mapping and runtime code must
+be rechecked by the committed doctor command.
+
+Files/modules allowed: `.nvmrc`, `.npmrc`, `.editorconfig`, `.gitignore`,
+`.prettierignore`, `prettier.config.mjs`, `package.json`, `package-lock.json`,
+`tsconfig.base.json`, `ops/scripts/doctor.mts`,
+`ops/scripts/check-secrets.mts`, `ops/scripts/budget-status.mts`,
+`ops/scripts/dependency-report.mts`,
+`evidence/offline/G0/`, `evidence/reports/`,
+`evidence/sepolia/spend-ledger.json`,
+`docs/plans/00-foundation-and-feasibility.md`,
+`docs/plans/evidence-ledger.md`, `docs/operations/02-risk-register.md`, and
+`docs/operations/04-source-and-assumption-register.md`.
+
+Acceptance criteria: Exact direct versions and npm engines are pinned; a frozen
+install succeeds twice from a clean npm cache; doctor reports versions and public
+Sepolia/Nox health without values from environment variables; compile and format
+checks are deterministic; ignored secret, cache, and local-evidence paths are
+covered by a repository scan.
+
+Negative cases: Missing RPC configuration, an RPC reporting a non-Sepolia chain,
+missing Nox runtime code, an invalid spend ledger, unsupported Node/npm versions,
+or a detected committed secret must fail with a sanitized actionable message.
+
+Privacy/custody impact: This item performs no confidential computation and sends
+no transaction. It must not read, print, persist, or commit private keys,
+mnemonics, RPC credentials, confidential inputs, handles, proofs, or signatures.
+
+Funds location/recovery impact: No Sepolia write is permitted in this item; no
+funds move and no recovery action is required.
+
+Commands/checks: `npm ci` twice in clean processes, `npm run doctor`,
+`npm run format:check`, `npm run compile`, `npm run scan:secrets`,
+`npm run scan:dependencies`, `npm run check:offline`, and
+`npm run check:sepolia:read`.
+
+Evidence path: `evidence/offline/G0/FND-01.json` and
+`evidence/reports/G0-summary.md`.
+
+Intended commit: `build: pin verified workspace toolchain`.
+
+Rollback/failure action: Revert only the FND-01 commit and retain the sanitized
+failure report. A failed Nox runtime, package, license, or deterministic-build
+check blocks FND-02 through FND-07 and creates no product-code fallback.
 
 ## FND-01 — Toolchain lock
 

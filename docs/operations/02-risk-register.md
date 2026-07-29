@@ -17,6 +17,7 @@
 | R-13 | Sybil commits make k misleading | Medium | High | One commit/address; explicitly state that k is not Sybil resistance | Product |
 | R-14 | Unwrap proof never becomes available | Low | Critical | Phase 0 live liveness test; stop-ship if no bounded operational recovery | Protocol |
 | R-15 | Encrypted score arithmetic is unsupported or unsafe | Medium | Medium | Sepolia arithmetic spike; private score remains gated | Protocol |
+| R-16 | The pinned Hardhat toolchain currently resolves a high-severity `adm-zip` advisory | Medium | High | Restrict Hardhat to developer-controlled protocol artifacts, do not process untrusted ZIP files, recheck on every dependency scan, and upgrade when a compatible patched release exists; G8 requires closure or explicit allowed acceptance | Toolchain |
 
 ## Stop-ship conditions
 

@@ -8,7 +8,7 @@ seed phrases, environment dumps, or unsanitized terminal history.
 
 | Gate | Status | Environment | Evidence artifact | Commit | Chain/block | Public tx/address references | Verified checks | Notes |
 |---|---|---|---|---|---|---|---|---|
-| G0 | `not_run` | — | — | — | — | — | — | — |
+| G0 | `running` | offline / Sepolia read | FND-01 pending | — | — | — | Toolchain lock in progress | No Sepolia write permitted |
 | G1 | `not_run` | — | — | — | — | — | — | — |
 | G2 | `not_run` | — | — | — | — | — | — | — |
 | G3 | `not_run` | — | — | — | — | — | — | — |

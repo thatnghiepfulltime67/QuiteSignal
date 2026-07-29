@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "chainId": 11155111,
+  "maxTotalSpendWei": "500000000000000000",
+  "entries": []
+}
