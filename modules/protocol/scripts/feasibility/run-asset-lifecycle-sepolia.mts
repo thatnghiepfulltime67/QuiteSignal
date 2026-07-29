@@ -34,6 +34,7 @@ interface Artifact {
   abi: Abi;
   bytecode: Hex;
   deployedBytecode: Hex;
+  immutableReferences?: Record<string, readonly { start: number; length: number }[]>;
 }
 
 interface SpendEntry {
@@ -113,6 +114,26 @@ function loadArtifact(path: string, description: string): Artifact {
     fail(`The compiled ${description} artifact is unavailable or malformed.`);
   }
   return artifact as Artifact;
+}
+
+function runtimeMatchesArtifact(runtime: Hex, artifact: Artifact): boolean {
+  const normalize = (bytecode: Hex): Hex | undefined => {
+    let normalized = bytecode.slice(2);
+    for (const references of Object.values(artifact.immutableReferences ?? {})) {
+      for (const { start, length } of references) {
+        const offset = start * 2;
+        const span = length * 2;
+        if (offset + span > normalized.length) {
+          return undefined;
+        }
+        normalized = `${normalized.slice(0, offset)}${'00'.repeat(span)}${normalized.slice(
+          offset + span,
+        )}`;
+      }
+    }
+    return `0x${normalized}` as Hex;
+  };
+  return normalize(runtime)?.toLowerCase() === normalize(artifact.deployedBytecode)?.toLowerCase();
 }
 
 function loadLedger(): SpendLedger {
@@ -343,10 +364,10 @@ async function main(): Promise<void> {
       !wrapperRuntime ||
       !directRuntime ||
       !recoveryRuntime ||
-      fixtureRuntime.toLowerCase() !== fixtureArtifact.deployedBytecode.toLowerCase() ||
-      wrapperRuntime.toLowerCase() !== wrapperArtifact.deployedBytecode.toLowerCase() ||
-      directRuntime.toLowerCase() !== spikeArtifact.deployedBytecode.toLowerCase() ||
-      recoveryRuntime.toLowerCase() !== spikeArtifact.deployedBytecode.toLowerCase()
+      !runtimeMatchesArtifact(fixtureRuntime, fixtureArtifact) ||
+      !runtimeMatchesArtifact(wrapperRuntime, wrapperArtifact) ||
+      !runtimeMatchesArtifact(directRuntime, spikeArtifact) ||
+      !runtimeMatchesArtifact(recoveryRuntime, spikeArtifact)
     ) {
       fail('An existing FND-04 harness runtime does not match the compiled artifact.');
     }
@@ -360,8 +381,8 @@ async function main(): Promise<void> {
     if (
       !fixtureRuntime ||
       !wrapperRuntime ||
-      fixtureRuntime.toLowerCase() !== fixtureArtifact.deployedBytecode.toLowerCase() ||
-      wrapperRuntime.toLowerCase() !== wrapperArtifact.deployedBytecode.toLowerCase()
+      !runtimeMatchesArtifact(fixtureRuntime, fixtureArtifact) ||
+      !runtimeMatchesArtifact(wrapperRuntime, wrapperArtifact)
     ) {
       fail('A reusable FND-04 core runtime does not match the compiled artifact.');
     }
@@ -572,6 +593,36 @@ async function main(): Promise<void> {
   } as never)) as Address;
   if (configuredUnderlying.toLowerCase() !== contracts.fixture.toLowerCase()) {
     fail('The confidential wrapper does not bind the expected fixture collateral.');
+  }
+  const [directWrapper, directUnderlying, recoveryWrapper, recoveryUnderlying] = await Promise.all([
+    publicClient.readContract({
+      address: contracts.directSpike,
+      abi: spikeArtifact.abi,
+      functionName: 'wrapper',
+    } as never),
+    publicClient.readContract({
+      address: contracts.directSpike,
+      abi: spikeArtifact.abi,
+      functionName: 'underlying',
+    } as never),
+    publicClient.readContract({
+      address: contracts.recoverySpike,
+      abi: spikeArtifact.abi,
+      functionName: 'wrapper',
+    } as never),
+    publicClient.readContract({
+      address: contracts.recoverySpike,
+      abi: spikeArtifact.abi,
+      functionName: 'underlying',
+    } as never),
+  ]);
+  if (
+    (directWrapper as Address).toLowerCase() !== contracts.wrapper.toLowerCase() ||
+    (recoveryWrapper as Address).toLowerCase() !== contracts.wrapper.toLowerCase() ||
+    (directUnderlying as Address).toLowerCase() !== contracts.fixture.toLowerCase() ||
+    (recoveryUnderlying as Address).toLowerCase() !== contracts.fixture.toLowerCase()
+  ) {
+    fail('An asset lifecycle spike does not bind the expected wrapper and fixture collateral.');
   }
 
   const send = async (to: Address, data: Hex, action: string): Promise<Hash> => {
