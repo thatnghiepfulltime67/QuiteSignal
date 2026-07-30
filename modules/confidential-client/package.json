@@ -8,6 +8,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test test/*.test.ts",
+    "test:nox:sepolia": "tsx scripts/run-sdk02-confidential-input-sepolia.mts"
   }
 }

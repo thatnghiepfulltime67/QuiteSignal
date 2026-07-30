@@ -24,6 +24,7 @@
     "test:interfaces": "npm run --workspace @quitesignal/protocol test:interfaces",
     "test:verifier": "npm run --workspace @quitesignal/verifier test",
     "test:sdk": "npm run --workspace @quitesignal/confidential-client test",
+    "test:sdk:nox:sepolia": "npm run --workspace @quitesignal/confidential-client test:nox:sepolia --",
     "verify:protocol:sepolia": "npm run --workspace @quitesignal/verifier verify:sepolia --",
     "verify:g5:evidence": "npm run --workspace @quitesignal/verifier verify:g5 --",
     "test:adapter:sepolia": "npm run --workspace @quitesignal/protocol test:adapter:sepolia --",
