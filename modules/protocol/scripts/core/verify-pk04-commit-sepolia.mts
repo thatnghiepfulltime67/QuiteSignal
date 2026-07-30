@@ -7,6 +7,7 @@ import { createViemHandleClient } from '@iexec-nox/handle';
 import {
   createPublicClient,
   createWalletClient,
+  encodeFunctionData,
   http,
   type Abi,
   type Address,
@@ -101,6 +102,14 @@ function sourceCommit(): string {
     encoding: 'utf8',
   }).trim();
 }
+async function expectRevert(action: () => Promise<unknown>, scenario: string): Promise<void> {
+  try {
+    await action();
+  } catch {
+    return;
+  }
+  fail(`${scenario} did not reject on Ethereum Sepolia.`);
+}
 
 async function main(): Promise<void> {
   loadEnvironment();
@@ -152,6 +161,44 @@ async function main(): Promise<void> {
   ];
   if (runtimeChecks.some((matches) => !matches))
     fail('A PK-04 deployment does not match its compiled runtime template.');
+  const callbackData = (operator: Address, from: Address) =>
+    encodeFunctionData({
+      abi: artifacts.pool.abi,
+      functionName: 'onConfidentialTransferReceived',
+      args: [
+        operator,
+        from,
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+        '0x',
+      ],
+    } as never);
+  await Promise.all([
+    expectRevert(
+      () =>
+        publicClient.call({
+          account: account.address,
+          to: ACCEPTED_POOL,
+          data: callbackData(account.address, account.address),
+        }),
+      'Direct callback from a non-collateral sender',
+    ),
+    expectRevert(
+      () =>
+        publicClient.call({
+          account: WRAPPER,
+          to: ACCEPTED_POOL,
+          data: callbackData(
+            '0x0000000000000000000000000000000000000001',
+            '0x0000000000000000000000000000000000000002',
+          ),
+        }),
+      'Callback with a distinct operator and owner',
+    ),
+    expectRevert(
+      () => publicClient.call({ account: account.address, to: ACCEPTED_POOL, value: 1n }),
+      'Native value at pool boundary',
+    ),
+  ]);
   const [
     underlying,
     acceptedEpoch,
@@ -294,6 +341,9 @@ async function main(): Promise<void> {
     checks: {
       runtimeTemplatesMatch: true,
       wrapperFixtureBinding: true,
+      directCallbackRejected: true,
+      wrongCallbackOperatorRejected: true,
+      nativeValueRejected: true,
       matchingCommitFinalized: true,
       acceptedOwnerViewerAclVerified: true,
       mismatchRejectedAndRefunded: true,
