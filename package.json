@@ -24,6 +24,7 @@
     "test:interfaces": "npm run --workspace @quitesignal/protocol test:interfaces",
     "test:verifier": "npm run --workspace @quitesignal/verifier test",
     "test:sdk": "npm run --workspace @quitesignal/confidential-client test",
+    "test:automation": "npm run --workspace @quitesignal/automation test",
     "test:sdk:nox:sepolia": "npm run --workspace @quitesignal/confidential-client test:nox:sepolia --",
     "test:sdk:commit-client:sepolia": "npm run --workspace @quitesignal/confidential-client test:transaction:sepolia --",
     "verify:sdk:transaction:sepolia": "npm run --workspace @quitesignal/confidential-client verify:transaction:sepolia --",
@@ -53,7 +54,7 @@
     "verify:g4:evidence": "tsx ops/scripts/verify-g4-evidence.mts",
     "scan:secrets": "tsx ops/scripts/check-secrets.mts",
     "scan:dependencies": "npm audit --audit-level=critical && tsx ops/scripts/dependency-report.mts",
-    "check:offline": "npm run format:check && npm run lint && npm run compile && npm run test:verifier && npm run test:sdk && npm run scan:secrets",
+    "check:offline": "npm run format:check && npm run lint && npm run compile && npm run test:verifier && npm run test:sdk && npm run test:automation && npm run scan:secrets",
     "check:sepolia:read": "npm run doctor && npm run budget:status"
   },
   "devDependencies": {

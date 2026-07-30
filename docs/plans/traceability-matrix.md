@@ -87,13 +87,14 @@ requirements.
 `T-VERIFIER-PK08-*` is pure schema and read-client mutation coverage. The separately
 named CLI execution reads Ethereum Sepolia; neither test writes chain state.
 
-| Test family           | Coverage                                                                                              | Invariants/requirements         |
-| --------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------- |
-| `T-VERIFIER-PK08-01`  | Schema version/chain, duplicate binding, and prohibited confidential-field rejection                  | FR-08, P1, P3, P7               |
-| `T-VERIFIER-PK08-02`  | Matching runtime hashes, immutable bindings, public epoch facts, and successful receipt acceptance    | FR-08, I5, I8, I9               |
-| `T-VERIFIER-PK08-03`  | Wrong chain, missing/stale runtime, wrong pool binding/state, and failed receipt rejection            | FR-08, I5, I8, I9               |
-| `T-VERIFIER-DEP-01-*` | Historical deployment-block epoch selection and malformed deployment-block rejection                  | FR-01, FR-08, I8, I9            |
-| `T-VERIFIER-VER-01-*` | Canonical factory, collateral interface, adapter/feed, zero-custody, and lifecycle-snapshot mutations | FR-01, FR-05, FR-08, I5, I8, I9 |
+| Test family           | Coverage                                                                                                | Invariants/requirements         |
+| --------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `T-VERIFIER-PK08-01`  | Schema version/chain, duplicate binding, and prohibited confidential-field rejection                    | FR-08, P1, P3, P7               |
+| `T-VERIFIER-PK08-02`  | Matching runtime hashes, immutable bindings, public epoch facts, and successful receipt acceptance      | FR-08, I5, I8, I9               |
+| `T-VERIFIER-PK08-03`  | Wrong chain, missing/stale runtime, wrong pool binding/state, and failed receipt rejection              | FR-08, I5, I8, I9               |
+| `T-VERIFIER-DEP-01-*` | Historical deployment-block epoch selection and malformed deployment-block rejection                    | FR-01, FR-08, I8, I9            |
+| `T-VERIFIER-VER-01-*` | Canonical factory, collateral interface, adapter/feed, zero-custody, and lifecycle-snapshot mutations   | FR-01, FR-05, FR-08, I5, I8, I9 |
+| `T-AUT-01-POLICY-*`   | Deterministic one-action permissionless policy, timeout precedence, invalid input, and schema exclusion | FR-03–FR-05, FR-07, I3, I8, I10 |
 
 ## PK-09 combined-evidence coverage
 

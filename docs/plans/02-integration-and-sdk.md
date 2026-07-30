@@ -199,7 +199,7 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `AUT-01-PLAN-01`.
+Active slice: `AUT-01-RUNNER-01`.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
 consumer bindings, deployment tests, this record, evidence ledger entries, and
@@ -545,6 +545,86 @@ Intended commit: `feat: add permissionless lifecycle relayer`.
 Rollback/failure action: Disable/remove the optional service only. Do not introduce
 a keeper role, service-held user signer, manual state transition, trusted proof
 cache, or direct asset call to compensate for a failed runner.
+
+Completion evidence: `b35880b` records the permissionless action boundary, required
+operational modes, budgets, and explicit exclusion of owner/custody methods. This is
+planning only; it creates no automation behavior or G6 evidence.
+
+### AUT-01-POLICY-01
+
+Status: `in_progress`
+
+Outcome: Implement the deterministic, side-effect-free public transition selector
+that the later RPC runner must use for dry-run and every re-read before a write.
+
+Output files: `services/automation` workspace public policy/types, unit/static
+tests, root command, this record, and traceability updates.
+
+Acceptance criteria: Given only public epoch/timing/adapter-readiness facts, the
+selector returns no more than one valid permissionless action. It prioritizes real
+aggregate finalization/settlement once public prerequisites are available, otherwise
+uses only immutable timeout/grace recovery. It has no action type for commit,
+wrap, transfer, approval, claim, refund, score, or any user-specific method, and no
+data structure capable of carrying confidential material.
+
+Privacy/custody impact: Pure public state only; no RPC, wallet, Nox value, result
+bytes, token call, persistence, or logging exists in this slice.
+
+Funds location/recovery impact: No chain interaction. A missing/invalid public
+precondition deterministically selects no action or the contract's already eligible
+recovery transition; owners retain all direct recovery actions.
+
+Checks: policy vectors for every epoch/timing branch, no-owner-action and
+no-sensitive-field static tests, typecheck, `npm run check:offline`, and
+`git diff --check`.
+
+Evidence location: unit test output only; it cannot advance G6.
+
+Intended commit: `feat: add permissionless action policy`.
+
+Rollback/failure action: Revert the isolated workspace. Do not replace a rejected
+policy branch with a broad transaction sender or a trusted service decision.
+
+Completion evidence: this slice adds three `T-AUT-01-*` policy cases for every
+public state/timing branch, invalid input, and the absence of owner-action or
+confidential-data schema. `npm run test:automation` is included in
+`npm run check:offline`. This is offline policy evidence only and cannot advance G6.
+
+### AUT-01-RUNNER-01
+
+Status: `in_progress`
+
+Outcome: Bind the public policy to guarded Sepolia reads and optional one-action
+writes without making the service a lifecycle authority.
+
+Output files: public ABI reader/encoder, runner CLI, dry-run/health tests, command
+documentation, this record, and later named Sepolia dry-run evidence.
+
+Acceptance criteria: The runner accepts only manifest-bound or explicitly named
+Sepolia pools, validates chain/runtime/configuration before action selection, reads
+the pending-commit and adapter timing public facts, and prints a sanitized dry-run
+candidate. `health` reads only; `once`/`poll` require explicit confirmation and send
+at most one policy-selected transaction after an immediate state re-read. The first
+runner slice sends no aggregate-finalization transaction until a distinct public
+result retrieval boundary is tested.
+
+Privacy/custody impact: RPC responses and console output contain public state/action
+labels only. No Nox result bytes or inputs are fetched, retained, or encoded yet.
+
+Funds location/recovery impact: Dry-run/health send no transaction. A guarded one
+action call can only invoke an on-chain permissionless transition selected by public
+state; failed/raced calls are reported without retrying an owner action.
+
+Checks: public reader/encoding/race unit tests, static schema scan, full offline
+check, named Sepolia dry-run, and `git diff --check`.
+
+Evidence location: `evidence/{offline,sepolia}/G6/AUT-01-RELAYER.json` after the
+runner and public-result retrieval slices complete.
+
+Intended commit: `feat: add guarded lifecycle runner`.
+
+Rollback/failure action: Revert the runner adapter only. Do not turn a missing
+public result into a guessed finalization, a trusted queue, or a user-signing path.
 
 ## Dependency graph
 
