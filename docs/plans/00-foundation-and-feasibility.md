@@ -840,6 +840,14 @@ bounded fixed gas limit for that valid Sepolia transaction, subject to the same
 single-transaction and cumulative spend checks, rather than treating estimation
 failure as a protocol result.
 
+The fixed-gas retry from `6a9b6a6` broadcast the valid finalization but received a
+non-out-of-gas revert after 318301 gas. The invalid substituted call also reverts,
+so this does not establish a valid-proof outcome. FND-04 obtains public proof
+results sequentially, while the C runner requested YES and NO concurrently. The next
+isolated correction serializes the two gateway requests and repeats the same
+on-chain proof verification; it changes no contract, trust, custody, or privacy
+behavior and is not a gate conclusion until the valid receipt succeeds.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

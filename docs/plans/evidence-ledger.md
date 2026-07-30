@@ -39,6 +39,11 @@ left the spike `AGGREGATE_PENDING`. A local ignored marker reports an
 contract or Nox evidence; the valid finalization must use the next committed bounded
 fixed-gas path and obtain a successful Sepolia receipt.
 
+The `6a9b6a6` retry broadcast its fixed-gas valid finalization and reverted after
+318301 gas, so it is not an out-of-gas result. The fixture remains
+`AGGREGATE_PENDING`. The next attempt serializes the two gateway proof requests and
+must still obtain the same successful contract verification before it can advance.
+
 ## Evidence artifact contract
 
 Each evidence artifact must include:

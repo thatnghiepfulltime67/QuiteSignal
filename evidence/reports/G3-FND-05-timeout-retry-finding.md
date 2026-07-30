@@ -292,3 +292,11 @@ dry-run planning. The fixture remains `AGGREGATE_PENDING`. This is an RPC estima
 failure before a write, not a Nox proof verdict. The correction sends that valid
 transaction with a fixed, budget-bounded gas limit and still requires a successful
 receipt before progressing to unwrap recovery.
+
+The fixed-gas retry from `6a9b6a6` broadcast the valid finalization but reverted
+after 318301 gas, ruling out an out-of-gas classification. The proof result remains
+unproven. The aggregate runner obtained YES and NO gateway results concurrently,
+unlike the already-passing sequential FND-04 proof path. The next correction
+serializes those two gateway requests and repeats the same on-chain verification on
+this fixture. It is an orchestration hypothesis, not a relaxation or a protocol
+claim.
