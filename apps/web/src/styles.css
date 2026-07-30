@@ -1,0 +1,121 @@
+:root {
+  color-scheme: dark;
+  --canvas: #0e100f;
+  --cream: #fffce1;
+  --muted: #7c7c6f;
+  --line: #42433d;
+  --panel: #191919;
+  --signal: #0ae448;
+  --public: #00bae2;
+  font-family: Mori, Söhne, 'DM Sans', ui-sans-serif, sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--cream);
+}
+.shell {
+  max-width: 1280px;
+  margin: auto;
+  padding: 24px 64px 80px;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 64px;
+  border-bottom: 1px solid var(--line);
+}
+.wordmark {
+  color: var(--cream);
+  font-size: 20px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.wallet,
+.primary {
+  min-height: 44px;
+  border: 1px solid var(--cream);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--cream);
+  padding: 10px 18px;
+  font: inherit;
+}
+.legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.legend span:nth-child(1) {
+  color: #fec5fb;
+}
+.legend span:nth-child(2) {
+  color: #9d95ff;
+}
+.legend span:nth-child(3),
+.public {
+  color: var(--public);
+}
+.legend span:nth-child(4) {
+  color: #ff8709;
+}
+.hero {
+  max-width: 800px;
+  padding: 96px 0 48px;
+}
+.eyebrow {
+  font-size: 16px;
+}
+.hero h1 {
+  font-size: clamp(48px, 9vw, 101px);
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  margin: 16px 0;
+}
+.hero p:not(.eyebrow) {
+  font-size: 20px;
+  line-height: 1.35;
+  max-width: 620px;
+}
+.primary {
+  display: inline-block;
+  margin-top: 16px;
+  text-decoration: none;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+  overflow-wrap: anywhere;
+}
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+@media (max-width: 700px) {
+  .shell {
+    padding: 24px;
+  }
+  .hero {
+    padding-top: 64px;
+  }
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

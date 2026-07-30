@@ -21,13 +21,13 @@ Last reviewed: 2026-07-30
 
 ## Assumptions requiring P0 evidence
 
-| Assumption                                             | Verification                         | Decision if false                        |
-| ------------------------------------------------------ | ------------------------------------ | ---------------------------------------- |
-| Sepolia protocol mapping is current                    | Pinned SDK source and live bytecode  | Stop deployment and update config        |
-| Owner viewer ACL survives settlement                   | Cross-transaction live test          | Remove private score or redesign receipt |
-| Aggregate public decrypt is reliable                   | Multi-user Sepolia spike             | Reject the batching model                |
-| Confidential collateral remains in pool custody         | Exact pull/payout/refund conservation | Stop if a third party receives collateral |
-| Target feed is callable and objectively normalizable    | Minimal resolution-adapter test       | Select another open protocol             |
+| Assumption                                           | Verification                          | Decision if false                         |
+| ---------------------------------------------------- | ------------------------------------- | ----------------------------------------- |
+| Sepolia protocol mapping is current                  | Pinned SDK source and live bytecode   | Stop deployment and update config         |
+| Owner viewer ACL survives settlement                 | Cross-transaction live test           | Remove private score or redesign receipt  |
+| Aggregate public decrypt is reliable                 | Multi-user Sepolia spike              | Reject the batching model                 |
+| Confidential collateral remains in pool custody      | Exact pull/payout/refund conservation | Stop if a third party receives collateral |
+| Target feed is callable and objectively normalizable | Minimal resolution-adapter test       | Select another open protocol              |
 
 ## FND-06A original target discovery
 
@@ -85,6 +85,7 @@ Verified on 2026-07-30 from the official npm release metadata and the committed
 lockfile:
 
 - Node.js `24.18.0` and npm `11.16.0`;
+- Vite `8.2.0` as a pinned build-only dependency for the browser workspace;
 - `@iexec-nox/nox-protocol-contracts@0.2.4`;
 - `@iexec-nox/nox-confidential-contracts@0.2.2`;
 - `@iexec-nox/handle@0.1.0-beta.13`;

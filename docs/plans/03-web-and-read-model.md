@@ -31,7 +31,7 @@ depending on a mock, private database, or privileged backend.
 
 ID: `WEB-01`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Establish the browser-only application shell, canonical-manifest boundary,
 and wallet/network state boundary for the real Sepolia product flow.
@@ -77,6 +77,13 @@ Intended commit: `feat: add application and wallet shell`.
 Rollback/failure action: Remove the isolated web workspace and its build dependency.
 Do not replace a failed manifest or wallet boundary with hard-coded addresses, a
 trusted backend, a demo mode, or a stored wallet/session record.
+
+Completion evidence: This slice adds the browser-native Vite shell, a
+canonical-manifest parser, and two focused `T-WEB-01-*` tests for accepted Sepolia
+and rejected malformed/network-mismatched manifests. The production build uses the
+repository's `deployments/sepolia/quiet-signal.json` as its public asset rather than
+copying addresses into source. The shell displays the DESIGN.md semantic legend and
+explicit provider/network/reconnect states, but it cannot submit a transaction.
 
 ## Primary route contract
 
