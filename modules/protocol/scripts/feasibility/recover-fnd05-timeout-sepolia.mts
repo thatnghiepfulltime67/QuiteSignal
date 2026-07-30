@@ -24,6 +24,7 @@ const EXPECTED_CHAIN_ID = 11_155_111;
 const CONFIRMATION_VALUE = 'yes';
 const EXPECTED_DEPLOYER_BALANCE = 120n;
 const EXPECTED_SECONDARY_BALANCE = 180n;
+const EXPECTED_REVERT_GAS = 2_000_000n;
 const OWNER_DECRYPT_MAX_ATTEMPTS = 8;
 const RETRY_DELAY_MS = 5_000;
 
@@ -183,7 +184,9 @@ function clearSecondaryPrivateKey(): void {
 }
 
 function recoverySet(): TimeoutRecoverySet {
-  const argument = process.argv.find((value) => value.startsWith('--recover-timeout='));
+  const argument = process.argv.find(
+    (value) => value.startsWith('--recover-timeout=') || value.startsWith('--advance-timeout='),
+  );
   if (!argument) fail('Three timeout recovery contract addresses are required.');
   const values = argument.slice('--recover-timeout='.length).split(',');
   if (values.length !== 3 || values.some((value) => !isAddress(value))) {
@@ -198,6 +201,7 @@ function recoverySet(): TimeoutRecoverySet {
 
 async function main(): Promise<void> {
   loadEnvironment();
+  const advanceOnly = process.argv.some((value) => value.startsWith('--advance-timeout='));
   const privateKey = process.env.SEPOLIA_PRIVATE_KEY;
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
   if (!privateKey || !rpcUrl)
@@ -253,7 +257,10 @@ async function main(): Promise<void> {
     fail('The timeout recovery wrapper does not bind the supplied fixture collateral.');
   }
   const initialState = await read(contracts.timeoutSpike, spikeArtifact, 'state');
-  if (initialState !== 2 && initialState !== 4) {
+  if (advanceOnly && initialState !== 0) {
+    fail('The supplied timeout advance spike is not open.');
+  }
+  if (!advanceOnly && initialState !== 2 && initialState !== 4) {
     fail('The supplied timeout recovery spike is neither aggregate pending nor refundable.');
   }
 
@@ -285,7 +292,7 @@ async function main(): Promise<void> {
     });
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     appendSpend(ledger, {
-      workItemId: 'FND-05',
+      workItemId: advanceOnly ? 'FND-05B' : 'FND-05',
       phase: 'P0',
       sender: account.address,
       transactionHash: hash,
@@ -312,6 +319,69 @@ async function main(): Promise<void> {
   };
 
   assertCleanSourceTree();
+  if (advanceOnly) {
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.timeoutSpike,
+      spikeData('closeEpoch'),
+      'close resumed threshold timeout epoch',
+    );
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.timeoutSpike,
+      spikeData('requestAggregateDecrypt'),
+      'request resumed threshold aggregate disclosure',
+    );
+    const access = (await read(
+      contracts.timeoutSpike,
+      spikeArtifact,
+      'aggregateAccess',
+    )) as readonly boolean[];
+    if (access.length !== 3 || !access[0] || !access[1] || access[2]) {
+      fail('The resumed threshold epoch did not expose exactly YES and NO aggregates.');
+    }
+    failureStage = 'early timeout rejection';
+    const fees = await publicClient.estimateFeesPerGas();
+    const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
+    const maximumCost = EXPECTED_REVERT_GAS * maxFeePerGas;
+    assertBudget(ledger, maximumCost);
+    if (maximumCost > singleTransactionCapWei) {
+      fail('The proposed early-timeout write exceeds the single-transaction gas allowance.');
+    }
+    const hash = await deployerWallet.sendTransaction({
+      account: deployer,
+      to: contracts.timeoutSpike,
+      data: spikeData('cancelBeforeUnwrap'),
+      gas: EXPECTED_REVERT_GAS,
+      maxFeePerGas,
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    appendSpend(ledger, {
+      workItemId: 'FND-05B',
+      phase: 'P0',
+      sender: deployer.address,
+      transactionHash: hash,
+      blockNumber: receipt.blockNumber.toString(),
+      gasUsed: receipt.gasUsed.toString(),
+      effectiveGasPrice: receipt.effectiveGasPrice.toString(),
+      actualGasCostWei: (receipt.gasUsed * receipt.effectiveGasPrice).toString(),
+    });
+    if (receipt.status !== 'reverted') {
+      fail('The early timeout cancellation did not revert on Ethereum Sepolia.');
+    }
+    console.log(
+      JSON.stringify({
+        aggregateAccess: 'yes-no-only',
+        aggregatePending: true,
+        earlyTimeoutRejected: true,
+        timeoutSpike: contracts.timeoutSpike,
+        workItem: 'FND-05B-advance',
+      }),
+    );
+    return;
+  }
   if (initialState === 2) {
     await send(
       secondary,
