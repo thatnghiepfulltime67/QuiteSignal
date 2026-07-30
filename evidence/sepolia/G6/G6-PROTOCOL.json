@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "gate": "G6",
+  "componentCount": 16,
+  "components": [
+    {
+      "id": "SDK-02",
+      "file": "SDK-02-CLIENT.json",
+      "conclusionCount": 5
+    },
+    {
+      "id": "SDK-03",
+      "file": "SDK-03-TRANSACTION-CLIENT.json",
+      "conclusionCount": 6
+    },
+    {
+      "id": "DEP-01",
+      "file": "DEP-01-DEPLOYMENT.json",
+      "conclusionCount": 4
+    },
+    {
+      "id": "VER-01",
+      "file": "VER-01-PUBLIC-VERIFIER.json",
+      "conclusionCount": 9
+    },
+    {
+      "id": "AUT-01",
+      "file": "AUT-01-RELAYER.json",
+      "conclusionCount": 5
+    },
+    {
+      "id": "IDX-01",
+      "file": "IDX-01-READ-MODEL.json",
+      "conclusionCount": 4
+    },
+    {
+      "id": "LIVE-01-MANIFEST",
+      "file": "LIVE-01-MANIFEST.json",
+      "conclusionCount": 28
+    },
+    {
+      "id": "LIVE-01-VERIFIER",
+      "file": "LIVE-01-VERIFIER.json",
+      "conclusionCount": 4
+    },
+    {
+      "id": "LIVE-01-READ-MODEL",
+      "file": "LIVE-01-READ-MODEL.json",
+      "conclusionCount": 4
+    },
+    {
+      "id": "LIVE-02-BELOW-K-MANIFEST",
+      "file": "LIVE-02-BELOW-K-MANIFEST.json",
+      "conclusionCount": 11
+    },
+    {
+      "id": "LIVE-02-BELOW-K-VERIFIER",
+      "file": "LIVE-02-BELOW-K-VERIFIER.json",
+      "conclusionCount": 4
+    },
+    {
+      "id": "LIVE-02-BELOW-K-READ-MODEL",
+      "file": "LIVE-02-BELOW-K-READ-MODEL.json",
+      "conclusionCount": 4
+    },
+    {
+      "id": "LIVE-02-TIMEOUT-MANIFEST",
+      "file": "LIVE-02-TIMEOUT-MANIFEST.json",
+      "conclusionCount": 16
+    },
+    {
+      "id": "LIVE-02-TIMEOUT-VERIFIER",
+      "file": "LIVE-02-TIMEOUT-VERIFIER.json",
+      "conclusionCount": 4
+    },
+    {
+      "id": "LIVE-02-TIMEOUT-READ-MODEL",
+      "file": "LIVE-02-TIMEOUT-READ-MODEL.json",
+      "conclusionCount": 4
+    },
+    {
+      "id": "LIVE-02-RECOVERY",
+      "file": "LIVE-02-RECOVERY.json",
+      "conclusionCount": 5
+    }
+  ],
+  "sourceCommits": [
+    "067df90dc346566da3775cef4948e55a8c4e701f",
+    "0a9e2cf4f5c7cd2a169a9e97d44d7f41a524c3a0",
+    "0b7679ec8464ffac353f215f8b66b99140539b3c",
+    "153135347ed182b43bbe05eb0071a3da81eec408",
+    "a50feb6821a0f8142ef1c9786f9ab32e72855a32",
+    "d2d147c31d79df35e7306a5201e64d2b728dc441",
+    "d3211ebe025dab910f85c7e800143f30450b2dc0",
+    "d4d78a09537167fce43ddc13cf74241ced8be17f"
+  ],
+  "coverage": {
+    "sdk": true,
+    "deployment": true,
+    "publicVerifier": true,
+    "permissionlessAutomation": true,
+    "rebuildableReadModel": true,
+    "settledTwoOwnerLifecycle": true,
+    "belowThresholdRecovery": true,
+    "aggregateTimeoutRecovery": true
+  },
+  "status": "passed"
+}

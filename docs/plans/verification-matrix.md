@@ -56,6 +56,7 @@ production-key configuration.
 | `npm run assess:g4:resolution:sepolia`                    | sepolia-read                 | Chainlink ETH/USD target metadata, runtime, and current round assessment                    | G4              |
 | `npm run verify:g4:evidence`                              | sepolia-read                 | G4 source/receipt/runtime-template/target-round/negative-case and zero-custody evidence     | G4              |
 | `npm run verify:g5:evidence`                              | offline/sepolia-read         | Fail-closed aggregation of every named sanitized G5 component artifact                      | PK-09/G5        |
+| `npm run verify:g6:evidence -- --out=evidence/sepolia/G6/G6-PROTOCOL.json` | offline | Fail-closed aggregation of the named sanitized P2 Sepolia evidence; output is create-only | G6 |
 | `npm run scan:secrets`                                    | offline                      | Repository/history/generated evidence scan                                                  | every commit/G8 |
 | `npm run scan:dependencies`                               | network/read                 | Advisories and licenses                                                                     | G0/G8           |
 | `npm run check:offline`                                   | offline                      | Complete no-chain merge gate                                                                | G0–G8           |

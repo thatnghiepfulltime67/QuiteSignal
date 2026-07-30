@@ -1,6 +1,6 @@
 # P2 — Integration, SDK, automation, and live protocol
 
-Status: `in_progress`
+Status: `complete`
 
 Pre-G5 preparation exception: While P1 is explicitly `awaiting_chain`, one
 dependency-independent pure TypeScript SDK slice may be `in_progress`. It cannot
@@ -239,7 +239,7 @@ point consumers at an unverified address.
 
 ### DEP-01-PLAN-01 work-item record
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Add a chain-read-only canonical Sepolia deployment planner before a
 deployment sender exists.
@@ -297,7 +297,7 @@ planner slice only; DEP-01 and G6 remain incomplete.
 
 ### DEP-01-COLLATERAL-01 work-item record
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Replace the P0 harness-branded collateral deployment input with a product
 named ERC-7984 wrapper that preserves the exact audited Nox/OpenZeppelin wrapper
@@ -343,7 +343,7 @@ the collateral identity slice only; no canonical contract was deployed.
 
 ### DEP-01-WRITE-01 work-item record
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Add the separately guarded canonical Sepolia sender and manifest producer.
 
@@ -394,7 +394,7 @@ pending the separate independent verifier/evidence slice before DEP-01 is comple
 
 ### DEP-01-VERIFY-01 work-item record
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Make the independent manifest verifier distinguish a deployment baseline
 from a live pool, then verify the canonical deployment without freezing future epoch
@@ -441,21 +441,20 @@ from blocks `11383118`–`11383123`: fixture
 block `11383137`, re-reading all five runtimes, immutable pool bindings, five
 successful receipts, and the empty initial epoch specifically at block `11383123`.
 The sanitized report is `evidence/sepolia/G6/DEP-01-DEPLOYMENT.json`. DEP-01 is
-complete as a G6 component; G6 remains `not_run` until every required P2 live item
-passes.
+complete as a G6 component and is included in the passed G6 aggregation.
 
 ## VER-01 work-item record
 
 ID: `VER-01`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Turn the existing manifest checker into a public, read-only release
 verifier for the canonical factory, pool, collateral, adapter, and feed boundary.
 
 ### VER-01-PLAN-01
 
-Status: `in_progress`
+Status: `complete`
 
 Output files: this work-item record, verifier acceptance/test matrix additions, and
 the following implementation-slice design before verifier code changes.
@@ -497,7 +496,7 @@ block `11383180` and wrote
 `evidence/sepolia/G6/VER-01-PUBLIC-VERIFIER.json`: runtime/receipt/pool baseline
 checks plus factory pool binding, ERC-7984 support, immutable adapter configuration,
 feed runtime/round validity, and zero native adapter custody. VER-01 is complete as
-a G6 component; G6 remains `not_run` until automation, indexer, and live cases pass.
+a G6 component and is included in the passed G6 aggregation.
 
 ## AUT-01 work-item record
 
@@ -730,7 +729,7 @@ G6.
 
 ID: `IDX-01`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Build a rebuildable, public-event-only read model that is never a source of
 protocol correctness or confidential data.
@@ -865,7 +864,7 @@ no signer, no asset operation, and does not by itself pass G6.
 
 ID: `LIVE-01`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Prove one fresh, real multi-user Sepolia success lifecycle through the
 published Nox/contract/adapter boundaries and independently rebuild its public
@@ -1211,7 +1210,7 @@ component; this does not by itself pass G6.
 
 ID: `G6-VERIFY-01`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Fail closed unless the complete, sanitized Sepolia evidence set proves the
 P2 success, recovery, SDK, deployment, public-verifier, relayer, and rebuildable
@@ -1249,6 +1248,15 @@ Intended commit: `test: aggregate G6 Sepolia evidence`.
 Rollback/failure action: Do not mark G6 or P2 complete and do not start P3. Correct
 only the missing or malformed component evidence with the responsible work item;
 never replace a required Sepolia fact with an offline fixture.
+
+Completion evidence: Source commit `c16a2c3` added a mutation-tested, fail-closed
+aggregator that accepts only the exact sixteen named G6 component artifacts and
+requires reachable source history where the artifact records a source commit. The
+clean-source read-only run wrote `evidence/sepolia/G6/G6-PROTOCOL.json` with a
+passed result: SDK, deployment, public verification, transient permissionless
+automation, rebuildable public projections, a settled two-owner lifecycle, and both
+below-threshold and aggregate-timeout recovery paths are present. No new chain
+transaction occurred. G6 and P2 are complete; P3 may begin.
 
 ## Dependency graph
 
@@ -1329,7 +1337,7 @@ Sepolia suites pass.
 
 - [ ] INT/SDK/VER/AUT/IDX/DEP items are independently committed.
 - [ ] LIVE-01 and LIVE-02 evidence is validated and committed safely.
-- [ ] G6 is passed; deployment manifest and generated bindings are synchronized.
+- [x] G6 is passed; deployment manifest and generated bindings are synchronized.
 - [ ] Third party can reproduce deploy/read/verify instructions from a clean environment.
 - [ ] Relayer/indexer outage does not block direct correctness or owner recovery.
 - [ ] Worktree is clean and the web package has stable SDK/read-model contracts.

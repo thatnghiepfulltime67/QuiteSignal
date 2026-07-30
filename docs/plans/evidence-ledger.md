@@ -14,19 +14,19 @@ seed phrases, environment dumps, or unsanitized terminal history.
 | G3   | `passed`  | Sepolia write and read           | `evidence/offline/G3/FND-05-BELOW-K.json`, `evidence/sepolia/G3/FND-05-BELOW-K.json`, `evidence/offline/G3/FND-05-TIMEOUT.json`, `evidence/sepolia/G3/FND-05-TIMEOUT.json`, `evidence/offline/G3/FND-05-RECOVERY.json`, `evidence/sepolia/G3/FND-05-RECOVERY.json`, `evidence/{offline,sepolia}/G3/FND-05.json`, `evidence/reports/G3-summary.md` | `ed38e6c`, `4a370c0`, `ae591ca` and this verification slice                 | `11155111` / `11379845–11380573` | FND-05A and FND-05B terminal fixtures are recorded in their artifacts; corrected FND-05C fixture `0x927a2dcb37d6605364a2385fccb1dfc1aa63f41c`, wrapper `0xfe835271300bff1578e52891b9f86e316b4ca3bb`, recovery spike `0x5625f911df84ec43740b036095559e1a9b83a07a`, and context peer `0x072f336b3926559623e2491abec74deb4c5603c6` | Below-k non-disclosure, threshold YES/NO-only disclosure, proof-context/replay/substitution rejection, pre-unwrap timeout, delayed permissionless rewrap recovery, terminal one-time refunds, runtime/binding checks, and receipt-ledger verification passed.               | G3 passed. G4 adapter feasibility is next.                                                                                          |
 | G4   | `passed`  | Sepolia write and read           | Historical: `evidence/offline/G4/FND-06-TARGET-DISCOVERY.json`, `evidence/sepolia/G4/FND-06-TARGET-DISCOVERY.json`, `evidence/reports/G4-adapter-feasibility.md`; passed: `evidence/{offline,sepolia}/G4/FND-06-RESOLUTION.json`, `evidence/reports/G4-resolution-feasibility.md`                                                                 | `e2f142c`, `da1f122`, and this evidence slice                               | `11155111` / `11380852–11380856` | Chainlink ETH/USD proxy `0x694AA1769357215DE4FAC081bf1f309aDC325306`; four zero-custody spikes `0x954ea2eee31377b694fa947e1e9203d841c42c2e`, `0x7d3ac54ef34823a1f2c0dc2759822a540017bdfd`, `0x918bddffbe32758732fc2c4d61744084486063e7`, and `0xe3b5f1aa2a8d36f2ea8d995caae45c50d03ba885`                                       | Source/license and target runtime/ABI metadata, valid historical round, template/runtime binding, immutable YES/NO outcomes, invalid config, stale/premature rejection, no caller result input, value rejection, zero balances, and independent historical verifier passed. | Original external-market candidates remain historical rejections. ADR-017 zero-custody public resolution is passed; P1 may begin.   |
 | G5   | `passed`  | offline / Sepolia write and read | `evidence/{offline,sepolia}/G5/PK-03A-ADAPTER.json`, `PK-03B-FACTORY.json`, `PK-04-COMMIT.json`, `PK-05-AGGREGATE.json`, `PK-06-RESOLUTION.json`, `PK-07-TERMINALS.json`, `PK-08-VERIFIER.json`, and `G5-PROTOCOL.json`                                                                                                                           | `a41bebe` and named component commits                                       | `11155111` / `11381157–11382884` | PK-07 fixture `0x9a1a3b3e99954caa92e2a498523d93cbb38178b6`, claim pool `0xBb7624e1b84d3BEEbccA0BaA0b4DC6B9c149139d`, refund pool `0xb30241600205771BBE9BdB9e621c4B7B33759908`                                                                                                                                                   | Seven independent named component reports, 10,000 deterministic model vectors, live invalid-state rejection, immutable adapter settlement, terminal confidential transfers, runtime/binding/receipt checks, and combined mutation-safe verification                         | G5 passed; reports retain public facts only.                                                                                        |
-| G6   | `not_run` | —                                | —                                                                                                                                                                                                                                                                                                                                                 | —                                                                           | —                                | —                                                                                                                                                                                                                                                                                                                               | —                                                                                                                                                                                                                                                                           | —                                                                                                                                   |
+| G6   | `passed` | offline aggregation of Sepolia evidence | `evidence/sepolia/G6/G6-PROTOCOL.json` and its sixteen named G6 component artifacts | `c16a2c3` and this evidence slice | `11155111` / `11382930–11383785` | Canonical deployment, LIVE-01, LIVE-02, and AUT-01 public pool/receipt references are retained in the component artifacts | Exact artifact set and work-item binding; all-true component checks; reachable source commits; sanitized schema; settled two-owner lifecycle; below-k and timeout recovery; public relayer action sequence | Read-only aggregation; no new chain write. P2 is complete and P3 may begin. |
 | G7   | `not_run` | —                                | —                                                                                                                                                                                                                                                                                                                                                 | —                                                                           | —                                | —                                                                                                                                                                                                                                                                                                                               | —                                                                                                                                                                                                                                                                           | —                                                                                                                                   |
 | G8   | `not_run` | —                                | —                                                                                                                                                                                                                                                                                                                                                 | —                                                                           | —                                | —                                                                                                                                                                                                                                                                                                                               | —                                                                                                                                                                                                                                                                           | —                                                                                                                                   |
 
-### G6 partial history
+### G6 component history
 
 SDK-02 is a completed G6 component, not G6 itself. Source commit `a50feb6` added a
 Sepolia-only Nox confidential-input smoke and the named execution emitted
 `evidence/{offline,sepolia}/G6/SDK-02-CLIENT.json` for pool
 `0xbb7624e1b84d3beebcca0baa0b4dc6b9c149139d`. It confirms real Nox input creation,
 pool/request context binding, and serialization rejection without persisting a
-confidential value, raw encrypted material, credential, or signature. G6 remains
-`not_run` until all P2 live lifecycle components pass.
+confidential value, raw encrypted material, credential, or signature. The passed
+G6 aggregation includes this component.
 
 SDK-03 is a completed G6 component, not G6 itself. The SDK transaction client
 submitted one real encrypted commit to pool
@@ -39,7 +39,7 @@ duplicate expiry attempt reverted after the successful expiry and remains record
 in the spend ledger. Three initial SDK-03 runner entries retain the pre-fix `P1`
 phase field, but their immutable work-item ID, source commit, pool receipts, and this
 record establish them as P2 setup; the runner now records SDK-03 writes as P2 without
-rewriting the append-only history. G6 remains `not_run`.
+rewriting the append-only history. The passed G6 aggregation includes this component.
 
 DEP-01 is a completed G6 component, not G6 itself. The canonical deployment is
 recorded in `deployments/sepolia/quiet-signal.json` and five append-only DEP-01
@@ -49,8 +49,7 @@ verified five observed runtimes, the product wrapper/pool and adapter/pool immut
 bindings, all five successful deployment receipts, and the empty initial epoch at
 the manifest's explicit deployment block `11383123`. The manifest verifier's
 historical epoch mode prevents normal future lifecycle transitions from invalidating
-this deployment baseline. G6 remains `not_run` until all P2 live lifecycle components
-pass.
+this deployment baseline. The passed G6 aggregation includes this component.
 
 VER-01 is a completed G6 component, not G6 itself. The public release verifier
 source commit `9ca7114` and report
@@ -59,8 +58,8 @@ the canonical manifest. In addition to baseline runtime/binding/receipt checks, 
 verified factory pool-id/address derivation, ERC-7984 collateral interface support,
 immutable adapter/feed configuration, a current valid feed round, and zero adapter
 native balance. Its mutation suite rejects factory, collateral, and stale-feed
-substitutions without modelling confidential input. G6 remains `not_run` until all
-P2 lifecycle components pass.
+substitutions without modelling confidential input. The passed G6 aggregation
+includes this component.
 
 AUT-01 is a completed G6 component. Source commit `ebdbe73` added the transient
 public-result boundary: values and gateway attestations never enter logs or storage,
@@ -70,8 +69,8 @@ runner submitted exactly one close, aggregate request, and aggregate finalizatio
 blocks `11383756`, `11383761`, and `11383764`. The read-only
 `evidence/sepolia/G6/AUT-01-RELAYER.json` binds each receipt to its frozen selector,
 checks success, and observes the two-participant 25/15 public aggregate in
-`RESOLUTION_PENDING`. G6 remains `not_run` until gate aggregation verifies every
-P2 component together.
+`RESOLUTION_PENDING`. The passed G6 aggregation verifies this component with every
+other required P2 component.
 
 IDX-01 is a completed G6 component, not G6 itself. Source commit `1531353` added a
 public-event-only mapper and a manifest/runtime-bound read rebuild. The named Sepolia
@@ -79,8 +78,8 @@ read at finalized block `11383298` replayed the canonical pool's `EpochOpened` a
 below-threshold `EpochClosed` events into a `REFUNDABLE` projection. Its sanitized
 checkpoint binds the manifest fingerprint and block hash in
 `evidence/sepolia/G6/IDX-01-READ-MODEL.json`. The reducer/reader has no signer,
-asset operation, confidential schema, or owner event storage. G6 remains `not_run`
-until the fresh threshold lifecycle and remaining P2 components pass.
+asset operation, confidential schema, or owner event storage. The passed G6
+aggregation includes this component.
 
 LIVE-01 has a completed fresh success execution and public manifest-verifier slice,
 not a G6 pass. Its two-owner pool `0xc900494624d7A785503104e7f98bb5C54Df950DB`
@@ -106,7 +105,8 @@ and is `refundable` after two state-gated terminal events. The direct read-only
 selector/state report `evidence/sepolia/G6/LIVE-02-RECOVERY.json` passed at block
 `11383657`: it proves that below-k had no aggregate request, while timeout used one
 aggregate request, one cancellation after eligibility, and two terminal receipts.
-G6 remains `not_run` until the remaining P2 acceptance work is complete.
+The passed G6 aggregation includes both recovery cases and their independent
+historical/current verification artifacts.
 
 ### G5 partial history
 
