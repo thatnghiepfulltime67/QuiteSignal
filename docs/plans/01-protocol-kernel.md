@@ -15,17 +15,17 @@ and score behavior satisfies I1–I10 without plaintext shadow accounting.
 
 ## Work-item register
 
-| ID | Outcome | Primary artifacts | Required tests | Intended commit |
-|---|---|---|---|---|
-| PK-01 | Pure reference model | Domain states, transitions, math, schemas, errors | Transition table, Brier/payout vectors, property model | `feat: add protocol reference model` |
-| PK-02 | Stable public interfaces | Pool/factory/adapter interfaces, events, errors | ABI snapshots, selector/event compatibility | `feat: define protocol interfaces and events` |
-| PK-03 | Immutable deployment | Factory and pool configuration | Invalid config, uniqueness, immutable target/code binding | `feat: add immutable pool factory` |
-| PK-04 | Confidential commit/custody | Signal import, clamp, allocation, position, token pull | I1/I2/I7/I10, duplicate/deadline/ACL cases | `feat: add confidential signal custody` |
-| PK-05 | Cohort/aggregate | close, k-gate, request, aggregate proof | Below-k, reveal scope, substitute proof, replay | `feat: add k gated aggregate lifecycle` |
-| PK-06 | Resolution/recovery | aggregate finalization, feed condition, freshness, grace refund | I4/I5, stale round, wrong target, zero custody, recovery | `feat: add bounded resolution and recovery` |
-| PK-07 | Settlement/owner terminal paths | resolve, score, claim, refund | I3/I6/I8/I10, rounding and conflict cases | `feat: add private settlement and score` |
-| PK-08 | Independent verifier/manifest | Verifier rules, manifest schema, CLI | Mutation rejection, stale binding, wrong code hash | `feat: add independent protocol verifier` |
-| PK-09 | Adversarial/invariant gate | Fuzz, reference-model, static analysis suites | I1–I10 and mandatory negatives | `test: close protocol correctness gate` |
+| ID    | Outcome                         | Primary artifacts                                               | Required tests                                            | Intended commit                               |
+| ----- | ------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------- |
+| PK-01 | Pure reference model            | Domain states, transitions, math, schemas, errors               | Transition table, Brier/payout vectors, property model    | `feat: add protocol reference model`          |
+| PK-02 | Stable public interfaces        | Pool/factory/adapter interfaces, events, errors                 | ABI snapshots, selector/event compatibility               | `feat: define protocol interfaces and events` |
+| PK-03 | Immutable deployment            | Factory and pool configuration                                  | Invalid config, uniqueness, immutable target/code binding | `feat: add immutable pool factory`            |
+| PK-04 | Confidential commit/custody     | Signal import, clamp, allocation, position, token pull          | I1/I2/I7/I10, duplicate/deadline/ACL cases                | `feat: add confidential signal custody`       |
+| PK-05 | Cohort/aggregate                | close, k-gate, request, aggregate proof                         | Below-k, reveal scope, substitute proof, replay           | `feat: add k gated aggregate lifecycle`       |
+| PK-06 | Resolution/recovery             | aggregate finalization, feed condition, freshness, grace refund | I4/I5, stale round, wrong target, zero custody, recovery  | `feat: add bounded resolution and recovery`   |
+| PK-07 | Settlement/owner terminal paths | resolve, score, claim, refund                                   | I3/I6/I8/I10, rounding and conflict cases                 | `feat: add private settlement and score`      |
+| PK-08 | Independent verifier/manifest   | Verifier rules, manifest schema, CLI                            | Mutation rejection, stale binding, wrong code hash        | `feat: add independent protocol verifier`     |
+| PK-09 | Adversarial/invariant gate      | Fuzz, reference-model, static analysis suites                   | I1–I10 and mandatory negatives                            | `test: close protocol correctness gate`       |
 
 ## PK-01 work-item record
 
@@ -506,6 +506,11 @@ adapter state, the early grace guard, and elapsed grace recovery; `success` prov
 adapter-only settlement after the immutable observation time. Each has two real
 encrypted commitments and distinct immutable configuration, so no mocked state
 transition substitutes for lifecycle evidence.
+
+PK-06 staging timeouts are deliberately at least 120 seconds. This provides enough
+time to commit the append-only receipt ledger and perform the required early-revert
+read without repeating a deployed lifecycle solely because a short test window
+elapsed.
 
 Privacy/custody impact: Resolution adds only public feed facts already returned by
 the immutable adapter. It does not decrypt any new Nox handle or reveal owner,

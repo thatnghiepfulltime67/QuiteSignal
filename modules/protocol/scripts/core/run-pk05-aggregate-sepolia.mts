@@ -399,11 +399,11 @@ async function main(): Promise<void> {
             ? 600n
             : 601n
           : caseName === 'timeout'
-            ? 30n
+            ? 120n
             : caseName === 'grace'
-              ? 31n
-              : 32n,
-      resolutionGrace: workItem === 'PK-06' ? 30n : 600n,
+              ? 121n
+              : 122n,
+      resolutionGrace: workItem === 'PK-06' ? 120n : 600n,
     };
     const salt = keccak256(toHex(`quiet-signal/${workItem}/${caseName}/v1`));
     await send(
