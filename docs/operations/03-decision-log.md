@@ -333,3 +333,25 @@ their existing explicit EIP-1193/Nox paths. This does not change custody, Nox AC
 contract state, or public contract interface; it introduces an external availability
 and metadata-linkability risk tracked as R-24. Users can still use an independent
 public explorer or their own wallet provider if the direct endpoint is unavailable.
+
+## ADR-023 — Append-only canonical deployment revisions
+
+**Status:** Accepted
+
+An immutable pool epoch can expire before the real-browser release journey is
+completed. The original DEP-01 manifest remains immutable G6 historical evidence and
+must never be overwritten. A replacement product epoch therefore uses an explicitly
+named append-only deployment revision with its own manifest, receipts, runtime
+verification, budget-ledger entries, and evidence. The browser may follow one small
+active-release pointer only after that revision has passed the same public manifest
+verification; the pointer contains no secret, wallet, confidential input, or mutable
+protocol state.
+
+This preserves independent reproducibility of DEP-01 while allowing the product to
+operate against a currently open immutable pool. The release pointer is not a
+trusted backend or authority: browser operations still validate the selected
+manifest, read contract state directly, and rely solely on immutable contract code.
+Each revision has a fresh deterministic deployment plan and native-gas budget guard.
+The old deployment remains visible and its refund state is not relabelled as current
+product success. This changes release artifact selection, but not custody, privacy,
+Nox ACL, contract interfaces, or protocol state transitions.

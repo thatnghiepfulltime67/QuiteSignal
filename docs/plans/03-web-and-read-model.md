@@ -516,6 +516,47 @@ Rollback/failure action: Do not mark G7/P3 complete. Preserve public receipts an
 stop at the documented on-chain recovery state; never replace browser evidence with
 a simulated provider or local chain.
 
+## WEB-08-DEPLOYMENT-01 work-item record
+
+ID: `WEB-08-DEPLOYMENT-01`
+
+Status: `in_progress`
+
+Outcome: Create an append-only, currently open Sepolia deployment revision and a
+verified active-release manifest selection for the real browser journey, preserving
+DEP-01/G6 history unchanged.
+
+Output files: guarded revision planner/writer, immutable revision manifest, active
+release pointer, manifest-selection validation/tests, this record, spend-ledger
+entries, and sanitized deployment verification evidence.
+
+Acceptance criteria: A revision has a unique explicit identifier, fresh deterministic
+addresses, its own `create-only` manifest, budgeted guarded writes, receipt/runtime/
+immutable-config verification, and a non-expired empty epoch. The active pointer can
+reference only a verified revision manifest; it never changes DEP-01 and no browser
+falls back to an unverified address or fixture.
+
+Privacy/custody impact: Deployment/release selection contains public addresses,
+hashes, and blocks only. It has no user input, owner value, key in artifacts,
+privileged runtime role, or collateral custody.
+
+Funds location/recovery impact: Revision deployment spends only guarded native gas
+and creates an empty pool. Existing DEP-01 remains independently refundable and
+recoverable. A failed revision stops before publishing an active pointer.
+
+Checks: revision mutation/unit tests, read-only Sepolia plan, guarded write with
+ledger verification, independent manifest verification, browser manifest-selection
+test, `npm run check:offline`, and `git diff --check`.
+
+Evidence location: immutable revision manifest and sanitized deployment evidence;
+later G7 evidence uses that selected manifest only after verification.
+
+Intended commit: `build: add append-only deployment revision`.
+
+Rollback/failure action: Leave the existing active release untouched and retain any
+public failed-stage receipts. Never overwrite DEP-01, an existing revision manifest,
+or a verified pointer with an unverified deployment.
+
 ## Primary route contract
 
 Required routes or equivalent framework views:
