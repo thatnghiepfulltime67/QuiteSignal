@@ -911,7 +911,7 @@ unit coverage remains green.
 
 ### LIVE-01-EXEC-01
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Execute the fresh two-owner threshold lifecycle in bounded, receipt-backed
 Sepolia stages and emit a temporary public manifest that later read-only verifiers
@@ -952,6 +952,57 @@ Intended commit: `test: execute live multi-user lifecycle`.
 Rollback/failure action: Stop at the failed stage, record the receipt and current
 fund location, and run only the corresponding on-chain recovery procedure. Never
 reuse the pool as success evidence or hide a failed stage with a new wallet.
+
+Completion evidence: The fresh `LIVE-01` pool
+`0xc900494624d7A785503104e7f98bb5C54Df950DB` was created at block `11383347`.
+Two distinct owners completed real Nox-bound commits and callbacks; its public
+epoch then reached threshold close (`11383403`), aggregate request (`11383406`),
+aggregate finalization (`11383410`, YES `25` / NO `15`), immutable settlement
+(`11383415`), and the primary owner terminal path (`11383418` / `11383420`). All
+confirmed writes are append-only `LIVE-01` P2 ledger entries. This is execution
+evidence only; the manifest, independent verifier, reader rebuild, and recovery
+family remain required before any G6 conclusion.
+
+### LIVE-01-VERIFY-01
+
+Status: `in_progress`
+
+Outcome: Generate a public manifest for the fresh LIVE-01 deployment and verify
+its runtime, immutable pool configuration, historical initial epoch, and all named
+receipts without accessing confidential inputs or owner views.
+
+Output files: a guarded manifest writer under `modules/verifier/scripts`, package
+and root command wiring, parser/mutation tests, this record,
+`evidence/sepolia/G6/LIVE-01-MANIFEST.json`, and a later independent verifier
+report.
+
+Acceptance criteria: The writer derives all receipt hashes from the immutable
+LIVE-01 ledger entries, rejects another chain, verifies every runtime, reads the
+initial epoch at the pool-creation block through an archive-capable read endpoint,
+and creates the manifest exactly once from a clean source tree. It cannot accept
+addresses, receipt hashes, or epoch values from command arguments. The existing
+public verifier must reject mutations to its bindings or historical epoch facts.
+
+Privacy/custody impact: The writer reads public code, receipts, config, and epoch
+facts only. It has no signer, Nox client, confidential calldata/log capture, owner
+view, or asset operation.
+
+Funds location/recovery impact: This slice is read-only except for writing its
+sanitized evidence file. It cannot move funds; failed generation leaves the live
+pool's existing on-chain lifecycle/recovery behavior unchanged.
+
+Checks: writer/parser/mutation tests, `npm run typecheck`, `npm run check:offline`,
+named archive-backed Sepolia manifest generation, independent verifier execution,
+and `git diff --check`.
+
+Evidence location: `evidence/sepolia/G6/LIVE-01-{MANIFEST,VERIFIER}.json`; these
+are G6 components only after both named reads pass.
+
+Intended commit: `feat: add live lifecycle public manifest writer`.
+
+Rollback/failure action: Do not overwrite a manifest. Record the public read error
+and recreate a new explicitly named lifecycle only if its chain facts cannot be
+verified; never fill a missing field manually.
 
 ## Dependency graph
 
