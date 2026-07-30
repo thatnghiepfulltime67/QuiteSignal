@@ -321,7 +321,7 @@ Output files: `modules/protocol/contracts/core/QuietSignalPool.sol`,
 `modules/protocol/contracts/interfaces/IQuietSignalErrors.sol`,
 `modules/protocol/contracts/interfaces/IQuietSignalPool.sol`,
 `modules/protocol/test/unit/interface-compatibility.test.ts`,
-`modules/protocol/scripts/core/run-pk04-commit-sepolia.mts`, package scripts,
+`modules/protocol/scripts/core/run-pk04-stage-sepolia.mts`, package scripts,
 `evidence/{offline,sepolia}/G5/PK-04-COMMIT.json`, the spend ledger, protocol/API
 specifications, ADR-018, risk R-22, this record, and the traceability matrix.
 
@@ -363,7 +363,8 @@ Evidence path: `evidence/{offline,sepolia}/G5/PK-04-COMMIT.json` plus append-onl
 spend-ledger entries. This is a named G5 component only.
 
 Intended commits: `docs: define bounded confidential commit` followed by
-`feat: add confidential signal custody` and `test: record Sepolia commit evidence`.
+`feat: add confidential signal custody`, `test: stage Sepolia commit verification`,
+and `test: record Sepolia commit evidence`.
 
 Rollback/failure action: Revert this isolated production custody slice and leave
 PK-04 incomplete. A failure of owner-bound proof import, exact callback-delta
