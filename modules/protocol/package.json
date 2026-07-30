@@ -18,6 +18,8 @@
     "verify:terminals:sepolia": "tsx scripts/core/verify-pk07-terminals-sepolia.mts",
     "verify:resolution:sepolia": "tsx scripts/core/verify-pk06-resolution-sepolia.mts",
     "test:factory:sepolia": "tsx scripts/core/run-pk03b-factory-sepolia.mts",
+    "deploy:sepolia:plan": "tsx scripts/deploy/plan-sepolia.mts",
+    "test:deployment-plan": "tsx --test test/unit/deployment-plan.test.ts",
     "test:interfaces": "hardhat build --force && tsx --test test/unit/interface-compatibility.test.ts test/unit/pk07-terminal-policy.test.ts test/unit/pk09-production-boundary.test.ts",
     "test:model": "tsx --test test/feasibility/reference-model.test.ts",
     "test:nox:sepolia": "tsx scripts/feasibility/run-nox-sepolia.mts",

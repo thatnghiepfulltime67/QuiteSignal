@@ -236,6 +236,57 @@ public receipts and the failed validation reason, then deploy a new explicitly n
 configuration only after correcting the cause; never rewrite a canonical manifest or
 point consumers at an unverified address.
 
+### DEP-01-PLAN-01 work-item record
+
+Status: `in_progress`
+
+Outcome: Add a chain-read-only canonical Sepolia deployment planner before a
+deployment sender exists.
+
+Output files: `modules/protocol/src/deployment-plan.ts`,
+`modules/protocol/scripts/deploy/plan-sepolia.mts`,
+`modules/protocol/test/unit/deployment-plan.test.ts`, workspace commands, and this
+record.
+
+Acceptance criteria: The planner derives the four sequential CREATE addresses and
+the factory CREATE2 pool address from a verified deployer nonce, uses one immutable
+ETH/USD Chainlink adapter configuration, validates feed runtime/round facts and
+compiled artifact shape, estimates every immediately executable CREATE, applies a
+declared maximum bound to the not-yet-deployable pool creation, and rejects a plan
+that exceeds the remaining committed Sepolia gas budget. It only performs RPC reads
+and estimations; it creates no wallet client and submits no transaction.
+
+Canonical public market decision: the MVP resolves the immutable condition
+`ETH/USD >= $2,000.00` using Chainlink Sepolia feed
+`0x694AA1769357215DE4FAC081bf1f309aDC325306` (8 decimals). The commit window is
+25 minutes and the observation is fixed 35 minutes after planning, leaving a
+10-minute post-close observation lead. This is a product-market configuration, not
+a change to custody, privacy, state transitions, or the adapter interface.
+
+Privacy/custody impact: Inputs and output are public deployment metadata only. The
+planner derives a public deployer address from local configuration but never emits a
+key, signature, confidential input, raw Nox material, or token approval. It cannot
+move native or confidential assets.
+
+Funds location/recovery impact: The only network operations are `eth_call`, code,
+block, nonce, fee, and gas-estimate reads. A rejected plan has no on-chain effect;
+the operator corrects the public configuration or budget before a separate guarded
+write slice is considered.
+
+Checks: `npm run typecheck`, `npm run test:deployment-plan`,
+`npm run deploy:sepolia:plan`, broader `npm run check:offline`, and `git diff --check`.
+
+Evidence location: the command's sanitized plan output is reviewed before write;
+the later committed deployment evidence remains
+`evidence/{offline,sepolia}/G6/DEP-01-DEPLOYMENT.json`. This planning slice makes no
+DEP-01 or G6 completion claim.
+
+Intended commit: `build: add canonical deployment plan`.
+
+Rollback/failure action: Revert only the planner slice. Do not manually copy its
+predicted addresses into any consumer, deploy from its stdout, or replace the
+factory CREATE2 derivation with an opaque address.
+
 ## Dependency graph
 
 ```text

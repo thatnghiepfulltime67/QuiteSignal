@@ -39,6 +39,8 @@
     "verify:terminals:sepolia": "npm run --workspace @quitesignal/protocol verify:terminals:sepolia",
     "verify:resolution:sepolia": "npm run --workspace @quitesignal/protocol verify:resolution:sepolia",
     "test:factory:sepolia": "npm run --workspace @quitesignal/protocol test:factory:sepolia --",
+    "deploy:sepolia:plan": "npm run --workspace @quitesignal/protocol deploy:sepolia:plan",
+    "test:deployment-plan": "npm run --workspace @quitesignal/protocol test:deployment-plan",
     "test:model": "npm run --workspace @quitesignal/protocol test:model && npm run --workspace @quitesignal/domain test:model",
     "test:nox:sepolia": "npm run --workspace @quitesignal/protocol test:nox:sepolia --",
     "test:g4:resolution:sepolia": "tsx modules/protocol/scripts/feasibility/run-g4-resolution-sepolia.mts",
