@@ -38,6 +38,14 @@ runtime bindings, deterministic pool id/address, immutable configuration, initia
 of any confidential callback or transfer. G5 remains `not_run` until the complete
 confidential lifecycle and verifier suite pass.
 
+PK-04 partial history: Source commit `9d986fb` recorded three successful Sepolia
+deployments before the runner stopped before factory creation: valueless fixture
+`0x9e2d1b5c8de8a774de20c76402e0ca05acf3b0da`, unchanged wrapper
+`0x3aede623df09d33c1f33a5c46953920b6ac10a50`, and zero-custody adapter
+`0x8bd72fb95ad3312b6c71420831f422dc4d39a875`. No confidential asset operation,
+pool deployment, or acceptance claim occurred. These receipts are spend history only
+until the bounded resume completes its named custody cases.
+
 ### G3 completion history
 
 The G3 row is `passed`. The historical FND-05C detail below is superseded by the latest
