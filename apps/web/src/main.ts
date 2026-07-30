@@ -3,7 +3,7 @@ import { parsePublicManifest, type PublicManifest } from './manifest.js';
 import { presentMarket } from './market.js';
 import { validateSignalDraft } from './signal.js';
 import { presentLifecycle } from './lifecycle.js';
-import { readPublicEpoch, submitSignalIntent } from './wallet.js';
+import { decryptOwnerPosition, readPublicEpoch, submitSignalIntent } from './wallet.js';
 
 interface Eip1193Provider {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
@@ -19,6 +19,7 @@ declare global {
 let manifest: PublicManifest | undefined;
 let walletState = 'No wallet detected';
 let lifecycleMessage = 'Connect a Sepolia wallet to refresh public pool state.';
+let ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
 
 async function loadManifest(): Promise<void> {
   const response = await fetch('/quiet-signal.json');
@@ -32,17 +33,23 @@ function render(message?: string): void {
   const isMarketRoute =
     location.pathname.startsWith('/markets') || location.pathname.startsWith('/pool/');
   const isSignalRoute = location.pathname.endsWith('/signal');
+  const isPositionRoute = location.pathname === '/position';
   const content =
-    isSignalRoute && market
-      ? `<section class="signal-card"><p class="eyebrow compute">{ encrypted locally }</p><h1>Prepare your signal</h1><p>Probability and collateral stay in this browser until Nox encrypts them.</p><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required /></label><label>Probability (basis points) <input name="probability" inputmode="numeric" autocomplete="off" placeholder="7500" required /></label><p class="sealed">COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.</p><button class="primary" type="submit">Validate before encryption</button><p id="signal-status" class="muted" role="status">No funds moved.</p></form></section>`
-      : isMarketRoute && market
-        ? `<section class="market"><p class="eyebrow public">{ public market }</p><h1>${market.condition}</h1><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><section class="timeline"><p class="eyebrow public">{ public lifecycle }</p><p id="lifecycle-status" role="status">${lifecycleMessage}</p><button class="wallet" id="refresh-lifecycle">Refresh public state</button></section><a class="primary" href="/pool/${market.poolAddress}/signal">Prepare encrypted signal</a></section>`
-        : `<section class="hero"><p class="eyebrow">{ confidential forecasts }</p><h1>Quiet signals.<br />Public proof.</h1><p>Signals are encrypted locally. Wallet activity, timing, and the eventual aggregate are public.</p><a class="primary" href="/markets">View market</a></section>`;
+    isPositionRoute && market
+      ? `<section class="signal-card owner"><p class="eyebrow private">{ owner only }</p><h1>Your private position</h1><p role="status">${ownerMessage}</p><button class="primary" id="reveal-owner">Reveal with owner wallet</button><p class="muted">No claim or refund is submitted automatically.</p></section>`
+      : isSignalRoute && market
+        ? `<section class="signal-card"><p class="eyebrow compute">{ encrypted locally }</p><h1>Prepare your signal</h1><p>Probability and collateral stay in this browser until Nox encrypts them.</p><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required /></label><label>Probability (basis points) <input name="probability" inputmode="numeric" autocomplete="off" placeholder="7500" required /></label><p class="sealed">COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.</p><button class="primary" type="submit">Validate before encryption</button><p id="signal-status" class="muted" role="status">No funds moved.</p></form></section>`
+        : isMarketRoute && market
+          ? `<section class="market"><p class="eyebrow public">{ public market }</p><h1>${market.condition}</h1><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><section class="timeline"><p class="eyebrow public">{ public lifecycle }</p><p id="lifecycle-status" role="status">${lifecycleMessage}</p><button class="wallet" id="refresh-lifecycle">Refresh public state</button></section><a class="primary" href="/pool/${market.poolAddress}/signal">Prepare encrypted signal</a></section>`
+          : `<section class="hero"><p class="eyebrow">{ confidential forecasts }</p><h1>Quiet signals.<br />Public proof.</h1><p>Signals are encrypted locally. Wallet activity, timing, and the eventual aggregate are public.</p><a class="primary" href="/markets">View market</a></section>`;
   root.innerHTML = `<main class="shell"><header><a class="wordmark" href="/markets">QuietSignal</a><button class="wallet" id="wallet">${walletState}</button></header><nav aria-label="Primary"><a href="/markets">Market</a><a href="${manifest ? `/pool/${manifest.poolAddress}` : '/markets'}">Public facts</a></nav><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section>${content}<section class="panel"><p class="eyebrow public">{ canonical Sepolia deployment }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : 'Loading verified manifest…')}</p></section></main>`;
   document.querySelector<HTMLButtonElement>('#wallet')?.addEventListener('click', connectWallet);
   document
     .querySelector<HTMLButtonElement>('#refresh-lifecycle')
     ?.addEventListener('click', refreshLifecycle);
+  document
+    .querySelector<HTMLButtonElement>('#reveal-owner')
+    ?.addEventListener('click', revealOwner);
   document
     .querySelector<HTMLFormElement>('#signal-form')
     ?.addEventListener('submit', async (event) => {
@@ -65,6 +72,26 @@ function render(message?: string): void {
           status.textContent = `${error instanceof Error ? error.message : 'Unable to prepare signal.'} Inspect wallet activity before retrying.`;
       }
     });
+}
+
+async function revealOwner(): Promise<void> {
+  if (!window.ethereum || !manifest) {
+    ownerMessage = 'Connect the owner wallet on Sepolia, then retry. No funds moved.';
+    render();
+    return;
+  }
+  ownerMessage = 'Requesting owner-only decrypt authorization…';
+  render();
+  try {
+    const position = await decryptOwnerPosition(window.ethereum, manifest.poolAddress);
+    ownerMessage = position.committed
+      ? `Position revealed for this session. Score: ${position.scoreBps.toString()} bps. ${position.claimed ? 'Claimed.' : position.refunded ? 'Refunded.' : 'No terminal action submitted.'}`
+      : 'This wallet has no committed position for the canonical pool.';
+  } catch {
+    ownerMessage =
+      'Viewer access was denied or unavailable. Verify the connected owner account, then retry safely.';
+  }
+  render();
 }
 
 async function refreshLifecycle(): Promise<void> {
