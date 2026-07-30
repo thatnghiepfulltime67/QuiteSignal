@@ -58,8 +58,12 @@ The classifier deployment at block `11380349` and its single target call at bloc
 `AGGREGATE_PENDING`. ADR-015 identifies the invalid post-unwrap ACL mutation: the
 wrapper creates the unwrap-request handle, so the recovery spike cannot grant itself
 access to it. The corrected source removes that call. The pre-fix fixture is excluded
-from post-fix evidence and must first use its timed-out cancellation and both owner
-refunds; a fresh corrected fixture must then complete all FND-05C requirements.
+from post-fix evidence. Its timeout cancellation and both owner refunds succeeded at
+blocks `11380418` through `11380420`; the terminal read at block `11380433` found
+`Refundable` state and confidential owner custody, and the local secondary recovery
+record was deleted. The cleanup artifact is
+`evidence/sepolia/G3/FND-05C-STALE-FIXTURE-RECOVERY.json`. A fresh corrected fixture
+must now complete all FND-05C requirements.
 
 ## Evidence artifact contract
 

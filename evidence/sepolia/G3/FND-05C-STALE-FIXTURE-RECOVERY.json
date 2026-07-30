@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "gate": "G3",
+  "workItem": "FND-05C-STALE-RECOVERY",
+  "phase": "P0",
+  "timestampUtc": "2026-07-30T05:25:52.193Z",
+  "sourceCommit": "e6909c6817b058d12327ba915ae26f8a0a3ee62a",
+  "environment": {
+    "class": "sepolia-write-and-read",
+    "chainId": 11155111,
+    "verificationBlock": "11380433"
+  },
+  "contracts": {
+    "fixture": "0x60a87c453107ac0ead37940b727baa58c51949fc",
+    "wrapper": "0x8290cb8fb05e3873f744eb8c2ce5a5c7395e27a2",
+    "recoverySpike": "0xbc1e525dedfa10eefb416ea89e6aef8cd4039878",
+    "staleRecoveryRuntimeHash": "0x8e760f26fdd3daec192c5c67dd6ba90e9cc8c683e212c0e27935d05ed1389394",
+    "wrapperUnderlyingMatchesFixture": true
+  },
+  "transactions": [
+    {
+      "purpose": "permissionless cancellation of the timed-out pre-fix fixture",
+      "hash": "0x68adc24d88b6fc34faec58916f3d450491dc6b05022bb4db5f53be0b8f51d173",
+      "blockNumber": "11380418"
+    },
+    {
+      "purpose": "first recorded-owner confidential refund",
+      "hash": "0x6575b6149334dabea8c9a04d2712f310a6eb3d2e0f54a05ea81b8ebee515b374",
+      "blockNumber": "11380419"
+    },
+    {
+      "purpose": "second recorded-owner confidential refund",
+      "hash": "0xe30a27c2188e383d3b3d3b328774a3d8720920753c1bdd9eececb35ae760184c",
+      "blockNumber": "11380420"
+    }
+  ],
+  "observed": {
+    "stateBefore": "AggregatePending",
+    "timeoutElapsedBeforeCancellation": true,
+    "terminalState": "Refundable",
+    "terminalFundsLocation": "PoolConfidentialCustody",
+    "participantCount": "2",
+    "bothOwnerRefundTransactionsSucceeded": true,
+    "localSecondaryRecoveryRecordDeletedAfterTerminalRead": true
+  },
+  "privacyAndCustody": {
+    "plaintextCommitted": false,
+    "rawHandlesCommitted": false,
+    "proofsOrCalldataCommitted": false,
+    "walletSignaturesCommitted": false,
+    "preFixFixtureExcludedFromGateEvidence": true,
+    "terminalFundsLocation": "Refunded confidential collateral is back with the recorded owners."
+  },
+  "knownLimitations": [
+    "This cleanup recovers only the pre-fix fixture. It cannot satisfy FND-05C or G3.",
+    "A fresh fixture running the corrected runtime must prove every FND-05C proof-context and recovery requirement."
+  ],
+  "reproduction": [
+    "Run npm run test:nox:sepolia -- FND-05-STALE-RECOVERY --resume-terminal --stale=<fixture>,<wrapper>,<recovery-spike>.",
+    "Inspect this sanitized artifact and the three referenced Sepolia receipts without exposing the ignored recovery record."
+  ]
+}

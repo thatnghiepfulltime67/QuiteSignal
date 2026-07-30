@@ -579,12 +579,14 @@ leaving the target `AGGREGATE_PENDING`. Source review identifies the exact defec
 `Nox.allowThis(unwrapRequest)`. The wrapper, rather than the spike, creates that
 handle and only receives its transient compute access; the spike must not re-grant
 it. The correction removes that invalid ACL operation. The pre-fix fixture cannot
-provide post-fix evidence, so after its documented aggregate timeout a dedicated
-ABI-only Sepolia continuation cancels it and returns both confidential owner refunds.
-It verifies only public state, transaction receipts, and the terminal secondary-key
-deletion; it never treats the old runtime as a match for the corrected artifact or
-as FND-05C proof/recovery evidence. A new isolated fixture must then prove every
-remaining FND-05C condition with the corrected runtime.
+provide post-fix evidence. The dedicated ABI-only Sepolia continuation cancelled it
+at block `11380418`, returned both confidential owner refunds at blocks `11380419`
+and `11380420`, and verified the terminal `Refundable` state before deleting the
+local secondary-key record. Its sanitized artifact is
+`evidence/sepolia/G3/FND-05C-STALE-FIXTURE-RECOVERY.json`. It never treats the old
+runtime as a match for the corrected artifact or as FND-05C proof/recovery evidence.
+A new isolated fixture must now prove every remaining FND-05C condition with the
+corrected runtime.
 
 Correction intended commit: `fix: remove invalid unwrap request ACL`.
 Stale-fixture recovery intended commit: `test: recover stale aggregate fixture`.

@@ -326,5 +326,9 @@ then tries to grant itself persistent access. That ACL mutation is invalid becau
 the spike is not the handle owner. ADR-015 removes the mutation without adding any
 authority or disclosure. The pre-fix fixture must cancel through its already-expired
 timeout and refund both owners; it is permanently excluded from FND-05C evidence.
-Only a fresh corrected fixture may prove finalization, delayed rewrap, and terminal
-refunds.
+That cleanup completed at blocks `11380418` through `11380420`: permissionless
+cancellation followed by both recorded-owner confidential refunds. A terminal read
+at block `11380433` found `Refundable` state and documented confidential owner
+custody, then deleted the ignored secondary recovery record. The cleanup artifact is
+`evidence/sepolia/G3/FND-05C-STALE-FIXTURE-RECOVERY.json`. Only a fresh corrected
+fixture may prove finalization, delayed rewrap, and terminal refunds.
