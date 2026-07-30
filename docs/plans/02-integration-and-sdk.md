@@ -199,7 +199,8 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `AUT-01-WRITE-01`.
+Active slice: none; AUT-01 is awaiting its separately verified public-result
+boundary and a fresh threshold lifecycle.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
 consumer bindings, deployment tests, this record, evidence ledger entries, and
@@ -661,6 +662,15 @@ Intended commit: `feat: add bounded lifecycle execution`.
 Rollback/failure action: Revert only the unexecuted write code. After a write,
 retain its ledger entry and receipt; never submit a replacement with altered action
 data or bypass the source/budget guards.
+
+Completion evidence: source commit `efe7412` adds bounded `once`/`poll` execution
+and a seventh AUT unit test for confirmation, clean tree, re-read, gas, ledger, and
+race guards. The Sepolia `once` command sent exactly one permissionless
+`closeEpoch` transaction at block `11383239`; the independent health read at block
+`11383240` observed the expected `REFUNDABLE` state with no follow-up action. Its
+public receipt/state evidence is `evidence/sepolia/G6/AUT-01-CLOSE-ACTION.json`.
+AUT-01 remains incomplete: public aggregate-result retrieval/finalization and a
+fresh threshold lifecycle must pass before it can be a G6 component.
 
 ## Dependency graph
 

@@ -62,6 +62,14 @@ native balance. Its mutation suite rejects factory, collateral, and stale-feed
 substitutions without modelling confidential input. G6 remains `not_run` until all
 P2 lifecycle components pass.
 
+AUT-01 has a completed permissionless close-action slice, not a completed G6
+component. Source commit `efe7412` ran `once` against the canonical pool and sent
+one public `closeEpoch` receipt at block `11383239`. The independent health reader
+at block `11383240` observed `REFUNDABLE` and no further action; the sanitized
+receipt/state artifact is `evidence/sepolia/G6/AUT-01-CLOSE-ACTION.json`. The
+append-only ledger records its gas. Aggregate-result retrieval/finalization and a
+threshold lifecycle remain required, so G6 remains `not_run`.
+
 ### G5 partial history
 
 PK-03A is a completed G5 component, not G5 itself. The source commit `4ef78df`

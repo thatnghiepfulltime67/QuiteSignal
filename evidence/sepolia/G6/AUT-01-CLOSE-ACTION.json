@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "gate": "G6",
+  "workItem": "AUT-01",
+  "status": "completed-action-slice",
+  "sourceCommit": "efe7412e6ed9bd31e243ed5f3033cf32e444f820",
+  "environment": {
+    "chainId": 11155111
+  },
+  "pool": "0xe73B691b490baaDa2FfC8da9Ee9c799B35770149",
+  "action": {
+    "kind": "close-epoch",
+    "transactionHash": "0x69611d93764fdfc9fd74c1202b5d88f8a1c58a6b5ad3d4c6ef797fc64c3b222f",
+    "blockNumber": "11383239"
+  },
+  "verification": {
+    "blockNumber": "11383240",
+    "checks": {
+      "receiptSucceeded": true,
+      "runnerHealthReadSucceeded": true,
+      "terminalPublicStateIsRefundable": true,
+      "noFollowUpActionSelected": true
+    }
+  }
+}
