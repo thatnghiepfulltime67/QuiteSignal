@@ -14,6 +14,7 @@ export type PublicLifecycleEvent =
   | (EventCursor & { kind: 'epoch-opened'; deadline: bigint; minimumParticipants: number })
   | (EventCursor & { kind: 'epoch-closed'; participantCount: number })
   | (EventCursor & { kind: 'aggregate-requested'; requestId: `0x${string}` })
+  | (EventCursor & { kind: 'refunded' })
   | (EventCursor & {
       kind: 'aggregate-finalized';
       requestId: `0x${string}`;
@@ -118,6 +119,18 @@ export function reducePublicEvent(
       if (model.phase !== 'aggregate-pending' || model.aggregateRequestId !== null)
         fail('aggregate request is invalid.');
       return { ...next, aggregateRequestId: event.requestId };
+    case 'refunded':
+      // The contract emits this only after its state-gated terminal operation.
+      // It is the public terminal signal for below-k, aggregate-timeout, or
+      // resolution-grace recovery; it reveals neither an amount nor a participant view.
+      if (
+        model.phase !== 'refundable' &&
+        model.phase !== 'aggregate-pending' &&
+        model.phase !== 'resolution-pending'
+      ) {
+        fail('refund transition is invalid.');
+      }
+      return { ...next, phase: 'refundable' };
     case 'aggregate-finalized':
       if (model.phase !== 'aggregate-pending' || model.aggregateRequestId !== event.requestId)
         fail('aggregate finalization is invalid.');

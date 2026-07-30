@@ -11,6 +11,7 @@
     "test": "tsx --test test/*.test.ts",
     "verify:g5": "tsx src/g5-cli.ts",
     "verify:sepolia": "tsx src/cli.ts",
-    "write:live01:manifest": "tsx scripts/write-live01-manifest.mts"
+    "write:live01:manifest": "tsx scripts/write-live01-manifest.mts",
+    "write:live02:manifests": "tsx scripts/write-live02-manifests.mts"
   }
 }

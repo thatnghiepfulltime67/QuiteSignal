@@ -1109,7 +1109,8 @@ Outcome: Execute fresh below-k and aggregate-timeout recovery cases on Sepolia, 
 with independent receipts and on-chain terminal state.
 
 Output files: LIVE-02 P2 ledger entries, two temporary public manifests, verifier
-and read-model evidence, this record, and recovery evidence records.
+and read-model evidence, a recovery-aware public event reducer, this record, and
+recovery evidence records.
 
 Acceptance criteria: The below-k pool closes with one accepted participant and no
 aggregate request; the timeout pool reaches aggregate pending with two participants,
@@ -1125,8 +1126,15 @@ Funds location/recovery impact: Before close, collateral is in the pool; termina
 recovery returns through its existing confidential transfer route. Failed stages are
 preserved and never bypassed with a manual transfer.
 
-Checks: named receipt/state assertions, manifest verifier, indexer rebuild,
-`npm run check:offline`, and `git diff --check`.
+Read-model decision: The existing public `Refunded` event is a state-gated terminal
+fact. The reducer records only its occurrence and maps it to `refundable`; it does
+not retain the indexed participant address, terminal identifier, amount, input,
+proof, or any decrypted view. This makes aggregate-timeout recovery visible to a
+rebuildable public read model without changing contract bytecode, trust, custody, or
+the confidential boundary.
+
+Checks: named receipt/state assertions, `npm run write:live02:manifests`, manifest
+verifier, indexer rebuild, `npm run check:offline`, and `git diff --check`.
 
 Evidence location: `evidence/sepolia/G6/LIVE-02-*.json`.
 
@@ -1171,6 +1179,9 @@ Sepolia suites pass.
 ## Indexer contract
 
 - Consumes public events only and stores no owner-decrypted data.
+- Reduces the state-gated terminal event to a phase transition while discarding its
+  participant-specific fields; recovery remains directly readable from the pool if
+  the indexer is unavailable.
 - Reducer output is deterministic for the same finalized event sequence.
 - Checkpoint includes chain id, block number/hash, manifest hash, and reducer version.
 - Reorg handling rewinds to a safe checkpoint; full rebuild is a supported command.

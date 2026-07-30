@@ -72,6 +72,16 @@ const settled = log(
   14n,
   0,
 );
+const refunded = log(
+  [
+    toEventSelector('Refunded(bytes32,address,bytes32)'),
+    HASH,
+    `0x${'f'.repeat(40).padStart(64, '0')}` as Hex,
+  ],
+  HASH,
+  15n,
+  0,
+);
 
 test('T-IDX-01-04: frozen public event logs map into the deterministic reducer', () => {
   const events = [opened, closed, requested, finalized, settled].map((entry) =>
@@ -102,6 +112,14 @@ test('T-IDX-01-05: unknown logs reject and known owner-specific events are ignor
     ),
     null,
   );
+});
+
+test('T-IDX-01-08: the existing terminal event maps only to the public refundable phase', () => {
+  const event = mapPublicLifecycleLog(refunded);
+  assert.ok(event);
+  assert.equal(event.kind, 'refunded');
+  assert.equal('owner' in event, false);
+  assert.equal('refundId' in event, false);
 });
 
 test('T-IDX-01-06: a checkpoint whose hash or manifest binding changed is unsafe for replay', async () => {

@@ -35,6 +35,7 @@
     "verify:sdk:transaction:sepolia": "npm run --workspace @quitesignal/confidential-client verify:transaction:sepolia --",
     "verify:protocol:sepolia": "npm run --workspace @quitesignal/verifier verify:sepolia --",
     "write:live01:manifest": "npm run --workspace @quitesignal/verifier write:live01:manifest",
+    "write:live02:manifests": "npm run --workspace @quitesignal/verifier write:live02:manifests",
     "verify:g5:evidence": "npm run --workspace @quitesignal/verifier verify:g5 --",
     "test:adapter:sepolia": "npm run --workspace @quitesignal/protocol test:adapter:sepolia --",
     "test:commit:sepolia": "npm run --workspace @quitesignal/protocol test:commit:sepolia --",

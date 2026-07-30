@@ -69,6 +69,15 @@ const PUBLIC_EVENT_ABI = [
       { indexed: false, name: 'answer', type: 'int256' },
     ],
   },
+  {
+    type: 'event',
+    name: 'Refunded',
+    inputs: [
+      { indexed: true, name: 'epochId', type: 'bytes32' },
+      { indexed: true, name: 'owner', type: 'address' },
+      { indexed: false, name: 'refundId', type: 'bytes32' },
+    ],
+  },
 ] as const;
 
 const PUBLIC_EVENT_TOPICS = new Set<string>([
@@ -77,6 +86,7 @@ const PUBLIC_EVENT_TOPICS = new Set<string>([
   toEventSelector('AggregateDecryptRequested(bytes32,bytes32)'),
   toEventSelector('AggregateFinalized(bytes32,bytes32,uint256,uint256)'),
   toEventSelector('SettlementFinalized(bytes32,uint8,uint256,uint256,uint80,int256)'),
+  toEventSelector('Refunded(bytes32,address,bytes32)'),
 ]);
 
 const IGNORED_EVENT_TOPICS = new Set<string>([
@@ -85,7 +95,6 @@ const IGNORED_EVENT_TOPICS = new Set<string>([
   toEventSelector('SignalCommitted(bytes32,address,bytes32)'),
   toEventSelector('ScoreMaterialized(bytes32,address)'),
   toEventSelector('PayoutClaimed(bytes32,address,bytes32)'),
-  toEventSelector('Refunded(bytes32,address,bytes32)'),
 ]);
 
 export interface ReplayLog {
@@ -208,6 +217,8 @@ export function mapPublicLifecycleLog(log: ReplayLog): PublicLifecycleEvent | nu
         publicYes: bigint(args.publicYes, 'AggregateFinalized.publicYes'),
         publicNo: bigint(args.publicNo, 'AggregateFinalized.publicNo'),
       };
+    case 'Refunded':
+      return { ...cursor, kind: 'refunded' };
     case 'SettlementFinalized':
       return {
         ...cursor,

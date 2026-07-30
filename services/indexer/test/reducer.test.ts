@@ -96,6 +96,20 @@ test('T-IDX-01-02: duplicate, out-of-order, and invalid transitions reject inste
 
 test('T-IDX-01-03: reducer source has no confidential or owner-terminal schema', () => {
   const source = readFileSync(new URL('../src/reducer.ts', import.meta.url), 'utf8');
-  assert.doesNotMatch(source, /\b(stake|probability|position|payout|refund|score|handle|proof)\b/i);
+  assert.doesNotMatch(source, /\b(stake|probability|position|payout|score|handle|proof)\b/i);
+  assert.doesNotMatch(source, /\bowner\b/i);
   assert.doesNotMatch(source, /\b(claim|materializeScore|wrap|approve|transfer)\b/);
+});
+
+test('T-IDX-01-07: a public terminal event proves the refundable recovery state', () => {
+  const refund = {
+    kind: 'refunded' as const,
+    blockNumber: 15n,
+    blockHash: HASH,
+    logIndex: 0,
+    transactionHash: TX,
+  };
+  const model = replayPublicEvents([...events.slice(0, 3), refund]);
+  assert.equal(model.phase, 'refundable');
+  assert.equal(model.participantCount, 2);
 });
