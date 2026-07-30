@@ -1,8 +1,9 @@
-import { createWalletClient, custom } from 'viem';
+import { createPublicClient, createWalletClient, custom } from 'viem';
 import { sepolia } from 'viem/chains';
 import {
   createSepoliaConfidentialInputClient,
   createSepoliaProtocolTransactionClient,
+  createViemProtocolPublicReader,
   prepareCommitSignal,
   publicAddress,
   requestId,
@@ -15,6 +16,20 @@ export interface BrowserProvider {
 export interface SignalSubmission {
   request: string;
   transactionHash: string;
+}
+
+export async function readPublicEpoch(
+  provider: BrowserProvider,
+  pool: string,
+): Promise<{ state: number; participantCount: number; publicYes: bigint; publicNo: bigint }> {
+  const client = createPublicClient({ chain: sepolia, transport: custom(provider) });
+  const epoch = await createViemProtocolPublicReader(client).readEpoch(publicAddress(pool));
+  return {
+    state: epoch.state,
+    participantCount: epoch.participantCount,
+    publicYes: epoch.publicYes,
+    publicNo: epoch.publicNo,
+  };
 }
 
 export async function submitSignalIntent(
