@@ -479,7 +479,7 @@ component, not G5 itself.
 
 ID: `PK-06`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Implement and Sepolia-test permissionless aggregate-timeout recovery and
 immutable-adapter resolution. Aggregate timeout may transition only an
@@ -529,6 +529,13 @@ spend-ledger entries. This is a named G5 component only.
 
 Intended commits: `feat: add bounded resolution and recovery` and
 `test: record Sepolia resolution evidence`.
+
+Completion record: Source changes are in `5402fd2`; staged-harness and evidence
+commits include `ace8cf9`, `d033b97`, and `9df8d41`. The independent verifier passed
+at Sepolia block `11382020`, including early aggregate-timeout rejection, elapsed
+aggregate recovery, early resolution-grace rejection, elapsed grace recovery, and
+immutable-adapter settlement. No tested recovery transferred collateral or native
+currency.
 
 Rollback/failure action: Revert this isolated slice and leave PK-06 incomplete. A
 caller-selected outcome, stale/unbound adapter result, premature recovery, any new
