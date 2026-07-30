@@ -383,6 +383,14 @@ timeout branches. The accepted collateral is encrypted pool custody at the recor
 pool; no native value entered it. The resume runner must reuse the exact fixture,
 wrapper, and adapter addresses and must not deploy replacements.
 
+The first resume reused those dependencies and deployed a second factory
+`0x4865cf531e7ff239ae6cfd2e17d1f91a26acc262` at block `11381300`, then completed
+another isolated accepted commit through block `11381308`. It stopped at a
+read-only replay probe after finalization; that probe has no custody role and is
+removed from the write runner. The associated accepted pool retains only its
+documented encrypted collateral. Remaining mismatch and timeout cases must run from
+a clean source commit without repeating a completed callback assertion.
+
 ## Sequencing
 
 ```text
