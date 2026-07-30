@@ -199,7 +199,7 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: none; AUT-01 is awaiting its separately verified public-result
+Active slice: `IDX-01-PLAN-01`; AUT-01 awaits its separately verified public-result
 boundary and a fresh threshold lifecycle.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
@@ -671,6 +671,51 @@ race guards. The Sepolia `once` command sent exactly one permissionless
 public receipt/state evidence is `evidence/sepolia/G6/AUT-01-CLOSE-ACTION.json`.
 AUT-01 remains incomplete: public aggregate-result retrieval/finalization and a
 fresh threshold lifecycle must pass before it can be a G6 component.
+
+## IDX-01 work-item record
+
+ID: `IDX-01`
+
+Status: `in_progress`
+
+Outcome: Build a rebuildable, public-event-only read model that is never a source of
+protocol correctness or confidential data.
+
+### IDX-01-PLAN-01
+
+Status: `in_progress`
+
+Output files: this record, public event schema/reducer/replay test plan, checkpoint
+schema, rebuild/run commands, and later service implementation.
+
+Acceptance criteria: The indexer accepts only a manifest-bound chain/pool and the
+pool's public lifecycle event surface. Given the same finalized event sequence it
+produces identical state; it can rebuild from the configured deployment block;
+checkpoints carry chain ID, block number/hash, manifest hash, and reducer version;
+and a reorg replaces the unsafe checkpoint with a deterministic replay. Its schema,
+logs, and checkpoints cannot represent confidential input, owner positions, values,
+handles, proofs, payouts, refunds, or scores. Direct verifier/RPC reads remain the
+correctness/recovery path when the service is absent.
+
+Privacy/custody impact: The reducer uses event topics/data that are already public.
+It has no signer, Nox client, owner view, encrypted call-data capture, token method,
+or database field for confidential/user-specific material.
+
+Funds location/recovery impact: The indexer cannot send a transaction or hold funds.
+A corrupted cache/checkpoint is deleted and rebuilt from finalized public events;
+protocol state and owner recovery do not depend on it.
+
+Checks: deterministic replay, duplicate ordering, event-shape/schema rejection,
+checkpoint/reorg reset, static no-sensitive-schema test, `npm run check:offline`,
+named Sepolia rebuild, and `git diff --check`.
+
+Evidence location: `evidence/{offline,sepolia}/G6/IDX-01-READ-MODEL.json`.
+
+Intended commit: `feat: add chain derived read model`.
+
+Rollback/failure action: Disable/remove the service cache only. Do not add an API
+with decrypted fields, turn the indexer into a write authority, or fall back to a
+manually curated state record.
 
 ## Dependency graph
 
