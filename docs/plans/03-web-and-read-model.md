@@ -557,6 +557,14 @@ Rollback/failure action: Leave the existing active release untouched and retain 
 public failed-stage receipts. Never overwrite DEP-01, an existing revision manifest,
 or a verified pointer with an unverified deployment.
 
+Execution note: DEP-02 submitted and confirmed its empty fixture, collateral wrapper,
+resolution adapter, and factory at Sepolia blocks `11384060`, `11384061`,
+`11384062`, and `11384064`. The writer stopped before pool creation and did not
+publish a revision manifest or alter the active-release pointer. Those four receipts
+and their native-gas costs are append-only spend-ledger records; they are not
+deployment or G7 evidence. The next action is a read-only diagnosis of the pool
+creation stop reason, followed only by an explicitly revised plan.
+
 ## Primary route contract
 
 Required routes or equivalent framework views:
