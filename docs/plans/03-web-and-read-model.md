@@ -127,6 +127,51 @@ the passed Sepolia manifest shape; `T-WEB-02-02` rejects anonymity/Sybil-resista
 claims in presenter copy. The production build and typecheck pass. The signal link
 is descriptive only until WEB-03 supplies the real encrypted transaction flow.
 
+## WEB-03 work-item record
+
+ID: `WEB-03`
+
+Status: `in_progress`
+
+Outcome: Provide the browser-local sealed signal journey using the production Nox
+SDK and the protocol's real two-step commit/collateral callback lifecycle.
+
+Output files: browser wallet/Nox adapter, sealed-signal form and state machine,
+privacy/logging tests, package dependency declarations, this record, and any
+required dependency decision/risk updates.
+
+Acceptance criteria: The form validates decimal stake and probability bounds before
+any encryption, creates both inputs locally with one fresh pool-bound request ID,
+and clears plaintext after encryption or cancel. It uses the connected Sepolia
+wallet and the SDK's sealed/prepared transaction boundary; no raw handle, proof,
+plaintext, account, or transaction payload enters URLs, logs, storage, analytics,
+or a service request. The UI distinguishes submitted signal intent from the later
+confidential collateral callback/finalization and never calls either complete until
+its public receipt/state confirms it. Every error states whether funds moved and
+whether a retry is safe.
+
+Privacy/custody impact: Plaintext exists only in the active browser form and Nox
+call. The app does not persist it or hold a key. Wallet approval and the callback
+transfer remain explicit user wallet actions; the browser never delegates custody.
+
+Funds location/recovery impact: Before submission funds remain with the owner.
+After a signal intent, the UI reads the public pending state before suggesting a
+retry; after callback, recovery follows the pool's permissionless pending timeout
+or terminal path, never an app-controlled transfer.
+
+Checks: SDK/browser boundary tests, form validation and plaintext-clear tests,
+production build, `npm run test:web`, `npm run check:offline`, and later named
+Sepolia browser evidence only after the real flow is wired.
+
+Evidence location: source/test output now; sanitized Sepolia browser evidence later
+under G7. This work item cannot pass G7 without the real user-held wallet path.
+
+Intended commit: `feat: add encrypted signal journey`.
+
+Rollback/failure action: Remove only the web signal layer; retain the user-owned
+on-chain pending/recovery path. Never substitute manual calldata, mock encryption,
+durable browser plaintext, or a service signer.
+
 ## Primary route contract
 
 Required routes or equivalent framework views:
