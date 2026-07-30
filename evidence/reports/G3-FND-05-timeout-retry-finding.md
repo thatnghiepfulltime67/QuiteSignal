@@ -60,3 +60,21 @@ The third-attempt legacy recovery completed at blocks `11378471` through
 `11378474` using the same permissionless cancellation and owner-refund checks. Its
 local secondary-actor recovery record was deleted only after both terminal owner
 balances were verified. The third attempt has no remaining fixture custody.
+
+The fourth fresh attempt from source commit `cc2b438` used the forced Solidity
+build and deployed fixture `0x504e30b11860d5c85efc2f098b03582e1710067e`, unchanged
+wrapper `0x574bdcd473425c78c0b68c5d5a0a8feb3943937e`, and isolated spikes
+`0x6f0bdbc7cb469a056a8137a426117ec2f857510f`,
+`0x22a27c2794f3a5f7420e4257bfa4124bb44cc224`, and
+`0xb4b65e4accb462f71343d70fce5560aba264523c` at blocks `11378485` through
+`11378526`. The below-k branch completed and refunded. The timeout spike has two
+accepted fixture members, entered `AGGREGATE_PENDING` at timestamp `1785365568`,
+and exposes exactly its YES/NO aggregates; it has neither a cancellation nor a
+refund receipt. The runner did not emit a terminal result after the aggregate
+request, so its early-timeout rejection is deliberately not counted as G3 evidence.
+
+The retained, ignored secondary-actor recovery record permits a dedicated recovery
+to cancel the now-expired timeout spike and return both deterministic fixture
+stakes. The recovery must complete and be documented before a staged fresh run is
+attempted. This attempt remains excluded from gate evidence; it contains no product
+asset or customer custody.

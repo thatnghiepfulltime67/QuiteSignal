@@ -500,6 +500,18 @@ returned both fixture stakes, verified terminal owner balances locally, and dele
 the ignored actor recovery record. The third attempt therefore has no remaining
 fixture custody.
 
+The fourth attempt from `cc2b438` used the forced build and deployed fixture
+`0x504e30b11860d5c85efc2f098b03582e1710067e`, unchanged wrapper
+`0x574bdcd473425c78c0b68c5d5a0a8feb3943937e`, and timeout spike
+`0x22a27c2794f3a5f7420e4257bfa4124bb44cc224` at blocks `11378485` through
+`11378526`. It passed the below-k branch and reached aggregate pending with the
+state-entry timeout timestamp set on-chain and only YES/NO aggregate access.
+Because it did not emit a terminal result after its aggregate request, no timeout
+negative assertion is claimed from this attempt. Its retained ignored actor record
+enables a permissionless timeout cancellation and both owner refunds before the next
+staged fresh run. The full sanitized finding is in
+`evidence/reports/G3-FND-05-timeout-retry-finding.md`.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:
