@@ -520,7 +520,7 @@ a simulated provider or local chain.
 
 ID: `WEB-08-DEPLOYMENT-01`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Create an append-only, currently open Sepolia deployment revision and a
 verified active-release manifest selection for the real browser journey, preserving
@@ -546,7 +546,8 @@ recoverable. A failed revision stops before publishing an active pointer.
 
 Checks: revision mutation/unit tests, read-only Sepolia plan, guarded write with
 ledger verification, independent manifest verification, browser manifest-selection
-test, `npm run check:offline`, and `git diff --check`.
+tests including the shipped DEP-02 pointer, production web build, and `git diff
+--check`.
 
 Evidence location: immutable revision manifest and sanitized deployment evidence;
 later G7 evidence uses that selected manifest only after verification.
