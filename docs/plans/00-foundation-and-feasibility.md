@@ -517,7 +517,9 @@ Output files: `modules/protocol/scripts/feasibility/run-aggregate-recovery-sepol
 the required dispatcher/test support,
 `evidence/offline/G3/FND-05-RECOVERY.json`,
 `evidence/sepolia/G3/FND-05-RECOVERY.json`, the G3 report, and the append-only
-Sepolia spend ledger.
+Sepolia spend ledger. A local ignored failure marker may contain only the work-item
+ID, sanitized stage, and error category; it never contains an error message, input,
+handle, proof, calldata, signature, key, or RPC value.
 
 Checks: `npm run compile`,
 `npm run test:nox:sepolia -- FND-05-RECOVERY --dry-run`, the confirmed Sepolia
