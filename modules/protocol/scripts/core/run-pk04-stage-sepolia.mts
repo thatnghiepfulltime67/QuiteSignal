@@ -130,15 +130,27 @@ function requiredAmount(name: string): bigint {
   if (!value || !/^\d+$/.test(value)) fail(`PK-04 ${name} requires a non-negative integer.`);
   return BigInt(value);
 }
-function saltFor(caseName: string): Hash {
-  const encoded = {
-    accepted: '0x706b30342d61636365707465642d7632000000000000000000000000000000000',
-    mismatch: '0x706b30342d6d69736d617463682d76320000000000000000000000000000000000',
-    uncalled: '0x706b30342d756e63616c6c65642d76320000000000000000000000000000000000',
-    timeout: '0x706b30342d74696d656f75742d7632000000000000000000000000000000000000',
+function caseConfig(caseName: string): { salt: Hash; kMin: number } {
+  const value = {
+    accepted: {
+      encoded: '0x706b30342d61636365707465642d7632000000000000000000000000000000000',
+      kMin: 2,
+    },
+    mismatch: {
+      encoded: '0x706b30342d6d69736d617463682d76320000000000000000000000000000000000',
+      kMin: 3,
+    },
+    uncalled: {
+      encoded: '0x706b30342d756e63616c6c65642d76320000000000000000000000000000000000',
+      kMin: 4,
+    },
+    timeout: {
+      encoded: '0x706b30342d74696d656f75742d7632000000000000000000000000000000000000',
+      kMin: 5,
+    },
   }[caseName];
-  if (!encoded) fail('PK-04 pool case must be accepted, mismatch, uncalled, or timeout.');
-  return keccak256(encoded as Hex);
+  if (!value) fail('PK-04 pool case must be accepted, mismatch, uncalled, or timeout.');
+  return { salt: keccak256(value.encoded as Hex), kMin: value.kMin };
 }
 async function expectRevert(action: () => Promise<unknown>, scenario: string): Promise<void> {
   try {
@@ -388,16 +400,17 @@ async function main(): Promise<void> {
     } as never)) as bigint;
     if (observationNotBefore <= (await publicClient.getBlock()).timestamp + 120n)
       fail('The PK-04 adapter observation window is too near for a new pool deadline.');
+    const caseParameters = caseConfig(caseName);
     const config: Config = {
       confidentialCollateral: wrapper,
       resolutionAdapter: adapter,
       deadline: observationNotBefore - 90n,
       commitTimeout: COMMIT_TIMEOUT,
-      kMin: 2,
+      kMin: caseParameters.kMin,
       aggregateTimeout: 600n,
       resolutionGrace: 600n,
     };
-    const salt = saltFor(caseName);
+    const salt = caseParameters.salt;
     await send(
       factory,
       calldata(artifacts.factory, 'createPool', [config, salt]),

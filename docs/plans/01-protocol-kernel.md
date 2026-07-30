@@ -401,6 +401,11 @@ write stages before any remaining negative or recovery branch is attempted; this
 a verification-orchestration change only and does not alter custody, authority, or
 the production protocol.
 
+The staged negative-branch fixtures use distinct public `kMin` values solely to
+produce distinct immutable test configurations through the factory's deliberate
+one-pool-per-configuration constraint. They do not represent multiple markets in
+one pool or change the production one-pool/one-market/one-epoch rule.
+
 ## Sequencing
 
 ```text
