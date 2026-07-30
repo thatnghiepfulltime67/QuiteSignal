@@ -316,6 +316,47 @@ Intended commit: `test: harden accessible recovery ux`.
 Rollback/failure action: Revert only isolated UI hardening; never relax privacy
 checks or use an inaccessible fallback state.
 
+## WEB-08 work-item record
+
+ID: `WEB-08`
+
+Status: `in_progress`
+
+Outcome: Produce sanitized, real-browser Ethereum Sepolia evidence for the primary
+signal journey and one documented recovery path without a mock wallet or chain.
+
+Output files: browser harness/configuration, explicit test-wallet runbook, sanitized
+evidence writer, G7 evidence artifact, this record, evidence ledger, and verification
+matrix updates.
+
+Acceptance criteria: The browser starts from the production web build and canonical
+manifest, connects a disposable Sepolia wallet, drives encryption and the real
+two-step intent/collateral path, and records only public receipt/state facts. A
+separate browser run observes or completes one permissionless recovery path. Browser
+console has no unexpected error; traces/screenshots/logs are scanned for confidential
+input, raw handles, proofs, private keys, signatures, and RPC configuration.
+
+Privacy/custody impact: The browser harness never reads or commits a key. Wallet
+authority remains external and explicit; any confidential plaintext stays within the
+browser/Nox path and is excluded from artifacts. No service receives it.
+
+Funds location/recovery impact: Every submitted test action is on Sepolia, budgeted,
+receipt-recorded, and followed to documented public state. A failed browser stage
+stops and uses only the pool's recovery function; no harness transfer or chain edit
+is permitted.
+
+Checks: browser tests on Ethereum Sepolia only, artifact sanitization, `npm run
+test:web`, production build, `npm run check:offline`, and read-only evidence
+verification.
+
+Evidence location: `evidence/sepolia/G7/WEB-08-*.json`.
+
+Intended commit: `test: prove live web user journey`.
+
+Rollback/failure action: Do not mark G7/P3 complete. Preserve public receipts and
+stop at the documented on-chain recovery state; never replace browser evidence with
+a simulated provider or local chain.
+
 ## Primary route contract
 
 Required routes or equivalent framework views:
