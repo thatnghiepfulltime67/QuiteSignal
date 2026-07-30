@@ -70,6 +70,15 @@ receipt/state artifact is `evidence/sepolia/G6/AUT-01-CLOSE-ACTION.json`. The
 append-only ledger records its gas. Aggregate-result retrieval/finalization and a
 threshold lifecycle remain required, so G6 remains `not_run`.
 
+IDX-01 is a completed G6 component, not G6 itself. Source commit `1531353` added a
+public-event-only mapper and a manifest/runtime-bound read rebuild. The named Sepolia
+read at finalized block `11383298` replayed the canonical pool's `EpochOpened` and
+below-threshold `EpochClosed` events into a `REFUNDABLE` projection. Its sanitized
+checkpoint binds the manifest fingerprint and block hash in
+`evidence/sepolia/G6/IDX-01-READ-MODEL.json`. The reducer/reader has no signer,
+asset operation, confidential schema, or owner event storage. G6 remains `not_run`
+until the fresh threshold lifecycle and remaining P2 components pass.
+
 ### G5 partial history
 
 PK-03A is a completed G5 component, not G5 itself. The source commit `4ef78df`

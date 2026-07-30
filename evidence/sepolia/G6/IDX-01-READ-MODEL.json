@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "workItemId": "IDX-01",
+  "environment": "sepolia-read",
+  "status": "passed",
+  "sourceCommit": "153135347ed182b43bbe05eb0071a3da81eec408",
+  "manifest": {
+    "path": "deployments/sepolia/quiet-signal.json",
+    "fingerprint": "0xf6fd482a08ce011fc5f4385fa050e3eab84d4dae975dd7b981f4ce141db4df14",
+    "pool": "0xe73B691b490baaDa2FfC8da9Ee9c799B35770149",
+    "epochVerificationBlock": "11383123"
+  },
+  "finalizedBlock": "11383298",
+  "eventCount": 2,
+  "eventKinds": ["epoch-opened", "epoch-closed"],
+  "checkpoint": {
+    "schemaVersion": 1,
+    "reducerVersion": 1,
+    "chainId": 11155111,
+    "manifestHash": "0xf6fd482a08ce011fc5f4385fa050e3eab84d4dae975dd7b981f4ce141db4df14",
+    "blockNumber": "11383239",
+    "blockHash": "0xcf1e6d641fc90530201af7bfd10f807578e5fd01a6cffe86f26193a01b23cd42",
+    "model": {
+      "phase": "refundable",
+      "deadline": "1785424008",
+      "minimumParticipants": 2,
+      "participantCount": 0,
+      "aggregateRequestId": null,
+      "publicYes": "0",
+      "publicNo": "0",
+      "winner": 0,
+      "settledRoundId": "0",
+      "settledAnswer": "0"
+    }
+  },
+  "projection": {
+    "phase": "refundable",
+    "deadline": "1785424008",
+    "minimumParticipants": 2,
+    "participantCount": 0,
+    "aggregateRequestId": null,
+    "publicYes": "0",
+    "publicNo": "0",
+    "winner": 0,
+    "settledRoundId": "0",
+    "settledAnswer": "0"
+  },
+  "checks": {
+    "manifestRuntimeAndBinding": true,
+    "finalizedDepth": true,
+    "orderedPublicEvents": true,
+    "checkpointBlockHash": true
+  }
+}

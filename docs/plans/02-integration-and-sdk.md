@@ -199,7 +199,7 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `IDX-01-REPLAY-01`; AUT-01 awaits its separately verified public-result
+Active slice: `LIVE-01-PLAN-01`; AUT-01 awaits its separately verified public-result
 boundary and a fresh threshold lifecycle.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
@@ -760,7 +760,7 @@ This pure slice has no chain write or G6 claim.
 
 ### IDX-01-REPLAY-01
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Rebuild the projection from the canonical pool's finalized public events
 and record a sanitized, independently reproducible Sepolia read evidence artifact.
@@ -773,7 +773,8 @@ Acceptance criteria: The command accepts only the committed Sepolia manifest;
 checks its runtime/binding before reading; maps only the frozen lifecycle event
 surface; verifies cursors and block hashes; and writes a manifest-bound checkpoint.
 It must reject another chain, an unknown event, a mutated checkpoint, non-finalized
-head data, and a reorged checkpoint by replaying from the last safe block. The
+head data, and a reorged checkpoint; the no-cache command then replays from the
+manifest deployment block. The
 canonical below-threshold lifecycle is valid partial-lifecycle evidence; a later
 fresh threshold lifecycle must extend the same read path.
 
@@ -797,6 +798,65 @@ Intended commit: `feat: add manifest-bound sepolia read model replay`.
 Rollback/failure action: Remove only generated local checkpoints/evidence and
 rebuild from public chain events. Never retain a stale cache as a source of truth
 or add a manual state override.
+
+Completion evidence: Source commit `1531353` adds the manifest/runtime-bound
+Sepolia reader, frozen-event mapper, finalized-depth guard, and six `T-IDX-01-*`
+tests. The named read rebuild passed at finalized block `11383298`, replaying the
+canonical `EpochOpened` and below-threshold `EpochClosed` events into a
+`REFUNDABLE` projection. Its block-hash-bound checkpoint is
+`evidence/sepolia/G6/IDX-01-READ-MODEL.json`. This completed IDX-01 component has
+no signer, no asset operation, and does not by itself pass G6.
+
+## LIVE-01 work-item record
+
+ID: `LIVE-01`
+
+Status: `in_progress`
+
+Outcome: Prove one fresh, real multi-user Sepolia success lifecycle through the
+published Nox/contract/adapter boundaries and independently rebuild its public
+projection.
+
+### LIVE-01-PLAN-01
+
+Status: `in_progress`
+
+Output files: a preflight/participant lifecycle design, named write-runner and
+read verifier plan, public evidence schema, spend-ledger entries, this record, and
+traceability updates. No contract change, mock lifecycle, or deployment-manifest
+rewrite is permitted in this planning slice.
+
+Acceptance criteria: The eventual run must use one immutable market/epoch in a
+fresh explicitly named Sepolia pool, at least two independent wallet owners, real
+Nox-bound confidential inputs, real collateral movement, permissionless close and
+aggregate request, authenticated public aggregate finalization, immutable adapter
+settlement, and independently verified public terminal state. It must also rerun
+the IDX-01 reader against the same pool and retain recovery/negative evidence
+separately. Each write remains budgeted, confirmed, and ledger-recorded.
+
+Privacy/custody impact: Each owner encrypts only in its local process and signs
+only its own transaction. No service, runner, or indexer receives plaintext or
+exclusive authority. The selected pool, wrapper, and Nox protocol retain the only
+protocol custody/compute roles already verified in G5.
+
+Funds location/recovery impact: Before each write, the runner documents asset and
+native-gas location. Failed commits use the existing pending/expiry recovery path;
+below-threshold or timed-out epochs use the on-chain recovery path. The planning
+slice moves no funds.
+
+Checks: prior G5 contract/Nox evidence revalidation, exact live-script preflight,
+budget status, write plan review, named Sepolia lifecycle/recovery cases, public
+verifier, IDX rebuild, `npm run check:offline`, and `git diff --check`.
+
+Evidence location: `evidence/{offline,sepolia}/G6/LIVE-01-*.json` and append-only
+spend-ledger records; none exist until the named runs pass.
+
+Intended commit: `docs: plan live multi-user lifecycle evidence`.
+
+Rollback/failure action: Stop after any failed stage, preserve all public receipts
+and the spend ledger, and use only the documented permissionless recovery state.
+Never mock a missing stage, alter the canonical manifest, or reuse an unfinished
+epoch as success evidence.
 
 ## Dependency graph
 
