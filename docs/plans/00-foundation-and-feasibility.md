@@ -603,6 +603,22 @@ the next confirmed command must resume only the close, proof, unwrap, recovery, 
 refund steps on this fixture. It remains excluded from FND-05C evidence until
 terminal completion.
 
+Unwrap-pending checkpoint: The confirmed resume closed the corrected fixture,
+requested aggregate disclosure, completed the real context and substituted-value
+rejections, and accepted the valid aggregate finalization at block `11380493`. The
+replayed aggregate proof reverted at block `11380495`, and early permissionless
+unwrap recovery reverted at block `11380496`. The spike is now `UNWRAP_PENDING`; its
+funds location is wrapper burn awaiting the public unwrap proof, and the retained
+local actor record is required for the final owner refund only. A sanitized
+observation `TypeError` stopped the runner before the delayed recovery. The next
+runner revision must accept this exact `UNWRAP_PENDING` state and perform only the
+remaining proof retrieval, delayed permissionless unwrap finalization, measured
+rewrap, and both terminal refunds. It must not repeat setup, aggregate proof, or
+early-recovery checks. This is an orchestration correction and does not relax any
+G3 acceptance condition.
+
+Unwrap-resume intended commit: `fix: resume delayed unwrap recovery`.
+
 Correction intended commit: `fix: remove invalid unwrap request ACL`.
 Stale-fixture recovery intended commit: `test: recover stale aggregate fixture`.
 

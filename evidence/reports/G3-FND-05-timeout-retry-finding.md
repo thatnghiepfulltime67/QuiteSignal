@@ -343,3 +343,13 @@ No close, proof, unwrap, recovery, or refund claim follows from this partial run
 The committed resume dry run accepts precisely this corrected runtime and state, so
 the next confirmed command continues it without repeating setup or creating another
 fixture.
+
+The corrected fixture resume then reached a valid aggregate finalization at block
+`11380493`. Its replay rejection was recorded at block `11380495`, and the required
+early permissionless unwrap-recovery rejection was recorded at block `11380496`.
+The recovery spike is now `UNWRAP_PENDING`, where funds are the wrapper's
+burn-pending request. A sanitized local observation `TypeError` stopped before its
+delayed recovery, rewrap, and refunds. The retained local actor record is necessary
+only for the final refund. The next runner correction accepts this precise state and
+runs only the remaining delayed recovery path; it cannot repeat setup or proof
+checks or count this non-terminal fixture as FND-05C evidence.

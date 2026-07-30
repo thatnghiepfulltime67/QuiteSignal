@@ -74,6 +74,14 @@ spike, and no-custody context peer still match the corrected runtime and exact
 resumable state. This partial fixture remains excluded from G3 evidence until its
 terminal sequence completes.
 
+The corrected fixture then reached `UNWRAP_PENDING` at block `11380493` after valid
+aggregate finalization. A replayed proof reverted at block `11380495` and early
+permissionless unwrap recovery reverted at block `11380496`. Its remaining funds are
+at the documented wrapper burn-pending location. A sanitized local observation
+`TypeError` stopped before the delayed recovery, without a new custody transition.
+The next committed resume accepts only this state and completes delayed recovery,
+rewrap, and both refunds without replaying setup or aggregate proof checks.
+
 ## Evidence artifact contract
 
 Each evidence artifact must include:
