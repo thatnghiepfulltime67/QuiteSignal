@@ -23,6 +23,7 @@ const EVIDENCE = [
 interface Artifact {
   abi: Abi;
   deployedBytecode: `0x${string}`;
+  immutableReferences?: Record<string, readonly { start: number; length: number }[]>;
 }
 
 interface Ledger {
@@ -42,6 +43,20 @@ function sourceCommit(): string {
   return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
 }
 
+function runtimeMatches(artifact: Artifact, runtime: `0x${string}` | undefined): boolean {
+  if (!runtime) return false;
+  const normalize = (value: `0x${string}`): `0x${string}` => {
+    let output = value.slice(2);
+    for (const references of Object.values(artifact.immutableReferences ?? {})) {
+      for (const reference of references) {
+        output = `${output.slice(0, reference.start * 2)}${'0'.repeat(reference.length * 2)}${output.slice((reference.start + reference.length) * 2)}`;
+      }
+    }
+    return `0x${output}` as `0x${string}`;
+  };
+  return normalize(runtime).toLowerCase() === normalize(artifact.deployedBytecode).toLowerCase();
+}
+
 async function main(): Promise<void> {
   const pool = argument('pool');
   if (!pool || !isAddress(pool)) fail('a valid --pool=0x... is required.');
@@ -53,7 +68,7 @@ async function main(): Promise<void> {
   if ((await chain.getChainId()) !== CHAIN_ID) fail('the configured RPC is not Ethereum Sepolia.');
   const artifact = JSON.parse(readFileSync(POOL_ARTIFACT, 'utf8')) as Artifact;
   const runtime = await chain.getCode({ address: pool });
-  if (!runtime || runtime.toLowerCase() !== artifact.deployedBytecode.toLowerCase())
+  if (!runtimeMatches(artifact, runtime))
     fail('the named pool runtime does not match the compiled artifact.');
 
   const reader = createViemProtocolPublicReader(chain);
