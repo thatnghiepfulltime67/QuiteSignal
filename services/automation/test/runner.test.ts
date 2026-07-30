@@ -4,15 +4,18 @@ import test from 'node:test';
 
 import {
   EPOCH_STATE,
+  encodePublicAggregateFinalization,
   encodePermissionlessAction,
   publicActionReport,
   readPublicPoolSnapshot,
+  readPublicAggregateAttestations,
   selectPublicPoolAction,
 } from '../src/index.js';
 
 const POOL = '0x0000000000000000000000000000000000000001' as const;
 const ADAPTER = '0x0000000000000000000000000000000000000002' as const;
 const ZERO_REQUEST = `0x${'0'.repeat(64)}` as const;
+const REQUEST = `0x${'1'.repeat(64)}` as const;
 
 function client(options: { wrongChain?: boolean; missingCode?: boolean } = {}) {
   return {
@@ -72,12 +75,33 @@ test('T-AUT-01-05: non-Sepolia, missing runtime, and finalization encoding bound
   );
 });
 
+test('T-AUT-01-08: public aggregate attestations are transient and encode only the frozen finalizer call', async () => {
+  const aggregateClient = {
+    readContract: async ({ functionName }: { functionName: string }) => {
+      assert.equal(functionName, 'aggregateDisclosureHandles');
+      return [`0x${'2'.repeat(64)}`, `0x${'3'.repeat(64)}`];
+    },
+  };
+  const values = await readPublicAggregateAttestations(aggregateClient as never, POOL, REQUEST, {
+    publicDecrypt: async () => ({ attestation: '0x1234' }),
+  });
+  assert.deepEqual(values, { yes: '0x1234', no: '0x1234' });
+  assert.match(
+    encodePublicAggregateFinalization({ kind: 'finalize-aggregate', requestId: REQUEST }, values),
+    /^0x[0-9a-f]+$/i,
+  );
+});
+
 test('T-AUT-01-06: runner source uses public state/action fields only', () => {
-  for (const path of ['../src/runner.ts', '../scripts/run-sepolia.mts']) {
-    const source = readFileSync(new URL(path, import.meta.url), 'utf8');
-    assert.doesNotMatch(source, /\b(stake|probability|position|payout|score|handle|proof)\b/i);
+  const runner = readFileSync(new URL('../src/runner.ts', import.meta.url), 'utf8');
+  const script = readFileSync(new URL('../scripts/run-sepolia.mts', import.meta.url), 'utf8');
+  for (const source of [runner, script]) {
+    assert.doesNotMatch(source, /\b(stake|probability|position|payout|score)\b/i);
     assert.doesNotMatch(source, /\b(claim|refund|materializeScore|wrap|approve|transfer)\b/);
+    assert.doesNotMatch(source, /\b(localStorage|sessionStorage)\b/);
   }
+  assert.doesNotMatch(runner, /\bwriteFileSync\b/);
+  assert.match(script, /writeFileSync\(ledgerPath/);
 });
 
 test('T-AUT-01-07: write mode requires clean source, confirmation, re-read, gas estimate, and ledger recording', () => {

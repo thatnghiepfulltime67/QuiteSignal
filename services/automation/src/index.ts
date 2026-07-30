@@ -10,9 +10,14 @@ export {
 export {
   SEPOLIA_CHAIN_ID,
   createSepoliaReadClient,
+  createPublicAggregateGateway,
+  encodePublicAggregateFinalization,
   encodePermissionlessAction,
   publicActionReport,
   readPublicPoolSnapshot,
+  readPublicAggregateAttestations,
   selectPublicPoolAction,
+  type PublicAggregateAttestations,
+  type PublicAggregateGateway,
   type PublicPoolSnapshot,
 } from './runner.js';

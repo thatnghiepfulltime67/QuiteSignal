@@ -1,11 +1,14 @@
+import { createViemHandleClient } from '@iexec-nox/handle';
 import {
   createPublicClient,
   encodeFunctionData,
   http,
   isAddress,
+  isHex,
   type Abi,
   type Address,
   type Hex,
+  type WalletClient,
 } from 'viem';
 import { sepolia } from 'viem/chains';
 
@@ -86,6 +89,20 @@ const POOL_ABI = [
   },
   {
     type: 'function',
+    name: 'aggregateDisclosureHandles',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'bytes32' }, { type: 'bytes32' }],
+  },
+  {
+    type: 'function',
+    name: 'finalizeAggregate',
+    stateMutability: 'nonpayable',
+    inputs: [{ type: 'bytes32' }, { type: 'bytes' }, { type: 'bytes' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
     name: 'cancelBeforeResolution',
     stateMutability: 'nonpayable',
     inputs: [],
@@ -122,6 +139,15 @@ export interface PublicPoolSnapshot {
   observationNotBefore: bigint;
 }
 
+export interface PublicAggregateGateway {
+  publicDecrypt(input: Hex): Promise<{ attestation: Hex }>;
+}
+
+export interface PublicAggregateAttestations {
+  readonly yes: Hex;
+  readonly no: Hex;
+}
+
 function fail(message: string): never {
   throw new Error(`Automation runner failed: ${message}`);
 }
@@ -144,6 +170,12 @@ function number(value: unknown, path: string): number {
 function hash(value: unknown, path: string): `0x${string}` {
   if (typeof value !== 'string' || !/^0x[0-9a-f]{64}$/i.test(value)) fail(`${path} is malformed.`);
   return value as `0x${string}`;
+}
+
+function attestation(value: unknown, path: string): Hex {
+  if (typeof value !== 'string' || !isHex(value) || value.length <= 2)
+    fail(`${path} is malformed.`);
+  return value as Hex;
 }
 
 function pendingAvailableAt(value: unknown): bigint {
@@ -201,6 +233,7 @@ export async function readPublicPoolSnapshot(
 
 export function selectPublicPoolAction(
   snapshot: PublicPoolSnapshot,
+  aggregateResultAvailable = false,
 ): PermissionlessAction | undefined {
   return selectPermissionlessAction({
     now: snapshot.timestamp,
@@ -211,8 +244,43 @@ export function selectPublicPoolAction(
       resolutionGrace: snapshot.resolutionGrace,
       observationNotBefore: snapshot.observationNotBefore,
     },
-    readiness: { aggregateResultAvailable: false },
+    readiness: { aggregateResultAvailable },
   });
+}
+
+export async function createPublicAggregateGateway(
+  wallet: WalletClient,
+): Promise<PublicAggregateGateway> {
+  const client = await createViemHandleClient(wallet);
+  return {
+    async publicDecrypt(input: Hex): Promise<{ attestation: Hex }> {
+      const result = await client.publicDecrypt(input);
+      return { attestation: attestation(result.decryptionProof, 'public aggregate attestation') };
+    },
+  };
+}
+
+export async function readPublicAggregateAttestations(
+  client: ReturnType<typeof createSepoliaReadClient>,
+  pool: Address,
+  requestId: Hex,
+  gateway: PublicAggregateGateway,
+): Promise<PublicAggregateAttestations> {
+  const raw = await client.readContract({
+    address: pool,
+    abi: POOL_ABI,
+    functionName: 'aggregateDisclosureHandles',
+  });
+  if (!Array.isArray(raw) || raw.length !== 2) fail('aggregate disclosure response is malformed.');
+  const [yes, no] = await Promise.all([
+    gateway.publicDecrypt(hash(raw[0], 'aggregate yes input')),
+    gateway.publicDecrypt(hash(raw[1], 'aggregate no input')),
+  ]);
+  if (!/^0x[0-9a-f]{64}$/i.test(requestId)) fail('aggregate request id is malformed.');
+  return {
+    yes: attestation(yes.attestation, 'aggregate yes attestation'),
+    no: attestation(no.attestation, 'aggregate no attestation'),
+  };
 }
 
 export function encodePermissionlessAction(
@@ -230,6 +298,17 @@ export function encodePermissionlessAction(
     'cancel-after-resolution-grace': 'cancelAfterResolutionGrace',
   }[action.kind];
   return encodeFunctionData({ abi: POOL_ABI, functionName } as never);
+}
+
+export function encodePublicAggregateFinalization(
+  action: Extract<PermissionlessAction, { kind: 'finalize-aggregate' }>,
+  values: PublicAggregateAttestations,
+): Hex {
+  return encodeFunctionData({
+    abi: POOL_ABI,
+    functionName: 'finalizeAggregate',
+    args: [action.requestId, values.yes, values.no],
+  });
 }
 
 export function publicActionReport(

@@ -11,8 +11,11 @@ import { parseManifest } from '@quitesignal/verifier';
 
 import {
   createSepoliaReadClient,
+  createPublicAggregateGateway,
+  encodePublicAggregateFinalization,
   encodePermissionlessAction,
   publicActionReport,
+  readPublicAggregateAttestations,
   readPublicPoolSnapshot,
   selectPublicPoolAction,
 } from '../src/runner.js';
@@ -137,9 +140,30 @@ async function main(): Promise<void> {
   if (!rpcUrl) fail('SEPOLIA_RPC_URL is required.');
   const pool = poolFromArguments();
   const publicClient = createSepoliaReadClient(rpcUrl);
-  const read = async () => {
+  const read = async (gateway?: Awaited<ReturnType<typeof createPublicAggregateGateway>>) => {
     const snapshot = await readPublicPoolSnapshot(publicClient, pool);
-    return { snapshot, action: selectPublicPoolAction(snapshot) };
+    let aggregate;
+    if (
+      gateway &&
+      snapshot.epoch.state === 2 &&
+      /^0x(?!0{64}$)[0-9a-f]{64}$/i.test(snapshot.epoch.aggregateRequestId)
+    ) {
+      try {
+        aggregate = await readPublicAggregateAttestations(
+          publicClient,
+          pool,
+          snapshot.epoch.aggregateRequestId,
+          gateway,
+        );
+      } catch {
+        aggregate = undefined;
+      }
+    }
+    return {
+      snapshot,
+      action: selectPublicPoolAction(snapshot, aggregate !== undefined),
+      aggregate,
+    };
   };
   if (mode === 'dry-run' || mode === 'health') {
     const { snapshot, action } = await read();
@@ -156,6 +180,7 @@ async function main(): Promise<void> {
   if (!privateKey) fail('SEPOLIA_PRIVATE_KEY is required for once or poll mode.');
   const account = privateKeyToAccount(privateKey);
   const walletClient = createWalletClient({ account, chain: sepolia, transport: http(rpcUrl) });
+  const gateway = await createPublicAggregateGateway(walletClient);
   const iterations = mode === 'poll' ? Number(argument('iterations') ?? '1') : 1;
   const intervalSeconds = Number(argument('interval-seconds') ?? '15');
   if (!Number.isSafeInteger(iterations) || iterations < 1 || iterations > 100)
@@ -164,27 +189,29 @@ async function main(): Promise<void> {
     fail('poll interval must be 5 through 300 seconds.');
   const ledger = loadLedger();
   for (let iteration = 0; iteration < iterations; iteration += 1) {
-    const first = await read();
+    const first = await read(gateway);
     if (!first.action) {
       process.stdout.write(
         `${JSON.stringify({ mode, iteration, status: 'no-action', ...publicActionReport(first.snapshot, first.action) })}\n`,
       );
-    } else if (first.action.kind === 'finalize-aggregate') {
-      process.stdout.write(
-        `${JSON.stringify({ mode, iteration, status: 'public-result-required', ...publicActionReport(first.snapshot, first.action) })}\n`,
-      );
     } else {
-      const second = await read();
+      const second = await read(gateway);
       if (JSON.stringify(first.action) !== JSON.stringify(second.action)) {
         process.stdout.write(
           `${JSON.stringify({ mode, iteration, status: 'race-retryable', ...publicActionReport(second.snapshot, second.action) })}\n`,
         );
-      } else if (!second.action || second.action.kind === 'finalize-aggregate') {
+      } else if (
+        !second.action ||
+        (second.action.kind === 'finalize-aggregate' && !second.aggregate)
+      ) {
         process.stdout.write(
           `${JSON.stringify({ mode, iteration, status: 'action-no-longer-writable', ...publicActionReport(second.snapshot, second.action) })}\n`,
         );
       } else {
-        const data = encodePermissionlessAction(second.action);
+        const data =
+          second.action.kind === 'finalize-aggregate'
+            ? encodePublicAggregateFinalization(second.action, second.aggregate!)
+            : encodePermissionlessAction(second.action);
         const gas = await publicClient.estimateGas({ account: account.address, to: pool, data });
         const fees = await publicClient.estimateFeesPerGas();
         const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
