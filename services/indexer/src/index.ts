@@ -11,3 +11,15 @@ export {
   type PublicReadModel,
   type ReadModelCheckpoint,
 } from './reducer.js';
+export {
+  FINALITY_BLOCKS,
+  SEPOLIA_CHAIN_ID,
+  assertCheckpointSafe,
+  loadFinalizedPublicEvents,
+  manifestFingerprint,
+  mapPublicLifecycleLog,
+  rebuildManifestBoundReadModel,
+  type FinalizedReplay,
+  type ReplayClient,
+  type ReplayLog,
+} from './replay.js';

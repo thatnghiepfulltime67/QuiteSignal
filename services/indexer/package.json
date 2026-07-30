@@ -8,6 +8,11 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test test/*.test.ts",
+    "rebuild:sepolia": "tsx scripts/rebuild-sepolia.mts"
+  },
+  "dependencies": {
+    "@quitesignal/verifier": "0.0.0",
+    "viem": "2.55.10"
   }
 }
