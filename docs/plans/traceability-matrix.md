@@ -14,7 +14,7 @@ suffixes but cannot silently rename or remove a required family.
 | FR-04 Aggregate finalization | Pool | aggregate → `RESOLUTION_PENDING` | I2, I4, I7, I9 | `T-AGGREGATE-*`, `T-RESOLUTION-PENDING-*` | G3–G6 |
 | FR-05 Settlement | Pool, resolution adapter | `RESOLUTION_PENDING.settle` | I5, I6, I8, I9 | `T-RESOLUTION-*`, `T-FEED-FRESHNESS-*`, `T-PAYOUT-BOUND-*` | G4–G6 |
 | FR-06 Private view | Pool, Nox client, web | owner decrypt position | I3, I10 | `T-VIEWER-*`, `T-UNAUTHORIZED-DECRYPT-*`, `T-WEB-POSITION-*` | G1, G5–G7 |
-| FR-07 Refund/recovery | Pool, relayer | timeout/grace → `REFUNDABLE` | I2, I3, I7, I8, I10 | `T-TIMEOUT-*`, `T-RESOLUTION-GRACE-*`, `T-REFUND-*` | G2, G3, G5–G7 |
+| FR-07 Refund/recovery | Pool, relayer | timeout/grace → `REFUNDABLE` | I2, I3, I7, I8, I10 | `T-TIMEOUT-*`, `T-ZERO-WINNER-*`, `T-RESOLUTION-GRACE-*`, `T-REFUND-*` | G2, G3, G5–G7 |
 | FR-08 Independent audit | Verifier, config | public chain → report | I1–I10 observable subset | `T-VERIFIER-MUTATION-*`, `T-MANIFEST-*`, `T-EVIDENCE-*` | G5–G8 |
 | FR-09 Private score | Pool, Nox client, web | `SETTLED.materializeScore` | I3, I8, I10 | `T-BRIER-MATH-*`, `T-SCORE-ACL-*`, `T-WEB-SCORE-*` | G1, G5–G7 |
 
@@ -54,6 +54,20 @@ suffixes but cannot silently rename or remove a required family.
 | I8 State safety | Monotonic state and terminal owner flags | Explicit transition table | Backward/claim-refund transition | G5 transition report |
 | I9 Integration integrity | Target/adapter code + ABI match manifest | RPC runtime code hash | Wrong address/stale binding | G4/G6/G8 manifest check |
 | I10 ACL minimality | Pool persistent authority; owner viewer only | ACL matrix | Grant keeper/token persistent access | G1/G5/G6 |
+
+## PK-01 reference-model coverage
+
+The following pure-model tests establish the TypeScript oracle only. They are not
+contract, Nox, ACL, or Sepolia evidence and do not advance G5 by themselves.
+
+| Test family | Coverage | Invariants/requirements |
+|---|---|---|
+| `T-DOMAIN-PK01-01` | Allocation clamp, floor arithmetic, Brier endpoints | I1, FR-09 |
+| `T-DOMAIN-PK01-02` | Invalid config, owner, deadline, duplicate, early/empty close | I8, FR-01–FR-03 |
+| `T-DOMAIN-PK01-03` | Success lifecycle, floor payout dust, one-time claim | I1, I2, I6, I8, FR-05 |
+| `T-DOMAIN-PK01-04` | Below-k and aggregate-timeout refunds | I2, I8, FR-03, FR-07 |
+| `T-DOMAIN-PK01-05` | Request binding, premature/stale/incomplete round, zero-winner grace recovery | I4, I5, I7, I8, FR-04, FR-05, FR-07 |
+| `T-DOMAIN-PK01-06` | 1,000 deterministic conservation, payout-bound, and terminal-flag vectors | I1, I2, I6, I8 |
 
 ## Evidence naming
 

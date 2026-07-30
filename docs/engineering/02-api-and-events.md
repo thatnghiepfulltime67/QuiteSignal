@@ -27,10 +27,8 @@ EpochOpened(epochId, pool, deadline, kMin)
 SignalCommitted(epochId, sender, commitmentId)
 EpochClosed(epochId, participantCount)
 AggregateDecryptRequested(epochId, requestId)
-AggregateFinalized(epochId, requestId, publicYes, publicNo, unwrapRequestId)
-ExecutionFinalized(epochId, adapter, acquiredYes, acquiredNo)
-UnwrapRecovered(epochId, releasedCollateral)
-SettlementFinalized(epochId, winner, pot, winningPool)
+AggregateFinalized(epochId, requestId, publicYes, publicNo)
+SettlementFinalized(epochId, winner, aggregateCollateral, winningAggregate, roundId)
 ScoreMaterialized(epochId, owner)
 PayoutClaimed(epochId, owner, claimId)
 Refunded(epochId, owner, refundId)
@@ -38,8 +36,8 @@ Refunded(epochId, owner, refundId)
 
 ## Read API
 
-The indexer exposes only chain-derived public views: market metadata, epoch state,
-participant count, aggregate totals after reveal, adapter execution, and tx links.
+The indexer exposes only chain-derived public views: condition metadata, epoch state,
+participant count, aggregate totals after reveal, resolution metadata, and tx links.
 Owner-specific values are fetched from the contract and decrypted in-browser.
 
 ## Idempotency

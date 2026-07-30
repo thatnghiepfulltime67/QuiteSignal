@@ -1,6 +1,6 @@
 # P1 — Protocol kernel
 
-Status: `not_started`
+Status: `in_progress`
 
 ## Objective
 
@@ -26,6 +26,70 @@ and score behavior satisfies I1–I10 without plaintext shadow accounting.
 | PK-07 | Settlement/owner terminal paths | resolve, score, claim, refund | I3/I6/I8/I10, rounding and conflict cases | `feat: add private settlement and score` |
 | PK-08 | Independent verifier/manifest | Verifier rules, manifest schema, CLI | Mutation rejection, stale binding, wrong code hash | `feat: add independent protocol verifier` |
 | PK-09 | Adversarial/invariant gate | Fuzz, reference-model, static analysis suites | I1–I10 and mandatory negatives | `test: close protocol correctness gate` |
+
+## PK-01 work-item record
+
+ID: `PK-01`
+
+Status: `complete`
+
+Outcome: Establish the pure TypeScript reference model for the revised
+zero-custody-resolution lifecycle before defining a production ABI or contract. The
+model is an offline mathematical and state-transition oracle only; it cannot call
+RPC, deploy contracts, synthesize Nox handles, transfer assets, or serve production
+state.
+
+Output files: `modules/domain/package.json`, `modules/domain/src/state.ts`,
+`modules/domain/src/errors.ts`, `modules/domain/src/schemas.ts`,
+`modules/domain/src/reference-model.ts`, `modules/domain/src/index.ts`,
+`modules/domain/test/reference-model.test.ts`, root `package.json`,
+`package-lock.json`, `DESIGN.md`, `docs/engineering/01-protocol-spec.md`,
+`docs/engineering/02-api-and-events.md`, this work-package record, and the
+traceability matrix when a model boundary is clarified.
+
+Acceptance criteria: The model defines immutable configuration validation; open,
+aggregate-pending, resolution-pending, settled, and refundable transitions; one
+commit per owner; confidential-equivalent allocation arithmetic; exact public
+aggregate matching; request replay rejection; fresh objective resolution validation;
+resolution-grace refund; private-score math; floor payout; and mutually exclusive
+one-time claim/refund. It records every state funds location as confidential pool
+custody. Deterministic tests include explicit boundary vectors and at least 1,000
+offline generated property cases for conservation, payout bound, and terminal flag
+exclusivity.
+
+Negative cases: Invalid immutable timings or precision; empty/duplicate owner;
+commit after deadline; close before deadline; below-k aggregate request; unmatched or
+replayed aggregate request; aggregate mismatch; premature, stale, incomplete, or
+non-positive feed round; zero winning aggregate; early resolution-grace refund;
+duplicate claim/refund; and claim/refund conflict must fail in the pure model.
+
+Privacy/custody impact: Model fixtures contain only public, deterministic bigint
+test values and never represent production plaintext, Nox handle, proof, wallet,
+signature, or RPC data. The model has no chain, token, or adapter dependency and
+cannot create custody or authority.
+
+Funds location/recovery impact: Every model state labels collateral as confidential
+pool custody. Aggregate timeout and resolution-grace paths return the model to
+`REFUNDABLE`; a zero winning aggregate remains resolution-pending until the same
+grace recovery is available. No modeled path moves assets to the public feed.
+
+Checks: `npm run test:model`, `npm run typecheck`, `npm run compile`,
+`npm run check:offline`, and `git diff --check`.
+
+Evidence path: `modules/domain/test/reference-model.test.ts` output. The six named
+`T-DOMAIN-PK01-*` cases include a deterministic 1,000-vector run; the G5
+reference-model report will be created by PK-09. PK-01 makes no Sepolia evidence
+claim; production contract conclusions remain reserved for named Sepolia tests.
+
+Recorded checks: `npm run test:model`, `npm run typecheck`, `npm run compile`, and
+`npm run check:offline` passed before this work-item was completed. `git diff --check`
+is run immediately before its commit.
+
+Intended commit: `feat: add protocol reference model`.
+
+Rollback/failure action: Revert only this isolated domain-model commit. A model
+counterexample, undefined funds location, or conflict with a privacy/custody
+invariant blocks PK-02 onward until a documented architecture decision resolves it.
 
 ## Sequencing
 
@@ -59,7 +123,7 @@ No SDK, relayer, indexer, or web implementation begins in P1.
 
 - [ ] Below-k close enters `REFUNDABLE` and never grants aggregate public decrypt.
 - [ ] At/above-k close exposes only aggregate YES/NO handles.
-- [ ] Aggregate and unwrap request IDs are context-bound and single-use.
+- [ ] Aggregate request IDs are context-bound and single-use.
 - [ ] `publicYes + publicNo` is proof-verified before resolution and determines the payout rate.
 - [ ] Feed target, threshold, observation time, maximum age, and grace are immutable hard checks.
 - [ ] Aggregate timeout and resolution grace follow the documented confidential funds map.

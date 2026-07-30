@@ -81,8 +81,8 @@ No transition moves backward. Individual claim/refund flags are monotonic.
 | `closeEpoch`              | Deadline reached                                                        | Below k: `REFUNDABLE`; otherwise `AGGREGATE_PENDING`                  |
 | `requestAggregateDecrypt` | `AGGREGATE_PENDING`, request not created                                | Public-decrypt YES/NO aggregate handles only                          |
 | `finalizeAggregate`       | Matching request context and valid proof                                | Store public totals, enter `RESOLUTION_PENDING`                         |
-| `cancelBeforeUnwrap`      | `AGGREGATE_PENDING`, aggregate timeout elapsed from entry to that state | Enter `REFUNDABLE`; revealable aggregate remains public               |
-| `settle`                  | `RESOLUTION_PENDING`, adapter gives valid fresh resolution              | Store result context and winner; enter `SETTLED`                       |
+| `cancelBeforeResolution`  | `AGGREGATE_PENDING`, aggregate timeout elapsed from entry to that state | Enter `REFUNDABLE`; revealable aggregate remains public               |
+| `settle`                  | `RESOLUTION_PENDING`, adapter gives valid fresh resolution and selected aggregate is non-zero | Store result context and winner; enter `SETTLED` |
 | `cancelAfterResolutionGrace` | `RESOLUTION_PENDING`, grace elapsed                                  | Enter `REFUNDABLE`; collateral never left pool custody                 |
 | `materializeScore`        | `SETTLED`, caller committed                                             | Create/update owner-only encrypted Brier score                        |
 | `claim`                   | `SETTLED`, caller committed and not claimed/refunded                    | Confidential payout once                                              |
@@ -91,7 +91,9 @@ No transition moves backward. Individual claim/refund flags are monotonic.
 The Phase 0 unwrap/rewrap evidence remains valid for the confidential asset
 boundary, but the MVP does not unwrap aggregate collateral. Invalid, stale, or
 unavailable price-feed data is handled by the permissionless resolution-grace refund
-path rather than a target-side recovery call.
+path rather than a target-side recovery call. A valid round selecting a zero
+winning aggregate also leaves the epoch `RESOLUTION_PENDING`; it cannot invent a
+payout denominator and reaches the same permissionless grace refund.
 
 ## Signal math
 

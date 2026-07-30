@@ -181,8 +181,9 @@ Role: input surface for probability and stake.
 
 Role: public lifecycle explanation.
 
-- Vertical hairline with labeled states: `Open`, `Aggregate`, `Execute`, `Resolve`,
-  `Settle`.
+- Vertical hairline with labeled states: `Open`, `Aggregate`, `Verify`, `Settle`.
+- `Verify` means the pool reads and validates its immutable public price-feed
+  condition. It never indicates an external market execution or asset transfer.
 - Completed states use signal green, active compute uses lilac, waiting uses orange,
   public facts use blue, and recovery uses lipstick with an explanation.
 - Each row includes timestamp/transaction link only when public.
