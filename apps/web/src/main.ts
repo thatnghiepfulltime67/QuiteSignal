@@ -9,6 +9,7 @@ import {
   finalizePendingSignal,
   readPublicEpoch,
   SignalJourneyError,
+  submitOwnerTerminalAction,
   submitSignalJourney,
 } from './wallet.js';
 
@@ -27,6 +28,7 @@ let manifest: PublicManifest | undefined;
 let walletState = 'No wallet detected';
 let lifecycleMessage = 'Connect a Sepolia wallet to refresh public pool state.';
 let ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
+let ownerActions = '';
 
 async function loadManifest(): Promise<void> {
   const response = await fetch('/quiet-signal.json');
@@ -55,7 +57,7 @@ function render(message?: string): void {
           }
         })()
       : isPositionRoute && market
-        ? `<section class="band blush-band signal-card owner"><div class="band-inner"><p class="eyebrow private">{ owner only }</p><h1>Your private position</h1><div class="panel"><p role="status">${ownerMessage}</p><button class="primary" id="reveal-owner">Reveal with owner wallet</button><p class="muted">No claim or refund is submitted automatically.</p></div></div></section>`
+        ? `<section class="band blush-band signal-card owner"><div class="band-inner"><p class="eyebrow private">{ owner only }</p><h1>Your private position</h1><div class="panel"><p role="status">${ownerMessage}</p><button class="primary" id="reveal-owner">Reveal with owner wallet</button>${ownerActions}<p class="muted">No claim or refund is submitted automatically.</p></div></div></section>`
         : isSignalRoute && market
           ? `<section class="band plum-band signal-card"><div class="band-inner"><p class="eyebrow compute">{ encrypted locally }</p><h1>Prepare your signal</h1><p>Probability and collateral stay in this browser until Nox encrypts them.</p><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required /></label><label>Probability (basis points) <input name="probability" inputmode="numeric" autocomplete="off" placeholder="7500" required /></label><p class="sealed">COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.</p><button class="primary" type="submit">Encrypt and submit signal</button><button class="secondary" id="retry-finalize" type="button" hidden>Retry pending finalization</button><p id="signal-status" class="muted" role="status">No funds moved.</p></form></div></section>`
           : isMarketRoute && market
@@ -69,6 +71,33 @@ function render(message?: string): void {
   document
     .querySelector<HTMLButtonElement>('#reveal-owner')
     ?.addEventListener('click', revealOwner);
+  document.querySelectorAll<HTMLButtonElement>('[data-owner-action]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      if (!window.ethereum || !manifest) {
+        ownerMessage = 'Connect the owner wallet on Sepolia, then retry. No funds moved.';
+        render();
+        return;
+      }
+      const action = button.dataset.ownerAction;
+      if (action !== 'materializeScore' && action !== 'claim' && action !== 'refund') return;
+      ownerMessage = `Requesting ${action} from the owner wallet. Check the wallet before approving.`;
+      render();
+      try {
+        const transactionHash = await submitOwnerTerminalAction(
+          window.ethereum,
+          manifest.poolAddress,
+          action,
+        );
+        ownerMessage = `${action} confirmed on Sepolia: ${transactionHash.slice(0, 10)}…. Refresh the owner position before another action.`;
+      } catch (error) {
+        ownerMessage =
+          error instanceof Error
+            ? error.message
+            : 'Owner action is unavailable. Read public pool state before retrying.';
+      }
+      render();
+    });
+  });
   document
     .querySelector<HTMLButtonElement>('#retry-finalize')
     ?.addEventListener('click', async (event) => {
@@ -146,6 +175,9 @@ async function revealOwner(): Promise<void> {
     ownerMessage = position.committed
       ? `Position revealed for this session. Score: ${position.scoreBps.toString()} bps. ${position.claimed ? 'Claimed.' : position.refunded ? 'Refunded.' : 'No terminal action submitted.'}`
       : 'This wallet has no committed position for the canonical pool.';
+    ownerActions = position.committed
+      ? `<div class="owner-actions"><button class="secondary" data-owner-action="materializeScore">Materialize score</button><button class="secondary" data-owner-action="claim">Claim payout</button><button class="secondary" data-owner-action="refund">Request refund</button></div>`
+      : '';
   } catch {
     ownerMessage =
       'Viewer access was denied or unavailable. Verify the connected owner account, then retry safely.';
@@ -203,11 +235,13 @@ async function connectWallet(): Promise<void> {
 window.ethereum?.on('accountsChanged', () => {
   walletState = 'Account changed';
   ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
+  ownerActions = '';
   render('Reconnect to review the current public market.');
 });
 window.ethereum?.on('chainChanged', () => {
   walletState = 'Network changed';
   ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
+  ownerActions = '';
   render('Reconnect after selecting Ethereum Sepolia.');
 });
 loadManifest()

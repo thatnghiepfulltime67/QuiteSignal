@@ -33,6 +33,8 @@ export interface SignalSubmission {
   finalizeTransactionHash: string;
 }
 
+export type OwnerTerminalAction = 'materializeScore' | 'claim' | 'refund';
+
 type SignalJourneyStage =
   | 'preparing'
   | 'intent-submitted'
@@ -162,6 +164,29 @@ export async function decryptOwnerPosition(
     probabilityBps: probabilityBps.value as bigint,
     scoreBps: scoreBps.value as bigint,
   };
+}
+
+export async function submitOwnerTerminalAction(
+  provider: BrowserProvider,
+  pool: string,
+  action: OwnerTerminalAction,
+): Promise<string> {
+  try {
+    const { account, wallet } = await connectedSepoliaWallet(provider);
+    const reader = createPublicClient({ chain: sepolia, transport: custom(provider) });
+    const transactionHash = await wallet.sendTransaction({
+      account,
+      chain: sepolia,
+      to: publicAddress(pool) as Address,
+      data: encodeFunctionData({ abi: quietSignalPoolAbi, functionName: action }),
+    });
+    await waitForConfirmedReceipt(reader, transactionHash);
+    return transactionHash;
+  } catch {
+    throw new Error(
+      'The owner action was not confirmed. Read the public pool state before retrying; no application-controlled transfer occurred.',
+    );
+  }
 }
 
 export async function submitSignalJourney(

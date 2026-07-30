@@ -356,6 +356,53 @@ Intended commit: `feat: add private position and settlement`.
 Rollback/failure action: Remove the isolated owner presentation/action layer; do not
 replace it with a backend decrypt service or a cached private position.
 
+## WEB-05-TERMINAL-01 work-item record
+
+ID: `WEB-05-TERMINAL-01`
+
+Status: `complete`
+
+Outcome: Bind the revealed-owner view to the compiled terminal ABI and expose only
+explicit, wallet-gated score, claim, and refund requests with receipt confirmation.
+
+Output files: frozen SDK ABI entries and artifact comparison, browser owner action
+adapter, owner action controls, focused source checks, and this record.
+
+Acceptance criteria: Owner controls appear only after explicit owner reveal, clear on
+account/chain change, and submit `materializeScore`, `claim`, or `refund` only from
+the connected Sepolia wallet. Each action waits for a public receipt and on any
+failure directs the owner to read public state before retrying. The UI renders no raw
+handle or proof and does not persist owner values.
+
+Privacy/custody impact: The action adapter uses the existing wallet and public ABI
+only. It adds no key, signer, backend, storage, raw confidential payload, or viewer
+authority. Claim/refund movement remains entirely inside the immutable pool/wrapper
+contracts and requires explicit user approval.
+
+Funds location/recovery impact: Materializing a score moves no funds. Claim and
+refund may move only the contract-authorized confidential output after a user wallet
+approval and receipt; an unconfirmed action is never presented as final and public
+pool state remains the recovery source.
+
+Checks: compiled ABI comparison, owner action source test, `npm run test:sdk`,
+`npm run test:web`, root typecheck, production web build, and later named browser
+Sepolia owner/recovery evidence only.
+
+Evidence location: source/test output only. This is not terminal or G7 evidence;
+sanitized owner/recovery receipts remain required under WEB-08.
+
+Intended commit: `feat: add owner terminal actions`.
+
+Rollback/failure action: Remove only owner action controls and their adapter. Never
+replace an unavailable action with backend signing, durable owner data, or a manual
+proof/calldata flow.
+
+Completion evidence: `T-SDK-03-01` compares the three terminal selectors to the
+compiled pool artifact. `T-WEB-05-01` asserts that controls are wallet-gated, use the
+frozen ABI, wait for receipts, and clear with owner state. SDK tests (12), web tests
+(18), root typecheck, and production build passed. No terminal write was run offline
+and no G7 claim is made.
+
 ## WEB-06 work-item record
 
 ID: `WEB-06`

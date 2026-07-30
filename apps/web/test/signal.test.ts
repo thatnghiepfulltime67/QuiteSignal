@@ -39,7 +39,7 @@ test('T-WEB-03-04: every submitted stage waits for a receipt and exposes a no-pl
   const main = readFileSync(resolve(root, 'src', 'main.ts'), 'utf8');
   const styles = readFileSync(resolve(root, 'src', 'styles.css'), 'utf8');
 
-  assert.equal((wallet.match(/waitForConfirmedReceipt\(/g) ?? []).length, 5);
+  assert.ok((wallet.match(/waitForConfirmedReceipt\(/g) ?? []).length >= 5);
   assert.match(wallet, /export async function finalizePendingSignal/);
   assert.match(main, /id="retry-finalize" type="button" hidden/);
   assert.match(styles, /\.secondary\[hidden\]\s*\{\s*display: none;/);

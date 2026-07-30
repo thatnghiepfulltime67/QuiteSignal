@@ -490,6 +490,13 @@ a {
   color: var(--petal);
 }
 
+.owner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+
 .owner .primary:hover {
   background: var(--plum);
   color: var(--petal);
