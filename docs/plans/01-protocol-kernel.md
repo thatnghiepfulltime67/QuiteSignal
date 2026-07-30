@@ -1,6 +1,6 @@
 # P1 — Protocol kernel
 
-Status: `completed`
+Status: `in_progress`
 
 ## Objective
 
@@ -230,7 +230,7 @@ artifact writes from a dirty worktree.
 
 ID: `PK-03B`
 
-Status: `in_progress`
+Status: `completed`
 
 Outcome: Implement and Sepolia-test permissionless factory deployment of a single
 configuration-only pool shell with immutable collateral, adapter, deadline, k, and
