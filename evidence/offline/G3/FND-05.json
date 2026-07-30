@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "gate": "G3",
+  "workItem": "FND-05",
+  "phase": "P0",
+  "timestampUtc": "2026-07-30T06:10:36Z",
+  "sourceArtifacts": [
+    "evidence/offline/G3/FND-05-BELOW-K.json",
+    "evidence/sepolia/G3/FND-05-BELOW-K.json",
+    "evidence/offline/G3/FND-05-TIMEOUT.json",
+    "evidence/sepolia/G3/FND-05-TIMEOUT.json",
+    "evidence/offline/G3/FND-05-RECOVERY.json",
+    "evidence/sepolia/G3/FND-05-RECOVERY.json"
+  ],
+  "checks": [
+    {
+      "command": "npm run verify:evidence -- G3",
+      "result": "passed",
+      "summary": "The committed G3 verifier performed Sepolia reads only and validated all three terminal slice artifacts, 47 receipts, runtime/binding context, terminal custody, and source commit reachability."
+    },
+    {
+      "command": "npm run check:offline",
+      "result": "passed",
+      "summary": "Formatting, typechecking, compilation, and secret scanning passed."
+    },
+    {
+      "command": "npm run check:sepolia:read",
+      "result": "passed",
+      "summary": "Sepolia/Nox preflight and committed spend-ledger validation passed."
+    }
+  ],
+  "decision": {
+    "status": "passed",
+    "reason": "FND-05A, FND-05B, and FND-05C satisfy every G3 required case with independent terminal evidence; the combined read verifier passed.",
+    "nextRequiredGate": "G4"
+  },
+  "knownLimitations": [
+    "This combined record is an index over the slice artifacts, not a substitute for the direct Sepolia receipts they reference."
+  ],
+  "reproduction": [
+    "Run npm run verify:evidence -- G3.",
+    "Run npm run check:offline and npm run check:sepolia:read.",
+    "Review evidence/sepolia/G3/FND-05.json and its source artifacts."
+  ]
+}

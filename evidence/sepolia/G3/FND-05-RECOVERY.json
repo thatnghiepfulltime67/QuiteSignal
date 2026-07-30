@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "gate": "G3",
+  "workItem": "FND-05C",
+  "phase": "P0",
+  "timestampUtc": "2026-07-30T05:50:52Z",
+  "sourceCommits": {
+    "correctedRuntime": "ed38e6c43eb8c2617af2fa42193a23defa3c21d4",
+    "lifecycleResume": "4a370c00f413343a5726d828de2996d6afd8e20a",
+    "terminalRecovery": "ae591ca8468d232ea496d0e55d40a75140d2c50a"
+  },
+  "environment": {
+    "class": "sepolia-write-and-read",
+    "chainId": 11155111,
+    "verificationBlock": 11380559,
+    "noxComputeAddress": "0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF",
+    "noxProtocolContracts": "0.2.4",
+    "noxConfidentialContracts": "0.2.2",
+    "noxHandle": "0.1.0-beta.13"
+  },
+  "contracts": {
+    "fixture": {
+      "address": "0x927a2dcb37d6605364a2385fccb1dfc1aa63f41c",
+      "runtimeBytecodeHash": "0x9ed7dd887c4fc51e7cd3b3c2d8248a5c6430706dfffd7156af5455a5441ab880",
+      "runtimeMatchesCompiledArtifact": true
+    },
+    "wrapper": {
+      "address": "0xfe835271300bff1578e52891b9f86e316b4ca3bb",
+      "runtimeBytecodeHash": "0xb3390179de91356d30fad1ae3695a7437b8dd67f2a2b449b4c12d118ff3c49bf",
+      "runtimeMatchesCompiledArtifactTemplate": true,
+      "underlyingMatchesFixture": true
+    },
+    "recoverySpike": {
+      "address": "0x5625f911df84ec43740b036095559e1a9b83a07a",
+      "runtimeBytecodeHash": "0xab45b100bb5ac84b11f4d767e0e971981c878996bce9402b36b322b393ea7272",
+      "runtimeMatchesCompiledArtifactTemplate": true,
+      "wrapperAndUnderlyingBindingsMatch": true
+    },
+    "contextPeer": {
+      "address": "0x072f336b3926559623e2491abec74deb4c5603c6",
+      "runtimeBytecodeHash": "0xab45b100bb5ac84b11f4d767e0e971981c878996bce9402b36b322b393ea7272",
+      "runtimeMatchesCompiledArtifactTemplate": true,
+      "hasNoAcceptedMembers": true
+    }
+  },
+  "transactions": [
+    {
+      "purpose": "close threshold epoch",
+      "hash": "0xd1fc280d2462bbd4c12c43129809492e3ae9e8eb6f45b501c0a984bf9ad73dd8",
+      "blockNumber": 11380485,
+      "expectedStatus": "success"
+    },
+    {
+      "purpose": "request aggregate disclosure",
+      "hash": "0xfe148f8fb2dbfce4130c3daad2fb0b60d95154544ba1d47c0a2f5b70b79b9972",
+      "blockNumber": 11380486,
+      "expectedStatus": "success"
+    },
+    {
+      "purpose": "reject cross-pool aggregate proof context",
+      "hash": "0x96aa1fc38185f3635cbf5c16818b5962b67d2d51d76b4d073b1b2e43b3250804",
+      "blockNumber": 11380488,
+      "expectedStatus": "reverted"
+    },
+    {
+      "purpose": "reject wrong-chain aggregate proof context",
+      "hash": "0x49ea418a0118d0625f85068b0556d5a2a52050ca0c5c4951890d124d929e0fef",
+      "blockNumber": 11380489,
+      "expectedStatus": "reverted"
+    },
+    {
+      "purpose": "reject wrong-epoch aggregate proof context",
+      "hash": "0xdec8e851b941c40f5188beacb8cf2077fbdf138c468400e1dc8da94ccbe3e714",
+      "blockNumber": 11380491,
+      "expectedStatus": "reverted"
+    },
+    {
+      "purpose": "reject substituted aggregate plaintext",
+      "hash": "0xca743c2c09b6e045272be821229d99160bdd68e4c56ed5742e4a5b4f450c5a60",
+      "blockNumber": 11380492,
+      "expectedStatus": "reverted"
+    },
+    {
+      "purpose": "finalize context-bound aggregate and request unwrap",
+      "hash": "0x704c80132ccca933f93e5a1880e2e5e75145b324c849812f7207e7f31be66e32",
+      "blockNumber": 11380493,
+      "expectedStatus": "success"
+    },
+    {
+      "purpose": "reject replayed aggregate proof",
+      "hash": "0xf4c2954927d5b134697e3daa85ebc2c3fa88648c9785fa303a6760d102fa0661",
+      "blockNumber": 11380495,
+      "expectedStatus": "reverted"
+    },
+    {
+      "purpose": "reject early delayed-unwrap recovery",
+      "hash": "0xa388c18a63b48af98367f40e3697b372925f64ba00bab6bd85fb6689f88e772a",
+      "blockNumber": 11380496,
+      "expectedStatus": "reverted"
+    },
+    {
+      "purpose": "permissionless finalize unwrap and rewrap recovery",
+      "hash": "0x44a62e9f60831322585eb7ff158b930126051542318b7d06d59784b97e2b1821",
+      "blockNumber": 11380523,
+      "expectedStatus": "success"
+    },
+    {
+      "purpose": "refund recovered first member",
+      "hash": "0xc697008a2989ddca6d616fc2b1cdcc618fabab5a573ec00a4d75a766cb768774",
+      "blockNumber": 11380524,
+      "expectedStatus": "success"
+    },
+    {
+      "purpose": "reject duplicate first-member refund",
+      "hash": "0x3715f9033b29d4e86a715ad1b6254acf3d8aba5627a0ce338fa641eff71e61e0",
+      "blockNumber": 11380526,
+      "expectedStatus": "reverted"
+    },
+    {
+      "purpose": "refund recovered independent member",
+      "hash": "0xd77f85b3cf6bce865bae3a2d062474358e2ae2f950b9f312056460f0d7ebf468",
+      "blockNumber": 11380527,
+      "expectedStatus": "success"
+    },
+    {
+      "purpose": "reject duplicate independent-member refund",
+      "hash": "0x9b8149b73ed1150f5e0507bf5b1e7bfd04f4f9a0e8c2b2de08c6486138b7d5c4",
+      "blockNumber": 11380528,
+      "expectedStatus": "reverted"
+    }
+  ],
+  "observed": {
+    "participantCount": 2,
+    "terminalState": "Refundable",
+    "aggregatePublicDecryptAccess": {
+      "yes": true,
+      "no": true,
+      "total": false
+    },
+    "aggregateTotalsConserved": true,
+    "observedReleasedAmount": "100",
+    "publicSpikeUnderlyingBalance": "0",
+    "terminalFundsLocation": "PoolConfidentialCustody",
+    "terminalOwnerConfidentialBalancesVerifiedLocally": true,
+    "secondaryRecoveryRecordDeletedAfterVerification": true
+  },
+  "requirementsCovered": [
+    "T-FND-05-PROOF-01",
+    "T-FND-05-RECOVERY-01",
+    "P1",
+    "P3",
+    "P4",
+    "P7",
+    "I1",
+    "I2",
+    "I3",
+    "I4",
+    "I7",
+    "I8",
+    "I10"
+  ],
+  "privacyAndCustody": {
+    "plaintextCommitted": false,
+    "rawHandlesCommitted": false,
+    "proofsOrCalldataCommitted": false,
+    "walletSignaturesCommitted": false,
+    "fixtureHasExternalValue": false,
+    "publicDecryptionScope": "Only the aggregate YES and NO handles received public-decrypt permission after the threshold. The aggregate total and all owner-shaped handles remained outside public-decrypt scope. This evidence records ACL booleans and conservation only.",
+    "terminalRecovery": "Accepted deterministic fixture collateral remained confidential pool custody until the valid proof requested unwrap. Delayed permissionless recovery measured the released amount, immediately rewrapped all of it, then each recorded owner completed one confidential refund before the local secondary recovery record was deleted."
+  },
+  "knownLimitations": [
+    "FND-05A and FND-05B retain their own independent terminal artifacts; this FND-05C artifact neither replaces nor weakens them.",
+    "The evidence records public receipt references and state observations only. It deliberately excludes private test-actor material and all confidential inputs, handles, proofs, calldata, and signatures."
+  ],
+  "reproduction": [
+    "Run npm run compile with the committed workspace toolchain.",
+    "Run npm run verify:evidence -- G3 using a configured Ethereum Sepolia RPC; it performs reads only and verifies this artifact, compiled runtimes, bindings, all referenced receipts, spend records, terminal state, and local-record deletion.",
+    "Run npm run budget:status and inspect the referenced sanitized Sepolia receipts without exposing local recovery material."
+  ]
+}

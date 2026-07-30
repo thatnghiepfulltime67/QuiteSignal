@@ -363,7 +363,7 @@ append-only Sepolia spend ledger.
 
 ID: `FND-05`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Prove an isolated, real Nox confidential-cohort lifecycle on Ethereum
 Sepolia: distinct-address commits with confidential collateral, below-k refund with
@@ -390,7 +390,8 @@ narrowly required protocol test/model files,
 combined `evidence/offline/G3/FND-05.json` and
 `evidence/sepolia/G3/FND-05.json`, `evidence/reports/G3-summary.md`,
 `evidence/sepolia/spend-ledger.json`, `docs/plans/evidence-ledger.md`, and this
-work-package record. The historical monolithic runner is retained only for its
+work-package record, plus `ops/scripts/verify-evidence.mts` and its package
+command. The historical monolithic runner is retained only for its
 documented recovery context; it cannot create new G3 gate evidence. Findings, risk,
 source, or decision records are added when live behavior changes an existing
 conclusion.
@@ -424,7 +425,7 @@ evidence and the combined read verifier passes.
 | --------- | ------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `FND-05A` | `complete`    | `T-FND-05-BELOW-K-01`                          | One owner refund once; no aggregate disclosure; no secondary actor required.           |
 | `FND-05B` | `complete`    | `T-FND-05-AGGREGATE-01`, `T-FND-05-TIMEOUT-01` | Permissionless timeout cancellation and both owner refunds once.                       |
-| `FND-05C` | `in_progress` | `T-FND-05-PROOF-01`, `T-FND-05-RECOVERY-01`    | Rewrapped confidential custody and both owner refunds once after delayed finalization. |
+| `FND-05C` | `complete`    | `T-FND-05-PROOF-01`, `T-FND-05-RECOVERY-01`    | Rewrapped confidential custody and both owner refunds once after delayed finalization. |
 
 ### FND-05A work-item record
 
@@ -618,6 +619,43 @@ early-recovery checks. This is an orchestration correction and does not relax an
 G3 acceptance condition.
 
 Unwrap-resume intended commit: `fix: resume delayed unwrap recovery`.
+
+Terminal-evidence verification sub-slice: The corrected fixture is terminal only
+after the delayed unwrap receipt, exact measured rewrap, two successful owner
+refunds, and their duplicate-refund rejections. Add the read-only
+`ops/scripts/verify-evidence.mts` verifier and `npm run verify:evidence -- G3`.
+It reads the committed sanitized FND-05A, FND-05B, and FND-05C evidence plus
+Ethereum Sepolia only; it must validate artifact shape, commit reachability,
+historical runtime hashes and corrected runtime templates/bindings, every recorded
+lifecycle receipt status sequence, the terminal `Refundable` states, aggregate ACL
+tuples, released-collateral measurement, zero public spike balance, and deletion of
+the ignored local secondary-actor record. It has no signer, Nox handle client,
+contract write, proof, plaintext, handle, calldata, signature, or key output. Its
+outputs are the verifier source, the package command, and the sanitized FND-05C and
+combined G3 evidence artifacts. Prerequisites are the already-terminal corrected
+fixture and append-only spend records; failure leaves the recorded fixture unchanged
+and blocks G3. Checks are `npm run compile`,
+`npm run verify:evidence -- G3`, `npm run check:offline`,
+`npm run check:sepolia:read`, `npm run scan:secrets`, and `git diff --check`.
+The only funds location it observes is terminal confidential pool custody; any
+other result is a G3 blocker. Intended commit: `test: verify aggregate recovery
+evidence`.
+
+Terminal completion: The corrected recovery fixture reached `Refundable` after the
+successful delayed recovery-and-rewrap receipt at block `11380523`, successful
+owner refunds at `11380524` and `11380527`, and duplicate-refund rejections at
+`11380526` and `11380528`. `npm run verify:evidence -- G3` passed at block
+`11380652` without a write. It verified all three terminal FND-05 slices and 47
+receipt statuses, including all fourteen FND-05C lifecycle receipts; matching
+historical runtime hashes and corrected runtime templates/bindings; two members;
+YES/NO-only public aggregate access; aggregate conservation; exact released
+collateral; zero public spike balance; terminal confidential pool custody; and
+secondary-record deletion. The terminal
+artifacts are `evidence/offline/G3/FND-05-RECOVERY.json` and
+`evidence/sepolia/G3/FND-05-RECOVERY.json`; the combined G3 artifacts and report
+are `evidence/{offline,sepolia}/G3/FND-05.json` and
+`evidence/reports/G3-summary.md`. FND-05C and G3 are complete. G4 is the next
+eligible work item; no adapter work has started.
 
 Correction intended commit: `fix: remove invalid unwrap request ACL`.
 Stale-fixture recovery intended commit: `test: recover stale aggregate fixture`.
@@ -1017,7 +1055,7 @@ docs/operations/03-decision-log.md
 - [ ] G0 passed: frozen npm toolchain and Sepolia read preflight are reproducible.
 - [x] G1 passed: arithmetic, context binding, ACL, and persistence pass directly on Sepolia.
 - [x] G2 passed: confidential asset success and recovery conserve funds.
-- [ ] G3 passed: aggregate-only disclosure and proof/recovery semantics pass.
+- [x] G3 passed: aggregate-only disclosure and proof/recovery semantics pass.
 - [ ] G4 passed: one unchanged public protocol and adapter boundary are selected.
 - [ ] Evidence ledger contains validated, sanitized records for G0–G4.
 - [ ] All P0 findings, risks, and architecture consequences are documented.

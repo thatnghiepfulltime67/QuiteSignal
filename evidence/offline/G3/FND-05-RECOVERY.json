@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "gate": "G3",
+  "workItem": "FND-05C",
+  "phase": "P0",
+  "timestampUtc": "2026-07-30T06:10:36Z",
+  "environment": {
+    "class": "offline-static-and-sepolia-read-verification",
+    "node": "24.18.0",
+    "npm": "11.16.0",
+    "hardhat": "3.11.1",
+    "solidity": "0.8.35",
+    "noxProtocolContracts": "0.2.4",
+    "noxConfidentialContracts": "0.2.2",
+    "noxHandle": "0.1.0-beta.13"
+  },
+  "checks": [
+    {
+      "command": "npm run compile",
+      "result": "passed",
+      "summary": "Strict TypeScript checking and the Solidity build passed with the independent G3 read verifier included."
+    },
+    {
+      "command": "npm run verify:evidence -- G3",
+      "result": "passed",
+      "summary": "A read-only Ethereum Sepolia verifier checked all three FND-05 slice artifacts, source commit reachability, historical runtime hashes and corrected runtime templates/bindings, 47 receipt statuses, spend records, terminal states, aggregate ACLs, conservation, and local-record deletion."
+    },
+    {
+      "command": "npm run check:offline",
+      "result": "passed",
+      "summary": "Formatting, typechecking, Solidity compilation, and the tracked-file and history secret scan passed."
+    },
+    {
+      "command": "npm run check:sepolia:read",
+      "result": "passed",
+      "summary": "The configured endpoint reported Ethereum Sepolia and the live NoxCompute runtime; 378 recorded writes consume 207971258466474401 wei, leaving 292028741533525599 wei within the committed allowance."
+    }
+  ],
+  "requirementsCovered": [
+    "T-FND-05-PROOF-01",
+    "T-FND-05-RECOVERY-01",
+    "P1",
+    "P3",
+    "P4",
+    "P7",
+    "I1",
+    "I2",
+    "I3",
+    "I4",
+    "I7",
+    "I8",
+    "I10"
+  ],
+  "knownLimitations": [
+    "Offline checks validate only static code, formatting, typing, compilation, evidence structure, and read-only chain observation. All contract, Nox, ACL, confidential-asset, lifecycle, proof, and recovery conclusions remain the referenced Ethereum Sepolia evidence.",
+    "FND-05A and FND-05B have separate evidence because below-k and pre-unwrap timeout are independently terminal requirements."
+  ],
+  "reproduction": [
+    "Use Node 24.18.0 and npm 11.16.0 with the committed lockfile and local Sepolia RPC configuration.",
+    "Run npm run check:offline.",
+    "Run npm run verify:evidence -- G3; the command is read-only and never requires or prints a private key.",
+    "Inspect evidence/sepolia/G3/FND-05-RECOVERY.json and the referenced receipt hashes without exposing recovery material."
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "gate": "G3",
+  "workItem": "FND-05",
+  "phase": "P0",
+  "timestampUtc": "2026-07-30T06:10:36Z",
+  "environment": {
+    "class": "sepolia-write-and-read",
+    "chainId": 11155111,
+    "verificationBlock": 11380652,
+    "noxComputeAddress": "0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF"
+  },
+  "completedSlices": [
+    {
+      "workItem": "FND-05A",
+      "evidence": "evidence/sepolia/G3/FND-05-BELOW-K.json",
+      "result": "Below-k closure entered Refundable without public aggregate access; one confidential owner refund succeeded and a duplicate refund reverted."
+    },
+    {
+      "workItem": "FND-05B",
+      "evidence": "evidence/sepolia/G3/FND-05-TIMEOUT.json",
+      "result": "At threshold, only YES/NO became publicly decryptable; permissionless pre-unwrap timeout cancellation and both confidential owner refunds succeeded."
+    },
+    {
+      "workItem": "FND-05C",
+      "evidence": "evidence/sepolia/G3/FND-05-RECOVERY.json",
+      "result": "Context-bound proof finalization, replay and early-recovery rejection, delayed permissionless unwrap finalization, exact rewrap, and both one-time confidential refunds succeeded."
+    }
+  ],
+  "combinedVerification": {
+    "command": "npm run verify:evidence -- G3",
+    "result": "passed",
+    "verifiedReceiptCount": 47,
+    "verifiedRecoveryReceiptCount": 14,
+    "verifiedCorrectedRecoveryFixture": "0x927a2dcb37d6605364a2385fccb1dfc1aa63f41c",
+    "verifiedRecoverySpike": "0x5625f911df84ec43740b036095559e1a9b83a07a",
+    "terminalState": "Refundable",
+    "terminalFundsLocation": "PoolConfidentialCustody"
+  },
+  "requirementsCovered": [
+    "T-FND-05-BELOW-K-01",
+    "T-FND-05-AGGREGATE-01",
+    "T-FND-05-PROOF-01",
+    "T-FND-05-TIMEOUT-01",
+    "T-FND-05-RECOVERY-01",
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6",
+    "P7",
+    "I1",
+    "I2",
+    "I3",
+    "I4",
+    "I7",
+    "I8",
+    "I10"
+  ],
+  "decision": {
+    "status": "passed",
+    "reason": "All three independently terminal FND-05 slices have sanitized Ethereum Sepolia evidence and their combined read verifier passed without a new write.",
+    "nextRequiredGate": "G4"
+  },
+  "knownLimitations": [
+    "G3 proves only the feasibility spike lifecycle. It does not select or authorize an external protocol adapter; that is the distinct G4 decision."
+  ],
+  "reproduction": [
+    "Run npm run verify:evidence -- G3.",
+    "Inspect the three named FND-05 Sepolia artifacts and the append-only spend ledger.",
+    "Run npm run check:offline and npm run check:sepolia:read."
+  ]
+}

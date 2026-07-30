@@ -39,7 +39,7 @@ production-key configuration.
 | `npm run deploy:sepolia` | sepolia-write | Confirmed deployment only | G6 |
 | `npm run test:sepolia:write -- <case>` | sepolia-write | One named live gate case | G1–G6 |
 | `npm run verify:deployment` | sepolia-read | Sources, runtime hashes, ABI/address sync | G6/G8 |
-| `npm run verify:evidence` | sepolia-read | Evidence schema, receipts, commit/code context | every gate/G8 |
+| `npm run verify:evidence -- G3` | sepolia-read | G3 evidence shape, receipts, commit reachability, runtime/binding context, terminal custody | G3 |
 | `npm run scan:secrets` | offline | Repository/history/generated evidence scan | every commit/G8 |
 | `npm run scan:dependencies` | network/read | Advisories and licenses | G0/G8 |
 | `npm run check:offline` | offline | Complete no-chain merge gate | G0–G8 |
