@@ -49,6 +49,19 @@ at blocks `11381269` through `11381278`; that pool's collateral is confidential 
 custody. Mismatch and timeout evidence is absent, so these receipts are partial
 spend history only until the bounded resume completes its named custody cases.
 
+PK-04 is now a completed G5 component. Source commits `edc1e60` through `be918fb`
+staged one Sepolia write at a time, then `be918fb` read and recorded
+`evidence/{offline,sepolia}/G5/PK-04-COMMIT.json` at block `11381565`. The artifact
+binds fixture `0x6ddec1152764df0e18ac7de3eecf51a78b3a508d`, unchanged wrapper
+`0xf578b307c50950d8bb20bedb827033e9549dcc44`, adapter
+`0x5656a86dcb5a52651c441b6ebaf215762953db02`, factory
+`0xbf2729bca968f6d91822568a0939706cc66535d8`, and the four accepted/mismatch/
+uncalled/callback-timeout pools. It verifies compiled runtime templates, all 22
+successful receipts and ledger entries, strict callback boundary rejections, final
+owner viewer ACL, terminal confidential conservation, recovery terminal states, and
+zero native balances without storing confidential values, handles, or proofs. G5
+remains `not_run` until PK-05 through PK-09 and the protocol verifier pass.
+
 ### G3 completion history
 
 The G3 row is `passed`. The historical FND-05C detail below is superseded by the latest

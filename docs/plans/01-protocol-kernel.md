@@ -1,6 +1,6 @@
 # P1 — Protocol kernel
 
-Status: `in_progress`
+Status: `completed`
 
 ## Objective
 
@@ -405,6 +405,15 @@ The staged negative-branch fixtures use distinct public `kMin` values solely to
 produce distinct immutable test configurations through the factory's deliberate
 one-pool-per-configuration constraint. They do not represent multiple markets in
 one pool or change the production one-pool/one-market/one-epoch rule.
+
+Completion evidence: `evidence/{offline,sepolia}/G5/PK-04-COMMIT.json` was
+independently read on Sepolia after source commit `be918fb`. It binds the compiled
+fixture, unchanged inherited wrapper, adapter, factory, and four isolated pools;
+checks every recorded receipt against the spend ledger; verifies terminal public
+state, owner viewer access, confidential owner conservation, zero native balances,
+and direct callback/operator/native-value rejections. The accepted pool retains
+only its documented confidential collateral. PK-04 is a completed G5 component,
+not G5 itself.
 
 ## Sequencing
 
