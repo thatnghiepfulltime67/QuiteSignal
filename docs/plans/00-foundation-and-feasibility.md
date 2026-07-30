@@ -580,6 +580,19 @@ and deleted the ignored actor record.
 Lifecycle waits now use bounded direct `eth_getBlockByNumber("latest")` requests
 before and after a timestamp-derived wait, independent of client cache or polling.
 
+The ninth fresh attempt from `7fb9f7a` was deliberately stopped after setup at
+blocks `11379777` through `11379786`, before any confidential commitment, Nox
+request, lifecycle transition, or recovery action. It deployed fixture
+`0xf5f5fc79772431696a99a5d6aa1c47804f90a771`, unchanged wrapper
+`0x50aa1fa64f3b41b7a89de895f101ff1d8358a755`, and isolated spikes
+`0xeb4546c180911f088dff19b0c9471601f0b11d96`,
+`0x4440bbcd29f088521bbb9355c1e46156b76b2fdc`, and
+`0xc91afc510d8ef06c980e6b115f1914dcf60720b3`. No spike received confidential
+collateral. The unused local actor recovery record was deleted; this setup is
+excluded from G3 evidence. Its receipts are retained in the spend ledger. The next
+implementation replaces the monolithic runner with independently terminal Sepolia
+evidence slices.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

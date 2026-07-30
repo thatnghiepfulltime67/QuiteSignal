@@ -167,3 +167,18 @@ contract custody and remains excluded from G3 evidence.
 Lifecycle waits now use bounded direct `eth_getBlockByNumber("latest")` requests
 before and after a timestamp-derived wait. This avoids client-cache and polling-loop
 semantics; an unavailable or malformed RPC response fails the run.
+
+The ninth fresh attempt from source commit `7fb9f7a` stopped intentionally after
+setup at blocks `11379777` through `11379786`, before any confidential commitment,
+Nox request, aggregate-state transition, or recovery action. It deployed fixture
+`0xf5f5fc79772431696a99a5d6aa1c47804f90a771`, unchanged wrapper
+`0x50aa1fa64f3b41b7a89de895f101ff1d8358a755`, and isolated below-k, timeout, and
+recovery spikes `0xeb4546c180911f088dff19b0c9471601f0b11d96`,
+`0x4440bbcd29f088521bbb9355c1e46156b76b2fdc`, and
+`0xc91afc510d8ef06c980e6b115f1914dcf60720b3`. The writes are limited to those
+deployments, deterministic fixture preparation, and bounded gas funding for an
+unused secondary actor. No spike received confidential collateral and no actor
+submitted a confidential input. The unused, ignored actor recovery record was
+deleted. This setup is excluded from G3 evidence; its public receipts remain in the
+append-only spend ledger. The next implementation replaces the monolithic runner
+with terminal, independently recoverable Sepolia evidence slices.
