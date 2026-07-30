@@ -33,6 +33,7 @@ production-key configuration.
 | `npm run test:nox:sepolia -- <case>`         | sepolia-write                | Named ACL/compute/proof/asset case                                                          | G1–G3/G5/G8     |
 | `npm run test:adapter:sepolia -- [--write]`  | sepolia-read / sepolia-write | Dry-run or confirmed immutable direct-adapter cases                                         | PK-03A/G5       |
 | `npm run test:factory:sepolia -- [--write]`  | sepolia-read / sepolia-write | Dry-run, confirmed CREATE2 shell deployment, or read-only verification                      | PK-03B/G5       |
+| `npm run test:commit:sepolia -- [--write]`   | sepolia-read / sepolia-write | Bounded real ERC-7984/Nox confidential commit and recovery cases                            | PK-04/G5        |
 | `npm run test:adversarial:sepolia -- <case>` | sepolia-write                | Replay, unauthorized, timeout, stale feed, reentrancy case                                  | G5/G8           |
 | `npm run test:e2e:sepolia`                   | sepolia-write                | Full lifecycle across deployed modules                                                      | G5–G8           |
 | `npm run test:web`                           | offline                      | Component, accessibility, and deterministic UI-state tests                                  | G7/G8           |

@@ -23,6 +23,7 @@
     "test:unit": "node --test --test-reporter=spec",
     "test:interfaces": "npm run --workspace @quitesignal/protocol test:interfaces",
     "test:adapter:sepolia": "npm run --workspace @quitesignal/protocol test:adapter:sepolia --",
+    "test:commit:sepolia": "npm run --workspace @quitesignal/protocol test:commit:sepolia --",
     "test:factory:sepolia": "npm run --workspace @quitesignal/protocol test:factory:sepolia --",
     "test:model": "npm run --workspace @quitesignal/protocol test:model && npm run --workspace @quitesignal/domain test:model",
     "test:nox:sepolia": "npm run --workspace @quitesignal/protocol test:nox:sepolia --",
