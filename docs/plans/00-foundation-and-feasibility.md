@@ -424,7 +424,7 @@ evidence and the combined read verifier passes.
 | --------- | ------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `FND-05A` | `complete`    | `T-FND-05-BELOW-K-01`                          | One owner refund once; no aggregate disclosure; no secondary actor required.           |
 | `FND-05B` | `complete`    | `T-FND-05-AGGREGATE-01`, `T-FND-05-TIMEOUT-01` | Permissionless timeout cancellation and both owner refunds once.                       |
-| `FND-05C` | `not_started` | `T-FND-05-PROOF-01`, `T-FND-05-RECOVERY-01`    | Rewrapped confidential custody and both owner refunds once after delayed finalization. |
+| `FND-05C` | `in_progress` | `T-FND-05-PROOF-01`, `T-FND-05-RECOVERY-01`    | Rewrapped confidential custody and both owner refunds once after delayed finalization. |
 
 ### FND-05A work-item record
 
@@ -495,6 +495,54 @@ The previous coupled runner is supporting orchestration and has been replaced by
 bounded slices; further orchestration features that do not improve those acceptance
 criteria are deferred. Any future removal must follow Plan §2.2 and cannot waive
 `T-FND-05-AGGREGATE-01` or `T-FND-05-TIMEOUT-01`.
+
+### FND-05C work-item record
+
+Outcome: Prove aggregate proof-context binding and delayed, permissionless unwrap
+recovery on one fresh Ethereum Sepolia fixture. Two independently signing
+confidential members must reach the k-gated aggregate state; only aggregate YES/NO
+may become publicly decryptable. The harness must reject a cross-pool, wrong-chain,
+wrong-epoch, substituted, and replayed aggregate proof; it must reject recovery
+before the delay, then measure the actual unwrap collateral, rewrap all of it into
+confidential custody, and refund each owner once.
+
+Prerequisites: FND-05A and FND-05B terminal evidence is recorded; G1 and G2 remain
+passed. The context peer is an isolated no-custody contract used only to derive a
+different pool context. A bounded-gas secondary actor is stored only in an ignored
+local recovery record and is deleted only after both terminal refunds verify.
+
+Output files: `modules/protocol/scripts/feasibility/run-aggregate-recovery-sepolia.mts`,
+`modules/protocol/scripts/feasibility/run-fnd05-aggregate-recovery-sepolia.mts`,
+the required dispatcher/test support,
+`evidence/offline/G3/FND-05-RECOVERY.json`,
+`evidence/sepolia/G3/FND-05-RECOVERY.json`, the G3 report, and the append-only
+Sepolia spend ledger.
+
+Checks: `npm run compile`,
+`npm run test:nox:sepolia -- FND-05-RECOVERY --dry-run`, the confirmed Sepolia
+command only after its reviewed dry run, then `npm run budget:status`,
+`npm run check:offline`, `npm run check:sepolia:read`, `npm run scan:secrets`, and
+`git diff --check`.
+
+Privacy impact and funds: both artificial inputs are encrypted before submission;
+the evidence records neither plaintext, handles, proofs, calldata, signatures, nor
+the local secondary key. Accepted fixture collateral remains confidential pool
+custody until the valid proof starts an unwrap, then is burn-pending until delayed
+permissionless recovery measures and rewraps it. Each owner refunds once only after
+the spike returns to `Refundable`. Any failure preserves the local recovery record,
+records the exact public fixture state, and blocks G3; it never substitutes a mock
+gateway, a trusted relayer, or a custodial recovery service.
+
+Evidence path: `evidence/offline/G3/FND-05-RECOVERY.json` and
+`evidence/sepolia/G3/FND-05-RECOVERY.json`.
+
+Rollback/failure action: Revert the isolated runner slice only. The deployed
+fixtures contain deterministic valueless test collateral; a non-terminal fixture is
+recovered with the retained actor record before another fresh run. A proof-context,
+conservation, rewrap, or terminal-refund failure is a G3 blocker, not an optional
+feature eligible for triage.
+
+Intended commit: `test: isolate aggregate recovery evidence`.
 
 Privacy impact: artificial test values are encrypted before submission and no
 owner-shaped handle is marked publicly decryptable. Public permission is granted
