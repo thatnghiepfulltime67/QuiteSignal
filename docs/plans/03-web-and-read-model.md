@@ -806,6 +806,14 @@ No transaction was sent and no G7 claim is made. R-25 records this release block
 the next permitted action is the documented external-wallet run against a fresh open
 release when such approval is available.
 
+Current readiness note: DEP-02 has since passed its commit deadline. At Sepolia block
+`11384319`, the explicit `DEP-03` command completed a read-only plan with a guarded
+maximum cost of `13708638480017808` wei against `459756084534477420` wei remaining
+in the committed ledger. It created no contract, manifest, ledger entry, or
+active-release change. A fresh revision must be planned and deployed only once an
+externally unlocked EIP-1193 Sepolia wallet is ready to complete the named browser
+journey before the new pool deadline.
+
 ## WEB-08-READ-01 work-item record
 
 ID: `WEB-08-READ-01`
