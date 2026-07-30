@@ -489,8 +489,9 @@ read-only result; resolution grace may transition only an unresolved pool to
 `REFUNDABLE`.
 
 Output files: `modules/protocol/contracts/core/QuietSignalPool.sol`, ABI tests if
-needed, `modules/protocol/scripts/core/run-pk06-resolution-sepolia.mts`, package
-scripts, `evidence/{offline,sepolia}/G5/PK-06-RESOLUTION.json`, spend ledger,
+needed, the `PK-06` mode of
+`modules/protocol/scripts/core/run-pk05-aggregate-sepolia.mts`, package scripts,
+`evidence/{offline,sepolia}/G5/PK-06-RESOLUTION.json`, spend ledger,
 protocol/API/risk/traceability documents, and this record.
 
 Acceptance criteria: Early aggregate timeout and resolution grace revert. A valid,
@@ -498,6 +499,13 @@ fresh, positive adapter round is the only source of the binary winner, round id,
 answer; no caller input selects a result. Wrong/invalid adapter output, zero winning
 aggregate, or unavailable round preserves `RESOLUTION_PENDING`. Both recovery paths
 are permissionless, have no asset transfer, and preserve confidential pool custody.
+
+The shared staged Sepolia harness uses three distinct PK-06 pools: `timeout` proves
+the aggregate-pending guard and elapsed timeout recovery; `grace` proves unavailable
+adapter state, the early grace guard, and elapsed grace recovery; `success` proves
+adapter-only settlement after the immutable observation time. Each has two real
+encrypted commitments and distinct immutable configuration, so no mocked state
+transition substitutes for lifecycle evidence.
 
 Privacy/custody impact: Resolution adds only public feed facts already returned by
 the immutable adapter. It does not decrypt any new Nox handle or reveal owner,

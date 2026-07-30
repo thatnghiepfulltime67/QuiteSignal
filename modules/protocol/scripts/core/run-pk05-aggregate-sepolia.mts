@@ -12,7 +12,9 @@ import {
   encodeFunctionData,
   http,
   isAddress,
+  keccak256,
   parseEther,
+  toHex,
   type Abi,
   type Address,
   type Hash,
@@ -197,10 +199,13 @@ async function main(): Promise<void> {
   loadEnvironment();
   const stage = argument('stage');
   const write = process.argv.includes('--write');
-  if (!stage) fail('PK-05 requires --stage.');
+  const workItem = argument('work-item') ?? 'PK-05';
+  if (workItem !== 'PK-05' && workItem !== 'PK-06') fail('The work item must be PK-05 or PK-06.');
+  if (!stage) fail(`${workItem} requires --stage.`);
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
   const primaryKey = process.env.SEPOLIA_PRIVATE_KEY as Hex | undefined;
-  if (!rpcUrl || !primaryKey) fail('PK-05 requires Sepolia RPC and primary signer configuration.');
+  if (!rpcUrl || !primaryKey)
+    fail(`${workItem} requires Sepolia RPC and primary signer configuration.`);
   if (write && process.env.CONFIRM_SEPOLIA_WRITE !== 'yes')
     fail('Confirmed writes require CONFIRM_SEPOLIA_WRITE=yes.');
   const publicClient = createPublicClient({
@@ -248,7 +253,7 @@ async function main(): Promise<void> {
   console.log(
     JSON.stringify({
       mode: write ? 'confirmed-write' : 'dry-run',
-      workItem: 'PK-05',
+      workItem,
       stage,
       remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpend(ledger)).toString(),
     }),
@@ -264,7 +269,7 @@ async function main(): Promise<void> {
     receipt: { blockNumber: bigint; gasUsed: bigint; effectiveGasPrice: bigint },
   ) => {
     appendSpend(ledger, {
-      workItemId: 'PK-05',
+      workItemId: workItem,
       phase: 'P1',
       sender,
       transactionHash: hash,
@@ -275,7 +280,7 @@ async function main(): Promise<void> {
     });
     console.log(
       JSON.stringify({
-        workItem: 'PK-05',
+        workItem,
         stage,
         purpose,
         transactionHash: hash,
@@ -295,7 +300,7 @@ async function main(): Promise<void> {
     const maxFeePerGas =
       (await publicClient.estimateFeesPerGas()).maxFeePerGas ?? (await publicClient.getGasPrice());
     if (totalSpend(ledger) + gas * maxFeePerGas > BigInt(ledger.maxTotalSpendWei))
-      fail('The next PK-05 write exceeds budget.');
+      fail(`The next ${workItem} write exceeds budget.`);
     const hash = await wallet.sendTransaction({ account, to, data, value, gas, maxFeePerGas });
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     record(account.address, purpose, hash, receipt);
@@ -342,13 +347,14 @@ async function main(): Promise<void> {
   }
   if (stage === 'deploy-adapter') {
     const block = await publicClient.getBlock();
+    const observationDelay = workItem === 'PK-06' ? 1_500n : 900n;
     console.log(
       JSON.stringify({
         adapter: await deploy(
           encodeDeployData({
             abi: artifacts.adapter.abi,
             bytecode: artifacts.adapter.bytecode,
-            args: [FEED, true, 1n, block.timestamp + 900n, 2_592_000n],
+            args: [FEED, true, 1n, block.timestamp + observationDelay, 2_592_000n],
           }),
           'deploy adapter',
         ),
@@ -372,8 +378,10 @@ async function main(): Promise<void> {
     const wrapper = requiredAddress('wrapper');
     const adapter = requiredAddress('adapter');
     const caseName = argument('case');
-    if (caseName !== 'below-k' && caseName !== 'threshold')
-      fail('PK-05 pool case must be below-k or threshold.');
+    const validCases =
+      workItem === 'PK-05' ? ['below-k', 'threshold'] : ['timeout', 'grace', 'success'];
+    if (!caseName || !validCases.includes(caseName))
+      fail(`${workItem} pool case must be one of: ${validCases.join(', ')}.`);
     const observation = (await publicClient.readContract({
       address: adapter,
       abi: artifacts.adapter.abi,
@@ -382,16 +390,22 @@ async function main(): Promise<void> {
     const config: Config = {
       confidentialCollateral: wrapper,
       resolutionAdapter: adapter,
-      deadline: observation - 180n,
+      deadline: observation - (workItem === 'PK-06' ? 300n : 180n),
       commitTimeout: 30n,
       kMin: 2,
-      aggregateTimeout: caseName === 'below-k' ? 600n : 601n,
-      resolutionGrace: 600n,
+      aggregateTimeout:
+        workItem === 'PK-05'
+          ? caseName === 'below-k'
+            ? 600n
+            : 601n
+          : caseName === 'timeout'
+            ? 30n
+            : caseName === 'grace'
+              ? 31n
+              : 32n,
+      resolutionGrace: workItem === 'PK-06' ? 30n : 600n,
     };
-    const salt =
-      caseName === 'below-k'
-        ? '0x706b30352d62656c6f772d6b0000000000000000000000000000000000000000'
-        : '0x706b30352d7468726573686f6c64000000000000000000000000000000000000';
+    const salt = keccak256(toHex(`quiet-signal/${workItem}/${caseName}/v1`));
     await send(
       primary,
       primaryWallet,
@@ -428,11 +442,12 @@ async function main(): Promise<void> {
   }
   if (stage === 'mint') {
     const fixture = requiredAddress('fixture');
+    const collateral = workItem === 'PK-06' ? 180n : 100n;
     await send(
       primary,
       primaryWallet,
       fixture,
-      calldata(artifacts.fixture, 'mint', [primary.address, 100n]),
+      calldata(artifacts.fixture, 'mint', [primary.address, collateral]),
       'mint fixture',
     );
     return;
@@ -440,29 +455,36 @@ async function main(): Promise<void> {
   if (stage === 'approve') {
     const fixture = requiredAddress('fixture');
     const wrapper = requiredAddress('wrapper');
+    const collateral = workItem === 'PK-06' ? 180n : 100n;
     await send(
       primary,
       primaryWallet,
       fixture,
-      calldata(artifacts.fixture, 'approve', [wrapper, 100n]),
+      calldata(artifacts.fixture, 'approve', [wrapper, collateral]),
       'approve wrapper',
     );
     return;
   }
   if (stage === 'wrap') {
     const wrapper = requiredAddress('wrapper');
+    const collateral = workItem === 'PK-06' ? 180n : 100n;
     await send(
       primary,
       primaryWallet,
       wrapper,
-      calldata(artifacts.wrapper, 'wrap', [primary.address, 100n]),
+      calldata(artifacts.wrapper, 'wrap', [primary.address, collateral]),
       'wrap collateral',
     );
     return;
   }
   if (stage === 'distribute') {
     const wrapper = requiredAddress('wrapper');
-    const input = (await primaryHandles.encryptInput(40n, 'uint256', wrapper)) as EncryptedValue;
+    const secondaryCollateral = workItem === 'PK-06' ? 60n : 40n;
+    const input = (await primaryHandles.encryptInput(
+      secondaryCollateral,
+      'uint256',
+      wrapper,
+    )) as EncryptedValue;
     await send(
       primary,
       primaryWallet,
@@ -602,10 +624,81 @@ async function main(): Promise<void> {
     );
     return;
   }
-  fail(`Unknown PK-05 stage: ${stage}`);
+  if (stage === 'assert-early-recovery') {
+    const recovery = argument('recovery');
+    if (recovery === 'aggregate') {
+      await expectRevert(
+        () =>
+          publicClient.call({
+            account: primary.address,
+            to: pool,
+            data: calldata(artifacts.pool, 'cancelBeforeResolution'),
+          }),
+        'Early aggregate timeout recovery',
+      );
+      console.log(JSON.stringify({ pool, recovery, rejected: true }));
+      return;
+    }
+    if (recovery === 'resolution') {
+      await expectRevert(
+        () =>
+          publicClient.call({
+            account: primary.address,
+            to: pool,
+            data: calldata(artifacts.pool, 'cancelAfterResolutionGrace'),
+          }),
+        'Early resolution-grace recovery',
+      );
+      await expectRevert(
+        () =>
+          publicClient.call({
+            account: primary.address,
+            to: pool,
+            data: calldata(artifacts.pool, 'settle'),
+          }),
+        'Unavailable immutable adapter result',
+      );
+      console.log(JSON.stringify({ pool, recovery, rejected: true }));
+      return;
+    }
+    fail('PK-06 early recovery assertion requires --recovery=aggregate or --recovery=resolution.');
+  }
+  if (stage === 'settle') {
+    await send(
+      primary,
+      primaryWallet,
+      pool,
+      calldata(artifacts.pool, 'settle'),
+      'settle immutable adapter result',
+    );
+    return;
+  }
+  if (stage === 'cancel-before-resolution') {
+    await send(
+      primary,
+      primaryWallet,
+      pool,
+      calldata(artifacts.pool, 'cancelBeforeResolution'),
+      'cancel elapsed aggregate request',
+    );
+    return;
+  }
+  if (stage === 'cancel-after-resolution-grace') {
+    await send(
+      primary,
+      primaryWallet,
+      pool,
+      calldata(artifacts.pool, 'cancelAfterResolutionGrace'),
+      'cancel elapsed resolution grace',
+    );
+    return;
+  }
+  fail(`Unknown ${workItem} stage: ${stage}`);
 }
 
 main().catch((error: unknown) => {
-  console.error(`PK-05 stage failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  console.error(
+    `Sepolia lifecycle stage failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+  );
   process.exitCode = 1;
 });
