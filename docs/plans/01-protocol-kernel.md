@@ -375,9 +375,13 @@ Partial-run record: Source commit `9d986fb` deployed a fresh fixture
 `0x9e2d1b5c8de8a774de20c76402e0ca05acf3b0da`, unchanged inherited wrapper
 `0x3aede623df09d33c1f33a5c46953920b6ac10a50`, and immutable adapter
 `0x8bd72fb95ad3312b6c71420831f422dc4d39a875` at blocks `11381264` through
-`11381267`, then stopped before factory deployment. No fixture mint, wrap, callback,
-or pool custody action occurred; the three deployments have no asset recovery need.
-The resume runner must reuse these exact addresses and must not deploy replacements.
+`11381267`. The same invocation continued through factory
+`0xda40842629be6da6087640e64253ec222ced89c9`, pool
+`0x1caab9d1f4182d9791ccccef56e8f4ebbaf5b57f`, fixture mint/wrap, and one accepted
+commit at blocks `11381269` through `11381278`, then stopped before mismatch and
+timeout branches. The accepted collateral is encrypted pool custody at the recorded
+pool; no native value entered it. The resume runner must reuse the exact fixture,
+wrapper, and adapter addresses and must not deploy replacements.
 
 ## Sequencing
 

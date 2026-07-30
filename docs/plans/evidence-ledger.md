@@ -39,12 +39,15 @@ of any confidential callback or transfer. G5 remains `not_run` until the complet
 confidential lifecycle and verifier suite pass.
 
 PK-04 partial history: Source commit `9d986fb` recorded three successful Sepolia
-deployments before the runner stopped before factory creation: valueless fixture
+deployments before the runner entered its later custody branches: valueless fixture
 `0x9e2d1b5c8de8a774de20c76402e0ca05acf3b0da`, unchanged wrapper
 `0x3aede623df09d33c1f33a5c46953920b6ac10a50`, and zero-custody adapter
-`0x8bd72fb95ad3312b6c71420831f422dc4d39a875`. No confidential asset operation,
-pool deployment, or acceptance claim occurred. These receipts are spend history only
-until the bounded resume completes its named custody cases.
+`0x8bd72fb95ad3312b6c71420831f422dc4d39a875`. It then deployed factory
+`0xda40842629be6da6087640e64253ec222ced89c9`, accepted pool
+`0x1caab9d1f4182d9791ccccef56e8f4ebbaf5b57f`, and a single encrypted commitment
+at blocks `11381269` through `11381278`; that pool's collateral is confidential pool
+custody. Mismatch and timeout evidence is absent, so these receipts are partial
+spend history only until the bounded resume completes its named custody cases.
 
 ### G3 completion history
 
