@@ -349,7 +349,10 @@ async function main(): Promise<void> {
   }
   if (stage === 'deploy-adapter') {
     const block = await publicClient.getBlock();
-    const observationDelay = workItem === 'PK-07' ? 21_600n : workItem === 'PK-06' ? 1_500n : 900n;
+    // PK-07 needs enough room for staged Nox calls without turning a Sepolia
+    // evidence fixture into a multi-hour wait: 25 minutes to commit and 10 minutes
+    // from close to immutable adapter observation.
+    const observationDelay = workItem === 'PK-07' ? 2_100n : workItem === 'PK-06' ? 1_500n : 900n;
     console.log(
       JSON.stringify({
         adapter: await deploy(
@@ -396,7 +399,7 @@ async function main(): Promise<void> {
     const config: Config = {
       confidentialCollateral: wrapper,
       resolutionAdapter: adapter,
-      deadline: observation - (workItem === 'PK-07' ? 3_600n : workItem === 'PK-05' ? 180n : 300n),
+      deadline: observation - (workItem === 'PK-07' ? 600n : workItem === 'PK-05' ? 180n : 300n),
       commitTimeout: 30n,
       kMin: 2,
       aggregateTimeout:

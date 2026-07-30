@@ -575,10 +575,11 @@ Checks: `npm run test:interfaces`, `npm run compile`, the staged
 `npm run test:terminals:sepolia` runner, `npm run verify:terminals:sepolia`,
 `npm run check:offline`, and `git diff --check`.
 
-PK-07 staging uses a six-hour adapter observation lead and a five-hour commit window.
-These are harness-only immutable test configurations that prevent genuine Sepolia
-network and Nox proof latency from invalidating a terminal lifecycle before evidence
-can be collected.
+PK-07 staging uses a 35-minute adapter observation lead: a 25-minute commit window
+and a 10-minute post-close observation interval. These harness-only immutable test
+configurations leave room for genuine Sepolia/Nox proof latency without imposing the
+earlier multi-hour wait. The superseded six-hour fixture remains recoverable
+testnet-only confidential custody and is excluded from PK-07 evidence.
 
 Evidence path: `evidence/{offline,sepolia}/G5/PK-07-TERMINALS.json` plus append-only
 spend-ledger entries. Intended commit: `feat: add private settlement and score`.
