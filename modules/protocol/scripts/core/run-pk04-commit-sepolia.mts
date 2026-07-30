@@ -416,15 +416,6 @@ async function main(): Promise<void> {
     calldata(artifacts.pool, 'finalizeCommit', [accepted.proof]),
     'finalize accepted commit',
   );
-  await expectRevert(
-    () =>
-      publicClient.call({
-        account: account!.address,
-        to: pool,
-        data: calldata(artifacts.pool, 'finalizeCommit', [accepted.proof]),
-      }),
-    'Replayed acceptance proof',
-  );
 
   const mismatchSalt = keccak256(
     '0x706b30342d6d69736d617463682d76310000000000000000000000000000000000',
@@ -515,7 +506,7 @@ async function main(): Promise<void> {
       exactCallbackDelta: true,
       matchingCommitAccepted: true,
       invalidProofRejected: true,
-      replayRejected: true,
+      replayRejected: false,
       mismatchedCallbackAtomicallyRefunded: true,
       earlyTimeoutRejected: true,
       uncalledIntentPermissionlesslyCleared: true,
@@ -527,6 +518,7 @@ async function main(): Promise<void> {
     fundsLocation:
       'Accepted collateral remains confidential pool custody; mismatch and uncalled intent paths retain confidential owner custody.',
     limitations: [
+      'Acceptance-proof replay is deferred to a read-only Sepolia probe after write slices complete.',
       'Timed-out successful callback return remains required before PK-04 can complete.',
     ],
     status: 'partial',
