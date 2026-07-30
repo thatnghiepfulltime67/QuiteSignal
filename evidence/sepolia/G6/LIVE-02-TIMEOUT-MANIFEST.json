@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "chainId": 11155111,
+  "sourceCommit": "067df90dc346566da3775cef4948e55a8c4e701f",
+  "deployment": {
+    "workItemId": "LIVE-02",
+    "deployedAtBlock": "11383478"
+  },
+  "contracts": [
+    {
+      "id": "fixture",
+      "address": "0x0cb082c6ab865de63a60386f090a0d6012544723",
+      "runtimeCodeHash": "0x9ed7dd887c4fc51e7cd3b3c2d8248a5c6430706dfffd7156af5455a5441ab880"
+    },
+    {
+      "id": "wrapper",
+      "address": "0x6ab40c7656d161922aa4e95ab8a5b8d1f069c638",
+      "runtimeCodeHash": "0xa3c88c69a0cde985835e4534c11de47262a5d96354860841512b2f40941262ea"
+    },
+    {
+      "id": "adapter",
+      "address": "0x56fcb610959bcd58e0fad3cdad5898654b47942a",
+      "runtimeCodeHash": "0xd538cf7ed552128e4f8cae3415e40fcadebbf5274eafc49e696588cc5518bc90"
+    },
+    {
+      "id": "factory",
+      "address": "0x0f126d665ca27b78373e9d59339a846386479165",
+      "runtimeCodeHash": "0xc4c4908d17c2b2ec77c194a0c6b96a56955ab8a285075a804af4ae44e72d154e"
+    },
+    {
+      "id": "pool",
+      "address": "0x7C7E4428767520A99B2bfb4f196B5558c64efEC8",
+      "runtimeCodeHash": "0x44eb7ee89ec05fde29038e5aa6f1a1e63eec072f2f50c080d0c99b92020ab716"
+    }
+  ],
+  "pools": [
+    {
+      "contractId": "pool",
+      "address": "0x7C7E4428767520A99B2bfb4f196B5558c64efEC8",
+      "confidentialCollateral": "0x6Ab40c7656D161922Aa4e95Ab8a5B8d1f069c638",
+      "resolutionAdapter": "0x56fCB610959BCd58E0Fad3CdAd5898654b47942A",
+      "epoch": {
+        "state": 0,
+        "winner": 0,
+        "participantCount": 0,
+        "publicYes": "0",
+        "publicNo": "0",
+        "settledRoundId": "0",
+        "settledAnswer": "0"
+      }
+    }
+  ],
+  "receipts": [
+    {
+      "transactionHash": "0xb59c9d766e94d25851e81fb9a4fb3fec55892069b083d08f7e1fb890e779f9a3"
+    },
+    {
+      "transactionHash": "0xc6f6787fb0c69c6a3f75a13dbcdf659d2f3430b9731570ab54377d16a3c42aa0"
+    },
+    {
+      "transactionHash": "0x3d91681846adfaf73fe41a5d6eb01d59dda2f107f6e0a31bf210fca25b1c3361"
+    },
+    {
+      "transactionHash": "0x4c2c7159ee8715d3eb7cfc7cc15070ba5f836dcf87a1b1f3b9354b3050f825c3"
+    },
+    {
+      "transactionHash": "0x0a027b776acca87318dd0fef9488ed5d98d666250311f9d90fd0e83a3af4aa4a"
+    },
+    {
+      "transactionHash": "0x88ea0848a228bc9efcd7cfa349bc3e210051881663d58207101905eb868c0b88"
+    },
+    {
+      "transactionHash": "0x2f1df39055722be4fe66958433a1d4c9553191d0064455ba5fbc706741283854"
+    },
+    {
+      "transactionHash": "0x5283ea79a48c3b6a03539a042b11d598e01eec4549723e6cb324040be47cb7f8"
+    },
+    {
+      "transactionHash": "0x2831af8756975979eb87b9bf7e54b715d67b84add98fb1665b517a1b69c51969"
+    },
+    {
+      "transactionHash": "0x9fa2f565c0076f27c0730b178d254f91dd3f9f9622fe5303f2ad7e53f186c594"
+    }
+  ]
+}

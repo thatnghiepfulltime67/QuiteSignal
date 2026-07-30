@@ -89,6 +89,20 @@ exact manifest into a settled two-participant projection at finalized block
 `11383447` in `evidence/sepolia/G6/LIVE-01-READ-MODEL.json`. The separate recovery
 family and remaining P2 components remain pending.
 
+LIVE-02 has a completed fresh recovery execution component, not a G6 pass. The
+below-k pool `0x53f14f513519e4247E6443fe042495Ebb1839A6F` reached a one-participant
+refund terminal path, while the timeout pool
+`0x7C7E4428767520A99B2bfb4f196B5558c64efEC8` reached aggregate pending with two
+participants, elapsed its immutable timeout, and returned both participants through
+the contract terminal path. The public manifests, independent historical verifiers,
+and finalized indexer replays are recorded as
+`evidence/sepolia/G6/LIVE-02-{BELOW-K,TIMEOUT}-{MANIFEST,VERIFIER,READ-MODEL}.json`.
+The below-k projection has one participant and no aggregate request; the timeout
+projection retains its aggregate request, has two participants, zero public totals,
+and is `refundable` after two state-gated terminal events. G6 remains `not_run`
+until the final recovery selector/state report and the remaining P2 acceptance work
+are complete.
+
 ### G5 partial history
 
 PK-03A is a completed G5 component, not G5 itself. The source commit `4ef78df`

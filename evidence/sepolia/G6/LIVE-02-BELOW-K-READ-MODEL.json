@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "workItemId": "IDX-01",
+  "environment": "sepolia-read",
+  "status": "passed",
+  "sourceCommit": "067df90dc346566da3775cef4948e55a8c4e701f",
+  "manifest": {
+    "path": "evidence/sepolia/G6/LIVE-02-BELOW-K-MANIFEST.json",
+    "fingerprint": "0x6e93c7bfce33728c70e7a7e02529cdeefc91c34ef5255387423135ac37b0e58e",
+    "pool": "0x53f14f513519e4247E6443fe042495Ebb1839A6F",
+    "epochVerificationBlock": "11383474"
+  },
+  "finalizedBlock": "11383633",
+  "eventCount": 3,
+  "eventKinds": [
+    "epoch-opened",
+    "epoch-closed",
+    "refunded"
+  ],
+  "checkpoint": {
+    "schemaVersion": 1,
+    "reducerVersion": 1,
+    "chainId": 11155111,
+    "manifestHash": "0x6e93c7bfce33728c70e7a7e02529cdeefc91c34ef5255387423135ac37b0e58e",
+    "blockNumber": "11383592",
+    "blockHash": "0x4be6cac822fd087045a812292ccca6c7339845374baae6245672a2e3851ef5f9",
+    "model": {
+      "phase": "refundable",
+      "deadline": "1785428184",
+      "minimumParticipants": 2,
+      "participantCount": 1,
+      "aggregateRequestId": null,
+      "publicYes": "0",
+      "publicNo": "0",
+      "winner": 0,
+      "settledRoundId": "0",
+      "settledAnswer": "0"
+    }
+  },
+  "projection": {
+    "phase": "refundable",
+    "deadline": "1785428184",
+    "minimumParticipants": 2,
+    "participantCount": 1,
+    "aggregateRequestId": null,
+    "publicYes": "0",
+    "publicNo": "0",
+    "winner": 0,
+    "settledRoundId": "0",
+    "settledAnswer": "0"
+  },
+  "checks": {
+    "manifestRuntimeAndBinding": true,
+    "finalizedDepth": true,
+    "orderedPublicEvents": true,
+    "checkpointBlockHash": true
+  }
+}

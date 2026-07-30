@@ -1143,6 +1143,13 @@ Intended commit: `test: execute live recovery lifecycle`.
 Rollback/failure action: Stop at the failed stage and retain its public facts. Use
 only the pool's corresponding permissionless recovery function.
 
+Partial evidence: Source commit `067df90` generated separate immutable historical
+manifests for the below-k and timeout pools. Independent public verification passed
+for five and ten scenario receipts respectively, and finalized public-event replays
+produced `refundable` projections. The remaining selector/state report will bind the
+timeout cancellation and both terminal events to the current pool facts before this
+work item can be marked complete.
+
 ## Dependency graph
 
 ```text

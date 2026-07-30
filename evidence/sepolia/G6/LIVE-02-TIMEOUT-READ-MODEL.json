@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "workItemId": "IDX-01",
+  "environment": "sepolia-read",
+  "status": "passed",
+  "sourceCommit": "067df90dc346566da3775cef4948e55a8c4e701f",
+  "manifest": {
+    "path": "evidence/sepolia/G6/LIVE-02-TIMEOUT-MANIFEST.json",
+    "fingerprint": "0x8ecc37ec77c0a1826b8f25699872c49e6ba678eb101282a2970f33b59ea7cda8",
+    "pool": "0x7C7E4428767520A99B2bfb4f196B5558c64efEC8",
+    "epochVerificationBlock": "11383478"
+  },
+  "finalizedBlock": "11383634",
+  "eventCount": 5,
+  "eventKinds": [
+    "epoch-opened",
+    "epoch-closed",
+    "aggregate-requested",
+    "refunded",
+    "refunded"
+  ],
+  "checkpoint": {
+    "schemaVersion": 1,
+    "reducerVersion": 1,
+    "chainId": 11155111,
+    "manifestHash": "0x8ecc37ec77c0a1826b8f25699872c49e6ba678eb101282a2970f33b59ea7cda8",
+    "blockNumber": "11383597",
+    "blockHash": "0x7c39c646dfcbf917820572d4411280f058107132d1fb00ca8bf803507d5c7618",
+    "model": {
+      "phase": "refundable",
+      "deadline": "1785428184",
+      "minimumParticipants": 2,
+      "participantCount": 2,
+      "aggregateRequestId": "0x1c3e3faea415dabaea16a8b015c552af47afddef639d2062356a8938c37fd818",
+      "publicYes": "0",
+      "publicNo": "0",
+      "winner": 0,
+      "settledRoundId": "0",
+      "settledAnswer": "0"
+    }
+  },
+  "projection": {
+    "phase": "refundable",
+    "deadline": "1785428184",
+    "minimumParticipants": 2,
+    "participantCount": 2,
+    "aggregateRequestId": "0x1c3e3faea415dabaea16a8b015c552af47afddef639d2062356a8938c37fd818",
+    "publicYes": "0",
+    "publicNo": "0",
+    "winner": 0,
+    "settledRoundId": "0",
+    "settledAnswer": "0"
+  },
+  "checks": {
+    "manifestRuntimeAndBinding": true,
+    "finalizedDepth": true,
+    "orderedPublicEvents": true,
+    "checkpointBlockHash": true
+  }
+}
