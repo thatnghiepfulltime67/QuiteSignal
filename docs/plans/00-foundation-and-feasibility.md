@@ -521,6 +521,17 @@ because the interrupted execution did not record its timeout negative assertion.
 The recovery runner retries boundedly for Nox owner decryption and can resume an
 already refundable fixture without repeating an on-chain cancellation or refund.
 
+The fifth fresh attempt from `1d1c69f` deployed fixture
+`0x58efcb66dce89743b2ecf293b0ea12450a286524`, unchanged wrapper
+`0x37e364e0d521425b2caf07336e7e1448d248288e`, and timeout spike
+`0x056d4605f541f7f9d374372c59bccc93bda3c750` at blocks `11379507` through
+`11379548`. It completed the below-k refund and reached threshold aggregate pending,
+but the RPC simulation for the early timeout negative assertion did not return. No
+timeout cancellation or refund was sent. This is not a contract conclusion and the
+attempt is excluded from G3 evidence. Its ignored actor record enables recovery of
+both fixture stakes. The next revision replaces that unbounded simulation with a
+real, bounded Sepolia transaction whose reverted receipt is the required evidence.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

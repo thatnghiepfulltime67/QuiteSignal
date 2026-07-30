@@ -85,3 +85,19 @@ each refunded once. Local owner decryption verified the planned terminal fixture
 balances without recording plaintext or handles. The ignored recovery record was
 deleted only after that check. The fourth attempt therefore has no remaining fixture
 custody and remains excluded from G3 evidence because it was non-terminal.
+
+The fifth fresh attempt from source commit `1d1c69f` deployed fixture
+`0x58efcb66dce89743b2ecf293b0ea12450a286524`, unchanged wrapper
+`0x37e364e0d521425b2caf07336e7e1448d248288e`, and timeout spike
+`0x056d4605f541f7f9d374372c59bccc93bda3c750` at blocks `11379507` through
+`11379548`. It completed the below-k refund and committed two independent threshold
+members. The epoch entered aggregate pending at timestamp `1785378192` and requested
+aggregate disclosure, but the RPC `eth_call` that was intended to observe an early
+timeout revert did not return. No cancellation or refund write was sent. A later
+read found the same spike still aggregate pending after its timeout; therefore this
+is a runner RPC-observation failure, not a contract result.
+
+The next runner revision will use a bounded, real Sepolia transaction that must
+produce a `reverted` receipt before the timeout instead of an unbounded simulation.
+The fifth fixture will first be recovered with the retained ignored actor record;
+both its deterministic stakes remain recoverable and no product custody is present.
