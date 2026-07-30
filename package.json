@@ -15,8 +15,8 @@
   ],
   "scripts": {
     "doctor": "tsx ops/scripts/doctor.mts",
-    "format:check": "prettier --check package.json package-lock.json tsconfig.base.json prettier.config.mjs ops evidence modules/domain modules/protocol modules/verifier modules/confidential-client",
-    "format:write": "prettier --write package.json package-lock.json tsconfig.base.json prettier.config.mjs ops evidence modules/domain modules/protocol modules/verifier modules/confidential-client",
+    "format:check": "prettier --check package.json package-lock.json tsconfig.base.json prettier.config.mjs ops evidence modules services",
+    "format:write": "prettier --write package.json package-lock.json tsconfig.base.json prettier.config.mjs ops evidence modules services",
     "lint": "npm run format:check && npm run typecheck",
     "typecheck": "tsc --noEmit --project tsconfig.base.json",
     "compile": "npm run typecheck && npm run --workspace @quitesignal/protocol compile",
@@ -25,6 +25,7 @@
     "test:verifier": "npm run --workspace @quitesignal/verifier test",
     "test:sdk": "npm run --workspace @quitesignal/confidential-client test",
     "test:automation": "npm run --workspace @quitesignal/automation test",
+    "run:automation:sepolia": "npm run --workspace @quitesignal/automation run:sepolia --",
     "test:sdk:nox:sepolia": "npm run --workspace @quitesignal/confidential-client test:nox:sepolia --",
     "test:sdk:commit-client:sepolia": "npm run --workspace @quitesignal/confidential-client test:transaction:sepolia --",
     "verify:sdk:transaction:sepolia": "npm run --workspace @quitesignal/confidential-client verify:transaction:sepolia --",

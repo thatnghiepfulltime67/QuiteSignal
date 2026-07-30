@@ -7,7 +7,12 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "dependencies": {
+    "@quitesignal/verifier": "0.0.0",
+    "viem": "2.55.10"
+  },
   "scripts": {
-    "test": "tsx --test test/*.test.ts"
+    "test": "tsx --test test/*.test.ts",
+    "run:sepolia": "tsx scripts/run-sepolia.mts"
   }
 }
