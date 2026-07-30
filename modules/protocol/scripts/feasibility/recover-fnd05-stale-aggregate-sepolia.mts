@@ -271,10 +271,11 @@ async function main(): Promise<void> {
   loadEnvironment();
   const fixture = staleFixture();
   const dryRun = process.argv.includes('--dry-run');
+  const terminalResume = process.argv.includes('--resume-terminal');
   const primaryKey = process.env.SEPOLIA_PRIVATE_KEY as Hex | undefined;
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
   if (!primaryKey || !rpcUrl) fail('The local Sepolia stale-fixture configuration is incomplete.');
-  if (!dryRun && process.env.CONFIRM_SEPOLIA_WRITE !== CONFIRMATION_VALUE) {
+  if (!dryRun && !terminalResume && process.env.CONFIRM_SEPOLIA_WRITE !== CONFIRMATION_VALUE) {
     fail('Set CONFIRM_SEPOLIA_WRITE=yes only after reviewing the stale-fixture dry run.');
   }
 
@@ -332,11 +333,113 @@ async function main(): Promise<void> {
   if (
     !runtime ||
     (underlying as Address).toLowerCase() !== fixture.fixture.toLowerCase() ||
-    Number(state) !== 2 ||
     participants !== 2n ||
-    currentBlock.timestamp < BigInt(pendingSince) + BigInt(timeout)
+    (terminalResume
+      ? Number(state) !== 4
+      : Number(state) !== 2 || currentBlock.timestamp < BigInt(pendingSince) + BigInt(timeout))
   ) {
     fail('The documented stale fixture is not eligible for its timeout recovery.');
+  }
+
+  if (terminalResume) {
+    failureStage = 'terminal stale fixture verification';
+    const [fundsLocation, terminalBlock] = await Promise.all([
+      publicClient.readContract({
+        address: fixture.recoverySpike,
+        abi: SPIKE_ABI,
+        functionName: 'fundsLocation',
+      }),
+      publicClient.getBlockNumber(),
+    ]);
+    const recoveryEntries = ledger.entries.slice(-3);
+    const receipts = await Promise.all(
+      recoveryEntries.map((entry) =>
+        publicClient.getTransactionReceipt({ hash: entry.transactionHash }),
+      ),
+    );
+    if (
+      Number(fundsLocation) !== 2 ||
+      recoveryEntries.length !== 3 ||
+      recoveryEntries.some((entry) => entry.workItemId !== 'FND-05C') ||
+      receipts.some((receipt) => receipt.status !== 'success')
+    ) {
+      fail('The stale fixture terminal resume could not verify its recorded cleanup receipts.');
+    }
+    unlinkSync(secondaryActorPath);
+    clearFailureMarker();
+    mkdirSync(dirname(evidencePath), { recursive: true });
+    writeFileSync(
+      evidencePath,
+      `${JSON.stringify(
+        {
+          schemaVersion: 1,
+          gate: 'G3',
+          workItem: 'FND-05C-STALE-RECOVERY',
+          phase: 'P0',
+          timestampUtc: new Date().toISOString(),
+          sourceCommit: sourceCommit(),
+          environment: {
+            class: 'sepolia-write-and-read',
+            chainId: EXPECTED_CHAIN_ID,
+            verificationBlock: terminalBlock.toString(),
+          },
+          contracts: {
+            fixture: fixture.fixture,
+            wrapper: fixture.wrapper,
+            recoverySpike: fixture.recoverySpike,
+            staleRecoveryRuntimeHash: keccak256(runtime),
+            wrapperUnderlyingMatchesFixture: true,
+          },
+          transactions: recoveryEntries.map((entry, index) => ({
+            purpose:
+              index === 0
+                ? 'permissionless cancellation of the timed-out pre-fix fixture'
+                : index === 1
+                  ? 'first recorded-owner confidential refund'
+                  : 'second recorded-owner confidential refund',
+            hash: entry.transactionHash,
+            blockNumber: entry.blockNumber,
+          })),
+          observed: {
+            stateBefore: 'AggregatePending',
+            timeoutElapsedBeforeCancellation: true,
+            terminalState: 'Refundable',
+            terminalFundsLocation: 'PoolConfidentialCustody',
+            participantCount: participants.toString(),
+            bothOwnerRefundTransactionsSucceeded: true,
+            localSecondaryRecoveryRecordDeletedAfterTerminalRead: true,
+          },
+          privacyAndCustody: {
+            plaintextCommitted: false,
+            rawHandlesCommitted: false,
+            proofsOrCalldataCommitted: false,
+            walletSignaturesCommitted: false,
+            preFixFixtureExcludedFromGateEvidence: true,
+            terminalFundsLocation:
+              'Refunded confidential collateral is back with the recorded owners.',
+          },
+          knownLimitations: [
+            'This cleanup recovers only the pre-fix fixture. It cannot satisfy FND-05C or G3.',
+            'A fresh fixture running the corrected runtime must prove every FND-05C proof-context and recovery requirement.',
+          ],
+          reproduction: [
+            'Run npm run test:nox:sepolia -- FND-05-STALE-RECOVERY --resume-terminal --stale=<fixture>,<wrapper>,<recovery-spike>.',
+            'Inspect this sanitized artifact and the three referenced Sepolia receipts without exposing the ignored recovery record.',
+          ],
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    console.log(
+      JSON.stringify({
+        chainId: EXPECTED_CHAIN_ID,
+        status: 'recovered',
+        terminalState: 'Refundable',
+        workItem: 'FND-05C-STALE-RECOVERY',
+      }),
+    );
+    return;
   }
 
   const fees = await publicClient.estimateFeesPerGas();
@@ -418,7 +521,7 @@ async function main(): Promise<void> {
     }),
     publicClient.getBlockNumber(),
   ]);
-  if (Number(terminalState) !== 4 || Number(fundsLocation) !== 0) {
+  if (Number(terminalState) !== 4 || Number(fundsLocation) !== 2) {
     fail('The stale fixture did not return to documented confidential refund custody.');
   }
   unlinkSync(secondaryActorPath);
