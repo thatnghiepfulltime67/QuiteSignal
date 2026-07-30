@@ -226,6 +226,64 @@ partial artifacts remain historical only; the passed PK-03A artifact uses the fi
 `yes`/`no` pair and follow-up negative pair. The runner now refuses verify-only
 artifact writes from a dirty worktree.
 
+## PK-03B work-item record
+
+ID: `PK-03B`
+
+Status: `in_progress`
+
+Outcome: Implement and Sepolia-test permissionless factory deployment of a single
+configuration-only pool shell with immutable collateral, adapter, deadline, k, and
+recovery timings. The shell has no confidential callback or lifecycle action yet;
+those production behaviors remain owned by PK-04 through PK-07.
+
+Output files: `modules/protocol/contracts/core/QuietSignalFactory.sol`,
+`modules/protocol/contracts/core/QuietSignalPool.sol`,
+`modules/protocol/scripts/core/run-pk03b-factory-sepolia.mts`,
+`modules/protocol/package.json`, root `package.json`,
+`evidence/{offline,sepolia}/G5/PK-03B-FACTORY.json`,
+`docs/engineering/01-protocol-spec.md`, this work-package record, the evidence
+ledger, and the spend ledger.
+
+Acceptance criteria: The permissionless factory rejects native value, empty/EOA
+collateral or adapter, non-ERC-7984 collateral, invalid/future-incompatible adapter
+metadata, zero k/timeouts, past deadlines, reused deployment salts, and duplicate
+immutable configurations. It computes a deterministic pool id, creates exactly one
+pool with CREATE2, emits the frozen public configuration, and maps the id to that
+pool. The pool stores its config, epoch id, and initial `OPEN` public epoch only;
+it has no payable, fallback, asset callback, privileged role, upgrade path, or
+hidden lifecycle implementation. Live tests use a fresh real production adapter
+against Chainlink ETH/USD and the already Sepolia-proven pinned ERC-7984 wrapper;
+they do not use a mock collateral or resolver.
+
+Negative cases: Every rejected configuration above, duplicate factory creation, a
+deadline after the adapter observation boundary, a changed adapter target runtime,
+and native value fail without creating a pool or moving assets. A valid deployment
+must leave factory and pool ETH balances at zero and cannot expose an owner/admin.
+
+Privacy/custody impact: No confidential input, proof, ACL operation, token callback,
+or transfer exists in this shell. The collateral address is immutable metadata only;
+no pool method can receive or move collateral before PK-04.
+
+Funds location/recovery impact: No funds may enter factory or pool. The frozen
+aggregate/resolution timeout values are read-only configuration for later
+permissionless recovery; no recovery claim is made before its lifecycle exists.
+
+Checks: `npm run test:interfaces`, `npm run compile`,
+`npm run test:factory:sepolia`, `npm run check:offline`,
+`npm run check:sepolia:read`, and `git diff --check`.
+
+Evidence path: `evidence/{offline,sepolia}/G5/PK-03B-FACTORY.json` and committed
+spend-ledger entries. This contributes immutable deployment evidence only and cannot
+pass G5 by itself.
+
+Intended commit: `feat: add immutable pool factory`.
+
+Rollback/failure action: Revert only this factory/shell slice. An incompatible real
+ERC-7984 wrapper or direct adapter is a production feasibility blocker; do not
+substitute a mock or loosen configuration validation. A trust, custody, state, or
+public-interface change requires an ADR before retrying.
+
 ## Sequencing
 
 ```text

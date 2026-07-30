@@ -15,6 +15,11 @@ Owns confidential accounting, epoch state, collateral custody, aggregate disclos
 settlement, refund, and owner-only score receipts. Configuration is immutable after
 deployment. The pool has no upgrade proxy in the MVP; a new version deploys a new pool.
 
+PK-03B provides only the immutable configuration container and its initial public
+`OPEN` epoch. It intentionally has no collateral callback or lifecycle mutation, so
+it cannot receive or move funds until the separately Sepolia-tested custody and
+lifecycle slices are implemented.
+
 ### `IResolutionAdapter`
 
 ```solidity
