@@ -819,7 +819,7 @@ projection.
 
 ### LIVE-01-PLAN-01
 
-Status: `in_progress`
+Status: `complete`
 
 Output files: a preflight/participant lifecycle design, named write-runner and
 read verifier plan, public evidence schema, spend-ledger entries, this record, and
@@ -857,6 +857,101 @@ Rollback/failure action: Stop after any failed stage, preserve all public receip
 and the spend ledger, and use only the documented permissionless recovery state.
 Never mock a missing stage, alter the canonical manifest, or reuse an unfinished
 epoch as success evidence.
+
+Completion evidence: The audited G5 stage runner already exercises two distinct
+wallets, real Nox input/callback/aggregate proof paths, confidential collateral,
+and immutable settlement on Sepolia. LIVE-01 will extend that bounded runner with
+an explicit P2 work-item ID and fresh pool salt; it will not reinterpret G5
+receipts as G6 evidence.
+
+### LIVE-01-RUNNER-01
+
+Status: `complete`
+
+Outcome: Add an explicit `LIVE-01` mode to the existing bounded Sepolia lifecycle
+runner, retaining its per-write confirmation, budget, clean-source, and
+append-only-ledger guards while isolating the new P2 pool namespace.
+
+Output files: `modules/protocol/scripts/core/run-pk05-aggregate-sepolia.mts`, root
+command wiring, this record, and runner boundary checks. The later independent
+verifier/evidence writer is outside this slice.
+
+Acceptance criteria: `LIVE-01` accepts only the threshold-pool case, derives a
+new `quiet-signal/LIVE-01/...` salt, records every confirmed write with phase `P2`,
+and preserves every existing PK-05/06/07/SDK-03 behavior unchanged. Its dry run
+must report the remaining committed budget without writing; confirmed mode retains
+the existing explicit confirmation and clean-tree guards.
+
+Privacy/custody impact: The mode retains the runner's local owner processes and
+Nox-only encryption/proof paths. It does not serialize input material, credentials,
+or signatures, and it does not add a service or trusted account.
+
+Funds location/recovery impact: The existing stage boundary records native gas in
+the ledger before each subsequent write. The secondary test owner remains locally
+recoverable for the full fresh-pool lifecycle; a failed stage stops without changing
+the pool namespace or using a manual custody action.
+
+Checks: mode/parser/static boundary tests, `npm run typecheck`, dry-run preflight,
+`npm run check:offline`, and `git diff --check`.
+
+Evidence location: source/test output only; it is not a G6 claim until the later
+named lifecycle and independent verifier runs pass.
+
+Intended commit: `feat: prepare live multi-user lifecycle runner`.
+
+Rollback/failure action: Revert only the additional mode. Do not change an existing
+pool's config, rewrite prior ledger entries, or issue a write under an ambiguous
+work-item phase.
+
+Completion evidence: The runner now derives `LIVE-01` salts only for the fresh
+threshold case and records it as P2. Two `T-LIVE-01-*` unit tests verify its mode,
+phase, case restriction, and stable salt. Its named dry run passed with the current
+remaining committed budget and performed no write. Existing PK-05/06/07/SDK-03
+unit coverage remains green.
+
+### LIVE-01-EXEC-01
+
+Status: `in_progress`
+
+Outcome: Execute the fresh two-owner threshold lifecycle in bounded, receipt-backed
+Sepolia stages and emit a temporary public manifest that later read-only verifiers
+can bind to.
+
+Output files: staged runner invocation records, generated
+`evidence/sepolia/G6/LIVE-01-MANIFEST.json`, append-only spend-ledger entries,
+this record, and later independent verifier/indexer evidence. No canonical manifest
+or prior evidence file may be overwritten.
+
+Acceptance criteria: Before every write, the runner must pass its source, chain,
+confirmation, gas estimate, and remaining-budget guard. The pool must use a fresh
+LIVE-01 threshold salt and two different owners. Each Nox callback and aggregate
+proof must be checked on Sepolia; any failed/reverted receipt stops the sequence and
+is retained. The execution must reach public settlement before any owner-specific
+terminal action is considered.
+
+Privacy/custody impact: Only the two local owners produce encrypted inputs; the
+only aggregate disclosure is the existing proof-verified public result. Staged logs,
+ledger records, and the temporary manifest retain public receipts/configuration
+facts only.
+
+Funds location/recovery impact: Native gas remains at the configured funder until
+each bounded transaction. Confidential collateral is in owner wallets before
+transfer, the pool during the epoch, and the existing settlement/recovery paths
+afterward. A stop leaves public receipts and invokes no manual asset movement.
+
+Checks: named Sepolia stage receipts, real Nox/callback/aggregate proof outcomes,
+public epoch readbacks, spend-ledger verification, independent manifest verifier,
+IDX rebuild, `npm run check:offline`, and `git diff --check`.
+
+Evidence location: `evidence/{offline,sepolia}/G6/LIVE-01-*.json`; no G6 claim is
+permitted until the complete success and recovery families are independently
+verified.
+
+Intended commit: `test: execute live multi-user lifecycle`.
+
+Rollback/failure action: Stop at the failed stage, record the receipt and current
+fund location, and run only the corresponding on-chain recovery procedure. Never
+reuse the pool as success evidence or hide a failed stage with a new wallet.
 
 ## Dependency graph
 

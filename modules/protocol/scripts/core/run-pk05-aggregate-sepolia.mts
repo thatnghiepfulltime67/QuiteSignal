@@ -12,9 +12,7 @@ import {
   encodeFunctionData,
   http,
   isAddress,
-  keccak256,
   parseEther,
-  toHex,
   type Abi,
   type Address,
   type Hash,
@@ -22,6 +20,14 @@ import {
 } from 'viem';
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
+
+import {
+  isLifecycleWorkItem,
+  lifecyclePhase,
+  poolCases,
+  poolSalt,
+  usesAggregateLifecycle,
+} from '../../src/live-runner-policy.js';
 
 const CHAIN_ID = 11_155_111;
 const FEED = '0x694AA1769357215DE4FAC081bf1f309aDC325306' as const;
@@ -200,9 +206,10 @@ async function main(): Promise<void> {
   loadEnvironment();
   const stage = argument('stage');
   const write = process.argv.includes('--write');
-  const workItem = argument('work-item') ?? 'PK-05';
-  if (!['PK-05', 'PK-06', 'PK-07', 'SDK-03'].includes(workItem))
-    fail('The work item must be PK-05, PK-06, PK-07, or SDK-03.');
+  const requestedWorkItem = argument('work-item') ?? 'PK-05';
+  if (!isLifecycleWorkItem(requestedWorkItem))
+    fail('The work item must be PK-05, PK-06, PK-07, SDK-03, or LIVE-01.');
+  const workItem = requestedWorkItem;
   if (!stage) fail(`${workItem} requires --stage.`);
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
   const primaryKey = process.env.SEPOLIA_PRIVATE_KEY as Hex | undefined;
@@ -273,7 +280,7 @@ async function main(): Promise<void> {
   ) => {
     appendSpend(ledger, {
       workItemId: workItem,
-      phase: workItem === 'SDK-03' ? 'P2' : 'P1',
+      phase: lifecyclePhase(workItem),
       sender,
       transactionHash: hash,
       blockNumber: receipt.blockNumber.toString(),
@@ -384,14 +391,7 @@ async function main(): Promise<void> {
     const wrapper = requiredAddress('wrapper');
     const adapter = requiredAddress('adapter');
     const caseName = argument('case');
-    const validCases =
-      workItem === 'PK-05'
-        ? ['below-k', 'threshold']
-        : workItem === 'PK-06'
-          ? ['timeout', 'grace', 'success']
-          : workItem === 'PK-07'
-            ? ['claim', 'refund']
-            : ['commit'];
+    const validCases = poolCases(workItem);
     if (!caseName || !validCases.includes(caseName))
       fail(`${workItem} pool case must be one of: ${validCases.join(', ')}.`);
     const observation = (await publicClient.readContract({
@@ -402,24 +402,25 @@ async function main(): Promise<void> {
     const config: Config = {
       confidentialCollateral: wrapper,
       resolutionAdapter: adapter,
-      deadline: observation - (workItem === 'PK-07' ? 600n : workItem === 'PK-05' ? 180n : 300n),
+      deadline:
+        observation -
+        (workItem === 'PK-07' ? 600n : usesAggregateLifecycle(workItem) ? 180n : 300n),
       commitTimeout: 30n,
       kMin: 2,
-      aggregateTimeout:
-        workItem === 'PK-05'
-          ? caseName === 'below-k'
-            ? 600n
-            : 601n
-          : caseName === 'timeout'
-            ? 120n
-            : caseName === 'grace'
-              ? 121n
-              : caseName === 'claim'
-                ? 122n
-                : 123n,
-      resolutionGrace: workItem === 'PK-05' ? 600n : 120n,
+      aggregateTimeout: usesAggregateLifecycle(workItem)
+        ? caseName === 'below-k'
+          ? 600n
+          : 601n
+        : caseName === 'timeout'
+          ? 120n
+          : caseName === 'grace'
+            ? 121n
+            : caseName === 'claim'
+              ? 122n
+              : 123n,
+      resolutionGrace: usesAggregateLifecycle(workItem) ? 600n : 120n,
     };
-    const salt = keccak256(toHex(`quiet-signal/${workItem}/${caseName}/v1`));
+    const salt = poolSalt(workItem, caseName);
     await send(
       primary,
       primaryWallet,

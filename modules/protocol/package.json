@@ -21,9 +21,10 @@
     "deploy:sepolia:plan": "tsx scripts/deploy/plan-sepolia.mts",
     "deploy:sepolia:write": "tsx scripts/deploy/write-sepolia.mts",
     "test:deployment-plan": "tsx --test test/unit/deployment-plan.test.ts",
-    "test:interfaces": "hardhat build --force && tsx --test test/unit/interface-compatibility.test.ts test/unit/pk07-terminal-policy.test.ts test/unit/pk09-production-boundary.test.ts",
+    "test:interfaces": "hardhat build --force && tsx --test test/unit/interface-compatibility.test.ts test/unit/live-runner-policy.test.ts test/unit/pk07-terminal-policy.test.ts test/unit/pk09-production-boundary.test.ts",
     "test:model": "tsx --test test/feasibility/reference-model.test.ts",
     "test:nox:sepolia": "tsx scripts/feasibility/run-nox-sepolia.mts",
+    "run:live:sepolia": "tsx scripts/core/run-pk05-aggregate-sepolia.mts --work-item=LIVE-01",
     "recover:nox:sepolia": "tsx scripts/feasibility/recover-fnd05-timeout-sepolia.mts"
   },
   "devDependencies": {
