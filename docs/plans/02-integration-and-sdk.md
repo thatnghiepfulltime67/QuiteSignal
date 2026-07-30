@@ -140,10 +140,11 @@ Outcome: Add a typed Sepolia public-read and transaction boundary that consumes
 sealed SDK-02 inputs without exposing encrypted material, encodes the frozen pool
 ABI, and maps retries to one logical request.
 
-Active slice: `SDK-03-CLIENT-01`.
+Active slice: `SDK-03-SEPOLIA-01`.
 
 Output files: transaction/read client source, frozen ABI declaration, exports,
-unit and ABI-compatibility tests, this record, and traceability updates.
+unit and ABI-compatibility tests, the bounded Sepolia fixture runner, this record,
+and traceability updates.
 
 Acceptance criteria: Public reads return only public pool epoch/config facts. A
 prepared encrypted commit remains non-serializable and requires matching pool/chain/
@@ -163,8 +164,10 @@ retry cannot silently issue a second commit. A reload requires an on-chain publi
 state read before retry, which is implemented by later LIVE evidence.
 
 Checks: unit/ABI compatibility tests, `npm run typecheck`, `npm run check:offline`,
-and `git diff --check`. A later live Sepolia sender/read case must prove this client
-before any G6 claim.
+`npm run test:sdk-transaction:sepolia`, and `git diff --check`. The named fixture
+uses no collateral transfer: it submits one encrypted commit intent and then reaches
+the existing permissionless pending-commit expiry path before evidence is recorded.
+This is SDK-03 evidence only, not a G6 claim.
 
 Evidence path: unit output for this slice; later live evidence under
 `evidence/{offline,sepolia}/G6/SDK-03-TRANSACTION-CLIENT.json`.

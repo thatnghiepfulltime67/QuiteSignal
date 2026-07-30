@@ -87,7 +87,8 @@ function argument(name: string): string | undefined {
 }
 function requiredAddress(name: string): Address {
   const value = argument(name);
-  if (!value || !isAddress(value)) fail(`PK-05 ${name} requires an address.`);
+  if (!value || !isAddress(value))
+    fail(`${argument('work-item') ?? 'PK-05'} ${name} requires an address.`);
   return value;
 }
 function loadEnvironment(): void {
@@ -200,8 +201,8 @@ async function main(): Promise<void> {
   const stage = argument('stage');
   const write = process.argv.includes('--write');
   const workItem = argument('work-item') ?? 'PK-05';
-  if (!['PK-05', 'PK-06', 'PK-07'].includes(workItem))
-    fail('The work item must be PK-05, PK-06, or PK-07.');
+  if (!['PK-05', 'PK-06', 'PK-07', 'SDK-03'].includes(workItem))
+    fail('The work item must be PK-05, PK-06, PK-07, or SDK-03.');
   if (!stage) fail(`${workItem} requires --stage.`);
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
   const primaryKey = process.env.SEPOLIA_PRIVATE_KEY as Hex | undefined;
@@ -388,7 +389,9 @@ async function main(): Promise<void> {
         ? ['below-k', 'threshold']
         : workItem === 'PK-06'
           ? ['timeout', 'grace', 'success']
-          : ['claim', 'refund'];
+          : workItem === 'PK-07'
+            ? ['claim', 'refund']
+            : ['commit'];
     if (!caseName || !validCases.includes(caseName))
       fail(`${workItem} pool case must be one of: ${validCases.join(', ')}.`);
     const observation = (await publicClient.readContract({
@@ -616,6 +619,16 @@ async function main(): Promise<void> {
       pool,
       calldata(artifacts.pool, 'finalizeCommit', [proof.proof]),
       'finalize accepted commit',
+    );
+    return;
+  }
+  if (stage === 'expire-pending-commit') {
+    await send(
+      primary,
+      primaryWallet,
+      pool,
+      calldata(artifacts.pool, 'expirePendingCommit'),
+      'expire pending commit',
     );
     return;
   }

@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "tsx --test test/*.test.ts",
-    "test:nox:sepolia": "tsx scripts/run-sdk02-confidential-input-sepolia.mts"
+    "test:nox:sepolia": "tsx scripts/run-sdk02-confidential-input-sepolia.mts",
+    "test:transaction:sepolia": "tsx scripts/run-sdk03-transaction-sepolia.mts"
   }
 }
