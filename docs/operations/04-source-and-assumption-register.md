@@ -26,10 +26,10 @@ Last reviewed: 2026-07-30
 | Sepolia protocol mapping is current                    | Pinned SDK source and live bytecode  | Stop deployment and update config        |
 | Owner viewer ACL survives settlement                   | Cross-transaction live test          | Remove private score or redesign receipt |
 | Aggregate public decrypt is reliable                   | Multi-user Sepolia spike             | Reject the batching model                |
-| Confidential collateral can cross the adapter boundary | Exact unwrap/proof conservation test | Select a supported asset boundary        |
-| Target protocol is deployable and callable             | Minimal adapter test                 | Select another open protocol             |
+| Confidential collateral remains in pool custody         | Exact pull/payout/refund conservation | Stop if a third party receives collateral |
+| Target feed is callable and objectively normalizable    | Minimal resolution-adapter test       | Select another open protocol             |
 
-## FND-06 target discovery
+## FND-06A original target discovery
 
 The official [Gnosis Conditional Tokens repository](https://github.com/gnosis/conditional-tokens-contracts)
 documents LGPL-3.0 source and deployments on Ethereum mainnet, xDai, and Rinkeby;
@@ -46,8 +46,28 @@ is a separate example. The live Sepolia oracle address and runtime are recorded 
 the FND-06A artifact. Official network guidance describes Sepolia as testnet-only
 without a DVM. This is insufficient to prove deterministic disputed resolution,
 aggregate market execution with price slippage, or redemption against an unchanged
-public market target. The target-protocol assumption is therefore false under the
-current Ethereum Sepolia-only constraint; P0 remains blocked.
+public market target. The original target-protocol assumption was false under the
+prior external-market definition. This historical result remains evidence for
+ADR-016; it is superseded for active work by the user-authorized ADR-017 boundary.
+
+## FND-06B direct price-feed resolution
+
+ADR-017 evaluates the canonical Chainlink ETH/USD price-feed proxy at
+`0x694AA1769357215DE4FAC081bf1f309aDC325306` on Ethereum Sepolia. Chainlink's
+official [Data Feeds documentation](https://docs.chain.link/data-feeds) describes
+the proxy/aggregator integration model, and the official
+[Chainlink repository](https://github.com/smartcontractkit/chainlink) provides the
+open target implementation source. FND-06B must independently verify the proxy's
+runtime code hash, ABI response shape, pair metadata, decimals, positive current
+answer, complete round, and freshness on Sepolia. This entry does not assert that
+the target has passed G4.
+
+The target is an explicit external oracle dependency, not a custody protocol. A
+QuietSignal pool will bind a feed address, comparison direction, threshold,
+observation-not-before timestamp, maximum feed age, and resolution grace deadline
+immutably. The pool never transfers collateral to the proxy. A stale or invalid feed
+round must prevent settlement and eventually reach the pool's confidential refund
+path; it cannot be replaced by an operator-selected outcome.
 
 ## FND-01 verified toolchain baseline
 

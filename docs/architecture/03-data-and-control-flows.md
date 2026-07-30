@@ -6,10 +6,10 @@
 | -------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | `QuietSignalFactory`       | Validate immutable configuration and deploy pools                                       | No custody or lifecycle role                                |
 | `QuietSignalPool`          | Confidential ledger, epoch state, custody, payout, score receipt                        | Owns pool handles; no oracle authority                      |
-| `IMarketAdapter`           | Convert public aggregate into protocol calls, normalize resolution, and redeem outcomes | Permissionless; returns all assets to the caller atomically |
+| `IResolutionAdapter`       | Normalize an immutable binary condition from a public feed                              | Permissionless; zero asset custody and no outcome-writing authority |
 | Confidential asset wrapper | Move between confidential and public collateral                                         | External protocol dependency                                |
 
-The MVP deployment unit is one pool, one public market, and one epoch. Creating a
+The MVP deployment unit is one pool, one objective public condition, and one epoch. Creating a
 new cohort deploys a new pool through the factory. This deliberately removes
 cross-epoch ledgers and shared settlement state from the protocol kernel.
 
@@ -28,23 +28,23 @@ One address can commit once per epoch. The participant counter measures distinct
 addresses, not economic uniqueness. The MVP makes no Sybil-resistance claim; a
 credential or bond policy is a future, separate module.
 
-## Aggregate and execution flow
+## Aggregate and resolution flow
 
 1. After deadline, `closeEpoch` chooses `REFUNDABLE` below k or `AGGREGATE_PENDING`.
 2. Only YES/NO aggregate handles are marked for public decryption.
 3. A permissionless actor submits the aggregate proof bound to the epoch request id.
-4. The pool requests unwrap of the encrypted total and enters `UNWRAP_PENDING`.
-5. A permissionless actor submits the unwrap proof and slippage bounds.
-6. In one atomic transaction the pool finalizes unwrap, verifies
-   `publicYes + publicNo == releasedCollateral`, and calls the adapter.
+4. The pool stores the proof-verified public YES and NO totals and enters
+   `RESOLUTION_PENDING`; collateral remains in confidential custody.
+5. A permissionless actor calls the adapter after the immutable observation time.
+6. The adapter reads the immutable Chainlink feed, rejects invalid or stale data, and
+   returns a binary result only from the configured threshold comparison.
 
-If adapter execution reverts, the entire finalization transaction reverts and the
-epoch remains `UNWRAP_PENDING`. The pre-unwrap timeout begins only when the epoch
-enters `AGGREGATE_PENDING`, not at the commit deadline. After a recovery delay,
-`recoverUnwrap` finalizes the same proof, rewraps the released collateral, and enters
-`REFUNDABLE`. If the Nox proof service never produces a valid unwrap proof, recovery
-is unavailable; this is an explicit protocol-liveness dependency and a stop-ship
-feasibility gate.
+The adapter cannot receive collateral, write an outcome, or access confidential
+handles. If it rejects an invalid or stale feed round, the state remains
+`RESOLUTION_PENDING`. Once the immutable resolution grace deadline elapses without a
+valid result, anyone can enter the confidential refund path. The earlier Phase 0
+unwrap/recovery evidence remains a proven asset-boundary capability, but no longer
+belongs to the MVP product execution path.
 
 ## Settlement and private score
 
@@ -58,8 +58,8 @@ scoreBps = 10_000 - brierLossBps
 
 The score is computed as an encrypted handle and grants viewer rights to the owner
 only. Payout is based on the owner's encrypted allocation to the winning outcome and
-the public rate `redeemedPot / aggregateWinningAllocation`. Division denominators are
-checked as public non-zero values before confidential arithmetic.
+the public rate `aggregateCollateral / aggregateWinningAllocation`. Division
+denominators are checked as public non-zero values before confidential arithmetic.
 
 ## State-specific recovery
 
@@ -67,8 +67,7 @@ checked as public non-zero values before confidential arithmetic.
 | ------------------- | ----------------------- | ----------------------------------------------------- |
 | `OPEN`              | Confidential pool       | Refund only after deadline/cancellation policy        |
 | `AGGREGATE_PENDING` | Confidential pool       | Timeout to `REFUNDABLE`                               |
-| `UNWRAP_PENDING`    | Burn pending proof      | Finalize and execute, or delayed finalize-and-rewrap  |
-| `EXECUTED`          | Public market positions | Await normalized resolution; no original-stake refund |
+| `RESOLUTION_PENDING` | Confidential pool      | Valid fresh feed result or grace-timeout refund       |
 | `SETTLED`           | Confidential payout pot | Owner claims once; dust handled by immutable policy   |
 | `REFUNDABLE`        | Confidential pool       | Owner refund once                                     |
 
@@ -80,7 +79,6 @@ checked as public non-zero values before confidential arithmetic.
 | Owner position/score       |                      Required |                      Yes |              No |                  Never |
 | Epoch aggregates           |                      Required |                       No |              No |           After k only |
 | Transfer/payout/refund     |                      Required | Recipient after transfer |    For one call |                  Never |
-| Unwrap request/burn        | Required as protocol requires |                       No | For unwrap only | Protocol-required only |
 
 Every ACL grant is explicit in code and asserted by integration tests. No module may
 grant persistent admin rights to a user, relayer, indexer, adapter, or keeper.

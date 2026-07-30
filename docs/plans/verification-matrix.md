@@ -31,7 +31,7 @@ production-key configuration.
 | `npm run test:model` | offline | Pure state/math/reference-model property and fuzz tests | G1/G5/G8 |
 | `npm run test:contracts:sepolia -- <case>` | sepolia-write | Named contract state/economic case | G1–G6/G8 |
 | `npm run test:nox:sepolia -- <case>` | sepolia-write | Named ACL/compute/proof/asset case | G1–G3/G5/G8 |
-| `npm run test:adversarial:sepolia -- <case>` | sepolia-write | Replay, unauthorized, timeout, slippage, reentrancy case | G5/G8 |
+| `npm run test:adversarial:sepolia -- <case>` | sepolia-write | Replay, unauthorized, timeout, stale feed, reentrancy case | G5/G8 |
 | `npm run test:e2e:sepolia` | sepolia-write | Full lifecycle across deployed modules | G5–G8 |
 | `npm run test:web` | offline | Component, accessibility, and deterministic UI-state tests | G7/G8 |
 | `npm run test:sepolia:read` | sepolia-read | Manifest, bytecode, events, public verifier | G6–G8 |
@@ -79,8 +79,8 @@ after the test harness exists, but cannot replace transition/invariant traceabil
 - Unauthorized owner viewer, compute authority, token transfer, and adapter use.
 - Commit after deadline, duplicate commit, below-k close, and zero participants.
 - Aggregate/plaintext conservation mismatch and stale/public proof.
-- Slippage revert, adapter residual balance, false return value, and unresolved market.
-- Unwrap requested but adapter unavailable; delayed finalize-and-rewrap recovery.
+- Stale/incomplete feed round, wrong resolution target, caller result injection, and unresolved condition.
+- Resolution grace expiry, zero target custody, and confidential refund recovery.
 - Zero winning aggregate, rounding extremes, duplicate claim/refund, claim/refund conflict.
 - Relayer duplicate/race/reorg, indexer rebuild, RPC outage, and replacement transaction.
 - Wallet rejection, account/chain change, gateway timeout, reload, and reconnect.

@@ -5,8 +5,9 @@ Status values: `not_started`, `in_progress`, `blocked`, `complete`.
 ## 1. Objective
 
 Deliver a reproducible, privacy-honest Ethereum Sepolia application that accepts
-encrypted stake and probability, reveals only a k-gated aggregate, executes through
-an unchanged open protocol, and returns owner-only payout and Brier score.
+encrypted stake and probability, reveals only a k-gated aggregate, resolves one
+objective binary price condition through an unchanged open protocol, and returns
+owner-only payout and Brier score.
 
 This plan is an execution contract. A task is not complete because code exists; it
 is complete only when its artifact, checks, evidence, documentation, and commit are
@@ -51,9 +52,14 @@ operational complexity and improves delivery confidence.
 Every deferral or removal records the affected requirements, user-facing impact,
 reason, replacement or absence of replacement, and rollback implications in the
 active work package. It must remove obsolete code, copy, tests, and claims rather
-than leave an unsupported optional path. A core-path requirement is never waived
-merely because its current implementation is unreliable; simplify its implementation
-or record a feasibility blocker instead.
+than leave an unsupported optional path. The user expressly authorizes this
+core-path triage for every subsequent phase: remove or simplify a repeatedly failing
+non-core feature rather than letting it block a submission-ready product. A
+requirement remains core when it protects Sepolia-only real execution, confidential
+input/ACL boundaries, non-custodial correctness, permissionless recovery, payout or
+refund conservation, independent evidence, or the primary browser journey. A core
+requirement is never waived merely because its current implementation is unreliable;
+simplify its implementation or record a feasibility blocker instead.
 
 ## 3. Critical path
 
@@ -63,7 +69,7 @@ P0 Foundation/feasibility
  └─ G1 Nox compute + ACL
  └─ G2 confidential asset lifecycle
  └─ G3 aggregate proof + recovery
- └─ G4 public-protocol adapter
+ └─ G4 public-resolution adapter
       ↓ explicit approval
 P1 Protocol kernel ── G5 Sepolia protocol correctness
       ↓
@@ -80,7 +86,7 @@ No downstream package may hide or compensate for a failed upstream gate.
 
 | ID  | Work package                                                              | Status        | Required gates | Exit gate                                                           |
 | --- | ------------------------------------------------------------------------- | ------------- | -------------- | ------------------------------------------------------------------- |
-| P0  | [Foundation and feasibility](docs/plans/00-foundation-and-feasibility.md) | `blocked`     | G0–G4          | Load-bearing primitives proven on Sepolia; pure models pass offline |
+| P0  | [Foundation and feasibility](docs/plans/00-foundation-and-feasibility.md) | `in_progress` | G0–G4          | Load-bearing primitives proven on Sepolia; pure models pass offline |
 | P1  | [Protocol kernel](docs/plans/01-protocol-kernel.md)                       | `not_started` | G0–G4          | G5: Sepolia contract lifecycle and I1–I10 pass                      |
 | P2  | [Integration and SDK](docs/plans/02-integration-and-sdk.md)               | `not_started` | G5             | G6: repeatable multi-user Sepolia lifecycle                         |
 | P3  | [Web and read model](docs/plans/03-web-and-read-model.md)                 | `not_started` | G6             | G7: real primary flow without mock state                            |
@@ -141,8 +147,9 @@ A work item is complete only when:
 
 ## 9. Scope controls
 
-- MVP: one pool, one market, one epoch, binary outcome, one collateral boundary,
-  one adapter, owner-only score, permissionless lifecycle.
+- MVP: one pool, one objective price condition, one epoch, binary outcome, one
+  collateral boundary, one public-resolution adapter, owner-only score, and a
+  permissionless lifecycle.
 - Stretch work cannot begin before G8.
 - Do not add upgrades, cross-chain behavior, portable credentials, multiple market
   adapters, administrative sweeping, or write-enabled agent integrations to the MVP.

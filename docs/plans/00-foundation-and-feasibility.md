@@ -1,6 +1,6 @@
 # P0 — Foundation and feasibility
 
-Status: `blocked`
+Status: `in_progress`
 
 ## Objective
 
@@ -22,7 +22,7 @@ production modules are created. Pure arithmetic/reference expectations are teste
 | FND-03 | ACL lifecycle proven          | Isolated ACL spike/tests                                 | Context binding, persistent handle, viewer-only, unauthorized, public scope | G1    | `test: prove handle binding and acl lifecycle`  |
 | FND-04 | Asset lifecycle proven        | Isolated confidential-asset spike/tests                  | Pull, payout, refund, unwrap, finalize, rewrap, replay                      | G2    | `test: prove confidential asset recovery`       |
 | FND-05 | Aggregate/recovery proven     | Isolated cohort/aggregate spike                          | Below-k, aggregate-only reveal, proof binding, timeout, rewrap              | G3    | `test: prove aggregate disclosure and recovery` |
-| FND-06 | Public protocol selected      | Decision matrix + minimal adapter spike                  | License, unchanged target, code hash, execution, slippage, redemption       | G4    | `test: prove open protocol adapter boundary`    |
+| FND-06 | Public resolution selected    | Decision matrix + minimal resolution-adapter spike       | License, unchanged target, code hash, freshness, threshold, zero custody    | G4    | `test: prove public resolution adapter boundary` |
 | FND-07 | Feasibility decision recorded | Evidence JSON/reports, feedback, risks, ADR updates      | Evidence validator and full G0–G4 review                                    | G0–G4 | `docs: record feasibility gates and decisions`  |
 
 Only one FND item may be in progress. Each item must be committed before the next
@@ -965,7 +965,7 @@ behavior and is not a gate conclusion until the valid receipt succeeds.
 
 ID: `FND-06A`
 
-Status: `blocked`
+Status: `complete`
 
 Outcome: Evaluate the smallest set of unchanged public conditional-market targets
 that could satisfy G4 on Ethereum Sepolia. This discovery slice selects a target
@@ -1000,16 +1000,83 @@ decision record.
 
 Intended commit: `docs: record G4 target feasibility blocker`.
 
-Discovery result: No evaluated candidate satisfies every mandatory G4 dimension on
-Ethereum Sepolia. The official conditional-token deployment set has no documented
-Sepolia target. The official v3 exchange deployment index does not list Sepolia and
-does not supply binary resolution/redemption. The live Sepolia optimistic-oracle
-candidate is public and readable, but its official network guidance is testnet-only
-without a DVM; it is an oracle, not a complete conditional market, and cannot prove
+Discovery result: No evaluated candidate satisfied the original external-market G4
+definition on Ethereum Sepolia. The official conditional-token deployment set has
+no documented Sepolia target. The official v3 exchange deployment index does not
+list Sepolia and does not supply binary resolution/redemption. The live Sepolia
+optimistic-oracle candidate is public and readable, but its official network
+guidance is testnet-only without a DVM; it is not a complete market and cannot prove
 disputed deterministic resolution or aggregate execution with price slippage.
-The findings are recorded in the FND-06A evidence artifacts and G4 report. FND-06A,
-G4, and P0 are blocked. No adapter or product contract may begin unless a new
-source-proven candidate changes this feasibility result through a new work item.
+The findings remain recorded in the FND-06A evidence artifacts and G4 report. The
+user then authorized removal of the non-core external-market requirements. ADR-017
+supersedes the original G4 definition; FND-06B is the only active G4 work item.
+
+## FND-06B work-item record
+
+ID: `FND-06B`
+
+Status: `in_progress`
+
+Outcome: Prove that the canonical Ethereum Sepolia Chainlink ETH/USD price-feed
+proxy can serve as the unchanged, zero-custody resolution dependency defined by
+ADR-017. This replaces the rejected external-market execution path; it does not
+replace a failed requirement with a mock, copied target, private resolver, or
+caller-supplied result.
+
+Prerequisites: G0 through G3 are passed. ADR-017 is accepted with this feasibility
+gate. The investigation may read public official documentation, source metadata,
+verified public contracts, and Ethereum Sepolia state only until a separate guarded
+Sepolia write plan is reviewed.
+
+Output files: `ops/scripts/assess-g4-resolution-target.mts`, the root package
+command, `modules/protocol/contracts/feasibility/PriceFeedResolutionSpike.sol`,
+`modules/protocol/scripts/feasibility/run-g4-resolution-sepolia.mts`,
+`evidence/offline/G4/FND-06-RESOLUTION.json`,
+`evidence/sepolia/G4/FND-06-RESOLUTION.json`,
+`evidence/reports/G4-resolution-feasibility.md`, the evidence ledger, source and
+assumption register, risk register, decision log, and this work-package record.
+
+Acceptance criteria: The assessment identifies documented source and license
+provenance, a live Sepolia proxy address, ABI compatibility, positive answer,
+complete round, expected decimals/pair metadata, update time, and runtime hash. The
+isolated Sepolia spike binds the target immutably, evaluates both result sides from
+one real feed response, rejects a zero age bound against that same observed round,
+and exposes no asset-receiving, confidential-handle, result-writing, owner, or
+upgrade entry point. It sends no collateral to the target. The evidence records only
+public target metadata, receipts, runtime hashes, and sanitized test conclusions.
+
+Negative cases: Zero target, invalid comparison, zero/negative answer, incomplete
+round, stale answer, settlement before the observation time, wrong target runtime,
+and a caller-provided result must fail without pool or target fund movement. A
+missing qualifying target or a target that needs a trusted result writer blocks G4.
+
+Privacy/custody impact: The target response and threshold are public. No confidential
+input, handle, proof, owner position, asset amount, signature, key, RPC credential,
+or local private record may be logged or committed. The target and spike receive no
+collateral; all product collateral remains in confidential pool custody. A live
+spike write spends only the committed Sepolia gas allowance and has no asset-recovery
+operation.
+
+Funds location/recovery impact: Before the future product's valid resolution call,
+all collateral remains in the confidential pool. A feed that remains invalid after
+the immutable grace deadline must lead to a permissionless confidential refund; this
+is re-proven in P1/G5. The FND-06B spike has no asset balance, so failed or stale
+calls need no recovery beyond retaining the sanitized receipt.
+
+Checks: `npm run assess:g4:resolution:sepolia`, `npm run test:g4:resolution:sepolia`,
+`npm run compile`, `npm run check:offline`, `npm run check:sepolia:read`,
+`npm run scan:secrets`, and `git diff --check`.
+
+Evidence path: `evidence/offline/G4/FND-06-RESOLUTION.json`,
+`evidence/sepolia/G4/FND-06-RESOLUTION.json`, and
+`evidence/reports/G4-resolution-feasibility.md`.
+
+Intended commit: `test: prove public resolution adapter boundary`.
+
+Rollback/failure action: Revert only the FND-06B source and documentation commit if
+the target assessment is incorrect; preserve an accurate sanitized failure report.
+Do not create a mock feed, fork the target, add a result writer, accept a stale
+answer, or begin P1. A failing FND-06B returns P0 and G4 to `blocked`.
 
 ## FND-01 — Toolchain lock
 
@@ -1072,7 +1139,7 @@ Acceptance:
 - Substitute aggregate plaintext fails conservation.
 - Timeout before unwrap and delayed recovery after unwrap have known funds locations.
 
-## FND-06 — Adapter selection
+## FND-06 — Resolution-adapter selection
 
 Selection scorecard:
 
@@ -1080,14 +1147,15 @@ Selection scorecard:
 | -------------------------------------------------- | -----: | ------- |
 | Unchanged open-source protocol and license clarity |     20 | Pass    |
 | Sepolia deployability/availability                 |     15 | Pass    |
-| Atomic spend/slippage bound                        |     20 | Pass    |
-| Deterministic resolution/redemption                |     15 | Pass    |
-| No between-call adapter custody                    |     15 | Pass    |
+| Immutable objective condition/freshness            |     20 | Pass    |
+| Caller-independent binary normalization            |     15 | Pass    |
+| Target and adapter zero-custody boundary           |     15 | Pass    |
 | Verifiable runtime bytecode/provenance             |     10 | Pass    |
 | Demo/read-model clarity                            |      5 | ≥3/5    |
 
-Document all candidates evaluated, but implement only the selected adapter. A target
-that misses any minimum is rejected even if its aggregate score is highest.
+Document all candidates evaluated, but implement only the selected resolution
+adapter. A target that misses any minimum is rejected even if its aggregate score is
+highest.
 
 ## Required evidence
 
@@ -1106,7 +1174,7 @@ docs/operations/03-decision-log.md
 - [x] G1 passed: arithmetic, context binding, ACL, and persistence pass directly on Sepolia.
 - [x] G2 passed: confidential asset success and recovery conserve funds.
 - [x] G3 passed: aggregate-only disclosure and proof/recovery semantics pass.
-- [ ] G4 passed: one unchanged public protocol and adapter boundary are selected.
+- [ ] G4 passed: one unchanged public protocol and zero-custody resolution-adapter boundary are selected.
 - [ ] Evidence ledger contains validated, sanitized records for G0–G4.
 - [ ] All P0 findings, risks, and architecture consequences are documented.
 - [ ] User explicitly approves transition to P1.

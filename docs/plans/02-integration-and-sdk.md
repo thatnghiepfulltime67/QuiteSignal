@@ -11,13 +11,13 @@ lifecycle without introducing plaintext or privileged service authority.
 
 - P1 is complete and G5 is passed.
 - Contract ABI/events and manifest schema are frozen for the P2 release candidate.
-- The selected target adapter passed G4 and its live target facts are rechecked.
+- The selected resolution adapter passed G4 and its live target facts are rechecked.
 
 ## Work-item register
 
 | ID | Outcome | Primary artifacts | Required checks | Intended commit |
 |---|---|---|---|---|
-| INT-01 | Production target adapter | Selected adapter, target config, integration tests | Runtime hash, slippage, resolution, redemption, residual balance | `feat: integrate selected public market` |
+| INT-01 | Production resolution adapter | Selected adapter, target config, integration tests | Runtime hash, freshness, resolution, zero custody, residual collateral | `feat: integrate selected public resolution feed` |
 | SDK-01 | Safe public types | Branded types, schemas, decimal parser, domain config | Compile-time misuse tests, boundary vectors | `feat: add typed protocol sdk` |
 | SDK-02 | Confidential client | Encrypt/import preparation, owner decrypt, ACL reads | Context binding, no plaintext serialization, live smoke | `feat: add nox signal client` |
 | SDK-03 | Transaction/read client | Prepare/send/replacement/retry, public reads | ABI compatibility, idempotency, chain/account changes | `feat: add protocol transaction client` |
@@ -25,8 +25,8 @@ lifecycle without introducing plaintext or privileged service authority.
 | AUT-01 | Permissionless relayer | dry-run/once/poll/health, policy, bounded budget | race, duplicate, stale request, RPC failure | `feat: add permissionless lifecycle relayer` |
 | IDX-01 | Rebuildable read model | event reducer, checkpoint, reorg, rebuild | deterministic replay, checkpoint reset, no private schema | `feat: add chain derived read model` |
 | DEP-01 | Deterministic Sepolia deploy | deploy plan/write scripts, manifest generation | chain guard, cost plan, source/runtime verification | `build: add guarded sepolia deployment` |
-| LIVE-01 | Success lifecycle | Multi-user live lifecycle and evidence | signal → aggregate → execute → settle → score/claim | `test: prove live sepolia lifecycle` |
-| LIVE-02 | Failure/recovery lifecycle | Named live negative cases and evidence | below-k, unauthorized, replay, timeout/recovery, slippage | `test: prove live failure recovery paths` |
+| LIVE-01 | Success lifecycle | Multi-user live lifecycle and evidence | signal → aggregate → resolve → settle → score/claim | `test: prove live sepolia lifecycle` |
+| LIVE-02 | Failure/recovery lifecycle | Named live negative cases and evidence | below-k, unauthorized, replay, timeout/recovery, stale feed | `test: prove live failure recovery paths` |
 
 ## Dependency graph
 
@@ -84,12 +84,12 @@ Sepolia suites pass.
 
 | Case ID | Required result | Evidence |
 |---|---|---|
-| LIVE-SUCCESS-01 | At least k distinct wallets commit; aggregate executes; outcome settles; owner score/claim succeeds | G6 lifecycle JSON/report |
+| LIVE-SUCCESS-01 | At least k distinct wallets commit; aggregate finalizes; fresh feed outcome settles; owner score/claim succeeds | G6 lifecycle JSON/report |
 | LIVE-K-01 | Below-k closes to refund and no aggregate public-decrypt permission exists | G6 failure JSON/report |
 | LIVE-ACL-01 | Unrelated wallet cannot view/compute owner position or score | G6 ACL report |
 | LIVE-REPLAY-01 | Reused/wrong-context request fails without state/fund movement | G6 receipt/report |
-| LIVE-RECOVERY-01 | Requested unwrap follows delayed finalize-and-rewrap refund path | G6 recovery report |
-| LIVE-SLIPPAGE-01 | Adapter slippage revert preserves state and bounded funds | G6 receipt/balance report |
+| LIVE-RECOVERY-01 | Resolution grace expiry reaches confidential refund without target custody | G6 recovery report |
+| LIVE-FEED-01 | Stale or invalid feed rejection preserves state and confidential funds | G6 receipt/balance report |
 | LIVE-VERIFY-01 | Independent CLI validates manifest and observable invariants | G6 verifier report |
 
 ## Verification

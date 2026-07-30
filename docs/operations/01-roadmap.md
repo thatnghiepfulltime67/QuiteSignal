@@ -10,8 +10,8 @@ Exit criteria:
 - Pin and inspect current Nox package versions and Sepolia addresses.
 - Prove external input encryption, owner viewer ACL, aggregate public decrypt,
   confidential token transfer, and cross-transaction handle reuse on Sepolia.
-- Confirm the public market adapter can execute and settle without modifying the
-  target protocol.
+- Confirm the public resolution adapter can normalize an objective condition without
+  modifying the target protocol or receiving collateral.
 - Record failures and workarounds in `nox-feedback.md`.
 
 No product implementation proceeds if any load-bearing primitive fails without a
@@ -25,12 +25,12 @@ safe alternative.
   Nox, ACL, lifecycle, and recovery cases directly on Sepolia.
 - Build read-only verifier before the frontend.
 
-Exit: a dedicated Sepolia test deployment completes commit → aggregate → execute →
+Exit: a dedicated Sepolia test deployment completes commit → aggregate → resolve →
 settle → claim/refund and recovery paths within the phase budget.
 
 ## Phase 2 — Real integration and SDK
 
-- Implement one immutable public-market adapter.
+- Implement one immutable public-resolution adapter.
 - Build typed SDK and browser Nox client.
 - Deploy test contracts, seed a multi-user Sepolia epoch, and verify invariants.
 - Commit deployment manifest, ABI hashes, and transaction evidence.

@@ -37,7 +37,7 @@ work item; empty scaffolding does not count as progress.
 | B02 | Domain kernel | G0–G4 passed | State enum, transitions, schemas, math model, stable errors | G5 |
 | B03 | Contract interfaces | B02 | Factory/pool/adapter/token interfaces and events | G5 |
 | B04 | Confidential pool | B03 | Custody, signal math, aggregate, recovery, settlement, score/refund | G5 |
-| B05 | Public adapter | B03 + G4 | One immutable target adapter and balance-delta checks | G5 |
+| B05 | Public resolution adapter | B03 + G4 | One immutable target adapter and feed-condition checks | G5 |
 | B06 | Independent verifier/config | B03–B05 | Manifest schema, code-hash checks, I1–I10 verifier | G5 |
 | B07 | Nox client SDK | B03 + G1–G3 | Typed encryption, binding, owner decrypt, tx preparation | G6 |
 | B08 | Relayer and indexer | B06–B07 | Idempotent jobs, public event model, checkpoint/reorg behavior | G6 |
@@ -82,8 +82,8 @@ modules/domain/src/schemas.ts
 modules/domain/src/reference-model.ts
 modules/protocol/contracts/core/QuietSignalFactory.sol
 modules/protocol/contracts/core/QuietSignalPool.sol
-modules/protocol/contracts/interfaces/IMarketAdapter.sol
-modules/protocol/contracts/adapters/<SelectedAdapter>.sol
+modules/protocol/contracts/interfaces/IResolutionAdapter.sol
+modules/protocol/contracts/adapters/<SelectedResolutionAdapter>.sol
 modules/protocol/test/unit/
 modules/protocol/test/invariant/
 modules/protocol/test/adversarial/

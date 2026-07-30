@@ -11,8 +11,10 @@ cohort aggregates are public after the k-gate.
 
 **Status:** Accepted
 
-The pool talks to a narrow `IMarketAdapter`. The integration does not modify the
-target protocol, and all target addresses and code hashes are recorded.
+The pool talks to a narrow adapter. The integration does not modify the target
+protocol, and all target addresses and code hashes are recorded. ADR-017 narrows
+the MVP adapter to public result normalization and explicitly forbids it from
+receiving collateral.
 
 ## ADR-003 — Binary first
 
@@ -164,7 +166,7 @@ changing custody, or exposing a confidential value. Pre-fix fixtures are recover
 through their existing timeout and refund path and are excluded from post-fix gate
 evidence.
 
-## ADR-016 — Retain the G4 target stop condition
+## ADR-016 — Retain the original G4 target stop condition
 
 **Status:** Accepted
 
@@ -179,5 +181,38 @@ The project will not deploy a copied target, simulate a protocol, add a trusted
 resolver, or claim that an undisputed oracle assertion is equivalent to complete
 market settlement. This preserves the existing trust, custody, privacy, state, and
 public-interface commitments. P0 is blocked until a new source-proven target is
-available on Ethereum Sepolia or the user explicitly authorizes a changed chain
-constraint and a new decision record.
+available on Ethereum Sepolia or the user explicitly authorizes a revised G4
+acceptance boundary and a new decision record.
+
+## ADR-017 — Direct public price-feed settlement
+
+**Status:** Accepted with feasibility gate
+
+The user authorized removal of non-core conditional-market requirements on
+2026-07-30. The MVP retains its privacy, custody, recovery, and Sepolia-only
+requirements, but replaces external AMM execution, slippage handling, external
+redemption, and third-party market custody with a direct public resolution adapter.
+
+Each immutable pool configures one unchanged canonical Chainlink ETH/USD price-feed
+proxy on Ethereum Sepolia, one comparison direction, one integer threshold, one
+observation-not-before timestamp, and one maximum feed age. The adapter reads the
+feed and returns a binary result only when the answer is positive, the round is
+complete, and its update time is within the immutable age bound. A pool can settle
+only after its configured observation time. The pool continues to own all
+confidential collateral; the target receives no pool assets and has no authority
+over pool state, Nox handles, payout handles, or recovery.
+
+The public aggregate remains the k-gated product output. Once a valid objective
+outcome is available, the pool selects each participant's confidential YES or NO
+allocation and applies the public rate `aggregateCollateral / winningAggregate`.
+Claims therefore remain confidential and cannot exceed collateral already held by
+the pool. If the feed does not provide a valid round before an immutable resolution
+grace deadline, the pool enters the documented confidential refund path. No owner,
+backend, relayer, indexer, or adapter may choose the result.
+
+This is a material state, custody, and public-interface change. FND-06B must prove
+the target's source/license provenance, Sepolia runtime, ABI, current round shape,
+positive/negative threshold behavior, stale-round rejection, and zero-custody
+boundary before G4 can pass. Product implementation remains blocked until that
+evidence is recorded. The external oracle remains an explicit public trust
+dependency; QuietSignal makes no claim that it independently verifies the feed.

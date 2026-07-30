@@ -10,7 +10,7 @@ and score behavior satisfies I1–I10 without plaintext shadow accounting.
 ## Prerequisites
 
 - P0 is `complete`, G0–G4 are `passed`, and the transition is explicitly approved.
-- Exact Nox asset/ACL patterns and one adapter target are recorded by ADR/evidence.
+- Exact Nox asset/ACL patterns and one resolution target are recorded by ADR/evidence.
 - Domain paths and production paths from the deliverables register are accepted.
 
 ## Work-item register
@@ -22,8 +22,8 @@ and score behavior satisfies I1–I10 without plaintext shadow accounting.
 | PK-03 | Immutable deployment | Factory and pool configuration | Invalid config, uniqueness, immutable target/code binding | `feat: add immutable pool factory` |
 | PK-04 | Confidential commit/custody | Signal import, clamp, allocation, position, token pull | I1/I2/I7/I10, duplicate/deadline/ACL cases | `feat: add confidential signal custody` |
 | PK-05 | Cohort/aggregate | close, k-gate, request, aggregate proof | Below-k, reveal scope, substitute proof, replay | `feat: add k gated aggregate lifecycle` |
-| PK-06 | Execution/recovery | unwrap, adapter call, slippage, timeout, rewrap | I4/I5, malicious return, revert atomicity, recovery | `feat: add bounded execution and recovery` |
-| PK-07 | Settlement/owner terminal paths | resolve, redeem, wrap pot, score, claim, refund | I3/I6/I8/I10, rounding and conflict cases | `feat: add private settlement and score` |
+| PK-06 | Resolution/recovery | aggregate finalization, feed condition, freshness, grace refund | I4/I5, stale round, wrong target, zero custody, recovery | `feat: add bounded resolution and recovery` |
+| PK-07 | Settlement/owner terminal paths | resolve, score, claim, refund | I3/I6/I8/I10, rounding and conflict cases | `feat: add private settlement and score` |
 | PK-08 | Independent verifier/manifest | Verifier rules, manifest schema, CLI | Mutation rejection, stale binding, wrong code hash | `feat: add independent protocol verifier` |
 | PK-09 | Adversarial/invariant gate | Fuzz, reference-model, static analysis suites | I1–I10 and mandatory negatives | `test: close protocol correctness gate` |
 
@@ -43,7 +43,7 @@ No SDK, relayer, indexer, or web implementation begins in P1.
 
 - [ ] Factory validates collateral/wrapper/adapter compatibility and non-zero addresses.
 - [ ] One pool owns exactly one market and one epoch; deployment starts in `OPEN`.
-- [ ] Deadline, `kMin`, timeouts, target, collateral, and adapter are immutable.
+- [ ] Deadline, `kMin`, timeouts, target, condition, collateral, and adapter are immutable.
 - [ ] Duplicate configuration salt and unsupported outcome count fail.
 - [ ] No upgrade, pause, owner sweep, or hidden administrative settlement path exists.
 
@@ -60,14 +60,14 @@ No SDK, relayer, indexer, or web implementation begins in P1.
 - [ ] Below-k close enters `REFUNDABLE` and never grants aggregate public decrypt.
 - [ ] At/above-k close exposes only aggregate YES/NO handles.
 - [ ] Aggregate and unwrap request IDs are context-bound and single-use.
-- [ ] `publicYes + publicNo` equals observed released collateral before adapter call.
-- [ ] Slippage and adapter balance deltas are hard checks, not relayer promises.
-- [ ] Timeout and delayed finalize-and-rewrap follow the documented funds map.
+- [ ] `publicYes + publicNo` is proof-verified before resolution and determines the payout rate.
+- [ ] Feed target, threshold, observation time, maximum age, and grace are immutable hard checks.
+- [ ] Aggregate timeout and resolution grace follow the documented confidential funds map.
 
 ### Settlement, score, and terminal actions
 
-- [ ] Resolution is read and normalized from the selected unchanged protocol.
-- [ ] Redemption is measured by public balance delta and pot is wrapped confidentially.
+- [ ] Resolution is read and normalized from the selected unchanged public feed.
+- [ ] Collateral remains confidential until payout; no adapter or target receives it.
 - [ ] Brier score matches the reference model and remains owner-viewable only.
 - [ ] Payout rounds down and total claims cannot exceed the pot.
 - [ ] Claim/refund are single-use and mutually exclusive.
@@ -86,8 +86,8 @@ No SDK, relayer, indexer, or web implementation begins in P1.
   - success → settle → score → claim;
   - below-k → refund;
   - aggregate timeout → refund;
-  - unwrap requested → delayed finalize-and-rewrap → refund;
-  - slippage/adapter revert with atomic state preservation.
+  - invalid/stale feed → resolution grace refund;
+  - wrong target or caller-supplied resolution rejection with state preservation.
 
 ## Required evidence
 

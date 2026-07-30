@@ -12,13 +12,13 @@
 ## Product insight
 
 Privacy is useful only if the public output remains useful. Therefore the system
-does not hide everything: market price, epoch membership, and aggregate output
+does not hide everything: the objective condition, epoch membership, and aggregate output
 remain public; direction, amount, exact forecast, and personal score remain
 confidential.
 
 ## Primary user flow
 
-1. The user selects a market and reviews deadline and k-threshold.
+1. The user selects an objective price condition and reviews deadline and k-threshold.
 2. The user enters a probability and stake. The client validates the range and
    encrypts both values for the same pool.
 3. The user signs approval/operator authorization and `commitSignal`; calldata
@@ -27,10 +27,9 @@ confidential.
 5. After the deadline, a keeper closes the epoch. If k is not reached, the epoch
    enters refund; no aggregate is revealed.
 6. A keeper public-decrypts aggregate handles and submits proofs. The contract
-   checks that aggregate plaintext equals the collateral actually released, then
-   batches into the public market adapter.
-7. The oracle publishes the result. The contract fixes a payout rate and computes
-   an owner-only Brier score from the encrypted probability.
+   fixes the aggregate payout inputs while collateral remains confidential in the pool.
+7. A permissionless call reads the immutable fresh public feed condition. The contract
+   fixes a payout rate and computes an owner-only Brier score from the encrypted probability.
 8. The user opens the position card, decrypts their position and score, and claims
    a confidential payout.
 
@@ -39,5 +38,5 @@ confidential.
 - k not reached: explain why and offer refund; never reveal aggregates.
 - Gateway timeout: keep encrypted payload local and retry idempotently.
 - Keeper offline: lifecycle calls remain permissionless; timeout refund exists.
-- Slippage: the batch reverts atomically and the epoch becomes refundable.
-- Oracle pending: show pending status and disable claim.
+- Invalid or stale feed: keep the epoch pending; resolution grace leads to refund.
+- Resolution pending: show pending status and disable claim.

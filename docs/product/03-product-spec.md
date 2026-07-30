@@ -2,7 +2,8 @@
 
 ## Concepts
 
-- **Market**: a binary question with condition, collateral, and adapter.
+- **Market**: one binary price condition with collateral and an immutable
+  public-resolution adapter.
 - **Epoch**: the single signal-collection window owned by one pool. A new cohort
   or market deploys a new pool; the MVP has no cross-epoch accounting.
 - **Signal**: `(stake, probabilityBps, salt)` encrypted client-side. The contract
@@ -17,11 +18,11 @@
 | FR-01 | Create pool | Factory deploys one immutable market/epoch pool in `OPEN` with deadline and `kMin` |
 | FR-02 | Commit signal | User commits encrypted stake and probability; no plaintext |
 | FR-03 | Cohort gate | No aggregate public decryption below `kMin` |
-| FR-04 | Batch execution | Only aggregate plaintext is routed through the adapter |
-| FR-05 | Settlement | Oracle result selects winner; payout cannot exceed pot |
+| FR-04 | Aggregate finalization | Only aggregate plaintext is published after the k-gate; collateral stays confidential |
+| FR-05 | Settlement | Immutable public feed condition selects winner; payout cannot exceed pool collateral |
 | FR-06 | Private view | Owner decrypts position and score; ACL is owner-scoped |
-| FR-07 | Refund | Timeout, slippage, or keeper failure cannot lock funds indefinitely |
-| FR-08 | Audit | Verifier recomputes conservation, disclosure, and execution bounds |
+| FR-07 | Refund | Aggregate/proof timeout, invalid feed, or keeper failure cannot lock funds indefinitely |
+| FR-08 | Audit | Verifier recomputes conservation, disclosure, resolution, and payout bounds |
 | FR-09 | Private score | Owner receives a Brier score derived from their encrypted forecast |
 
 ## Non-functional requirements

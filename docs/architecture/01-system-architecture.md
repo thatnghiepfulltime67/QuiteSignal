@@ -3,7 +3,8 @@
 ## Design goals
 
 1. Privacy-critical logic lives in contracts and Nox, not in a blindly trusted backend.
-2. The public market is an adapter dependency; its bytecode is not forked or modified.
+2. The public resolution feed is an adapter dependency; its bytecode is not forked
+   or modified.
 3. The asynchronous gateway/proof lifecycle is explicit and retryable.
 4. SDK, contracts, relayer, indexer, and UI have one-way dependency direction.
 
@@ -15,9 +16,8 @@ flowchart LR
   U -->|handles + proofs| C[QuietSignalPool]
   K[Permissionless keeper] --> C
   G -->|decryption proofs| K
-  C --> A[MarketAdapter]
-  A --> M[Open conditional market]
-  O[Oracle / resolver] --> M
+  C --> A[ResolutionAdapter]
+  A --> M[Open public price feed]
   C --> I[Indexer / read model]
   I --> W[Web application]
   U --> W
@@ -28,7 +28,7 @@ flowchart LR
 | Module | Owns | Must not own |
 |---|---|---|
 | `contracts/core` | Epoch state, encrypted ledgers, ACL, settlement bounds | UI formatting, gateway calls |
-| `contracts/adapters` | Narrow interface to public market | Private input decryption |
+| `contracts/adapters` | Narrow interface to public resolution feed | Private input decryption or asset custody |
 | `modules/confidential-client` | Encryption, proof packing, ACL-safe helpers | Wallet custody, business policy |
 | `modules/domain` | Pure state machine, schemas, error taxonomy | RPC side effects |
 | `services/automation` | Permissionless lifecycle pokes, proof queue | Plaintext user signal, user key |
@@ -44,10 +44,9 @@ stateDiagram-v2
   OPEN --> CLOSED: deadline / close
   CLOSED --> REFUNDABLE: count < k
   CLOSED --> AGGREGATE_PENDING: count >= k
-  AGGREGATE_PENDING --> UNWRAP_PENDING: aggregate proof accepted
-  UNWRAP_PENDING --> EXECUTED: unwrap proof + adapter batch
-  UNWRAP_PENDING --> REFUNDABLE: recovery finalize + rewrap
-  EXECUTED --> SETTLED: oracle result available
+  AGGREGATE_PENDING --> RESOLUTION_PENDING: aggregate proof accepted
+  RESOLUTION_PENDING --> SETTLED: valid immutable feed condition
+  RESOLUTION_PENDING --> REFUNDABLE: resolution grace elapsed
   REFUNDABLE --> REFUNDED
   SETTLED --> SETTLED: each owner claims once
 ```
@@ -59,11 +58,13 @@ stateDiagram-v2
   application-controlled backend or the public chain.
 - Browser ↔ wallet: the wallet authorizes funds and transactions; the app stores no keys.
 - Keeper ↔ contract: the keeper is replaceable; proof checks bound all amounts.
-- Oracle ↔ market: outcome resolution is an explicit external trust assumption.
+- Pool ↔ price feed: outcome resolution is an explicit external trust assumption;
+  the adapter has no asset or outcome-writing authority.
 
 ## Availability model
 
 Lifecycle calls are permissionless where safe. A relayer accelerates but is not a
 custodian. The indexer can be rebuilt from events and is not the source of truth.
-Once market execution occurs, the original collateral cannot be refunded; resolution
-liveness becomes an explicit oracle/market dependency.
+Collateral remains in confidential pool custody until a valid resolution. A feed
+outage remains an explicit oracle dependency, but its immutable grace deadline leads
+to a permissionless refund rather than external custody.

@@ -15,38 +15,39 @@ Owns confidential accounting, epoch state, collateral custody, aggregate disclos
 settlement, refund, and owner-only score receipts. Configuration is immutable after
 deployment. The pool has no upgrade proxy in the MVP; a new version deploys a new pool.
 
-### `IMarketAdapter`
+### `IResolutionAdapter`
 
 ```solidity
-interface IMarketAdapter {
-  function collateral() external view returns (address);
-  function executeBatch(
-    uint256 amountYes,
-    uint256 amountNo,
-    uint256 minYes,
-    uint256 minNo
-  ) external returns (uint256 acquiredYes, uint256 acquiredNo);
-  function resolution() external view returns (bool resolved, uint8 winner);
-  function redeem() external returns (uint256 redeemedCollateral);
+interface IResolutionAdapter {
+  function target() external view returns (address);
+  function targetRuntimeCodeHash() external view returns (bytes32);
+  function observationNotBefore() external view returns (uint256);
+  function maxFeedAge() external view returns (uint256);
+  function resolution()
+    external
+    view
+    returns (uint8 winner, uint80 roundId, int256 answer, uint256 updatedAt);
 }
 ```
 
-An adapter instance is bound to one public market and is permissionless. It cannot
-custody confidential handles and must return public collateral/outcome assets to the
-caller within the same transaction. The pool checks balances before and after every
-adapter call rather than trusting returned values alone.
+An adapter instance is bound to one public price-feed condition and is
+permissionless. It cannot custody confidential handles or assets, has no
+asset-receiving function, and cannot write an outcome. `resolution` reads the
+unchanged target and reverts unless the immutable observation time, complete-round,
+positive-answer, and maximum-age checks succeed. The pool never trusts a
+caller-supplied result.
 
 ## Storage model
 
 ```text
 PoolConfig
-  collateral, confidentialCollateral, adapter, kMin,
-  commitDuration, aggregateTimeout, recoveryDelay
+  confidentialCollateral, resolutionAdapter, kMin,
+  commitDuration, aggregateTimeout, resolutionGrace
 
 Epoch (one per pool)
-  state, deadline, participantCount, aggregateRequestId, unwrapRequestId,
+  state, deadline, participantCount, aggregateRequestId,
   encryptedTotal, encryptedYes, encryptedNo,
-  publicYes, publicNo, acquiredYes, acquiredNo, winner, pot
+  publicYes, publicNo, winner, settledRoundId, settledAnswer
 
 Position[owner]
   committed, claimed, refunded,
@@ -64,9 +65,8 @@ state from becoming coupled.
 ```text
 [factory deployment] → OPEN
 OPEN → AGGREGATE_PENDING | REFUNDABLE
-AGGREGATE_PENDING → UNWRAP_PENDING | REFUNDABLE
-UNWRAP_PENDING → EXECUTED | REFUNDABLE
-EXECUTED → SETTLED
+AGGREGATE_PENDING → RESOLUTION_PENDING | REFUNDABLE
+RESOLUTION_PENDING → SETTLED | REFUNDABLE
 SETTLED → SETTLED       (individual claims)
 REFUNDABLE → REFUNDABLE (individual refunds)
 ```
@@ -80,17 +80,18 @@ No transition moves backward. Individual claim/refund flags are monotonic.
 | `commitSignal`            | `OPEN`, before deadline, one commit/address, valid bound proofs         | Pull encrypted stake; update position and aggregates                  |
 | `closeEpoch`              | Deadline reached                                                        | Below k: `REFUNDABLE`; otherwise `AGGREGATE_PENDING`                  |
 | `requestAggregateDecrypt` | `AGGREGATE_PENDING`, request not created                                | Public-decrypt YES/NO aggregate handles only                          |
-| `finalizeAggregate`       | Matching request context and valid proof                                | Store public totals, request total unwrap, enter `UNWRAP_PENDING`     |
-| `finalizeExecution`       | Matching unwrap proof; conservation and slippage checks                 | Atomically finalize unwrap and call adapter; enter `EXECUTED`         |
-| `recoverUnwrap`           | `UNWRAP_PENDING`, recovery delay elapsed, valid unwrap proof            | Finalize, rewrap all released collateral, enter `REFUNDABLE`          |
+| `finalizeAggregate`       | Matching request context and valid proof                                | Store public totals, enter `RESOLUTION_PENDING`                         |
 | `cancelBeforeUnwrap`      | `AGGREGATE_PENDING`, aggregate timeout elapsed from entry to that state | Enter `REFUNDABLE`; revealable aggregate remains public               |
-| `settle`                  | `EXECUTED`, adapter reports resolved                                    | Redeem, verify balance delta, wrap pot, store winner; enter `SETTLED` |
+| `settle`                  | `RESOLUTION_PENDING`, adapter gives valid fresh resolution              | Store result context and winner; enter `SETTLED`                       |
+| `cancelAfterResolutionGrace` | `RESOLUTION_PENDING`, grace elapsed                                  | Enter `REFUNDABLE`; collateral never left pool custody                 |
 | `materializeScore`        | `SETTLED`, caller committed                                             | Create/update owner-only encrypted Brier score                        |
 | `claim`                   | `SETTLED`, caller committed and not claimed/refunded                    | Confidential payout once                                              |
 | `refund`                  | `REFUNDABLE`, caller committed and not claimed/refunded                 | Confidential stake return once                                        |
 
-`recoverUnwrap` requires the same proof whose absence caused the liveness failure.
-It protects against adapter/slippage failure, not total gateway unavailability.
+The Phase 0 unwrap/rewrap evidence remains valid for the confidential asset
+boundary, but the MVP does not unwrap aggregate collateral. Invalid, stale, or
+unavailable price-feed data is handled by the permissionless resolution-grace refund
+path rather than a target-side recovery call.
 
 ## Signal math
 
@@ -109,7 +110,7 @@ and token ACL sequence are Phase 0 feasibility gates on Sepolia.
 ## Settlement and score math
 
 If YES wins, `winningAllocation = encryptedYesAllocation`; otherwise it is the NO
-allocation. Public rate values are `rateNum = redeemedPot` and
+allocation. Public rate values are `rateNum = publicYes + publicNo` and
 `rateDen = publicWinningAggregate`. `rateDen` must be non-zero.
 
 ```text
@@ -128,9 +129,11 @@ sweep path. A future immutable expiry policy requires a separate decision record
 - **I1 Input conservation:** derived YES + NO allocation equals encrypted stake.
 - **I2 Epoch conservation:** aggregate YES + NO equals the encrypted collateral pulled.
 - **I3 Disclosure scope:** no owner position, probability, stake, score, payout, or refund handle is publicly decrypted.
-- **I4 Execution bound:** `publicYes + publicNo == releasedCollateral` before adapter execution.
-- **I5 Balance-delta integrity:** acquired positions and redeemed collateral are verified from on-chain balance deltas.
-- **I6 Payout bound:** sum of claims is at most the redeemed pot.
+- **I4 Aggregate/payout binding:** the public aggregate rate derives only from the
+  proof-verified YES/NO totals; no target call can change custody or spend.
+- **I5 Resolution integrity:** the immutable adapter target and condition yield a
+  complete, positive, fresh feed round and a caller-independent binary winner.
+- **I6 Payout bound:** sum of claims is at most confidential collateral held by the pool.
 - **I7 Replay safety:** every proof binds `(chainId, pool, epochId, requestId)` and is consumed once.
 - **I8 State safety:** state and per-owner terminal flags are monotonic and mutually exclusive.
 - **I9 Integration integrity:** adapter, target addresses, target code hashes, and ABI hashes match the deployment manifest.
@@ -140,5 +143,6 @@ sweep path. A future immutable expiry policy requires a separate decision record
 
 `InvalidConfiguration`, `InvalidState`, `CommitWindowClosed`, `AlreadyCommitted`,
 `KThresholdNotMet`, `ProofContextMismatch`, `ProofAlreadyConsumed`,
-`ConservationViolation`, `SlippageExceeded`, `ResolutionPending`, `ZeroWinningPool`,
-`AlreadyClaimed`, `AlreadyRefunded`, and `RecoveryNotReady`.
+`ConservationViolation`, `InvalidFeedRound`, `ResolutionNotReady`,
+`ResolutionGraceNotElapsed`, `ZeroWinningPool`, `AlreadyClaimed`, and
+`AlreadyRefunded`.

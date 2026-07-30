@@ -94,35 +94,40 @@ Kill conditions:
 - Proof service unavailability creates an unavoidable undocumented loss state.
 - A keeper can substitute plaintext totals without detection.
 
-## G4 — Open-protocol adapter
+## G4 — Open-protocol resolution adapter
 
 Required cases:
 
 - One target protocol selected with license, address, ABI, and runtime-code provenance.
-- Adapter performs aggregate execution with explicit slippage limits.
-- Adapter returns all assets to the caller in the same transaction.
-- Resolution normalization and redemption are verified from observed balance deltas.
-- Unauthorized calls, stale resolution, zero winning pool, and residual-balance cases.
+- Adapter normalizes one immutable, objective binary condition from the target's
+  current round without accepting caller-supplied outcome data.
+- Target and adapter receive no pool assets and have no confidential-handle access.
+- Positive/negative threshold behavior, stale or incomplete round rejection,
+  premature settlement, zero winning pool, and residual-collateral cases.
 
 Pass criteria:
 
 - Target protocol is unchanged and independently code-hash verifiable.
-- Adapter has no confidential handle access and no between-call custody.
+- Adapter has no confidential handle access, no asset-receiving entry point, and no
+  between-call custody.
 - G4 live smoke passes on Sepolia.
 
 Kill conditions:
 
 - Integration requires modifying the target protocol.
-- Adapter must retain user/pool assets or privileged authority between calls.
-- Execution cannot enforce a hard spend bound or slippage bound.
-- Resolution cannot be normalized deterministically and audited.
+- Adapter can receive user/pool assets, retain assets, or hold privileged authority
+  between calls.
+- Resolution accepts a caller-supplied result, a stale/incomplete round, or an
+  answer that does not satisfy the immutable condition.
+- A feed outage cannot reach the documented permissionless refund path.
 
 ## G5 — Sepolia protocol correctness
 
 Pass criteria:
 
-- Full success, below-k refund, pre-unwrap timeout, unwrap recovery, slippage revert,
-  replay, invalid state, zero winning pool, payout rounding, and ACL paths pass.
+- Full success, below-k refund, aggregate timeout, resolution-grace recovery,
+  stale-feed rejection, replay, invalid state, zero winning pool, payout rounding,
+  and ACL paths pass.
 - I1–I10 have named tests; verifier code is independent of pool accounting helpers.
 - Offline fuzz/property models and Sepolia boundary/adversarial cases meet the verification matrix.
 
