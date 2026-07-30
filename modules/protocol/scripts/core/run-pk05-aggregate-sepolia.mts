@@ -551,10 +551,14 @@ async function main(): Promise<void> {
     const wallet = actor.address === secondary.address ? secondaryWallet : primaryWallet;
     const probability =
       actor.address === secondary.address ? SECONDARY_PROBABILITY : PRIMARY_PROBABILITY;
-    const [stake, probabilityInput] = (await Promise.all([
-      handles.encryptInput(STAKE, 'uint256', pool),
-      handles.encryptInput(probability, 'uint256', pool),
-    ])) as [EncryptedValue, EncryptedValue];
+    // The Nox input builder owns mutable encryption state. Serialize two inputs for
+    // one commitment so each proof is bound to its intended public contract.
+    const stake = (await handles.encryptInput(STAKE, 'uint256', pool)) as EncryptedValue;
+    const probabilityInput = (await handles.encryptInput(
+      probability,
+      'uint256',
+      pool,
+    )) as EncryptedValue;
     await send(
       actor,
       wallet,
