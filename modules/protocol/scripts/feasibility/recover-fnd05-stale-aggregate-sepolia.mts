@@ -62,7 +62,12 @@ const evidencePath = resolve(
   'evidence/sepolia/G3/FND-05C-STALE-FIXTURE-RECOVERY.json',
 );
 const secondaryActorPath = resolve(repositoryRoot, 'evidence/local/fnd-05-secondary-actor.json');
+const failureMarkerPath = resolve(
+  repositoryRoot,
+  'evidence/local/fnd-05-stale-recovery-last-failure.json',
+);
 const spendLedgerPath = resolve(repositoryRoot, 'evidence/sepolia/spend-ledger.json');
+let failureStage = 'configuration validation';
 
 const SPIKE_ABI = [
   {
@@ -237,7 +242,31 @@ function appendSpend(
   writeFileSync(spendLedgerPath, `${JSON.stringify(ledger, null, 2)}\n`);
 }
 
+function writeFailureMarker(error: unknown): void {
+  try {
+    mkdirSync(dirname(failureMarkerPath), { recursive: true, mode: 0o700 });
+    writeFileSync(
+      failureMarkerPath,
+      `${JSON.stringify({
+        errorCategory: error instanceof Error ? error.name : typeof error,
+        failureStage,
+        schemaVersion: 1,
+        workItem: 'FND-05C-STALE-RECOVERY',
+      })}\n`,
+      { mode: 0o600 },
+    );
+    chmodSync(failureMarkerPath, 0o600);
+  } catch {
+    // Preserve the original sanitized failure path if local diagnostics are unavailable.
+  }
+}
+
+function clearFailureMarker(): void {
+  if (existsSync(failureMarkerPath)) unlinkSync(failureMarkerPath);
+}
+
 async function main(): Promise<void> {
+  failureStage = 'configuration validation';
   loadEnvironment();
   const fixture = staleFixture();
   const dryRun = process.argv.includes('--dry-run');
@@ -256,6 +285,7 @@ async function main(): Promise<void> {
   const secondaryWallet = createWalletClient({ account: secondary, chain: sepolia, transport });
   const ledger = loadLedger();
 
+  failureStage = 'Sepolia preflight';
   if ((await publicClient.getChainId()) !== EXPECTED_CHAIN_ID) {
     fail('The configured RPC is not Ethereum Sepolia.');
   }
@@ -267,6 +297,7 @@ async function main(): Promise<void> {
     fail('A stale-fixture refund actor has no Sepolia gas balance.');
   }
 
+  failureStage = 'stale fixture verification';
   const [runtime, underlying, state, participants, pendingSince, timeout, currentBlock] =
     await Promise.all([
       publicClient.getCode({ address: fixture.recoverySpike }),
@@ -335,6 +366,7 @@ async function main(): Promise<void> {
     return;
   }
 
+  failureStage = 'clean source verification';
   assertCleanSourceTree();
   const send = async (
     wallet: typeof primaryWallet,
@@ -342,6 +374,7 @@ async function main(): Promise<void> {
     functionName: 'cancelBeforeUnwrap' | 'refund',
     gas: bigint,
   ): Promise<{ hash: Hash; blockNumber: bigint }> => {
+    failureStage = `${functionName} budget and broadcast`;
     const liveFees = await publicClient.estimateFeesPerGas();
     const liveMaxFeePerGas = liveFees.maxFeePerGas ?? (await publicClient.getGasPrice());
     assertBudget(ledger, [gas * liveMaxFeePerGas]);
@@ -398,6 +431,7 @@ async function main(): Promise<void> {
     fail('The stale fixture did not return to documented confidential refund custody.');
   }
   unlinkSync(secondaryActorPath);
+  clearFailureMarker();
 
   mkdirSync(dirname(evidencePath), { recursive: true });
   writeFileSync(
@@ -481,7 +515,8 @@ async function main(): Promise<void> {
   );
 }
 
-main().catch(() => {
+main().catch((error) => {
+  writeFailureMarker(error);
   console.error('stale aggregate recovery failed: inspect the documented fixture state.');
   process.exitCode = 1;
 });
