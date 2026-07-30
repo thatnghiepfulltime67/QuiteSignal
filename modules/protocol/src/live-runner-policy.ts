@@ -2,6 +2,7 @@ import { keccak256, toHex, type Hash } from 'viem';
 
 export const LIVE_WORK_ITEM = 'LIVE-01' as const;
 export const LIVE_RECOVERY_WORK_ITEM = 'LIVE-02' as const;
+export const AUTOMATION_WORK_ITEM = 'AUT-01' as const;
 
 const KNOWN_WORK_ITEMS = [
   'PK-05',
@@ -10,6 +11,7 @@ const KNOWN_WORK_ITEMS = [
   'SDK-03',
   LIVE_WORK_ITEM,
   LIVE_RECOVERY_WORK_ITEM,
+  AUTOMATION_WORK_ITEM,
 ] as const;
 
 export type LifecycleWorkItem = (typeof KNOWN_WORK_ITEMS)[number];
@@ -21,7 +23,8 @@ export function isLifecycleWorkItem(value: string): value is LifecycleWorkItem {
 export function lifecyclePhase(workItem: LifecycleWorkItem): 'P1' | 'P2' {
   return workItem === 'SDK-03' ||
     workItem === LIVE_WORK_ITEM ||
-    workItem === LIVE_RECOVERY_WORK_ITEM
+    workItem === LIVE_RECOVERY_WORK_ITEM ||
+    workItem === AUTOMATION_WORK_ITEM
     ? 'P2'
     : 'P1';
 }
@@ -30,13 +33,14 @@ export function poolCases(workItem: LifecycleWorkItem): readonly string[] {
   if (workItem === 'PK-05') return ['below-k', 'threshold'];
   if (workItem === LIVE_WORK_ITEM) return ['threshold'];
   if (workItem === LIVE_RECOVERY_WORK_ITEM) return ['below-k', 'timeout'];
+  if (workItem === AUTOMATION_WORK_ITEM) return ['threshold'];
   if (workItem === 'PK-06') return ['timeout', 'grace', 'success'];
   if (workItem === 'PK-07') return ['claim', 'refund'];
   return ['commit'];
 }
 
 export function usesAggregateLifecycle(workItem: LifecycleWorkItem): boolean {
-  return workItem === 'PK-05' || workItem === LIVE_WORK_ITEM;
+  return workItem === 'PK-05' || workItem === LIVE_WORK_ITEM || workItem === AUTOMATION_WORK_ITEM;
 }
 
 export function poolSalt(workItem: LifecycleWorkItem, caseName: string): Hash {

@@ -681,8 +681,9 @@ Outcome: Add the narrow public-result boundary that lets the permissionless runn
 finalize an aggregate only after the pool has explicitly enabled public decryption.
 
 Output files: an in-memory public-result adapter, frozen aggregate ABI support,
-runner integration and unit tests, this record, verification-matrix command notes,
-and `evidence/sepolia/G6/AUT-01-RELAYER.json` after a named live action.
+runner integration and unit tests, a one-salt AUT-01 fixture mode using the existing
+Sepolia contracts, this record, verification-matrix command notes, and
+`evidence/sepolia/G6/AUT-01-RELAYER.json` after a named live action.
 
 Acceptance criteria: The adapter reads aggregate disclosure handles only while a
 pool is in `AGGREGATE_PENDING` with an on-chain request id, obtains two public Nox

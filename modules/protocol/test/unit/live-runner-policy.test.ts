@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   LIVE_WORK_ITEM,
   LIVE_RECOVERY_WORK_ITEM,
+  AUTOMATION_WORK_ITEM,
   isLifecycleWorkItem,
   lifecyclePhase,
   poolCases,
@@ -32,4 +33,15 @@ test('T-LIVE-02-01: the recovery runner has separate P2 salts for below-k and ti
 test('T-LIVE-01-02: the live pool salt is stable and rejects a recovery-only case', () => {
   assert.equal(poolSalt(LIVE_WORK_ITEM, 'threshold'), poolSalt(LIVE_WORK_ITEM, 'threshold'));
   assert.throws(() => poolSalt(LIVE_WORK_ITEM, 'below-k'), /not allowed/);
+});
+
+test('T-AUT-FIXTURE-01: automation receives one isolated P2 threshold fixture', () => {
+  assert.equal(isLifecycleWorkItem(AUTOMATION_WORK_ITEM), true);
+  assert.equal(lifecyclePhase(AUTOMATION_WORK_ITEM), 'P2');
+  assert.deepEqual(poolCases(AUTOMATION_WORK_ITEM), ['threshold']);
+  assert.equal(usesAggregateLifecycle(AUTOMATION_WORK_ITEM), true);
+  assert.notEqual(
+    poolSalt(AUTOMATION_WORK_ITEM, 'threshold'),
+    poolSalt(LIVE_WORK_ITEM, 'threshold'),
+  );
 });

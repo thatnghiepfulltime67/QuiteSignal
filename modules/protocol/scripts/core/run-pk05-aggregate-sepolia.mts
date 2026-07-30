@@ -208,7 +208,7 @@ async function main(): Promise<void> {
   const write = process.argv.includes('--write');
   const requestedWorkItem = argument('work-item') ?? 'PK-05';
   if (!isLifecycleWorkItem(requestedWorkItem))
-    fail('The work item must be PK-05, PK-06, PK-07, SDK-03, LIVE-01, or LIVE-02.');
+    fail('The work item must be PK-05, PK-06, PK-07, SDK-03, LIVE-01, LIVE-02, or AUT-01.');
   const workItem = requestedWorkItem;
   if (!stage) fail(`${workItem} requires --stage.`);
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
