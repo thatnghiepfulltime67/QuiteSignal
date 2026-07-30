@@ -27,7 +27,9 @@ const STAKE = 20n;
 const PRIMARY_PROBABILITY = 7_500n;
 const SECONDARY_PROBABILITY = 5_000n;
 const ACTOR_FUNDING = parseEther('0.01');
-const MAX_RETRIES = 8;
+// Keep each staged command inside the orchestration window; a failed proof lookup
+// can be retried in a fresh read/write stage without changing on-chain state.
+const MAX_RETRIES = 2;
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const protocolRoot = resolve(scriptDirectory, '../..');
 const repositoryRoot = resolve(protocolRoot, '../..');
