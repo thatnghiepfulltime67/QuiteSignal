@@ -28,6 +28,19 @@ pool/request context binding, and serialization rejection without persisting a
 confidential value, raw encrypted material, credential, or signature. G6 remains
 `not_run` until all P2 live lifecycle components pass.
 
+SDK-03 is a completed G6 component, not G6 itself. The SDK transaction client
+submitted one real encrypted commit to pool
+`0x390E27a689bA7c3fC2aa003984b8A923B43A79C1` at block `11382992`; the missing
+callback then reached the permissionless no-custody expiry at block `11383000`.
+`evidence/{offline,sepolia}/G6/SDK-03-TRANSACTION-CLIENT.json` independently checks
+the compiled runtime (with immutable references normalized), public reader result,
+pending-clear event, final OPEN/no-participant state, and receipt references. A
+duplicate expiry attempt reverted after the successful expiry and remains recorded
+in the spend ledger. Three initial SDK-03 runner entries retain the pre-fix `P1`
+phase field, but their immutable work-item ID, source commit, pool receipts, and this
+record establish them as P2 setup; the runner now records SDK-03 writes as P2 without
+rewriting the append-only history. G6 remains `not_run`.
+
 ### G5 partial history
 
 PK-03A is a completed G5 component, not G5 itself. The source commit `4ef78df`

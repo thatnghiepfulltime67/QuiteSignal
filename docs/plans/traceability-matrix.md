@@ -129,8 +129,8 @@ replace the required named Sepolia SDK smoke before G6.
 
 ## SDK-03 transaction/read boundary coverage
 
-`T-SDK-03-*` is offline ABI and operation-identity coverage. A later named Sepolia
-sender/read smoke is required before SDK-03 can contribute to G6.
+`T-SDK-03-*` is offline ABI and operation-identity coverage. The named Sepolia
+sender/read smoke is recorded separately as a G6 component, not as a G6 pass claim.
 
 | Test family   | Coverage                                                                                              | Requirements       |
 | ------------- | ----------------------------------------------------------------------------------------------------- | ------------------ |

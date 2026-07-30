@@ -134,13 +134,11 @@ G6 component and does not claim the gate.
 
 ID: `SDK-03`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Add a typed Sepolia public-read and transaction boundary that consumes
 sealed SDK-02 inputs without exposing encrypted material, encodes the frozen pool
 ABI, and maps retries to one logical request.
-
-Active slice: `SDK-03-SEPOLIA-01`.
 
 Output files: transaction/read client source, frozen ABI declaration, exports,
 unit and ABI-compatibility tests, the bounded Sepolia fixture runner, this record,
@@ -177,6 +175,19 @@ Intended commit: `feat: add protocol transaction client`.
 Rollback/failure action: Revert only SDK-03 and retain SDK-02's sealed boundary. Do
 not fall back to manual calldata, durable encrypted-material storage, automatic
 replacement transactions, or a service-held signer.
+
+Completion evidence: The dedicated Sepolia fixture deployed adapter
+`0x3f9f6be890629ec9b0794d618c032b488726aadf`, factory
+`0xfbb68704479ae4aada685a409f4a3c2fe38506be`, and pool
+`0x390E27a689bA7c3fC2aa003984b8A923B43A79C1`. The SDK submitted one real encrypted
+`commitSignal` transaction at block `11382992`. Its callback was intentionally absent,
+and the permissionless expiry emitted `SignalIntentCleared` at block `11383000`,
+returning the pool to `OPEN` with no pending owner or participant. The independent
+read verifier passed and emitted `evidence/{offline,sepolia}/G6/SDK-03-TRANSACTION-CLIENT.json`.
+An interrupted runner invocation produced a second, reverted expiry receipt in the
+same block after the successful expiry; both receipts remain in the append-only
+ledger, while the verifier requires the successful event and terminal public state.
+SDK-03 is complete and remains a G6 component only.
 
 ## Dependency graph
 

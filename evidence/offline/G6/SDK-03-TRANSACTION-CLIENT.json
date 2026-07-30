@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "gate": "G6",
+  "workItem": "SDK-03",
+  "phase": "P2",
+  "sourceCommit": "d3211ebe025dab910f85c7e800143f30450b2dc0",
+  "environment": {
+    "chainId": 11155111,
+    "verificationBlock": "11383028"
+  },
+  "pool": "0x390e27a689ba7c3fc2aa003984b8a923b43a79c1",
+  "checks": {
+    "compiledPoolRuntimeMatches": true,
+    "transactionClientEncryptedCommitSubmitted": true,
+    "publicReadClientReturnedOpenEpoch": true,
+    "pendingCommitExpiredPermissionlessly": true,
+    "noCallbackOrParticipantRemained": true,
+    "receiptLedgerReferencesPresent": true
+  },
+  "privacyImpact": "The verifier reads public runtime, epoch, event, and receipt facts only; no encrypted material is read, printed, or persisted.",
+  "fundsLocation": "The fixture has no participant and no pending callback after expiry; it has no committed collateral custody.",
+  "status": "passed"
+}
