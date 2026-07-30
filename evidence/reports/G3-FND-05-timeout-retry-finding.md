@@ -332,3 +332,14 @@ at block `11380433` found `Refundable` state and documented confidential owner
 custody, then deleted the ignored secondary recovery record. The cleanup artifact is
 `evidence/sepolia/G3/FND-05C-STALE-FIXTURE-RECOVERY.json`. Only a fresh corrected
 fixture may prove finalization, delayed rewrap, and terminal refunds.
+
+The first corrected-runtime fixture was deployed at blocks `11380443` through
+`11380447` and completed deterministic setup plus both independent encrypted
+commitments through block `11380463`. A sanitized local `TypeError` stopped the
+initial runner after the second accepted commitment. A read confirms the recovery
+spike remains `Open` with two participants, no aggregate request, and no aggregate
+public-decrypt permission; the context peer remains a no-custody `Open` fixture.
+No close, proof, unwrap, recovery, or refund claim follows from this partial run.
+The committed resume dry run accepts precisely this corrected runtime and state, so
+the next confirmed command continues it without repeating setup or creating another
+fixture.

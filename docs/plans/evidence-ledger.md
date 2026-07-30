@@ -65,6 +65,15 @@ record was deleted. The cleanup artifact is
 `evidence/sepolia/G3/FND-05C-STALE-FIXTURE-RECOVERY.json`. A fresh corrected fixture
 must now complete all FND-05C requirements.
 
+The fresh corrected fixture is `Open` with two accepted members after setup and
+commitments at blocks `11380443` through `11380463`; its recovery spike is
+`0x5625f911df84ec43740b036095559e1a9b83a07a`. A sanitized local `TypeError` stopped
+the initial runner before close, aggregate request, proof handling, unwrap, recovery,
+or refunds. The committed resume dry run verifies the fixture, wrapper, recovery
+spike, and no-custody context peer still match the corrected runtime and exact
+resumable state. This partial fixture remains excluded from G3 evidence until its
+terminal sequence completes.
+
 ## Evidence artifact contract
 
 Each evidence artifact must include:

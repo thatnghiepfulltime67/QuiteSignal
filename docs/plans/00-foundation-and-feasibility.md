@@ -588,6 +588,21 @@ runtime as a match for the corrected artifact or as FND-05C proof/recovery evide
 A new isolated fixture must now prove every remaining FND-05C condition with the
 corrected runtime.
 
+Corrected-fixture checkpoint: The fresh runtime from `ed38e6c` deployed fixture
+`0x927a2dcb37d6605364a2385fccb1dfc1aa63f41c`, unchanged wrapper
+`0xfe835271300bff1578e52891b9f86e316b4ca3bb`, recovery spike
+`0x5625f911df84ec43740b036095559e1a9b83a07a`, and no-custody context peer
+`0x072f336b3926559623e2491abec74deb4c5603c6` at blocks `11380443` through
+`11380447`. The fresh runner completed the deterministic fixture setup and both
+independent encrypted commitments through block `11380463`, then stopped with a
+sanitized local `TypeError` while the spike remained `Open`, with two participants,
+no aggregate request, and no aggregate public-decrypt permission. No product or
+fixture custody transition occurred beyond the two accepted confidential commitments.
+The committed resume dry run verifies the corrected runtime and this exact state, so
+the next confirmed command must resume only the close, proof, unwrap, recovery, and
+refund steps on this fixture. It remains excluded from FND-05C evidence until
+terminal completion.
+
 Correction intended commit: `fix: remove invalid unwrap request ACL`.
 Stale-fixture recovery intended commit: `test: recover stale aggregate fixture`.
 
