@@ -557,12 +557,12 @@ async function main(): Promise<void> {
       !runtimeMatchesArtifact(recoveryRuntime, spikeArtifact) ||
       !runtimeMatchesArtifact(contextPeerRuntime, spikeArtifact) ||
       (underlying as Address).toLowerCase() !== recoveryResumeContracts.fixture.toLowerCase() ||
-      state !== 0 ||
+      (state !== 0 && state !== 2) ||
       participants !== K_MIN ||
       peerState !== 0 ||
       peerParticipants !== 0n
     ) {
-      fail('The FND-05C fixture is not the documented resumable Open recovery state.');
+      fail('The FND-05C fixture is not a documented resumable recovery state.');
     }
     if (dryRun) {
       console.log(
@@ -1214,26 +1214,45 @@ async function main(): Promise<void> {
       'recovery independent member',
     );
   }
-  const recoveryDeadline = (await read(
-    contracts.recoverySpike,
-    spikeArtifact,
-    'deadline',
-  )) as bigint;
-  await waitUntil(rpcUrl, recoveryDeadline);
-  await send(
-    deployer,
-    deployerWallet,
-    contracts.recoverySpike,
-    spikeData('closeEpoch'),
-    'close threshold epoch for recovery',
-  );
-  await send(
-    deployer,
-    deployerWallet,
-    contracts.recoverySpike,
-    spikeData('requestAggregateDecrypt'),
-    'request recovery epoch aggregate disclosure',
-  );
+  const resumedRecoveryState = await read(contracts.recoverySpike, spikeArtifact, 'state');
+  if (resumedRecoveryState === 0) {
+    const recoveryDeadline = (await read(
+      contracts.recoverySpike,
+      spikeArtifact,
+      'deadline',
+    )) as bigint;
+    await waitUntil(rpcUrl, recoveryDeadline);
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.recoverySpike,
+      spikeData('closeEpoch'),
+      'close threshold epoch for recovery',
+    );
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.recoverySpike,
+      spikeData('requestAggregateDecrypt'),
+      'request recovery epoch aggregate disclosure',
+    );
+  } else if (recoveryResumeContracts && resumedRecoveryState === 2) {
+    const [requestId, access] = (await Promise.all([
+      read(contracts.recoverySpike, spikeArtifact, 'aggregateRequestId'),
+      read(contracts.recoverySpike, spikeArtifact, 'aggregateAccess'),
+    ])) as [Hex, readonly boolean[]];
+    if (
+      requestId === `0x${'0'.repeat(64)}` ||
+      access.length !== 3 ||
+      !access[0] ||
+      !access[1] ||
+      access[2]
+    ) {
+      fail('The resumable aggregate-pending fixture does not retain the required request and ACL.');
+    }
+  } else {
+    fail('The recovery fixture did not reach a resumable aggregate-pending state.');
+  }
   const [recoveryHandles, recoveryRequestId, crossPoolRequestId, deployerPositionHandles] =
     (await Promise.all([
       read(contracts.recoverySpike, spikeArtifact, 'aggregateHandles'),
