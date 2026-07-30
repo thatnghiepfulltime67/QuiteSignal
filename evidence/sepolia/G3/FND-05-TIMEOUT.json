@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "gate": "G3",
+  "workItem": "FND-05B",
+  "phase": "P0",
+  "timestampUtc": "2026-07-30T04:03:38Z",
+  "sourceCommits": {
+    "timeoutFixtureRunner": "9740e9a8ecdcd25a1f187320cb6343d4c00706a5",
+    "boundedAdvance": "8bdd0124169004a43a8cec58f583d2a8d696f7fe",
+    "terminalRecovery": "c4dc363a201a75d7cbc76977837c2a3946d10a4d"
+  },
+  "environment": {
+    "class": "sepolia-write-and-read",
+    "chainId": 11155111,
+    "deploymentBlockRange": "11379937-11379939",
+    "lifecycleBlockRange": "11379940-11380018",
+    "verificationBlock": 11380018,
+    "noxComputeAddress": "0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF",
+    "noxProtocolContracts": "0.2.4",
+    "noxConfidentialContracts": "0.2.2",
+    "noxHandle": "0.1.0-beta.13"
+  },
+  "contracts": {
+    "fixture": {
+      "address": "0xeb9a2aaf8575ae74c3b613e22482dfaa0ddf62ba",
+      "runtimeBytecodeHash": "0x9ed7dd887c4fc51e7cd3b3c2d8248a5c6430706dfffd7156af5455a5441ab880",
+      "abiHash": "0x89a3e5366d9cb596052a15810ef88b20dd283b01f17c28c0b222b7b6ee945fed",
+      "runtimeMatchesCompiledArtifact": true
+    },
+    "wrapper": {
+      "address": "0x3f6b508f63a015933b62540f661017f8559424c0",
+      "runtimeBytecodeHash": "0xe9533c38f748ad16f2194d09e826ec04b0eaf9f630f3d5540adb90b699e4754e",
+      "abiHash": "0x4f75eb14386d437548b100815181d244a1410b41d446faf890cfa74dded7dc96",
+      "runtimeMatchesCompiledArtifactTemplate": true,
+      "underlyingMatchesFixture": true
+    },
+    "timeoutSpike": {
+      "address": "0x6af71d5b9427d5f07e6cf5a939ff07a60a6eff45",
+      "runtimeBytecodeHash": "0x2765e24d557ea485312a29cb45648303e8fde12797341a2acbdc659a738a0a96",
+      "abiHash": "0xf1998689f7ab87ad36e37a937396587177d5d929b58f3536c3ecc94c517fd99a",
+      "runtimeMatchesCompiledArtifactTemplate": true,
+      "wrapperAndUnderlyingBindingsMatch": true
+    }
+  },
+  "transactions": [
+    {
+      "purpose": "fixture deployment",
+      "hash": "0x098b2c303fd005bddd19833f1971d380055e8eb9f8ceadf56f1b393941bb7303",
+      "blockNumber": 11379937
+    },
+    {
+      "purpose": "unchanged confidential wrapper deployment",
+      "hash": "0x83cf0a630f93941d4018777b800aea3e0ea27d434d639533f54aa62a8d129ab6",
+      "blockNumber": 11379938
+    },
+    {
+      "purpose": "threshold timeout spike deployment",
+      "hash": "0xd07208b1724f8e40d04199e1e260bc93e194f38e855c318fc43cf513a22d4834",
+      "blockNumber": 11379939
+    },
+    {
+      "purpose": "deterministic fixture preparation and two confidential commitments",
+      "transactionHashes": [
+        "0xfc315bfe7b94bdd4d768ae3dc63dc5aff61422599d17dd3830fa99ec13d0d56f",
+        "0x42391176c9abe7fc3a2b258de4d60c2ac27f9d8d14833a54b6b4e7419b3278e7",
+        "0x6e2f54cebe31b01370739d62ddf580ab0cb64d477f8b738cfd583ee75100caed",
+        "0x750ffe3c63502759a35ca3918956ebcc349d70dfd15269bf03c3c3c208d297d9",
+        "0x7df4b4210b061c1f58a6913113e725e97d89398a57e2d7325a8d91331ea4ba7e",
+        "0xd3f116c2be584d0f238b0a287a1c0de80b977378d2deda4c105796ff31121103",
+        "0xbff0b1efb5f1c0986cf0a177e2804fd60426aadcb4e12bdf1a9d3530980cc2a7",
+        "0x898d11b5f72b869c19bf1b22426ba71acac89ded800a360fdf9dba03ae575419",
+        "0x45dfb3d312ad4c688f55331aacc720426fff97dea72fab730cb45fe0c399304c",
+        "0x10d22fdc3ceae4406dd321dc72c259b86339dd89829d741ef4ce5386fe3375c0",
+        "0xfc7026e873ac5b5cb02c04af624835c0da7a23b4ca706446cf47a15549b9cab2"
+      ],
+      "blockRange": "11379940-11379953"
+    },
+    {
+      "purpose": "close threshold epoch",
+      "hash": "0x3159720bbef6a3a8f9afa27b877028c4aac5411e7c1e1c6d0ab3f55282eafa1e",
+      "blockNumber": 11379975
+    },
+    {
+      "purpose": "grant aggregate public-decrypt permission",
+      "hash": "0x89df010f48051babd3e1b35f43c6de95937b11f06382d93e8afbe77c6a0b3341",
+      "blockNumber": 11379977
+    },
+    {
+      "purpose": "reject cancellation before the timeout",
+      "hash": "0xf09e73808da63318df4bb365e915fb84e04bd2422e25e05fa3376cfb20431004",
+      "blockNumber": 11379978,
+      "expectedStatus": "reverted"
+    },
+    {
+      "purpose": "permissionless cancellation after the timeout",
+      "hash": "0x765ff52048174b0d21f6714e139204e82dfffeab7216ace868bb90536cbabb61",
+      "blockNumber": 11380016
+    },
+    {
+      "purpose": "first recorded-owner confidential refund",
+      "hash": "0x5e372fbd3bd33ae09ba08dc2ef02384e0c1544319386dd71e82cf2f5ddd56eb1",
+      "blockNumber": 11380017
+    },
+    {
+      "purpose": "second recorded-owner confidential refund",
+      "hash": "0xaf5155330a28c417ad9273133ab08ccb22d20a8cd49363fa87edd39541a044bd",
+      "blockNumber": 11380018
+    }
+  ],
+  "observed": {
+    "participantCount": 2,
+    "terminalState": "Refundable",
+    "aggregatePublicDecryptAccess": {
+      "yes": true,
+      "no": true,
+      "total": false
+    },
+    "earlyCancellationRejected": true,
+    "permissionlessCancellationAfterTimeout": true,
+    "bothOwnerRefundTransactionsSucceeded": true,
+    "terminalOwnerConfidentialBalancesVerifiedLocally": true,
+    "secondaryRecoveryRecordDeletedAfterVerification": true
+  },
+  "privacyAndCustody": {
+    "plaintextCommitted": false,
+    "rawHandlesCommitted": false,
+    "proofsOrCalldataCommitted": false,
+    "walletSignaturesCommitted": false,
+    "fixtureHasExternalValue": false,
+    "publicDecryptionScope": "Only the aggregate YES and NO handles received public-decrypt permission after the k-gate. The total and all owner-shaped handles remained outside public-decrypt scope. This evidence records ACL booleans, not decrypted values.",
+    "terminalRecovery": "Accepted deterministic fixture collateral was confidential pool custody until permissionless cancellation. Each recorded owner then invoked one confidential refund; bounded local owner-balance checks completed before the ignored secondary recovery record was deleted."
+  },
+  "knownLimitations": [
+    "This independent terminal slice does not satisfy aggregate-proof context binding, unwrap finalization, or rewrap-recovery requirements; FND-05C remains required for G3.",
+    "The append-only spend ledger retains the historical FND-05 work-item label for the three recovery receipts. The fixture addresses, commit, senders, transaction sequence, and this evidence bind those receipts to FND-05B without altering history."
+  ],
+  "reproduction": [
+    "Run npm run test:nox:sepolia -- FND-05-TIMEOUT --dry-run before any fresh write.",
+    "Read the recorded fixture, wrapper, and spike on Ethereum Sepolia; verify the runtime templates, wrapper binding, two participants, Refundable state, and YES/NO/total access tuple.",
+    "Run npm run budget:status and inspect the referenced append-only receipts."
+  ]
+}

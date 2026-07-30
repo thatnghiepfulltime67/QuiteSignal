@@ -423,7 +423,7 @@ evidence and the combined read verifier passes.
 | Slice     | Status        | Evidence scope                                 | Terminal requirement                                                                   |
 | --------- | ------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
 | `FND-05A` | `complete`    | `T-FND-05-BELOW-K-01`                          | One owner refund once; no aggregate disclosure; no secondary actor required.           |
-| `FND-05B` | `in_progress` | `T-FND-05-AGGREGATE-01`, `T-FND-05-TIMEOUT-01` | Permissionless timeout cancellation and both owner refunds once.                       |
+| `FND-05B` | `complete`    | `T-FND-05-AGGREGATE-01`, `T-FND-05-TIMEOUT-01` | Permissionless timeout cancellation and both owner refunds once.                       |
 | `FND-05C` | `not_started` | `T-FND-05-PROOF-01`, `T-FND-05-RECOVERY-01`    | Rewrapped confidential custody and both owner refunds once after delayed finalization. |
 
 ### FND-05A work-item record
@@ -726,10 +726,15 @@ receipts. Commit this checkpoint, then cancel permissionlessly and refund both o
 
 The terminal FND-05B recovery completed at blocks `11380016` through `11380018`:
 permissionless cancellation and one refund per recorded owner. Local balance checks
-passed and the ignored actor record was deleted. The immutable spend ledger retains
-the historical `FND-05` label for these recovery receipts; fixture, source commit,
-senders, and this checkpoint identify their FND-05B scope. Record FND-05B evidence
-next; G3 remains incomplete until FND-05C.
+passed and the ignored actor record was deleted. A post-terminal Sepolia read matched
+the compiled runtime templates and bindings, two participants, `Refundable` state,
+and the exact `YES=true`, `NO=true`, `total=false` public-decrypt ACL tuple. The
+immutable spend ledger retains the historical `FND-05` label for these recovery
+receipts; fixture, source commit, senders, and this checkpoint identify their
+FND-05B scope. Sanitized artifacts are
+`evidence/offline/G3/FND-05-TIMEOUT.json` and
+`evidence/sepolia/G3/FND-05-TIMEOUT.json`. FND-05B is complete; G3 remains
+incomplete until FND-05C.
 
 ## FND-01 — Toolchain lock
 
