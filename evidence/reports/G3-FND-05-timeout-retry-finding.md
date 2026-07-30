@@ -209,3 +209,17 @@ Runtime/template verification passed. The terminal evidence is
 `evidence/offline/G3/FND-05-BELOW-K.json` and
 `evidence/sepolia/G3/FND-05-BELOW-K.json`. This completes FND-05A only; FND-05B and
 FND-05C remain required for G3.
+
+The first FND-05B execution from `9740e9a` deployed fixture
+`0xeb9a2aaf8575ae74c3b613e22482dfaa0ddf62ba`, unchanged wrapper
+`0x3f6b508f63a015933b62540f661017f8559424c0`, and its one threshold timeout spike
+`0x6af71d5b9427d5f07e6cf5a939ff07a60a6eff45` at blocks `11379937` through
+`11379939`. It prepared deterministic fixture collateral and finalized two
+independently signed encrypted commitments at blocks `11379940` through `11379953`.
+The runner ended before the commitment deadline without a close, aggregate request,
+timeout cancellation, or refund write. A read confirms `Open` state, two
+participants, `PoolConfidentialCustody`, and no aggregate public-decrypt access.
+The ignored secondary-actor recovery record remains solely for this fixture. This is
+non-terminal and excluded from FND-05B evidence. A resume must close after the
+deadline, prove exactly YES/NO aggregate disclosure and early cancellation rejection,
+then retain the actor record until a terminal timeout cancellation and both refunds.

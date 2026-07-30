@@ -698,6 +698,18 @@ artifacts are `evidence/offline/G3/FND-05-BELOW-K.json` and
 `evidence/sepolia/G3/FND-05-BELOW-K.json`. FND-05A is complete; FND-05B is the only
 active slice. G3 remains running until FND-05B and FND-05C complete.
 
+The first FND-05B execution from `9740e9a` deployed fixture
+`0xeb9a2aaf8575ae74c3b613e22482dfaa0ddf62ba`, unchanged wrapper
+`0x3f6b508f63a015933b62540f661017f8559424c0`, and threshold timeout spike
+`0x6af71d5b9427d5f07e6cf5a939ff07a60a6eff45` at blocks `11379937` through
+`11379939`. It finalized two independently signed encrypted commitments at blocks
+`11379940` through `11379953`, then ended before the deadline without a close,
+aggregate request, cancellation, or refund. A read confirms `Open` state, two
+participants, confidential pool custody, and no aggregate public-decrypt access.
+Its ignored secondary-actor recovery record remains locally only. This non-terminal
+fixture is excluded from FND-05B evidence; a resume must close it after the deadline,
+prove its disclosure and early-timeout rejection, then complete terminal refunds.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:
