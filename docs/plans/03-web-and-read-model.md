@@ -314,6 +314,50 @@ without claiming to revoke wallet permissions. `T-WEB-01-WALLET-UX-04`, all 25 w
 tests, root typecheck, production Vite build, targeted Prettier checks, and `git diff
 --check` pass. No credential, storage, relay, or signer path was added.
 
+## WEB-04-DEADLINE-01 work-item record
+
+ID: `WEB-04-DEADLINE-01`
+
+Status: `complete`
+
+Outcome: Make public lifecycle copy fail closed when the immutable commit deadline
+has passed but a permissionless close transaction has not yet advanced the on-chain
+state from OPEN.
+
+Output files: direct public epoch/block reader in `apps/web/src/wallet.ts`,
+deadline-aware lifecycle presenter in `apps/web/src/lifecycle.ts`, route copy in
+`apps/web/src/main.ts`, focused tests, and this record.
+
+Acceptance criteria: The browser reads both the immutable public deadline and a
+Sepolia block timestamp; OPEN is presented as accepting signals only before that
+timestamp; an elapsed deadline names the safe no-signal/permissionless-close state;
+and unknown values fail closed. No local clock, indexer cache, wallet call, or
+transaction is used for that conclusion.
+
+Privacy/custody impact: Reads public contract and block data only. No owner value,
+Nox input, wallet request, storage, or service data is introduced.
+
+Funds location/recovery impact: Read-only. The elapsed-deadline copy directs users
+to the existing permissionless close path and prevents an unsafe new signal attempt.
+
+Checks: lifecycle mutation tests, `npm run test:web`, production web build, root
+typecheck, and `git diff --check`.
+
+Evidence location: source/test output and a later real Sepolia browser read; this
+work does not claim G7.
+
+Intended commit: `fix: prevent signals after public deadline`.
+
+Rollback/failure action: Revert only the presenter/read expansion. Never substitute
+a local-clock estimate or an application-controlled close action.
+
+Completion evidence: `readPublicEpoch` now reads the epoch deadline and the observed
+Sepolia block timestamp together. `presentLifecycle` represents elapsed OPEN epochs
+as `Commit deadline reached`, tells users not to submit, and names the existing
+permissionless close path. `T-WEB-04-DEADLINE-01`, all 26 web tests, root typecheck,
+production Vite build, targeted Prettier checks, and `git diff --check` pass. No
+wallet or chain write was performed.
+
 ## WEB-03 work-item record
 
 ID: `WEB-03`

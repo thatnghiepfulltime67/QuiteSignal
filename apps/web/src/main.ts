@@ -355,7 +355,10 @@ async function refreshLifecycle(): Promise<void> {
   render();
   try {
     const epoch = await readPublicEpoch(manifest.poolAddress);
-    const view = presentLifecycle(epoch.state);
+    const view = presentLifecycle(epoch.state, {
+      deadline: epoch.deadline,
+      observedAt: epoch.observedAt,
+    });
     lifecycleMessage = `${view.label}: ${view.explanation} Participants: ${epoch.participantCount}. ${view.recovery}`;
   } catch {
     lifecycleMessage =

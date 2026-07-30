@@ -99,16 +99,26 @@ async function waitForConfirmedReceipt(
   if (receipt.status !== 'success') throw new Error('The submitted transaction reverted.');
 }
 
-export async function readPublicEpoch(
-  pool: string,
-): Promise<{ state: number; participantCount: number; publicYes: bigint; publicNo: bigint }> {
+export async function readPublicEpoch(pool: string): Promise<{
+  state: number;
+  deadline: bigint;
+  observedAt: bigint;
+  participantCount: number;
+  publicYes: bigint;
+  publicNo: bigint;
+}> {
   const client = createPublicClient({
     chain: sepolia,
     transport: http(SEPOLIA_PUBLIC_READ_RPC, { retryCount: 0, timeout: 10_000 }),
   });
-  const epoch = await createViemProtocolPublicReader(client).readEpoch(publicAddress(pool));
+  const [epoch, block] = await Promise.all([
+    createViemProtocolPublicReader(client).readEpoch(publicAddress(pool)),
+    client.getBlock(),
+  ]);
   return {
     state: epoch.state,
+    deadline: epoch.deadline,
+    observedAt: block.timestamp,
     participantCount: epoch.participantCount,
     publicYes: epoch.publicYes,
     publicNo: epoch.publicNo,

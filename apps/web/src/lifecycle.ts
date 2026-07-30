@@ -5,7 +5,19 @@ export interface PublicLifecycle {
   recovery: string;
 }
 
-export function presentLifecycle(state: number): PublicLifecycle {
+export function presentLifecycle(
+  state: number,
+  timing?: { deadline: bigint; observedAt: bigint },
+): PublicLifecycle {
+  if (state === 0 && timing && timing.observedAt >= timing.deadline) {
+    return {
+      label: 'Commit deadline reached',
+      tone: 'pending',
+      explanation:
+        'The immutable commit deadline has passed. The public state remains OPEN until a permissionless close action advances it.',
+      recovery: 'Do not submit a new signal. Anyone may use the documented on-chain close path.',
+    };
+  }
   const states: Record<number, PublicLifecycle> = {
     0: {
       label: 'Open',
