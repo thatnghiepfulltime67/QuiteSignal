@@ -316,3 +316,15 @@ selector for the otherwise identical `eth_call`. ADR-014 permits one isolated,
 sanitized probe transaction to classify the caught target error without emitting or
 persisting a proof, handle, plaintext, or calldata. This is diagnostics only; a
 successful finalization, delayed rewrap recovery, and both refunds remain required.
+
+The live classifier was deployed at block `11380349` and called the existing target
+once at block `11380351`. It returned the sanitized `NoxUnauthorizedSender` class
+and preserved `AGGREGATE_PENDING`. Inspection of the unchanged wrapper and recovery
+source locates the error after `wrapper.unwrap`: the wrapper creates the encrypted
+unwrap-request handle and receives transient access to it, but the recovery spike
+then tries to grant itself persistent access. That ACL mutation is invalid because
+the spike is not the handle owner. ADR-015 removes the mutation without adding any
+authority or disclosure. The pre-fix fixture must cancel through its already-expired
+timeout and refund both owners; it is permanently excluded from FND-05C evidence.
+Only a fresh corrected fixture may prove finalization, delayed rewrap, and terminal
+refunds.

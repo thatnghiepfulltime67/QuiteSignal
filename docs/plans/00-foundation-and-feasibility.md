@@ -516,13 +516,16 @@ Output files: `modules/protocol/scripts/feasibility/run-aggregate-recovery-sepol
 `modules/protocol/scripts/feasibility/resume-fnd05-aggregate-recovery-sepolia.mts`,
 `modules/protocol/contracts/feasibility/AggregateFinalizationProbe.sol`,
 `modules/protocol/scripts/feasibility/run-fnd05-aggregate-proof-diagnostic-sepolia.mts`,
+`modules/protocol/scripts/feasibility/recover-fnd05-stale-aggregate-sepolia.mts`,
 the required dispatcher/test support,
 `evidence/offline/G3/FND-05-RECOVERY.json`,
 `evidence/sepolia/G3/FND-05-RECOVERY.json`,
 `evidence/sepolia/G3/FND-05-PROOF-DIAGNOSTIC.json`, the G3 report, and the
-append-only Sepolia spend ledger. A local ignored failure marker may contain only the
-work-item ID, sanitized stage, and error category; it never contains an error
-message, input, handle, proof, calldata, signature, key, or RPC value.
+append-only Sepolia spend ledger. The stale-fixture recovery record is
+`evidence/sepolia/G3/FND-05C-STALE-FIXTURE-RECOVERY.json`. A local ignored failure
+marker may contain only the work-item ID, sanitized stage, and error category; it
+never contains an error message, input, handle, proof, calldata, signature, key, or
+RPC value.
 
 Checks: `npm run compile`,
 `npm run test:nox:sepolia -- FND-05-RECOVERY --dry-run`, the confirmed Sepolia
@@ -567,6 +570,24 @@ ordinary delayed recovery and refunds. This diagnostic is not gate evidence and
 does not weaken `T-FND-05-PROOF-01` or `T-FND-05-RECOVERY-01`.
 
 Diagnostic intended commit: `test: diagnose aggregate finalization failure`.
+
+Correction and stale-fixture recovery sub-slice: The committed diagnostic deployed
+probe `0x7aaddc0f67f024cc7616ddb770da0fa83533f545` at block `11380349` and made one
+real classifier call at block `11380351`. It reported `NoxUnauthorizedSender` while
+leaving the target `AGGREGATE_PENDING`. Source review identifies the exact defect:
+`finalizeAggregate` requests a wrapper unwrap, then incorrectly calls
+`Nox.allowThis(unwrapRequest)`. The wrapper, rather than the spike, creates that
+handle and only receives its transient compute access; the spike must not re-grant
+it. The correction removes that invalid ACL operation. The pre-fix fixture cannot
+provide post-fix evidence, so after its documented aggregate timeout a dedicated
+ABI-only Sepolia continuation cancels it and returns both confidential owner refunds.
+It verifies only public state, transaction receipts, and the terminal secondary-key
+deletion; it never treats the old runtime as a match for the corrected artifact or
+as FND-05C proof/recovery evidence. A new isolated fixture must then prove every
+remaining FND-05C condition with the corrected runtime.
+
+Correction intended commit: `fix: remove invalid unwrap request ACL`.
+Stale-fixture recovery intended commit: `test: recover stale aggregate fixture`.
 
 Privacy impact: artificial test values are encrypted before submission and no
 owner-shaped handle is marked publicly decryptable. Public permission is granted

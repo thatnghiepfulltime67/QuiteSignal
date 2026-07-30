@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "gate": "G3",
+  "workItem": "FND-05C-PROOF-DIAGNOSTIC",
+  "phase": "P0",
+  "timestampUtc": "2026-07-30T05:08:29.134Z",
+  "sourceCommit": "f335bb49d66bec570462b5ac0f00f0431554b730",
+  "environment": {
+    "class": "sepolia-write-and-read",
+    "chainId": 11155111,
+    "verificationBlock": "11380351",
+    "noxComputeAddress": "0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF"
+  },
+  "contracts": {
+    "fixture": "0x60a87c453107ac0ead37940b727baa58c51949fc",
+    "wrapper": "0x8290cb8fb05e3873f744eb8c2ce5a5c7395e27a2",
+    "recoverySpike": "0xbc1e525dedfa10eefb416ea89e6aef8cd4039878",
+    "probe": "0x7aaddc0f67f024cc7616ddb770da0fa83533f545",
+    "recoveryRuntimeMatchesCompiledArtifact": true,
+    "recoveryRuntimeHash": "0x8e760f26fdd3daec192c5c67dd6ba90e9cc8c683e212c0e27935d05ed1389394"
+  },
+  "transactions": [
+    {
+      "purpose": "sanitized finalization classifier deployment",
+      "hash": "0x7a7ab33483e40a20c4c481b49970bac380656f59f4bfcb1ba1b683c7b44f3bb9",
+      "blockNumber": "11380349"
+    },
+    {
+      "purpose": "single permissionless aggregate finalization classification",
+      "hash": "0x55872c05aa6e36eed46b815cc7edbabb9f39aecd4a4985cd539017737ed19bdf",
+      "blockNumber": "11380351"
+    }
+  ],
+  "observed": {
+    "targetStateBefore": "AggregatePending",
+    "targetStateAfter": "AggregatePending",
+    "classifierResult": "NoxUnauthorizedSender",
+    "directNoxProofValidation": [
+      {
+        "noxComputeAccepted": true,
+        "proofByteLength": 97,
+        "resultByteLength": 32
+      },
+      {
+        "noxComputeAccepted": true,
+        "proofByteLength": 97,
+        "resultByteLength": 32
+      }
+    ],
+    "aggregateAmountAllowedToRecoverySpike": true,
+    "wrapperBalanceAllowedToWrapper": true
+  },
+  "privacyAndCustody": {
+    "plaintextCommitted": false,
+    "rawHandlesCommitted": false,
+    "proofsOrCalldataCommitted": false,
+    "walletSignaturesCommitted": false,
+    "probeHasCustody": false,
+    "probeHasExclusiveAuthority": false,
+    "targetSubcallFailureLeavesTargetStateUnchanged": true
+  },
+  "knownLimitations": [
+    "This diagnostic classifies one live finalization result only. It cannot satisfy FND-05C or G3.",
+    "A succeeded classification still requires the real delayed unwrap finalization, measured rewrap, and both owner refunds."
+  ],
+  "reproduction": [
+    "Run npm run test:nox:sepolia -- FND-05-PROOF-DIAGNOSTIC --dry-run --recovery=<fixture>,<wrapper>,<recovery-spike>.",
+    "Review the declared gas maximum and remaining cumulative Sepolia allowance before setting CONFIRM_SEPOLIA_WRITE=yes.",
+    "Inspect this sanitized artifact and the two referenced Sepolia receipts without exposing local configuration or proof material."
+  ]
+}

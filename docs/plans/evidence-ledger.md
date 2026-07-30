@@ -53,6 +53,14 @@ configured public RPC does not return the nested revert selector. ADR-014 theref
 authorizes one sanitized on-chain classifier call before any more repeated proof
 attempts; its result cannot count as FND-05C completion.
 
+The classifier deployment at block `11380349` and its single target call at block
+`11380351` produced `NoxUnauthorizedSender` while preserving
+`AGGREGATE_PENDING`. ADR-015 identifies the invalid post-unwrap ACL mutation: the
+wrapper creates the unwrap-request handle, so the recovery spike cannot grant itself
+access to it. The corrected source removes that call. The pre-fix fixture is excluded
+from post-fix evidence and must first use its timed-out cancellation and both owner
+refunds; a fresh corrected fixture must then complete all FND-05C requirements.
+
 ## Evidence artifact contract
 
 Each evidence artifact must include:

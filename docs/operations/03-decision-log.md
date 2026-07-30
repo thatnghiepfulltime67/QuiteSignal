@@ -144,3 +144,22 @@ it makes the same real transition as a direct finalization and normal delayed
 recovery, rewrap, and refund requirements remain. If it fails, its classification
 only informs the next real correction; it cannot pass G3 or relax privacy, custody,
 ACL, proof-context, or recovery requirements.
+
+## ADR-015 — Wrapper-owned unwrap request ACL
+
+**Status:** Accepted
+
+The unchanged wrapper creates the encrypted unwrap-request handle during
+`unwrap`. Nox grants the wrapper transient access to that newly produced handle in
+the transaction, but the calling recovery spike does not receive that access merely
+because the wrapper returns the handle. The spike must therefore store the handle for
+later use by the wrapper without attempting `Nox.allowThis` on it. Calling that ACL
+mutation is invalid and reverts with `NoxUnauthorizedSender`.
+
+The recovery spike retains authority only over its aggregate amount, for which it
+grants the wrapper transaction-scoped access immediately before `unwrap`. The
+wrapper remains the sole contract that validates the later public unwrap proof. This
+removes an invalid permission mutation without granting any new persistent access,
+changing custody, or exposing a confidential value. Pre-fix fixtures are recovered
+through their existing timeout and refund path and are excluded from post-fix gate
+evidence.
