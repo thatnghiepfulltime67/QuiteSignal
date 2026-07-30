@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "gate": "G5",
+  "workItem": "PK-03A",
+  "sourceCommit": "4ef78df7332cbc1af1f6be0d7640185ad6508500",
+  "chainId": 11155111,
+  "status": "incomplete",
+  "reason": "The initial confirmed runner recorded two successful zero-custody deployments before ending without its post-deployment evidence result. This artifact cannot satisfy PK-03A or G5.",
+  "deployments": [
+    {
+      "name": "yes",
+      "address": "0x4033cb15200e90b93f1b233741a2f5124256e163",
+      "transactionHash": "0x8027c2c25dd5c18006a340aa56c880d65d6a3cea85cf7a712e2f5401d359d78b",
+      "blockNumber": "11381029",
+      "threshold": "1",
+      "target": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+      "targetRuntimeCodeHash": "0x9190afba2a699a9627d64ed68c7cc60e4005a8830b33183c4413b4e1a93b9ccd",
+      "balanceWei": "0"
+    },
+    {
+      "name": "no",
+      "address": "0xc95af9da8435b4468959dc84767df4caa16bbb79",
+      "transactionHash": "0x9fcc45578ef6f6b1e688edffe0ba428504567be02c5f759ac474fe61877b01dd",
+      "blockNumber": "11381031",
+      "threshold": "57896044618658097711785492504343953926634992332820282019728792003956564819967",
+      "target": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+      "targetRuntimeCodeHash": "0x9190afba2a699a9627d64ed68c7cc60e4005a8830b33183c4413b4e1a93b9ccd",
+      "balanceWei": "0"
+    }
+  ],
+  "recovery": "No asset recovery is required because both adapters reject value and hold zero balance. The next runner slice must reuse these exact immutable deployments, deploy only stale and premature cases, and complete all checks before it can write a passed artifact."
+}

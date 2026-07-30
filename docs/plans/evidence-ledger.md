@@ -18,6 +18,16 @@ seed phrases, environment dumps, or unsanitized terminal history.
 | G7   | `not_run` | —                                | —                                                                                                                                                                                                                                 | —                                                                                                                                                                                                                                                           | —                                | —                                                                                                                                                                                                                                                                                                                                                        | —                                                                                                                                                                                                              | —                                                                                                                                   |
 | G8   | `not_run` | —                                | —                                                                                                                                                                                                                                 | —                                                                                                                                                                                                                                                           | —                                | —                                                                                                                                                                                                                                                                                                                                                        | —                                                                                                                                                                                                              | —                                                                                                                                   |
 
+### G5 partial history
+
+PK-03A has not passed G5. The source commit `4ef78df` recorded two successful
+zero-custody Chainlink adapter deployments before its runner ended without a final
+result. Their receipts and zero-balance read-back are in the append-only
+`PK-03A-ADAPTER-PARTIAL` artifacts and the spend ledger. This record is explicitly
+incomplete; the follow-up must reuse the completed `yes`/`no` deployments, prove the
+remaining negative cases, and emit a separate passed artifact before PK-03A or G5
+can be marked complete.
+
 ### G3 completion history
 
 The G3 row is `passed`. The historical FND-05C detail below is superseded by the latest

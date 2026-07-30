@@ -210,6 +210,13 @@ incomplete. A production-adapter failure cannot be replaced with a fixture, trus
 resolver, copied feed, or caller-selected result; it blocks factory deployment until
 the documented resolution boundary is repaired or an ADR records a true blocker.
 
+Partial-run record: Source commit `4ef78df` deployed the immutable `yes` and `no`
+adapters at Sepolia blocks `11381029` and `11381031`, then stopped before the final
+evidence result. Both are zero-custody and have zero ETH balance; no funds recovery
+is required. The append-only partial artifacts and spend entries are explicitly
+non-passing. The follow-up runner must reuse them and deploy only the remaining
+negative adapters rather than repeat completed writes.
+
 ## Sequencing
 
 ```text
