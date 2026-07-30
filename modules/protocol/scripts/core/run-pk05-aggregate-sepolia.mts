@@ -449,7 +449,7 @@ async function main(): Promise<void> {
   }
   if (stage === 'mint') {
     const fixture = requiredAddress('fixture');
-    const collateral = workItem === 'PK-06' ? 180n : 100n;
+    const collateral = workItem === 'PK-07' ? 200n : workItem === 'PK-06' ? 180n : 100n;
     await send(
       primary,
       primaryWallet,
@@ -462,7 +462,7 @@ async function main(): Promise<void> {
   if (stage === 'approve') {
     const fixture = requiredAddress('fixture');
     const wrapper = requiredAddress('wrapper');
-    const collateral = workItem === 'PK-06' ? 180n : 100n;
+    const collateral = workItem === 'PK-07' ? 200n : workItem === 'PK-06' ? 180n : 100n;
     await send(
       primary,
       primaryWallet,
@@ -474,7 +474,7 @@ async function main(): Promise<void> {
   }
   if (stage === 'wrap') {
     const wrapper = requiredAddress('wrapper');
-    const collateral = workItem === 'PK-06' ? 180n : 100n;
+    const collateral = workItem === 'PK-07' ? 200n : workItem === 'PK-06' ? 180n : 100n;
     await send(
       primary,
       primaryWallet,
@@ -486,7 +486,7 @@ async function main(): Promise<void> {
   }
   if (stage === 'distribute') {
     const wrapper = requiredAddress('wrapper');
-    const secondaryCollateral = workItem === 'PK-06' ? 60n : 40n;
+    const secondaryCollateral = workItem === 'PK-07' ? 80n : workItem === 'PK-06' ? 60n : 40n;
     const input = (await primaryHandles.encryptInput(
       secondaryCollateral,
       'uint256',
