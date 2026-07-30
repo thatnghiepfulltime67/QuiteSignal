@@ -33,6 +33,7 @@ production-key configuration.
 | `npm run run:live:sepolia -- --stage=<name> [--write]`    | sepolia-read / sepolia-write | Bounded fresh two-owner lifecycle stage with explicit P2 ledger attribution                 | G6              |
 | `npm run write:live01:manifest`                           | sepolia-read                 | Guarded public manifest generation from LIVE-01 ledger and historical chain facts           | G6              |
 | `npm run write:live02:manifests`                          | sepolia-read                 | Guarded below-k and timeout manifest generation from LIVE-02 receipts and historical facts  | G6              |
+| `npm run verify:live02:recovery`                          | sepolia-read                 | Historical manifest plus current recovery selector/state verification                       | G6              |
 | `npm run test:unit`                                       | offline                      | Domain, SDK, reducer, component units                                                       | G5–G8           |
 | `npm run test:model`                                      | offline                      | Pure state/math/reference-model property and fuzz tests                                     | G1/G5/G8        |
 | `npm run test:contracts:sepolia -- <case>`                | sepolia-write                | Named contract state/economic case                                                          | G1–G6/G8        |

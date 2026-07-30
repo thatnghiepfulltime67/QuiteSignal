@@ -12,6 +12,7 @@
     "verify:g5": "tsx src/g5-cli.ts",
     "verify:sepolia": "tsx src/cli.ts",
     "write:live01:manifest": "tsx scripts/write-live01-manifest.mts",
-    "write:live02:manifests": "tsx scripts/write-live02-manifests.mts"
+    "write:live02:manifests": "tsx scripts/write-live02-manifests.mts",
+    "verify:live02:recovery": "tsx scripts/verify-live02-recovery.mts"
   }
 }
