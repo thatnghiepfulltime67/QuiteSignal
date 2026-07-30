@@ -3110,6 +3110,90 @@
       "actualGasCostWei": "24133895793000",
       "sourceCommit": "7fb9f7a9a43cb7b64617a09fb1251d1974fa8df0",
       "timestampUtc": "2026-07-30T03:11:49.126Z"
+    },
+    {
+      "actualGasCostWei": "579724903612372",
+      "blockNumber": "11379845",
+      "effectiveGasPrice": "1109504359",
+      "gasUsed": "522508",
+      "phase": "P0",
+      "sender": "0xDC1cc527423C882156a632C250528D1922d18Fc7",
+      "transactionHash": "0x0b71cf8a322efcdc68e00f030e9b96f0ae548b95d8210f32fdb6fd2e826e0c9e",
+      "workItemId": "FND-05A",
+      "sourceCommit": "2a05bbefe066fa8b2be7354dc9889365d539a63b",
+      "timestampUtc": "2026-07-30T03:24:18.098Z"
+    },
+    {
+      "actualGasCostWei": "2249897345055740",
+      "blockNumber": "11379846",
+      "effectiveGasPrice": "1146038065",
+      "gasUsed": "1963196",
+      "phase": "P0",
+      "sender": "0xDC1cc527423C882156a632C250528D1922d18Fc7",
+      "transactionHash": "0x2d85e2f9ede93c13b31801df1940e855bea9db6928206d13058187263e2940ef",
+      "workItemId": "FND-05A",
+      "sourceCommit": "2a05bbefe066fa8b2be7354dc9889365d539a63b",
+      "timestampUtc": "2026-07-30T03:24:27.893Z"
+    },
+    {
+      "actualGasCostWei": "2320591227750700",
+      "blockNumber": "11379847",
+      "effectiveGasPrice": "1093301900",
+      "gasUsed": "2122553",
+      "phase": "P0",
+      "sender": "0xDC1cc527423C882156a632C250528D1922d18Fc7",
+      "transactionHash": "0x8b7071833f4c54c2235e0a5e954d3de0f1d9c3b3bce75e0e792c69f822f2bb1e",
+      "workItemId": "FND-05A",
+      "sourceCommit": "2a05bbefe066fa8b2be7354dc9889365d539a63b",
+      "timestampUtc": "2026-07-30T03:24:38.124Z"
+    },
+    {
+      "actualGasCostWei": "73676400236472",
+      "blockNumber": "11379849",
+      "effectiveGasPrice": "1082887256",
+      "gasUsed": "68037",
+      "phase": "P0",
+      "sender": "0xDC1cc527423C882156a632C250528D1922d18Fc7",
+      "transactionHash": "0x4d795a13d1ed770be4156bbcf1ec4c126702489bbbc45cf15c8dd7edb6af92f9",
+      "workItemId": "FND-05A",
+      "sourceCommit": "2a05bbefe066fa8b2be7354dc9889365d539a63b",
+      "timestampUtc": "2026-07-30T03:25:02.081Z"
+    },
+    {
+      "actualGasCostWei": "49161036892011",
+      "blockNumber": "11379850",
+      "effectiveGasPrice": "1071116563",
+      "gasUsed": "45897",
+      "phase": "P0",
+      "sender": "0xDC1cc527423C882156a632C250528D1922d18Fc7",
+      "transactionHash": "0x4b2930290ec2f96da466bc4fb1ceda7bc8ab2899a6f997dc8ed2db73eb187220",
+      "workItemId": "FND-05A",
+      "sourceCommit": "2a05bbefe066fa8b2be7354dc9889365d539a63b",
+      "timestampUtc": "2026-07-30T03:25:16.885Z"
+    },
+    {
+      "actualGasCostWei": "238420597651002",
+      "blockNumber": "11379851",
+      "effectiveGasPrice": "1061940893",
+      "gasUsed": "224514",
+      "phase": "P0",
+      "sender": "0xDC1cc527423C882156a632C250528D1922d18Fc7",
+      "transactionHash": "0x8907e520a027fff944c87f74d6bf143c3cc77010d987be7082b5b8d87c02083b",
+      "workItemId": "FND-05A",
+      "sourceCommit": "2a05bbefe066fa8b2be7354dc9889365d539a63b",
+      "timestampUtc": "2026-07-30T03:25:27.517Z"
+    },
+    {
+      "actualGasCostWei": "476511486576720",
+      "blockNumber": "11379853",
+      "effectiveGasPrice": "1037513960",
+      "gasUsed": "459282",
+      "phase": "P0",
+      "sender": "0xDC1cc527423C882156a632C250528D1922d18Fc7",
+      "transactionHash": "0x79ecf9ec98c8b5df88184fb46272bc03167fd96b71416406f268f07548e6127d",
+      "workItemId": "FND-05A",
+      "sourceCommit": "2a05bbefe066fa8b2be7354dc9889365d539a63b",
+      "timestampUtc": "2026-07-30T03:25:52.149Z"
     }
   ]
 }

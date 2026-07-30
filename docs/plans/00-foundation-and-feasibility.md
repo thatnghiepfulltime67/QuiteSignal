@@ -637,6 +637,14 @@ excluded from G3 evidence. Its receipts are retained in the spend ledger. The ne
 implementation replaces the monolithic runner with independently terminal Sepolia
 evidence slices.
 
+The first FND-05A run from `2a05bbe` stopped after fixture deployment only at block
+`11379845`: fixture `0x25084db2acfd1c400e59d65d02310430996bb3e1`, receipt
+`0x0b71cf8a322efcdc68e00f030e9b96f0ae548b95d8210f32fdb6fd2e826e0c9e`.
+It did not deploy a wrapper or spike, mint collateral, create an actor, submit a
+confidential input, or enter a lifecycle state. The fixture has no supply and no
+product custody. The runner did not expose a sanitized error cause, so this attempt
+is excluded from FND-05A evidence; repair failure reporting before a fresh run.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

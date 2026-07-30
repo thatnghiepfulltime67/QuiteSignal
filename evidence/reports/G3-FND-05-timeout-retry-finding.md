@@ -182,3 +182,12 @@ submitted a confidential input. The unused, ignored actor recovery record was
 deleted. This setup is excluded from G3 evidence; its public receipts remain in the
 append-only spend ledger. The next implementation replaces the monolithic runner
 with terminal, independently recoverable Sepolia evidence slices.
+
+The first FND-05A below-k slice execution from source commit `2a05bbe` stopped
+after deploying only fixture `0x25084db2acfd1c400e59d65d02310430996bb3e1` at block
+`11379845` (receipt `0x0b71cf8a322efcdc68e00f030e9b96f0ae548b95d8210f32fdb6fd2e826e0c9e`).
+It did not deploy a wrapper or spike, mint fixture collateral, create a secondary
+actor, submit a confidential input, or enter any lifecycle state. The runner's
+failure path did not expose its error message, so no protocol conclusion is made.
+The fixture has no supply or product custody and is excluded from FND-05A evidence.
+The runner must report a sanitized error cause before a fresh slice execution.
