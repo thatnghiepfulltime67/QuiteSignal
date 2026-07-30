@@ -26,6 +26,7 @@
     "test:commit:sepolia": "npm run --workspace @quitesignal/protocol test:commit:sepolia --",
     "test:aggregate:sepolia": "npm run --workspace @quitesignal/protocol test:aggregate:sepolia --",
     "test:resolution:sepolia": "npm run --workspace @quitesignal/protocol test:resolution:sepolia --",
+    "verify:resolution:sepolia": "npm run --workspace @quitesignal/protocol verify:resolution:sepolia",
     "test:factory:sepolia": "npm run --workspace @quitesignal/protocol test:factory:sepolia --",
     "test:model": "npm run --workspace @quitesignal/protocol test:model && npm run --workspace @quitesignal/domain test:model",
     "test:nox:sepolia": "npm run --workspace @quitesignal/protocol test:nox:sepolia --",

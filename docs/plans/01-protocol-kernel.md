@@ -490,7 +490,8 @@ read-only result; resolution grace may transition only an unresolved pool to
 
 Output files: `modules/protocol/contracts/core/QuietSignalPool.sol`, ABI tests if
 needed, the `PK-06` mode of
-`modules/protocol/scripts/core/run-pk05-aggregate-sepolia.mts`, package scripts,
+`modules/protocol/scripts/core/run-pk05-aggregate-sepolia.mts`,
+`modules/protocol/scripts/core/verify-pk06-resolution-sepolia.mts`, package scripts,
 `evidence/{offline,sepolia}/G5/PK-06-RESOLUTION.json`, spend ledger,
 protocol/API/risk/traceability documents, and this record.
 
