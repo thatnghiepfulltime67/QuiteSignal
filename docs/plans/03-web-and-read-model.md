@@ -16,18 +16,19 @@ depending on a mock, private database, or privileged backend.
 
 ## Work-item register
 
-| ID                | Outcome                        | Primary artifacts                                                                                | Required checks                                                       | Intended commit                                |
-| ----------------- | ------------------------------ | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | ---------------------------------------------- |
-| WEB-01            | Application/provider shell     | Routes, providers, error boundaries, manifest loader                                             | wrong chain, no wallet, provider discovery/reconnect                  | `feat: add application and wallet shell`       |
-| WEB-02            | Market/privacy onboarding      | Market list/detail, privacy legend, trust/limitation copy                                        | public/private copy audit, empty/loading/error                        | `feat: add market privacy onboarding`          |
-| WEB-03            | Sealed signal flow             | Probability/stake form, encrypt, approve, commit progress                                        | decimal boundaries, reject/retry/replacement/reload                   | `feat: add encrypted signal journey`           |
-| WEB-04            | Public lifecycle view          | Epoch timeline, aggregate, adapter execution, resolution                                         | event/reorg refresh, direct-RPC fallback                              | `feat: add public lifecycle timeline`          |
-| WEB-05            | Owner position/terminal flow   | Owner decrypt, score materialize, claim/refund/recovery                                          | account mismatch, ACL failure, duplicate, pending states              | `feat: add private position and settlement`    |
-| WEB-06            | Verification experience        | Manifest/code hash/invariant/evidence view                                                       | stale manifest, wrong chain, verifier failure                         | `feat: add public verification view`           |
-| WEB-07            | Accessibility/resilience       | Keyboard, screen reader, mobile, offline/RPC/gateway states                                      | automated a11y, console/log scan, responsive matrix                   | `test: harden accessible recovery ux`          |
-| WEB-08            | Real browser lifecycle         | Live browser e2e and sanitized result report                                                     | primary success plus one refund/recovery path                         | `test: prove live web user journey`            |
-| WEB-03-UI-01      | Poster-system visual refresh   | Revised design system, responsive banded application presentation, visual assertions             | token/source audit, responsive build and interaction checks           | `feat: refresh web visual system`              |
-| WEB-02-LANDING-01 | Product landing and navigation | Complete product narrative, task-oriented navigation, route guidance, accessibility improvements | route/source assertions, keyboard/navigation checks, production build | `feat: improve product landing and navigation` |
+| ID                   | Outcome                        | Primary artifacts                                                                                | Required checks                                                       | Intended commit                                     |
+| -------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | --------------------------------------------------- |
+| WEB-01               | Application/provider shell     | Routes, providers, error boundaries, manifest loader                                             | wrong chain, no wallet, provider discovery/reconnect                  | `feat: add application and wallet shell`            |
+| WEB-02               | Market/privacy onboarding      | Market list/detail, privacy legend, trust/limitation copy                                        | public/private copy audit, empty/loading/error                        | `feat: add market privacy onboarding`               |
+| WEB-03               | Sealed signal flow             | Probability/stake form, encrypt, approve, commit progress                                        | decimal boundaries, reject/retry/replacement/reload                   | `feat: add encrypted signal journey`                |
+| WEB-04               | Public lifecycle view          | Epoch timeline, aggregate, adapter execution, resolution                                         | event/reorg refresh, direct-RPC fallback                              | `feat: add public lifecycle timeline`               |
+| WEB-05               | Owner position/terminal flow   | Owner decrypt, score materialize, claim/refund/recovery                                          | account mismatch, ACL failure, duplicate, pending states              | `feat: add private position and settlement`         |
+| WEB-06               | Verification experience        | Manifest/code hash/invariant/evidence view                                                       | stale manifest, wrong chain, verifier failure                         | `feat: add public verification view`                |
+| WEB-07               | Accessibility/resilience       | Keyboard, screen reader, mobile, offline/RPC/gateway states                                      | automated a11y, console/log scan, responsive matrix                   | `test: harden accessible recovery ux`               |
+| WEB-08               | Real browser lifecycle         | Live browser e2e and sanitized result report                                                     | primary success plus one refund/recovery path                         | `test: prove live web user journey`                 |
+| WEB-03-UI-01         | Poster-system visual refresh   | Revised design system, responsive banded application presentation, visual assertions             | token/source audit, responsive build and interaction checks           | `feat: refresh web visual system`                   |
+| WEB-02-LANDING-01    | Product landing and navigation | Complete product narrative, task-oriented navigation, route guidance, accessibility improvements | route/source assertions, keyboard/navigation checks, production build | `feat: improve product landing and navigation`      |
+| WEB-08-DEPLOYMENT-02 | Revision command preparation   | Explicit append-only revision invocation and operator runbook                                    | static command policy test, formatter, typecheck, clean diff          | `build: prepare explicit release revision commands` |
 
 ## WEB-01 work-item record
 
@@ -883,6 +884,47 @@ custody, and the empty OPEN epoch; its sanitized report is
 `evidence/sepolia/G7/WEB-08-DEP-02-release-verification.json`. DEP-02 is verified
 deployment evidence, but it is not G7 product-journey evidence until the active
 pointer is promoted and the named browser cases complete.
+
+## WEB-08-DEPLOYMENT-02 work-item record
+
+ID: `WEB-08-DEPLOYMENT-02`
+
+Status: `in_progress`
+
+Outcome: Prepare the next append-only Sepolia release command path without creating
+a deployment, so the eventual browser-wallet run can use a fresh explicit release
+ID rather than a stale shortcut.
+
+Output files: protocol workspace command metadata, a pure static command-policy
+test, the Sepolia deployment runbook, and this work-item record.
+
+Acceptance criteria: The standard planner and sender accept a caller-supplied
+`--release=DEP-<integer>` argument, no script embeds an old release ID, and the
+runbook makes the read-only plan, guarded sender, verification, and promotion order
+unambiguous. This preparation must not send a transaction, edit an existing manifest,
+or change the active-release pointer.
+
+Privacy/custody impact: None. The change only documents and validates command-line
+argument forwarding; it adds no signer, browser provider, storage, backend, or
+confidential input path.
+
+Funds location/recovery impact: None. The slice performs no Sepolia write. A later
+revision command remains guarded by the existing clean-tree, confirmation, budget,
+and create-only manifest checks; an operator can simply leave the active release
+unchanged if planning or verification fails.
+
+Checks: `npm run --workspace @quitesignal/protocol test:deployment-plan`, root
+typecheck, targeted Prettier validation, and `git diff --check`.
+
+Evidence location: source/test output only. Any future revision requires its own
+immutable manifest, spend-ledger entries, independent verification, and browser
+evidence; this work item cannot satisfy G7.
+
+Intended commit: `build: prepare explicit release revision commands`.
+
+Rollback/failure action: Revert only the command metadata, static test, and runbook.
+Do not send a replacement deployment, overwrite an immutable manifest, or move the
+active-release pointer.
 
 ## Primary route contract
 
