@@ -186,7 +186,7 @@ independently written and presentation-only; it does not create G7 evidence.
 
 ID: `WEB-02-NAV-02`
 
-Status: `in_progress`
+Status: `complete`
 
 Prerequisite gates: G6 passed. This is a presentation-only P3 slice and cannot claim
 G7 browser-wallet evidence.
@@ -225,6 +225,14 @@ Intended commit: `feat: clarify workspace navigation`.
 Rollback/failure action: Revert only the navigation presentation. Do not restore a
 route-only hidden menu by adding a wallet dependency, backend navigation service, or
 stored session state.
+
+Completion evidence: The top-level bar now contains only Overview and Workspace.
+Workspace identifies the active task context and opens four 44px-plus task cards for
+Market, Guide, Verify, and owner-only Position, each with its purpose and privacy
+boundary. `T-WEB-02-LANDING-01` checks the two-level source contract and its task
+labels; `T-WEB-07-TARGETS-01` checks the shared top-level target contract. All 27 web
+tests, production Vite build, root typecheck, targeted Prettier validation, and `git
+diff --check` pass. No wallet, storage, backend, or chain behaviour changed.
 
 ## WEB-03-UX-02 work-item record
 

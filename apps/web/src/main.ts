@@ -41,6 +41,7 @@ let releaseId = 'unselected';
 let manifestPhase: 'loading' | 'ready' | 'unavailable' = 'loading';
 let walletState = 'No wallet detected';
 let walletMenuOpen = false;
+let workspaceMenuOpen = false;
 let selectedWallet: Eip1193Provider | undefined;
 const walletCandidates: WalletCandidate[] = [];
 const boundWalletProviders = new WeakSet<Eip1193Provider>();
@@ -142,6 +143,14 @@ function walletMenuContent(): string {
   return `<section class="wallet-menu" aria-label="Wallet connection"><p class="eyebrow">{ choose a browser wallet }</p><p>Connecting lets this page request your public account and Sepolia network. It does not submit a transaction.</p>${menu}<div class="wallet-menu-actions"><button class="text-button" id="refresh-wallets" type="button">Refresh wallets</button>${selectedWallet ? '<button class="text-button" id="disconnect-wallet" type="button">Disconnect app</button>' : ''}</div></section>`;
 }
 
+function workspaceNavigationContent(
+  marketPath: string,
+  verifyPath: string,
+  active: boolean,
+): string {
+  return `<div class="workspace-navigation"><button class="workspace-toggle" id="workspace-toggle" type="button" aria-expanded="${workspaceMenuOpen}" aria-controls="workspace-menu" data-active="${active}">Workspace <span aria-hidden="true">${workspaceMenuOpen ? '↑' : '↓'}</span></button>${workspaceMenuOpen ? `<section class="workspace-menu" id="workspace-menu" aria-label="Workspace functions"><p class="eyebrow">{ choose a task }</p><p class="workspace-intro">Start public and only connect a wallet when the task requires it.</p><div class="workspace-route-list"><a class="workspace-route" href="${marketPath}"><span>PUBLIC · MARKET</span><strong>Explore the live condition</strong><p>Read the market, lifecycle, and cohort rule before preparing a signal.</p></a><a class="workspace-route" href="/how-it-works"><span>PUBLIC · GUIDE</span><strong>Understand the flow</strong><p>Learn the privacy boundary, wallet approvals, and recovery path.</p></a><a class="workspace-route" href="${verifyPath}"><span>PUBLIC · VERIFY</span><strong>Check the release</strong><p>Review manifest-bound deployment facts before a wallet action.</p></a><a class="workspace-route" href="/position"><span>OWNER · POSITION</span><strong>Manage a private position</strong><p>Reveal, score, claim, or refund only with the connected owner wallet.</p></a></div></section>` : ''}</div>`;
+}
+
 function landingContent(market?: ReturnType<typeof presentMarket>): string {
   const marketLink = market ? `/pool/${market.poolAddress}` : '/markets';
   const verifyLink = market ? `/verify/${market.poolAddress}` : '/markets';
@@ -189,17 +198,20 @@ function render(message?: string): void {
               : landingContent(market);
   const canonicalPoolPath = manifest ? `/pool/${manifest.poolAddress}` : '/markets';
   const canonicalVerifyPath = manifest ? `/verify/${manifest.poolAddress}` : '/markets';
+  const isWorkspaceRoute =
+    isMarketRoute || isExplainerRoute || Boolean(verifyAddress) || isPositionRoute;
   const navigation = [
     navigationLink('/', 'Overview', isHomeRoute),
-    navigationLink('/markets', 'Market', isMarketRoute),
-    navigationLink('/how-it-works', 'How it works', isExplainerRoute),
-    navigationLink(canonicalVerifyPath, 'Verify', Boolean(verifyAddress)),
-    navigationLink('/position', 'Position', isPositionRoute),
+    workspaceNavigationContent(canonicalPoolPath, canonicalVerifyPath, isWorkspaceRoute),
   ].join('');
   root.innerHTML = `<a class="skip-link" href="#main-content">Skip to content</a><main class="app-shell"><header class="site-header"><a class="wordmark" href="/" aria-label="QuietSignal overview">QuietSignal</a><div class="header-actions"><span class="network-status" aria-label="Network: Ethereum Sepolia">Sepolia</span><button class="wallet" id="wallet" aria-expanded="${walletMenuOpen}"${manifest ? '' : ' disabled'}>${manifest ? walletState : 'Release check'}</button>${walletMenuContent()}</div></header><nav class="site-nav" aria-label="Primary">${navigation}</nav><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section><div id="main-content" tabindex="-1">${content}</div><section class="deployment-band"><div><p class="eyebrow">{ active Sepolia release ${releaseId} }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : manifestPhase === 'loading' ? 'Checking the canonical manifest…' : 'Canonical manifest unavailable. Do not continue with a wallet action.')}</p>${manifest ? `<a class="deployment-link" href="${canonicalPoolPath}">Read public lifecycle <span aria-hidden="true">↗</span></a>` : ''}</div></section></main>`;
   document.querySelector<HTMLButtonElement>('#wallet')?.addEventListener('click', () => {
     walletMenuOpen = !walletMenuOpen;
     if (walletMenuOpen) requestWalletDiscovery();
+    render();
+  });
+  document.querySelector<HTMLButtonElement>('#workspace-toggle')?.addEventListener('click', () => {
+    workspaceMenuOpen = !workspaceMenuOpen;
     render();
   });
   document.querySelector<HTMLButtonElement>('#refresh-wallets')?.addEventListener('click', () => {

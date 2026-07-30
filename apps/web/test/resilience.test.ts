@@ -22,8 +22,8 @@ test('T-WEB-07-02: stylesheet preserves keyboard focus and reduced-motion suppor
 test('T-WEB-07-TARGETS-01: primary navigation and utility actions meet the target-size contract', () => {
   const source = readFileSync(resolve(root, 'src/styles.css'), 'utf8');
 
+  assert.match(source, /\.site-nav a,\s*\.workspace-toggle\s*\{[\s\S]*?min-height: 44px;/);
   for (const selector of [
-    '.site-nav a',
     '.wordmark',
     '.skip-link',
     '.text-action',
