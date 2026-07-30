@@ -200,7 +200,8 @@ async function main(): Promise<void> {
   const stage = argument('stage');
   const write = process.argv.includes('--write');
   const workItem = argument('work-item') ?? 'PK-05';
-  if (workItem !== 'PK-05' && workItem !== 'PK-06') fail('The work item must be PK-05 or PK-06.');
+  if (!['PK-05', 'PK-06', 'PK-07'].includes(workItem))
+    fail('The work item must be PK-05, PK-06, or PK-07.');
   if (!stage) fail(`${workItem} requires --stage.`);
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
   const primaryKey = process.env.SEPOLIA_PRIVATE_KEY as Hex | undefined;
@@ -379,7 +380,11 @@ async function main(): Promise<void> {
     const adapter = requiredAddress('adapter');
     const caseName = argument('case');
     const validCases =
-      workItem === 'PK-05' ? ['below-k', 'threshold'] : ['timeout', 'grace', 'success'];
+      workItem === 'PK-05'
+        ? ['below-k', 'threshold']
+        : workItem === 'PK-06'
+          ? ['timeout', 'grace', 'success']
+          : ['claim', 'refund'];
     if (!caseName || !validCases.includes(caseName))
       fail(`${workItem} pool case must be one of: ${validCases.join(', ')}.`);
     const observation = (await publicClient.readContract({
@@ -390,7 +395,7 @@ async function main(): Promise<void> {
     const config: Config = {
       confidentialCollateral: wrapper,
       resolutionAdapter: adapter,
-      deadline: observation - (workItem === 'PK-06' ? 300n : 180n),
+      deadline: observation - (workItem === 'PK-05' ? 180n : 300n),
       commitTimeout: 30n,
       kMin: 2,
       aggregateTimeout:
@@ -403,7 +408,7 @@ async function main(): Promise<void> {
             : caseName === 'grace'
               ? 121n
               : 122n,
-      resolutionGrace: workItem === 'PK-06' ? 120n : 600n,
+      resolutionGrace: workItem === 'PK-05' ? 600n : 120n,
     };
     const salt = keccak256(toHex(`quiet-signal/${workItem}/${caseName}/v1`));
     await send(
@@ -670,6 +675,36 @@ async function main(): Promise<void> {
       pool,
       calldata(artifacts.pool, 'settle'),
       'settle immutable adapter result',
+    );
+    return;
+  }
+  if (stage === 'materialize-score') {
+    await send(
+      primary,
+      primaryWallet,
+      pool,
+      calldata(artifacts.pool, 'materializeScore'),
+      'materialize private score',
+    );
+    return;
+  }
+  if (stage === 'claim') {
+    await send(
+      primary,
+      primaryWallet,
+      pool,
+      calldata(artifacts.pool, 'claim'),
+      'claim confidential payout',
+    );
+    return;
+  }
+  if (stage === 'refund') {
+    await send(
+      primary,
+      primaryWallet,
+      pool,
+      calldata(artifacts.pool, 'refund'),
+      'refund confidential stake',
     );
     return;
   }
