@@ -434,13 +434,16 @@ confidential refund. It is intentionally independent of threshold, proof, and
 unwrap behavior.
 
 Output files: `modules/protocol/scripts/feasibility/run-fnd05-below-k-sepolia.mts`,
-the required dispatcher/test support,
+`modules/protocol/scripts/feasibility/resume-fnd05-below-k-sepolia.mts`, and the
+required dispatcher/test support,
 `evidence/offline/G3/FND-05-BELOW-K.json`,
 `evidence/sepolia/G3/FND-05-BELOW-K.json`, the G3 report and spend ledger.
 
 Checks: `npm run compile`, `npm run test:nox:sepolia -- FND-05-BELOW-K --dry-run`,
-the confirmed Sepolia command, `npm run budget:status`, `npm run check:offline`,
-`npm run check:sepolia:read`, `npm run scan:secrets`, and `git diff --check`.
+the confirmed Sepolia command, and when a documented non-terminal fixture exists,
+the named resume dry run and confirmed resume command; then `npm run budget:status`,
+`npm run check:offline`, `npm run check:sepolia:read`, `npm run scan:secrets`, and
+`git diff --check`.
 
 Privacy impact and funds: the single artificial test input is encrypted before
 submission; public identities, timing, and fixture addresses remain public. The

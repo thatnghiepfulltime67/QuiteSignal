@@ -4,7 +4,8 @@ const workItem = process.argv.find(
     argument === 'FND-03' ||
     argument === 'FND-04' ||
     argument === 'FND-05' ||
-    argument === 'FND-05-BELOW-K',
+    argument === 'FND-05-BELOW-K' ||
+    argument === 'FND-05-BELOW-K-RESUME',
 );
 
 if (workItem === 'FND-02') {
@@ -17,6 +18,8 @@ if (workItem === 'FND-02') {
   await import('./run-aggregate-recovery-sepolia.mjs');
 } else if (workItem === 'FND-05-BELOW-K') {
   await import('./run-fnd05-below-k-sepolia.mjs');
+} else if (workItem === 'FND-05-BELOW-K-RESUME') {
+  await import('./resume-fnd05-below-k-sepolia.mjs');
 } else {
   console.error('A supported Sepolia Nox feasibility work-item identifier is required.');
   process.exitCode = 1;
