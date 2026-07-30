@@ -800,6 +800,18 @@ record is retained only to resume this exact fixture; the next runner revision m
 close it after the deadline and complete every remaining proof and recovery
 assertion before a new C fixture is allowed.
 
+The first resume invocation from `f1b1026` verified that exact resumable state, but
+then incorrectly repeated the generic fixture mint, wrap, and secondary-distribution
+setup at blocks `11380114` through `11380119` before the existing-owner commitment
+preflight stopped it. No recovery-spike state transition, aggregate request, proof,
+unwrap, recovery, or refund occurred; a fresh read still reports the same `Open`,
+two-member, non-public aggregate state. The duplicate deterministic test collateral
+is confined to the confidential wrapper and raises the owners' local test baselines;
+it creates no spike custody, product custody, or external value. The next resume
+revision must skip every setup write and reconstruct each terminal baseline from the
+observed current confidential balance plus the known recorded stake. The fixture
+remains excluded until that exact recovery reaches terminal refunds.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

@@ -253,3 +253,15 @@ plaintext, handle, proof, calldata, or local actor material was recorded. This
 fixture is excluded from FND-05C evidence. The ignored actor record is retained so a
 dedicated resume command can complete this exact fixture terminally before another
 FND-05C fixture is considered.
+
+The first FND-05C resume from `f1b1026` verified that fixture's exact `Open`
+two-member state, but its shared runner still performed generic fixture setup before
+entering the resume state machine. It minted, wrapped, and distributed additional
+deterministic fixture collateral at blocks `11380114` through `11380119`, then
+stopped during the existing-owner commitment preflight without submitting a
+recovery-spike transaction. The spike remains `Open` with no aggregate request or
+public-decrypt access. The additional valueless collateral is confined to the
+wrapper and changes only the local test-owner baselines; it is not pool or product
+custody. This unsuccessful resume is excluded from evidence. The correction skips
+all setup writes and derives each refund baseline from the observed owner balance
+plus its recorded committed stake before completing this same fixture.
