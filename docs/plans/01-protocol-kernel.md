@@ -391,6 +391,15 @@ removed from the write runner. The associated accepted pool retains only its
 documented encrypted collateral. Remaining mismatch and timeout cases must run from
 a clean source commit without repeating a completed callback assertion.
 
+A second bounded resume used the same fixture, wrapper, and adapter, deployed
+factory `0x5bc56d1be173b97196cc5eb936348741c7f39e05`, and finalized one further
+isolated accepted commit at pool `0x1b071d07bf0ce7d60d56969e141322cf760176aa`
+through block `11381331`. That accepted pool likewise holds only its documented
+encrypted collateral. The source runner will be split into independently invokable
+write stages before any remaining negative or recovery branch is attempted; this is
+a verification-orchestration change only and does not alter custody, authority, or
+the production protocol.
+
 ## Sequencing
 
 ```text
