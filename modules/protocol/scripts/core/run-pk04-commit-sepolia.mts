@@ -11,6 +11,7 @@ import {
   encodeDeployData,
   encodeFunctionData,
   http,
+  isAddress,
   keccak256,
   type Abi,
   type Address,
@@ -165,6 +166,11 @@ async function waitForTimestamp(
 async function main(): Promise<void> {
   loadEnvironment();
   const write = process.argv.includes('--write');
+  const resumeArgument = process.argv.find((argument) => argument.startsWith('--resume='));
+  const resume = resumeArgument?.slice('--resume='.length).split(',');
+  if (resume && (resume.length !== 3 || resume.some((address) => !isAddress(address)))) {
+    fail('PK-04 resume requires fixture,wrapper,adapter contract addresses.');
+  }
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
   const privateKey = process.env.SEPOLIA_PRIVATE_KEY as Hex | undefined;
   if (!rpcUrl) fail('SEPOLIA_RPC_URL is required.');
@@ -211,7 +217,8 @@ async function main(): Promise<void> {
     JSON.stringify({
       mode: write ? 'confirmed-write' : 'dry-run',
       workItem: 'PK-04',
-      deployments: 5,
+      resumed: resume !== undefined,
+      deployments: resume ? 4 : 7,
       estimatedMaximumGasCostWei: estimate.toString(),
       remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpend(ledger)).toString(),
     }),
@@ -262,21 +269,42 @@ async function main(): Promise<void> {
   };
   const calldata = (artifact: Artifact, name: string, args: readonly unknown[] = []): Hex =>
     encodeFunctionData({ abi: artifact.abi, functionName: name, args } as never);
-  const fixture = await deploy(deployments[0]!, 'deploy fixture collateral');
-  const wrapper = await deploy(
-    encodeDeployData({
-      abi: artifacts.wrapper.abi,
-      bytecode: artifacts.wrapper.bytecode,
-      args: [fixture],
-    }),
-    'deploy unchanged wrapper',
-  );
-  const adapter = await deploy(deployments[1]!, 'deploy immutable adapter');
+  let fixture: Address;
+  let wrapper: Address;
+  let adapter: Address;
+  if (resume) {
+    [fixture, wrapper, adapter] = resume as [Address, Address, Address];
+    const codes = await Promise.all([
+      publicClient.getCode({ address: fixture }),
+      publicClient.getCode({ address: wrapper }),
+      publicClient.getCode({ address: adapter }),
+    ]);
+    if (codes.some((code) => !code)) fail('A requested PK-04 resume dependency has no code.');
+  } else {
+    fixture = await deploy(deployments[0]!, 'deploy fixture collateral');
+    wrapper = await deploy(
+      encodeDeployData({
+        abi: artifacts.wrapper.abi,
+        bytecode: artifacts.wrapper.bytecode,
+        args: [fixture],
+      }),
+      'deploy unchanged wrapper',
+    );
+    adapter = await deploy(deployments[1]!, 'deploy immutable adapter');
+  }
   const factory = await deploy(deployments[2]!, 'deploy factory');
+  const observationNotBefore = (await publicClient.readContract({
+    address: adapter,
+    abi: artifacts.adapter.abi,
+    functionName: 'observationNotBefore',
+  } as never)) as bigint;
+  if (observationNotBefore <= (await publicClient.getBlock()).timestamp + 90n) {
+    fail('The PK-04 adapter observation window is too near for a resumed pool deadline.');
+  }
   const config: Config = {
     confidentialCollateral: wrapper,
     resolutionAdapter: adapter,
-    deadline: block.timestamp + 600n,
+    deadline: observationNotBefore - 90n,
     commitTimeout: COMMIT_TIMEOUT,
     kMin: 2,
     aggregateTimeout: 600n,
