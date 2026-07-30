@@ -172,6 +172,41 @@ Rollback/failure action: Remove only the web signal layer; retain the user-owned
 on-chain pending/recovery path. Never substitute manual calldata, mock encryption,
 durable browser plaintext, or a service signer.
 
+## WEB-04 work-item record
+
+ID: `WEB-04`
+
+Status: `in_progress`
+
+Outcome: Render a chain-derived public epoch timeline with clear aggregate,
+verification, settlement, pending, and recovery states.
+
+Output files: public RPC reader adapter, lifecycle presenter/timeline UI and tests,
+this record, and status-copy updates.
+
+Acceptance criteria: The view reads the canonical pool's public config/epoch over
+Sepolia and maps every contract state to a labeled timeline. It never infers private
+positions or a pending state as success. Aggregate totals are rendered only after
+their public on-chain state exists. RPC/indexer failure uses a direct-read retry
+state and does not block permissionless recovery or suggest a trusted service.
+
+Privacy/custody impact: Only public pool/config/epoch values are read. The component
+does not request an owner view, Nox operation, wallet signature, or private storage.
+
+Funds location/recovery impact: This is read-only. Recovery states name the existing
+permissionless on-chain path and never offer an app-controlled transfer.
+
+Checks: state-mapping tests, public reader tests, production build, `npm run
+test:web`, typecheck, and later Sepolia browser read evidence.
+
+Evidence location: source/test output now; public browser-read evidence later under
+G7.
+
+Intended commit: `feat: add public lifecycle timeline`.
+
+Rollback/failure action: Remove only the lifecycle presenter. Do not replace failed
+RPC reads with static state or introduce indexer authority.
+
 ## Primary route contract
 
 Required routes or equivalent framework views:
