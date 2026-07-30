@@ -1071,7 +1071,8 @@ Evidence path: `evidence/offline/G4/FND-06-RESOLUTION.json`,
 `evidence/sepolia/G4/FND-06-RESOLUTION.json`, and
 `evidence/reports/G4-resolution-feasibility.md`.
 
-Intended commit: `test: prove public resolution adapter boundary`.
+Commit sequence: `test: add public resolution spike`, then
+`test: prove public resolution adapter boundary` after committed Sepolia evidence.
 
 Rollback/failure action: Revert only the FND-06B source and documentation commit if
 the target assessment is incorrect; preserve an accurate sanitized failure report.
