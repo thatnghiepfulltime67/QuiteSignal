@@ -117,6 +117,27 @@ export const quietSignalPoolAbi = [
     inputs: [{ name: 'acceptanceProof', type: 'bytes' }],
     outputs: [],
   },
+  {
+    type: 'function',
+    name: 'materializeScore',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'claim',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'refund',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
 ] as const;
 
 export const quietSignalCollateralAbi = [

@@ -95,6 +95,14 @@ test('T-SDK-03-01: frozen callback ABI stays compatible with compiled pool and c
     'finalizeCommit',
     ['bytes'],
   );
+  for (const name of ['materializeScore', 'claim', 'refund']) {
+    assertFunction(
+      quietSignalPoolAbi.find((item) => item.name === name),
+      artifact.abi,
+      name,
+      [],
+    );
+  }
   assertFunction(
     quietSignalCollateralAbi[0],
     collateralArtifact.abi,
