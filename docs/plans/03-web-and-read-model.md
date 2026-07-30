@@ -244,6 +244,42 @@ Intended commit: `feat: add private position and settlement`.
 Rollback/failure action: Remove the isolated owner presentation/action layer; do not
 replace it with a backend decrypt service or a cached private position.
 
+## WEB-06 work-item record
+
+ID: `WEB-06`
+
+Status: `in_progress`
+
+Outcome: Provide a public verification route that exposes canonical manifest facts,
+runtime/evidence status, and clear failure handling without treating the web app as
+the verifier of record.
+
+Output files: verification presenter/route and tests, public evidence loader,
+DESIGN.md verification panel styles, this record, and public-copy updates.
+
+Acceptance criteria: `/verify/:address` validates the canonical manifest address and
+Sepolia chain before showing public deployment facts. It links the committed G6
+evidence artifact and states that the independent verifier command—not the UI—is the
+source of invariant conclusions. Missing, stale, wrong-chain, or wrong-address
+inputs show failure copy and do not render a green status.
+
+Privacy/custody impact: The route reads only committed public manifest/evidence
+fields. It contains no wallet, owner data, Nox operation, service identity, or
+confidential schema.
+
+Funds location/recovery impact: Read-only; it cannot affect funds. A verification
+failure directs users to public evidence and does not block on-chain recovery.
+
+Checks: presenter mutation tests, production build, `npm run test:web`, typecheck,
+and later browser evidence against the real G6 manifest.
+
+Evidence location: source/test output now; G7 browser verification evidence later.
+
+Intended commit: `feat: add public verification view`.
+
+Rollback/failure action: Remove only the route/presenter. Never replace missing
+evidence with a fixture or claim an unverified manifest is valid.
+
 ## Primary route contract
 
 Required routes or equivalent framework views:
