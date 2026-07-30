@@ -13,3 +13,11 @@ export {
   type RequestId,
   type TransactionHash,
 } from './public.js';
+export {
+  ConfidentialInputClient,
+  SealedUint256,
+  contractEncryptedInput,
+  createSepoliaConfidentialInputClient,
+  type ContractEncryptedInput,
+  type EncryptionContext,
+} from './confidential.js';

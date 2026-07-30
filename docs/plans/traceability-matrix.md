@@ -115,6 +115,18 @@ Nox, encryption, or contract operation and does not advance G5/G6.
 | `T-SDK-01-03` | Unsafe, signed, scientific, malformed, over-precision, and overflow rejection | NFR-02, NFR-04 |
 | `T-SDK-01-04` | No confidential-shaped field, Nox, wallet, or private-key dependency          | P1, NFR-04     |
 
+## SDK-02 confidential-input boundary coverage
+
+`T-SDK-02-*` is offline behavioral and static boundary coverage only. It does not
+replace the required named Sepolia SDK smoke before G6.
+
+| Test family   | Coverage                                                                                             | Requirements       |
+| ------------- | ---------------------------------------------------------------------------------------------------- | ------------------ |
+| `T-SDK-02-01` | Canonical Sepolia/pool/request context, explicit contract encoding, and JSON rejection               | P1, P3, P7, NFR-04 |
+| `T-SDK-02-02` | Same-client Nox encryptions serialize rather than sharing mutable input-builder state                 | I7, I8, NFR-02     |
+| `T-SDK-02-03` | Invalid chain/context/value/Nox response rejects without reflecting plaintext in an error             | P1, P3, NFR-04     |
+| `T-SDK-02-04` | Confidential client contains no console, browser storage, or JSON serialization path                  | P1, P3, P7         |
+
 ## Evidence naming
 
 Evidence files use:

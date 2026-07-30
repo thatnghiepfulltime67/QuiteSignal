@@ -1,6 +1,6 @@
 # P2 — Integration, SDK, automation, and live protocol
 
-Status: `not_started`
+Status: `in_progress`
 
 Pre-G5 preparation exception: While P1 is explicitly `awaiting_chain`, one
 dependency-independent pure TypeScript SDK slice may be `in_progress`. It cannot
@@ -77,6 +77,50 @@ four passing `T-SDK-01-*` cases for identifier shape, exact decimal/base-unit
 conversion, malformed/unsafe value rejection, and prohibited confidential-shaped
 field/dependency absence. `npm run check:offline` passed. This remains pre-G5
 preparation; it makes no live-protocol or G6 claim.
+
+## SDK-02 work-item record
+
+ID: `SDK-02`
+
+Status: `in_progress`
+
+Outcome: Provide a Sepolia-only Nox encryption boundary that binds each encrypted
+uint256 input to its chain, pool, and caller-generated request nonce, serializes
+same-client encryption safely, and prevents raw encrypted material from entering
+ordinary serialization paths.
+
+Active slice: `SDK-02-BOUNDARY-01`.
+
+Output files: `modules/confidential-client/src/confidential.ts`, public exports,
+unit tests, this record, and the traceability matrix where behavior changes.
+
+Acceptance criteria: The production constructor refuses a non-Sepolia wallet. Every
+input validates uint256 range and a canonical public context before Nox encryption.
+The returned sealed value does not expose raw encrypted fields or serialize; contract
+encoding requires an exact context match. Sequential use of one Nox client is
+enforced even when callers initiate concurrent requests.
+
+Privacy/custody impact: Plaintext exists only in the caller process long enough for
+local Nox input encryption. No plaintext, raw handle, proof, wallet credential, or
+signature is logged, stored, returned in JSON, or sent to a service other than the
+configured Nox protocol path. This SDK has no token or custody authority.
+
+Funds location/recovery impact: The slice performs no contract write. A rejected
+input or failed encryption does not move funds; the caller may retry with the same
+public context and a new request nonce.
+
+Checks: SDK unit tests, `npm run typecheck`, `npm run check:offline`, and
+`git diff --check`. A later named Sepolia smoke under SDK-02 is required before any
+G6 claim; fake unit tests are not chain/privacy evidence.
+
+Evidence path: SDK unit test output for this boundary slice; later live evidence is
+recorded under `evidence/{offline,sepolia}/G6/SDK-02-CLIENT.json`.
+
+Intended commit: `feat: add nox confidential input client`.
+
+Rollback/failure action: Revert only the SDK boundary and leave SDK-02 incomplete.
+Do not replace context binding or serialization rejection with permissive strings,
+browser storage, telemetry, a trusted service, or a plaintext shadow record.
 
 ## Dependency graph
 
