@@ -4,6 +4,7 @@ import test from 'node:test';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { presentLifecycle } from '../src/lifecycle.js';
+import { presentEligibleLifecycleActions } from '../src/lifecycle-actions.js';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -38,4 +39,56 @@ test('T-WEB-04-03: public lifecycle reads use the documented wallet-free Sepolia
   assert.match(wallet, /observedAt: block\.timestamp/);
   assert.match(main, /void refreshLifecycle\(\);/);
   assert.match(main, /Direct public read is degraded/);
+});
+
+test('T-WEB-12-01: lifecycle controls expose only time- and state-eligible permissionless actions', () => {
+  const base = {
+    now: 100n,
+    deadline: 100n,
+    pendingAvailableAt: 100n,
+    aggregateRequestId: `0x${'0'.repeat(64)}`,
+    aggregatePendingAt: 50n,
+    aggregateTimeout: 50n,
+    resolutionPendingAt: 50n,
+    resolutionGrace: 50n,
+    observationNotBefore: 100n,
+  };
+  assert.deepEqual(
+    presentEligibleLifecycleActions({ ...base, state: 0 }).map(({ action }) => action),
+    ['close-epoch'],
+  );
+  assert.deepEqual(
+    presentEligibleLifecycleActions({ ...base, state: 1 }).map(({ action }) => action),
+    ['expire-pending-commit'],
+  );
+  assert.deepEqual(
+    presentEligibleLifecycleActions({ ...base, state: 2 }).map(({ action }) => action),
+    ['request-aggregate-decrypt'],
+  );
+  assert.deepEqual(
+    presentEligibleLifecycleActions({
+      ...base,
+      state: 2,
+      aggregateRequestId: `0x${'1'.repeat(64)}`,
+    }).map(({ action }) => action),
+    ['finalize-aggregate', 'cancel-before-resolution'],
+  );
+  assert.deepEqual(
+    presentEligibleLifecycleActions({ ...base, state: 3 }).map(({ action }) => action),
+    ['settle', 'cancel-after-resolution-grace'],
+  );
+  assert.deepEqual(presentEligibleLifecycleActions({ ...base, state: 5 }), []);
+});
+
+test('T-WEB-12-02: aggregate finalization uses transient public attestations and waits for receipt', () => {
+  const wallet = readFileSync(resolve(root, 'src', 'wallet.ts'), 'utf8');
+  const main = readFileSync(resolve(root, 'src', 'main.ts'), 'utf8');
+
+  assert.match(wallet, /functionName: 'aggregateDisclosureHandles'/);
+  assert.match(wallet, /nox\.publicDecrypt\(handles\[0\]/);
+  assert.match(wallet, /functionName: 'finalizeAggregate'/);
+  assert.match(wallet, /waitForConfirmedReceipt\(reader, transactionHash\)/);
+  assert.match(main, /data-lifecycle-action/);
+  assert.match(main, /submitPermissionlessLifecycleAction/);
+  assert.doesNotMatch(`${wallet}\n${main}`, /localStorage|sessionStorage|console\./i);
 });

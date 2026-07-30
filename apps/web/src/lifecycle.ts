@@ -26,10 +26,12 @@ export function presentLifecycle(
       recovery: 'No recovery action is needed.',
     },
     1: {
-      label: 'Closed below threshold',
-      tone: 'warning',
-      explanation: 'The cohort did not reach its public participant gate.',
-      recovery: 'Each owner can use the pool refund path.',
+      label: 'Commit pending',
+      tone: 'pending',
+      explanation:
+        'A signal intent is awaiting its confidential collateral callback or finalization.',
+      recovery:
+        'After the immutable pending timeout, anyone may clear or return the stalled intent.',
     },
     2: {
       label: 'Aggregate pending',

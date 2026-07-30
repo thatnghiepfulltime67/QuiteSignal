@@ -20,6 +20,11 @@ import {
   requestId,
 } from '@quitesignal/confidential-client';
 import type { ValidSignalDraft } from './signal.js';
+import {
+  presentEligibleLifecycleActions,
+  type LifecycleActionPresentation,
+  type PermissionlessLifecycleAction,
+} from './lifecycle-actions.js';
 
 const SEPOLIA_PUBLIC_READ_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 
@@ -90,6 +95,81 @@ const collateralSetupAbi = [
   },
 ] as const;
 
+const lifecyclePoolAbi = [
+  {
+    type: 'function',
+    name: 'pendingCommit',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'availableAt', type: 'uint64' },
+      { name: 'callbackReceived', type: 'bool' },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'aggregateDisclosureHandles',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [
+      { name: 'yesHandle', type: 'bytes32' },
+      { name: 'noHandle', type: 'bytes32' },
+    ],
+  },
+  {
+    type: 'function',
+    name: 'expirePendingCommit',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
+  { type: 'function', name: 'closeEpoch', stateMutability: 'nonpayable', inputs: [], outputs: [] },
+  {
+    type: 'function',
+    name: 'requestAggregateDecrypt',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [{ name: 'requestId', type: 'bytes32' }],
+  },
+  {
+    type: 'function',
+    name: 'finalizeAggregate',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'suppliedRequestId', type: 'bytes32' },
+      { name: 'yesProof', type: 'bytes' },
+      { name: 'noProof', type: 'bytes' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'cancelBeforeResolution',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
+  { type: 'function', name: 'settle', stateMutability: 'nonpayable', inputs: [], outputs: [] },
+  {
+    type: 'function',
+    name: 'cancelAfterResolutionGrace',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
+] as const;
+
+const lifecycleAdapterAbi = [
+  {
+    type: 'function',
+    name: 'observationNotBefore',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+] as const;
+
 export interface BrowserProvider {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
 }
@@ -109,6 +189,18 @@ export interface TestAssetState {
 }
 
 export type OwnerTerminalAction = 'materializeScore' | 'claim' | 'refund';
+
+export interface PublicLifecycleSnapshot {
+  state: number;
+  deadline: bigint;
+  observedAt: bigint;
+  participantCount: number;
+  publicYes: bigint;
+  publicNo: bigint;
+  kMin: number;
+  aggregateRequestId: string;
+  actions: LifecycleActionPresentation[];
+}
 
 type SignalJourneyStage =
   | 'preparing'
@@ -321,25 +413,41 @@ export async function wrapTestAsset(
   return transactionHash;
 }
 
-export async function readPublicEpoch(pool: string): Promise<{
-  state: number;
-  deadline: bigint;
-  observedAt: bigint;
-  participantCount: number;
-  publicYes: bigint;
-  publicNo: bigint;
-  kMin: number;
-}> {
-  const client = createPublicClient({
-    chain: sepolia,
-    transport: http(SEPOLIA_PUBLIC_READ_RPC, { retryCount: 0, timeout: 10_000 }),
-  });
+async function readPublicLifecycleSnapshotWithReader(
+  client: ReturnType<typeof createPublicClient>,
+  pool: string,
+): Promise<PublicLifecycleSnapshot> {
+  const address = publicAddress(pool) as Address;
   const publicReader = createViemProtocolPublicReader(client);
-  const [epoch, block, config] = await Promise.all([
-    publicReader.readEpoch(publicAddress(pool)),
+  const [epoch, block, config, pending] = await Promise.all([
+    publicReader.readEpoch(address),
     client.getBlock(),
-    publicReader.readConfig(publicAddress(pool)),
+    publicReader.readConfig(address),
+    client.readContract({
+      address,
+      abi: lifecyclePoolAbi,
+      functionName: 'pendingCommit',
+    } as never),
   ]);
+  if (!Array.isArray(pending) || typeof pending[1] !== 'bigint')
+    throw new Error('The public pending-commit state is malformed.');
+  const observationNotBefore = (await client.readContract({
+    address: config.resolutionAdapter as Address,
+    abi: lifecycleAdapterAbi,
+    functionName: 'observationNotBefore',
+  } as never)) as bigint;
+  const actions = presentEligibleLifecycleActions({
+    state: epoch.state,
+    now: block.timestamp,
+    deadline: epoch.deadline,
+    pendingAvailableAt: pending[1],
+    aggregateRequestId: epoch.aggregateRequestId,
+    aggregatePendingAt: epoch.aggregatePendingAt,
+    aggregateTimeout: config.aggregateTimeout,
+    resolutionPendingAt: epoch.resolutionPendingAt,
+    resolutionGrace: config.resolutionGrace,
+    observationNotBefore,
+  });
   return {
     state: epoch.state,
     deadline: epoch.deadline,
@@ -348,7 +456,119 @@ export async function readPublicEpoch(pool: string): Promise<{
     publicYes: epoch.publicYes,
     publicNo: epoch.publicNo,
     kMin: config.kMin,
+    aggregateRequestId: epoch.aggregateRequestId,
+    actions,
   };
+}
+
+export async function readPublicLifecycleSnapshot(pool: string): Promise<PublicLifecycleSnapshot> {
+  const client = createPublicClient({
+    chain: sepolia,
+    transport: http(SEPOLIA_PUBLIC_READ_RPC, { retryCount: 0, timeout: 10_000 }),
+  });
+  return readPublicLifecycleSnapshotWithReader(client, pool);
+}
+
+export async function readPublicEpoch(pool: string): Promise<PublicLifecycleSnapshot> {
+  return readPublicLifecycleSnapshot(pool);
+}
+
+const lifecycleFunctionNames: Record<
+  Exclude<PermissionlessLifecycleAction, 'finalize-aggregate'>,
+  | 'expirePendingCommit'
+  | 'closeEpoch'
+  | 'requestAggregateDecrypt'
+  | 'cancelBeforeResolution'
+  | 'settle'
+  | 'cancelAfterResolutionGrace'
+> = {
+  'expire-pending-commit': 'expirePendingCommit',
+  'close-epoch': 'closeEpoch',
+  'request-aggregate-decrypt': 'requestAggregateDecrypt',
+  'cancel-before-resolution': 'cancelBeforeResolution',
+  settle: 'settle',
+  'cancel-after-resolution-grace': 'cancelAfterResolutionGrace',
+};
+
+function lifecycleActionIsEligible(
+  snapshot: PublicLifecycleSnapshot,
+  action: PermissionlessLifecycleAction,
+): boolean {
+  return snapshot.actions.some((candidate) => candidate.action === action);
+}
+
+export async function submitPermissionlessLifecycleAction(
+  provider: BrowserProvider,
+  pool: string,
+  action: PermissionlessLifecycleAction,
+  reportProgress: (message: string) => void,
+): Promise<string> {
+  const { account, wallet } = await connectedSepoliaWallet(provider);
+  const reader = createPublicClient({
+    chain: sepolia,
+    transport: http(SEPOLIA_PUBLIC_READ_RPC, { retryCount: 0, timeout: 10_000 }),
+  });
+  const poolAddress = publicAddress(pool) as Address;
+  try {
+    reportProgress(
+      'Revalidating the latest public lifecycle before requesting a wallet transaction.',
+    );
+    const snapshot = await readPublicLifecycleSnapshotWithReader(reader, pool);
+    if (!lifecycleActionIsEligible(snapshot, action))
+      throw new Error('This permissionless action is not eligible in the latest public lifecycle.');
+    let data: Hex;
+    if (action === 'finalize-aggregate') {
+      reportProgress(
+        'Requesting transient public attestations for the two aggregate handles. No owner value is read or stored.',
+      );
+      const handles = (await reader.readContract({
+        address: poolAddress,
+        abi: lifecyclePoolAbi,
+        functionName: 'aggregateDisclosureHandles',
+      } as never)) as readonly [Hex, Hex];
+      if (!Array.isArray(handles) || handles.length !== 2)
+        throw new Error('The aggregate disclosure handles are unavailable.');
+      const nox = await createViemHandleClient(wallet);
+      const [yes, no] = await Promise.all([
+        nox.publicDecrypt(handles[0] as never),
+        nox.publicDecrypt(handles[1] as never),
+      ]);
+      if (!yes.decryptionProof || !no.decryptionProof)
+        throw new Error('The aggregate public attestations are unavailable.');
+      data = encodeFunctionData({
+        abi: lifecyclePoolAbi,
+        functionName: 'finalizeAggregate',
+        args: [
+          snapshot.aggregateRequestId as Hex,
+          yes.decryptionProof as Hex,
+          no.decryptionProof as Hex,
+        ],
+      } as never);
+    } else {
+      data = encodeFunctionData({
+        abi: lifecyclePoolAbi,
+        functionName: lifecycleFunctionNames[action],
+      } as never);
+    }
+    reportProgress(
+      'Permissionless action is ready. Confirm this explicit Sepolia transaction in your wallet.',
+    );
+    const transactionHash = await wallet.sendTransaction({
+      account,
+      chain: sepolia,
+      to: poolAddress,
+      data,
+    });
+    reportProgress('Transaction submitted. Waiting for its public Sepolia receipt.');
+    await waitForConfirmedReceipt(reader, transactionHash);
+    return transactionHash;
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? `${error.message} No application-controlled transfer occurred; refresh public state before retrying.`
+        : 'The permissionless action was not confirmed. No application-controlled transfer occurred; refresh public state before retrying.',
+    );
+  }
 }
 
 export async function decryptOwnerPosition(

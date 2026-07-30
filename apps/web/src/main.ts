@@ -18,12 +18,18 @@ import {
   mintTestAsset,
   readTestAssetState,
   readPublicEpoch,
+  readPublicLifecycleSnapshot,
   SignalJourneyError,
+  submitPermissionlessLifecycleAction,
   submitOwnerTerminalAction,
   submitSignalJourney,
   wrapTestAsset,
   type TestAssetState,
 } from './wallet.js';
+import type {
+  LifecycleActionPresentation,
+  PermissionlessLifecycleAction,
+} from './lifecycle-actions.js';
 import {
   isSelfTestPoolAddress,
   launchSelfTestMarket,
@@ -62,6 +68,10 @@ let selectedWallet: Eip1193Provider | undefined;
 const walletCandidates: WalletCandidate[] = [];
 const boundWalletProviders = new WeakSet<Eip1193Provider>();
 let lifecycleMessage = 'Connect a Sepolia wallet to refresh public pool state.';
+let lifecycleActions: LifecycleActionPresentation[] = [];
+let lifecycleActionMessage =
+  'Refresh public state to see contract-eligible permissionless actions.';
+let lifecycleActionBusy = false;
 let marketActionable = false;
 let marketReadinessMessage = 'Checking whether the canonical market is accepting signals.';
 let marketCohortGate = 'Loading public cohort rule…';
@@ -223,12 +233,25 @@ function assetSetupContent(market: ReturnType<typeof presentMarket>, selfTest = 
   return `<section class="band petal-band asset-hero"><div class="band-inner"><p class="eyebrow compute">{ test asset preparation }</p><h1>Prepare collateral you control.</h1><p class="route-lead">Mint a valueless Sepolia test token to your own wallet, then approve and wrap only the amount you choose. The wrapper creates confidential collateral; this page never holds an asset or a key.</p><div class="route-callout"><p class="eyebrow public">{ current setup state }</p><h2>${readiness.label}</h2><p>${readiness.explanation}</p></div></div></section><section class="band blush-band asset-workflow"><div class="band-inner"><div class="asset-intro"><p class="eyebrow">{ wallet-guided setup }</p><h2>Mint → approve → wrap.</h2><p>All four figures below belong only to the connected wallet. Public QSFC and allowance are public ERC-20 facts; QSCC is revealed only after your explicit refresh for this browser session.</p></div><div class="panel asset-panel"><label>Amount to prepare <input id="asset-amount" name="assetAmount" inputmode="decimal" autocomplete="off" value="${escapeHtml(assetAmount)}" /></label><p class="sealed">TESTNET ONLY · QSFC has no value. You still need Sepolia ETH for transaction gas.</p><div class="asset-actions"><button class="primary" type="button" data-asset-action="mint"${busy}>1 · Mint QSFC</button><button class="secondary" type="button" data-asset-action="approve"${busy}>2 · Approve exact amount</button><button class="secondary" type="button" data-asset-action="wrap"${busy}>3 · Wrap into QSCC</button><button class="text-button" type="button" data-asset-action="refresh"${busy}>Refresh owner asset state</button></div><p role="status" class="asset-status">${assetMessage}</p>${stateRows}</div><ol class="setup-checklist" aria-label="Self-test checklist"><li><strong>01</strong><span>Connect a wallet on Ethereum Sepolia with a small amount of test ETH.</span></li><li><strong>02</strong><span>Mint QSFC, then approve and wrap an amount you are comfortable testing with.</span></li><li><strong>03</strong><span>Return to the market. Signal submission becomes available only when the immutable commit window is open.</span></li><li><strong>04</strong><span>After a confirmed signal, use Position and public lifecycle views for owner and recovery actions.</span></li></ol><div class="route-actions"><a class="primary" href="${marketPath}">Back to the market</a><a class="text-action dark-action" href="${signalPath}">Open signal route <span aria-hidden="true">↗</span></a></div></div></section>`;
 }
 
+function lifecycleActionContent(): string {
+  const busy = lifecycleActionBusy ? ' disabled' : '';
+  const controls = lifecycleActions.length
+    ? `<div class="lifecycle-action-list">${lifecycleActions
+        .map(
+          (item) =>
+            `<div><button class="secondary" type="button" data-lifecycle-action="${item.action}"${busy}>${item.label}</button><p>${item.explanation}</p></div>`,
+        )
+        .join('')}</div>`
+    : '<p class="muted">No permissionless lifecycle action is eligible in the latest public state.</p>';
+  return `<section class="lifecycle-actions" aria-label="Permissionless lifecycle actions"><p class="eyebrow public">{ public lifecycle action }</p><p>These actions are contract-defined and wallet-gated. They never submit an owner claim or read a private signal.</p>${controls}<p class="muted" role="status">${lifecycleActionMessage}</p></section>`;
+}
+
 function selfTestContent(market: ReturnType<typeof presentMarket>): string {
   const busy = selfTestBusy ? ' disabled' : '';
   const joinAddress = selfTestJoinAddress();
   const sharePath = selfTestMarket ? `/self-test/join/${selfTestMarket.poolAddress}` : undefined;
   const active = selfTestMarket
-    ? `<div class="route-callout"><p class="eyebrow public">{ self-test market ready }</p><h2>Fresh OPEN epoch created.</h2><p>Pool ${selfTestMarket.poolAddress} is a user-created public test market with a 25-minute commit window and a two-participant gate. It is not the canonical release or G7 evidence.</p><dl class="asset-facts self-test-facts"><div><dt>POOL</dt><dd>${selfTestMarket.poolAddress}</dd></div><div><dt>ADAPTER</dt><dd>${selfTestMarket.adapterAddress}</dd></div><div><dt>COMMIT WINDOW</dt><dd>Until ${new Date(Number(selfTestMarket.deadline) * 1000).toLocaleTimeString()}</dd></div><div><dt>COHORT</dt><dd>${selfTestMarket.participantGate} participants</dd></div></dl><p id="self-test-lifecycle" role="status" class="asset-status">${lifecycleMessage}</p><div class="route-callout self-test-share"><p class="eyebrow public">{ second participant }</p><p>Share this public, read-only entry link with another Sepolia participant. Their browser verifies the factory and immutable configuration before any wallet action.</p><a class="text-action dark-action" href="${sharePath}">${sharePath} <span aria-hidden="true">↗</span></a></div><div class="route-actions"><button class="wallet" id="refresh-self-test-lifecycle" type="button">Refresh public state</button><a class="primary" href="/self-test/assets">Prepare test collateral</a><a class="secondary dark-secondary" href="/self-test/signal">Prepare self-test signal</a><a class="text-action dark-action" href="/self-test/position">Open self-test position <span aria-hidden="true">↗</span></a></div></div>`
+    ? `<div class="route-callout"><p class="eyebrow public">{ self-test market ready }</p><h2>Fresh OPEN epoch created.</h2><p>Pool ${selfTestMarket.poolAddress} is a user-created public test market with a 25-minute commit window and a two-participant gate. It is not the canonical release or G7 evidence.</p><dl class="asset-facts self-test-facts"><div><dt>POOL</dt><dd>${selfTestMarket.poolAddress}</dd></div><div><dt>ADAPTER</dt><dd>${selfTestMarket.adapterAddress}</dd></div><div><dt>COMMIT WINDOW</dt><dd>Until ${new Date(Number(selfTestMarket.deadline) * 1000).toLocaleTimeString()}</dd></div><div><dt>COHORT</dt><dd>${selfTestMarket.participantGate} participants</dd></div></dl><p id="self-test-lifecycle" role="status" class="asset-status">${lifecycleMessage}</p>${lifecycleActionContent()}<div class="route-callout self-test-share"><p class="eyebrow public">{ second participant }</p><p>Share this public, read-only entry link with another Sepolia participant. Their browser verifies the factory and immutable configuration before any wallet action.</p><a class="text-action dark-action" href="${sharePath}">${sharePath} <span aria-hidden="true">↗</span></a></div><div class="route-actions"><button class="wallet" id="refresh-self-test-lifecycle" type="button">Refresh public state</button><a class="primary" href="/self-test/assets">Prepare test collateral</a><a class="secondary dark-secondary" href="/self-test/signal">Prepare self-test signal</a><a class="text-action dark-action" href="/self-test/position">Open self-test position <span aria-hidden="true">↗</span></a></div></div>`
     : `<div class="panel self-test-panel"><p class="eyebrow compute">{ user-wallet deployment }</p><h2>Create or join a real test market.</h2><p>This creates one immutable adapter and one pool through the canonical permissionless factory. It uses only your Sepolia gas; no collateral moves and no key leaves the wallet.</p><ul class="self-test-list"><li>Condition: ETH/USD ≥ $2,000.00</li><li>Commit window: 25 minutes</li><li>Cohort gate: 2 participants</li><li>Factory, wrapper, and feed: bound to the canonical manifest</li></ul><button class="primary" id="launch-self-test" type="button"${busy}>Create self-test market</button><div class="self-test-join"><label>Existing public self-test pool <input id="join-self-test-address" inputmode="text" autocomplete="off" spellcheck="false" placeholder="0x…" value="${joinAddress ? escapeHtml(joinAddress) : ''}" /></label><button class="secondary" id="join-self-test" type="button"${busy}>Verify and join pool</button></div><p role="status" class="asset-status">${selfTestMessage}</p></div>`;
   return `<section class="band petal-band asset-hero"><div class="band-inner"><p class="eyebrow compute">{ permissionless self-test }</p><h1>Make a fresh test window.</h1><p class="route-lead">The published market has expired. This browser can create one new, public, immutable Sepolia test market from your wallet without changing the canonical release.</p>${active}</div></section><section class="band blush-band asset-workflow"><div class="band-inner"><div class="asset-intro"><p class="eyebrow">{ what this does }</p><h2>Real contracts. Your wallet. No shortcut.</h2><p>The adapter has no asset custody. The factory has no owner. The new pool uses the existing valueless test collateral flow and the same permissionless recovery rules as the product.</p></div><ol class="setup-checklist"><li><strong>01</strong><span>Connect a Sepolia wallet with enough test ETH for two deployment transactions.</span></li><li><strong>02</strong><span>Create the market, then mint and wrap QSFC into confidential QSCC.</span></li><li><strong>03</strong><span>Use two wallets to submit signals before the immutable commit deadline.</span></li><li><strong>04</strong><span>Follow the public lifecycle, settlement, owner score, claim, or refund path.</span></li></ol></div></section>`;
 }
@@ -317,7 +340,7 @@ function render(message?: string): void {
                   return `<section class="band plum-band signal-card"><div class="band-inner"><p class="eyebrow compute">{ encrypted locally }</p><h1>Prepare your ${isSelfTestRoute ? 'self-test ' : ''}signal</h1><p class="route-lead">Probability and collateral stay in this browser until Nox encrypts them. The process deliberately separates validation, encryption, and wallet approval.</p><div class="route-callout"><p class="eyebrow ${signalReady ? 'public' : 'private'}">{ signal readiness }</p><h2>${signalReady ? 'Commit window is open' : 'Signal is currently unavailable'}</h2><p>${signalReady ? marketReadinessMessage : isSelfTestRoute ? 'Create a self-test market in this browser session before opening its signal route.' : marketReadinessMessage}</p><a class="text-action" href="${assetPath}">Prepare test collateral <span aria-hidden="true">↗</span></a></div><ol class="journey-steps" aria-label="Signal journey steps"><li><strong>01</strong><span>Validate locally</span><small>No funds move.</small></li><li><strong>02</strong><span>Encrypt in browser</span><small>Separate pool and collateral inputs.</small></li><li><strong>03</strong><span>Confirm in wallet</span><small>Each receipt is awaited before the next stage.</small></li></ol><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required${signalReady ? '' : ' disabled'} /></label><label>Probability (basis points) <input name="probability" inputmode="numeric" autocomplete="off" placeholder="7500" required${signalReady ? '' : ' disabled'} /></label><p class="sealed">COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.</p><button class="primary" type="submit"${signalReady ? '' : ' disabled'}>${signalReady ? 'Encrypt and submit signal' : 'Await a fresh market release'}</button><button class="secondary" id="retry-finalize" type="button" hidden>Retry pending finalization</button><p id="signal-status" class="muted" role="status">${signalReady ? 'No funds moved.' : 'No signal can be submitted while the chain-derived market is unavailable or closed.'}</p></form></div></section>`;
                 })()
               : isMarketRoute && market
-                ? `<section class="band blush-band market"><div class="band-inner"><p class="eyebrow public">{ canonical MVP market }</p><h1>${market.condition}</h1><p class="route-lead">This product intentionally exposes one verified test market per release. Start with its real public lifecycle, then prepare collateral only when the chain says the commit window is open.</p><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><ol class="market-path" aria-label="Recommended market path"><li><strong>01</strong><span>Read the public state</span></li><li><strong>02</strong><span>Mint and wrap test collateral</span></li><li><strong>03</strong><span>Prepare an encrypted signal</span></li></ol><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><section class="timeline"><p class="eyebrow public">{ public lifecycle }</p><p id="lifecycle-status" role="status">${lifecycleMessage}</p><button class="wallet" id="refresh-lifecycle">Refresh public state</button></section><div class="route-callout market-readiness"><p class="eyebrow ${marketActionable ? 'public' : 'private'}">{ actionability }</p><h2>${marketActionable ? 'Ready for participant setup' : 'Signal path is safely paused'}</h2><p>${marketReadinessMessage}</p></div><div class="route-actions"><a class="primary" href="/pool/${market.poolAddress}/assets">Get test collateral</a>${marketActionable ? `<a class="secondary dark-secondary" href="/pool/${market.poolAddress}/signal">Prepare encrypted signal</a>` : `<a class="secondary dark-secondary" href="/self-test">Create a fresh self-test market</a>`}<a class="text-action dark-action" href="/verify/${market.poolAddress}">Verify this release <span aria-hidden="true">↗</span></a></div></div></section>`
+                ? `<section class="band blush-band market"><div class="band-inner"><p class="eyebrow public">{ canonical MVP market }</p><h1>${market.condition}</h1><p class="route-lead">This product intentionally exposes one verified test market per release. Start with its real public lifecycle, then prepare collateral only when the chain says the commit window is open.</p><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><ol class="market-path" aria-label="Recommended market path"><li><strong>01</strong><span>Read the public state</span></li><li><strong>02</strong><span>Mint and wrap test collateral</span></li><li><strong>03</strong><span>Prepare an encrypted signal</span></li></ol><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><section class="timeline"><p class="eyebrow public">{ public lifecycle }</p><p id="lifecycle-status" role="status">${lifecycleMessage}</p><button class="wallet" id="refresh-lifecycle">Refresh public state</button></section>${lifecycleActionContent()}<div class="route-callout market-readiness"><p class="eyebrow ${marketActionable ? 'public' : 'private'}">{ actionability }</p><h2>${marketActionable ? 'Ready for participant setup' : 'Signal path is safely paused'}</h2><p>${marketReadinessMessage}</p></div><div class="route-actions"><a class="primary" href="/pool/${market.poolAddress}/assets">Get test collateral</a>${marketActionable ? `<a class="secondary dark-secondary" href="/pool/${market.poolAddress}/signal">Prepare encrypted signal</a>` : `<a class="secondary dark-secondary" href="/self-test">Create a fresh self-test market</a>`}<a class="text-action dark-action" href="/verify/${market.poolAddress}">Verify this release <span aria-hidden="true">↗</span></a></div></div></section>`
                 : isExplainerRoute
                   ? explainerContent(market)
                   : landingContent(market);
@@ -374,6 +397,12 @@ function render(message?: string): void {
   document
     .querySelector<HTMLButtonElement>('#refresh-self-test-lifecycle')
     ?.addEventListener('click', () => void refreshLifecycle(selfTestMarket?.poolAddress));
+  document.querySelectorAll<HTMLButtonElement>('[data-lifecycle-action]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.dataset.lifecycleAction as PermissionlessLifecycleAction | undefined;
+      if (action) void runPermissionlessLifecycleAction(action);
+    });
+  });
   document
     .querySelector<HTMLButtonElement>('#reveal-owner')
     ?.addEventListener('click', revealOwner);
@@ -648,6 +677,44 @@ async function runSelfTestJoin(poolAddress: string, updateUrl: boolean): Promise
   }
 }
 
+async function runPermissionlessLifecycleAction(
+  action: PermissionlessLifecycleAction,
+): Promise<void> {
+  const provider = activeWallet();
+  const pool = routedPoolAddress();
+  if (!provider || !pool) {
+    lifecycleActionMessage =
+      'Connect a Sepolia wallet and refresh this public pool before requesting a lifecycle action.';
+    render();
+    return;
+  }
+  lifecycleActionBusy = true;
+  lifecycleActionMessage =
+    'Preparing the contract-defined lifecycle action. No transaction has been sent.';
+  render();
+  try {
+    const transactionHash = await submitPermissionlessLifecycleAction(
+      provider,
+      pool,
+      action,
+      (progress) => {
+        lifecycleActionMessage = progress;
+        render();
+      },
+    );
+    lifecycleActionBusy = false;
+    lifecycleActionMessage = `Lifecycle action confirmed on Sepolia: ${transactionHash.slice(0, 10)}…. Refreshing public state.`;
+    await refreshLifecycle(pool);
+  } catch (error) {
+    lifecycleActionBusy = false;
+    lifecycleActionMessage =
+      error instanceof Error
+        ? error.message
+        : 'The lifecycle action was not confirmed. Refresh public state before retrying.';
+    render();
+  }
+}
+
 async function revealOwner(): Promise<void> {
   const provider = activeWallet();
   const pool = routedPoolAddress();
@@ -692,9 +759,12 @@ async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
   }
   lifecycleMessage = 'Refreshing direct Ethereum Sepolia public pool state…';
   marketReadinessMessage = 'Checking the immutable commit window against the latest Sepolia block…';
+  lifecycleActionMessage =
+    'Checking which permissionless actions are eligible in the latest public state…';
+  lifecycleActions = [];
   render();
   try {
-    const epoch = await readPublicEpoch(pool);
+    const epoch = await readPublicLifecycleSnapshot(pool);
     const view = presentLifecycle(epoch.state, {
       deadline: epoch.deadline,
       observedAt: epoch.observedAt,
@@ -708,12 +778,19 @@ async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
     marketCohortGate = `At least ${epoch.kMin} participants`;
     marketReadinessMessage = `${readiness.label}: ${readiness.explanation}`;
     lifecycleMessage = `${view.label}: ${view.explanation} Participants: ${epoch.participantCount}. ${view.recovery}`;
+    lifecycleActions = epoch.actions;
+    lifecycleActionMessage = epoch.actions.length
+      ? 'The actions below were derived from the latest public Sepolia state. Each still requires its own wallet confirmation.'
+      : 'No permissionless lifecycle action is eligible in the latest public state.';
   } catch {
     marketActionable = false;
+    lifecycleActions = [];
     marketReadinessMessage =
       'The latest public market state could not be read. Signal submission stays disabled until a direct Sepolia refresh succeeds.';
     lifecycleMessage =
       'Direct public read is degraded. Retry safely or verify the canonical pool through an independent public explorer.';
+    lifecycleActionMessage =
+      'Permissionless actions stay unavailable until a direct Sepolia public refresh succeeds.';
   }
   render();
 }

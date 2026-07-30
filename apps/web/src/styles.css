@@ -1358,6 +1358,44 @@ a {
   overflow-wrap: anywhere;
 }
 
+.lifecycle-actions {
+  border-top: 1px solid var(--walnut);
+  margin-top: 32px;
+  max-width: 880px;
+  padding-top: 24px;
+}
+
+.lifecycle-actions > .eyebrow {
+  margin: 0 0 8px;
+}
+
+.lifecycle-actions > p:not(.eyebrow) {
+  max-width: 700px;
+}
+
+.lifecycle-action-list {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.lifecycle-action-list > div {
+  align-items: center;
+  border: 1px solid var(--walnut);
+  display: grid;
+  gap: 16px;
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 16px;
+}
+
+.lifecycle-action-list .secondary {
+  justify-content: center;
+}
+
+.lifecycle-action-list p {
+  margin: 0;
+}
+
 .asset-panel label {
   display: grid;
   gap: 8px;
@@ -1824,6 +1862,15 @@ a {
   }
 
   .self-test-join .secondary {
+    width: 100%;
+  }
+
+  .lifecycle-action-list > div {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .lifecycle-action-list .secondary {
     width: 100%;
   }
 
