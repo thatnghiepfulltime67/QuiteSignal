@@ -531,6 +531,9 @@ timeout cancellation or refund was sent. This is not a contract conclusion and t
 attempt is excluded from G3 evidence. Its ignored actor record enables recovery of
 both fixture stakes. The next revision replaces that unbounded simulation with a
 real, bounded Sepolia transaction whose reverted receipt is the required evidence.
+The fifth-attempt recovery passed at blocks `11379571` through `11379574`, verified
+both terminal owner balances with bounded retries, and deleted the ignored actor
+record. The fixture has no remaining custody and remains excluded from G3 evidence.
 
 ## FND-01 — Toolchain lock
 

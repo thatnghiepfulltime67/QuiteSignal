@@ -101,3 +101,9 @@ The next runner revision will use a bounded, real Sepolia transaction that must
 produce a `reverted` receipt before the timeout instead of an unbounded simulation.
 The fifth fixture will first be recovered with the retained ignored actor record;
 both its deterministic stakes remain recoverable and no product custody is present.
+
+The fifth-attempt recovery completed at blocks `11379571` through `11379574`.
+It cancelled permissionlessly, completed both one-time confidential refunds, checked
+the two terminal owner balances locally with bounded gateway retries, and deleted
+the ignored recovery record. The fifth fixture has no remaining custody and remains
+excluded from G3 evidence.
