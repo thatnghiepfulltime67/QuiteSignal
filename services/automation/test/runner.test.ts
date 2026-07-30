@@ -79,3 +79,17 @@ test('T-AUT-01-06: runner source uses public state/action fields only', () => {
     assert.doesNotMatch(source, /\b(claim|refund|materializeScore|wrap|approve|transfer)\b/);
   }
 });
+
+test('T-AUT-01-07: write mode requires clean source, confirmation, re-read, gas estimate, and ledger recording', () => {
+  const source = readFileSync(new URL('../scripts/run-sepolia.mts', import.meta.url), 'utf8');
+  for (const required of [
+    'CONFIRM_SEPOLIA_WRITE',
+    'assertClean()',
+    'JSON.stringify(first.action) !== JSON.stringify(second.action)',
+    'estimateGas',
+    'appendSpend(ledger',
+    "status: 'race-retryable'",
+  ]) {
+    assert.ok(source.includes(required), `missing write guard: ${required}`);
+  }
+});

@@ -199,7 +199,7 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `AUT-01-RUNNER-01`.
+Active slice: `AUT-01-WRITE-01`.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
 consumer bindings, deployment tests, this record, evidence ledger entries, and
@@ -625,6 +625,42 @@ Intended commit: `feat: add guarded lifecycle runner`.
 
 Rollback/failure action: Revert the runner adapter only. Do not turn a missing
 public result into a guessed finalization, a trusted queue, or a user-signing path.
+
+### AUT-01-WRITE-01
+
+Status: `in_progress`
+
+Outcome: Add bounded `once`/`poll` execution for the existing public action policy.
+
+Output files: guarded runner write mode, spend-ledger integration, write/race tests,
+this record, and later named Sepolia action evidence.
+
+Acceptance criteria: `once` and every poll iteration require `CONFIRM_SEPOLIA_WRITE`,
+a clean source tree before the first write, Sepolia RPC, a local gas signer, a
+remaining-budget check, and a live gas estimate. The runner reads state twice and
+sends only if the same non-finalization action remains selected; it then records the
+public receipt in the append-only ledger. No action means no transaction. Race or
+replacement is a reported expected outcome, never a blind retry.
+
+Privacy/custody impact: The local signer pays testnet gas only. Output is limited to
+public action, transaction hash, and block facts; no Nox result bytes or user
+collateral call is accepted or persisted.
+
+Funds location/recovery impact: The only reachable calls are permissionless public
+state transitions. The runner cannot call owner terminal actions or transfer assets
+to itself. A failed/raced action leaves normal direct recovery available.
+
+Checks: write-guard/race/budget unit tests, full offline check, one named Sepolia
+`once` result when an action is eligible, and `git diff --check`.
+
+Evidence location: `evidence/{offline,sepolia}/G6/AUT-01-RELAYER.json` after the
+public-result boundary and a named permissionless action complete.
+
+Intended commit: `feat: add bounded lifecycle execution`.
+
+Rollback/failure action: Revert only the unexecuted write code. After a write,
+retain its ledger entry and receipt; never submit a replacement with altered action
+data or bypass the source/budget guards.
 
 ## Dependency graph
 
