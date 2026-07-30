@@ -5,6 +5,7 @@ import {
   custom,
   encodeDeployData,
   encodeFunctionData,
+  http,
   keccak256,
   type Address,
   type Hex,
@@ -19,6 +20,7 @@ const COMMIT_TIMEOUT_SECONDS = 60n;
 const AGGREGATE_TIMEOUT_SECONDS = 600n;
 const RESOLUTION_GRACE_SECONDS = 600n;
 const MAXIMUM_FEED_AGE_SECONDS = 86_400n;
+const SEPOLIA_PUBLIC_READ_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 
 const factoryAbi = [
   {
@@ -74,7 +76,18 @@ const factoryAbi = [
   },
 ] as const;
 
+const poolIdentityAbi = [
+  {
+    type: 'function',
+    name: 'poolId',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'bytes32' }],
+  },
+] as const;
+
 export interface SelfTestLaunchInput {
+  canonicalPoolAddress: string;
   factoryAddress: string;
   factoryRuntimeCodeHash: string;
   collateralAddress: string;
@@ -89,6 +102,10 @@ export interface SelfTestMarket {
   deadline: bigint;
   observationNotBefore: bigint;
   participantGate: number;
+}
+
+export function isSelfTestPoolAddress(value: string): boolean {
+  return /^0x[0-9a-f]{40}$/i.test(value);
 }
 
 export function deriveSelfTestTiming(timestamp: bigint): {
@@ -130,6 +147,145 @@ async function confirmed(
   if (receipt.status !== 'success')
     throw new Error('The submitted self-test transaction reverted.');
   return receipt;
+}
+
+async function readVerifiedAdapter(
+  reader: ReturnType<typeof createPublicClient>,
+  adapter: Address,
+  feed: Address,
+  feedCode: Hex,
+  input: SelfTestLaunchInput,
+): Promise<bigint> {
+  const [
+    target,
+    greaterOrEqual,
+    threshold,
+    observationNotBefore,
+    maximumFeedAge,
+    targetRuntimeCodeHash,
+  ] = await Promise.all([
+    reader.readContract({
+      address: adapter,
+      abi: adapterArtifact.abi,
+      functionName: 'target',
+    } as never),
+    reader.readContract({
+      address: adapter,
+      abi: adapterArtifact.abi,
+      functionName: 'greaterOrEqual',
+    } as never),
+    reader.readContract({
+      address: adapter,
+      abi: adapterArtifact.abi,
+      functionName: 'threshold',
+    } as never),
+    reader.readContract({
+      address: adapter,
+      abi: adapterArtifact.abi,
+      functionName: 'observationNotBefore',
+    } as never),
+    reader.readContract({
+      address: adapter,
+      abi: adapterArtifact.abi,
+      functionName: 'maximumFeedAge',
+    } as never),
+    reader.readContract({
+      address: adapter,
+      abi: adapterArtifact.abi,
+      functionName: 'targetRuntimeCodeHash',
+    } as never),
+  ]);
+  if (
+    String(target).toLowerCase() !== feed.toLowerCase() ||
+    greaterOrEqual !== (input.comparison === 'greater-or-equal') ||
+    threshold !== BigInt(input.threshold) ||
+    maximumFeedAge !== MAXIMUM_FEED_AGE_SECONDS ||
+    targetRuntimeCodeHash !== keccak256(feedCode)
+  ) {
+    throw new Error('The adapter configuration does not match the fixed self-test condition.');
+  }
+  return observationNotBefore as bigint;
+}
+
+export async function loadSelfTestMarket(
+  poolAddress: string,
+  input: SelfTestLaunchInput,
+): Promise<SelfTestMarket> {
+  if (!isSelfTestPoolAddress(poolAddress)) throw new Error('Enter a valid public pool address.');
+  const reader = createPublicClient({
+    chain: sepolia,
+    transport: http(SEPOLIA_PUBLIC_READ_RPC, { retryCount: 0, timeout: 10_000 }),
+  });
+  const factory = publicAddress(input.factoryAddress) as Address;
+  const collateral = publicAddress(input.collateralAddress) as Address;
+  const feed = publicAddress(input.feedAddress) as Address;
+  const pool = publicAddress(poolAddress) as Address;
+  if (pool.toLowerCase() === input.canonicalPoolAddress.toLowerCase())
+    throw new Error(
+      'The canonical release is not a self-test market. Create or open a separate pool.',
+    );
+  const [factoryCode, collateralCode, feedCode, poolCode] = await Promise.all([
+    reader.getCode({ address: factory }),
+    reader.getCode({ address: collateral }),
+    reader.getCode({ address: feed }),
+    reader.getCode({ address: pool }),
+  ]);
+  if (
+    !factoryCode ||
+    factoryCode === '0x' ||
+    keccak256(factoryCode) !== input.factoryRuntimeCodeHash
+  ) {
+    throw new Error('The canonical factory runtime does not match the validated manifest.');
+  }
+  if (
+    !collateralCode ||
+    collateralCode === '0x' ||
+    !feedCode ||
+    feedCode === '0x' ||
+    !poolCode ||
+    poolCode === '0x'
+  ) {
+    throw new Error('The public pool, wrapper, or price feed has no Sepolia runtime.');
+  }
+  const poolId = (await reader.readContract({
+    address: pool,
+    abi: poolIdentityAbi,
+    functionName: 'poolId',
+  } as never)) as Hex;
+  const factoryPool = (await reader.readContract({
+    address: factory,
+    abi: factoryAbi,
+    functionName: 'poolOf',
+    args: [poolId],
+  } as never)) as Address;
+  if (factoryPool.toLowerCase() !== pool.toLowerCase())
+    throw new Error('This pool is not registered by the manifest-bound factory.');
+  const config = await createViemProtocolPublicReader(reader).readConfig(publicAddress(pool));
+  if (
+    config.confidentialCollateral.toLowerCase() !== collateral.toLowerCase() ||
+    config.kMin !== 2 ||
+    config.commitTimeout !== COMMIT_TIMEOUT_SECONDS ||
+    config.aggregateTimeout !== AGGREGATE_TIMEOUT_SECONDS ||
+    config.resolutionGrace !== RESOLUTION_GRACE_SECONDS
+  ) {
+    throw new Error('The pool configuration does not match the fixed self-test policy.');
+  }
+  const observationNotBefore = await readVerifiedAdapter(
+    reader,
+    config.resolutionAdapter as Address,
+    feed,
+    feedCode,
+    input,
+  );
+  if (observationNotBefore < config.deadline)
+    throw new Error('The self-test resolution adapter does not wait for the pool deadline.');
+  return {
+    poolAddress: pool,
+    adapterAddress: config.resolutionAdapter,
+    deadline: config.deadline,
+    observationNotBefore,
+    participantGate: config.kMin,
+  };
 }
 
 export async function launchSelfTestMarket(
@@ -176,51 +332,11 @@ export async function launchSelfTestMarket(
   const adapterReceipt = await confirmed(reader, adapterHash);
   const adapter = adapterReceipt.contractAddress;
   if (!adapter) throw new Error('The adapter receipt did not record a deployed contract address.');
-  const [target, greaterOrEqual, threshold, observedAt, maximumFeedAge, targetRuntimeCodeHash] =
-    await Promise.all([
-      reader.readContract({
-        address: adapter,
-        abi: adapterArtifact.abi,
-        functionName: 'target',
-      } as never),
-      reader.readContract({
-        address: adapter,
-        abi: adapterArtifact.abi,
-        functionName: 'greaterOrEqual',
-      } as never),
-      reader.readContract({
-        address: adapter,
-        abi: adapterArtifact.abi,
-        functionName: 'threshold',
-      } as never),
-      reader.readContract({
-        address: adapter,
-        abi: adapterArtifact.abi,
-        functionName: 'observationNotBefore',
-      } as never),
-      reader.readContract({
-        address: adapter,
-        abi: adapterArtifact.abi,
-        functionName: 'maximumFeedAge',
-      } as never),
-      reader.readContract({
-        address: adapter,
-        abi: adapterArtifact.abi,
-        functionName: 'targetRuntimeCodeHash',
-      } as never),
-    ]);
-  if (
-    String(target).toLowerCase() !== feed.toLowerCase() ||
-    greaterOrEqual !== (input.comparison === 'greater-or-equal') ||
-    threshold !== BigInt(input.threshold) ||
-    observedAt !== observationNotBefore ||
-    maximumFeedAge !== MAXIMUM_FEED_AGE_SECONDS ||
-    targetRuntimeCodeHash !== keccak256(feedCode)
-  ) {
+  const observedAt = await readVerifiedAdapter(reader, adapter, feed, feedCode, input);
+  if (observedAt !== observationNotBefore)
     throw new Error(
       'The deployed adapter configuration does not match the requested self-test condition.',
     );
-  }
 
   const config = {
     confidentialCollateral: collateral,

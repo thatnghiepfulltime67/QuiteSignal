@@ -1311,6 +1311,53 @@ a {
   color: var(--petal);
 }
 
+.self-test-join {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-top: 20px;
+}
+
+.self-test-join label {
+  display: grid;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  gap: 8px;
+}
+
+.self-test-join input {
+  background: var(--petal);
+  border: 1px solid var(--walnut);
+  border-radius: var(--control-radius);
+  color: var(--cocoa);
+  min-height: 52px;
+  min-width: 0;
+  padding: 12px;
+  width: 100%;
+}
+
+.self-test-join .secondary {
+  border-color: var(--petal);
+  color: var(--petal);
+  min-height: 52px;
+}
+
+.self-test-join .secondary:hover {
+  background: var(--petal);
+  color: var(--cocoa);
+}
+
+.self-test-share {
+  margin-top: 24px;
+}
+
+.self-test-share .text-action {
+  display: inline-block;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
 .asset-panel label {
   display: grid;
   gap: 8px;
@@ -1769,6 +1816,15 @@ a {
   .asset-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .self-test-join {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .self-test-join .secondary {
+    width: 100%;
   }
 
   .asset-actions .primary,

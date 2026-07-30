@@ -24,7 +24,12 @@ import {
   wrapTestAsset,
   type TestAssetState,
 } from './wallet.js';
-import { launchSelfTestMarket, type SelfTestMarket } from './self-test.js';
+import {
+  isSelfTestPoolAddress,
+  launchSelfTestMarket,
+  loadSelfTestMarket,
+  type SelfTestMarket,
+} from './self-test.js';
 
 interface Eip1193Provider {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
@@ -152,8 +157,14 @@ function activeWallet(): Eip1193Provider | undefined {
 }
 
 function routedPoolAddress(): string | undefined {
-  if (location.pathname.startsWith('/self-test/')) return selfTestMarket?.poolAddress;
+  if (location.pathname === '/self-test' || location.pathname.startsWith('/self-test/'))
+    return selfTestMarket?.poolAddress;
   return manifest?.poolAddress;
+}
+
+function selfTestJoinAddress(): string | undefined {
+  const match = /^\/self-test\/join\/(0x[0-9a-f]{40})$/i.exec(location.pathname);
+  return match?.[1];
 }
 
 function requestWalletDiscovery(): void {
@@ -214,16 +225,29 @@ function assetSetupContent(market: ReturnType<typeof presentMarket>, selfTest = 
 
 function selfTestContent(market: ReturnType<typeof presentMarket>): string {
   const busy = selfTestBusy ? ' disabled' : '';
+  const joinAddress = selfTestJoinAddress();
+  const sharePath = selfTestMarket ? `/self-test/join/${selfTestMarket.poolAddress}` : undefined;
   const active = selfTestMarket
-    ? `<div class="route-callout"><p class="eyebrow public">{ self-test market ready }</p><h2>Fresh OPEN epoch created.</h2><p>Pool ${selfTestMarket.poolAddress} is a user-created public test market with a 25-minute commit window and a two-participant gate. It is not the canonical release or G7 evidence.</p><dl class="asset-facts self-test-facts"><div><dt>POOL</dt><dd>${selfTestMarket.poolAddress}</dd></div><div><dt>ADAPTER</dt><dd>${selfTestMarket.adapterAddress}</dd></div><div><dt>COMMIT WINDOW</dt><dd>Until ${new Date(Number(selfTestMarket.deadline) * 1000).toLocaleTimeString()}</dd></div><div><dt>COHORT</dt><dd>${selfTestMarket.participantGate} participants</dd></div></dl><p id="self-test-lifecycle" role="status" class="asset-status">${lifecycleMessage}</p><div class="route-actions"><button class="wallet" id="refresh-self-test-lifecycle" type="button">Refresh public state</button><a class="primary" href="/self-test/assets">Prepare test collateral</a><a class="secondary dark-secondary" href="/self-test/signal">Prepare self-test signal</a><a class="text-action dark-action" href="/self-test/position">Open self-test position <span aria-hidden="true">↗</span></a></div></div>`
-    : `<div class="panel self-test-panel"><p class="eyebrow compute">{ user-wallet deployment }</p><h2>Create a real test market.</h2><p>This creates one immutable adapter and one pool through the canonical permissionless factory. It uses only your Sepolia gas; no collateral moves and no key leaves the wallet.</p><ul class="self-test-list"><li>Condition: ETH/USD ≥ $2,000.00</li><li>Commit window: 25 minutes</li><li>Cohort gate: 2 participants</li><li>Factory, wrapper, and feed: bound to the canonical manifest</li></ul><button class="primary" id="launch-self-test" type="button"${busy}>Create self-test market</button><p role="status" class="asset-status">${selfTestMessage}</p></div>`;
+    ? `<div class="route-callout"><p class="eyebrow public">{ self-test market ready }</p><h2>Fresh OPEN epoch created.</h2><p>Pool ${selfTestMarket.poolAddress} is a user-created public test market with a 25-minute commit window and a two-participant gate. It is not the canonical release or G7 evidence.</p><dl class="asset-facts self-test-facts"><div><dt>POOL</dt><dd>${selfTestMarket.poolAddress}</dd></div><div><dt>ADAPTER</dt><dd>${selfTestMarket.adapterAddress}</dd></div><div><dt>COMMIT WINDOW</dt><dd>Until ${new Date(Number(selfTestMarket.deadline) * 1000).toLocaleTimeString()}</dd></div><div><dt>COHORT</dt><dd>${selfTestMarket.participantGate} participants</dd></div></dl><p id="self-test-lifecycle" role="status" class="asset-status">${lifecycleMessage}</p><div class="route-callout self-test-share"><p class="eyebrow public">{ second participant }</p><p>Share this public, read-only entry link with another Sepolia participant. Their browser verifies the factory and immutable configuration before any wallet action.</p><a class="text-action dark-action" href="${sharePath}">${sharePath} <span aria-hidden="true">↗</span></a></div><div class="route-actions"><button class="wallet" id="refresh-self-test-lifecycle" type="button">Refresh public state</button><a class="primary" href="/self-test/assets">Prepare test collateral</a><a class="secondary dark-secondary" href="/self-test/signal">Prepare self-test signal</a><a class="text-action dark-action" href="/self-test/position">Open self-test position <span aria-hidden="true">↗</span></a></div></div>`
+    : `<div class="panel self-test-panel"><p class="eyebrow compute">{ user-wallet deployment }</p><h2>Create or join a real test market.</h2><p>This creates one immutable adapter and one pool through the canonical permissionless factory. It uses only your Sepolia gas; no collateral moves and no key leaves the wallet.</p><ul class="self-test-list"><li>Condition: ETH/USD ≥ $2,000.00</li><li>Commit window: 25 minutes</li><li>Cohort gate: 2 participants</li><li>Factory, wrapper, and feed: bound to the canonical manifest</li></ul><button class="primary" id="launch-self-test" type="button"${busy}>Create self-test market</button><div class="self-test-join"><label>Existing public self-test pool <input id="join-self-test-address" inputmode="text" autocomplete="off" spellcheck="false" placeholder="0x…" value="${joinAddress ? escapeHtml(joinAddress) : ''}" /></label><button class="secondary" id="join-self-test" type="button"${busy}>Verify and join pool</button></div><p role="status" class="asset-status">${selfTestMessage}</p></div>`;
   return `<section class="band petal-band asset-hero"><div class="band-inner"><p class="eyebrow compute">{ permissionless self-test }</p><h1>Make a fresh test window.</h1><p class="route-lead">The published market has expired. This browser can create one new, public, immutable Sepolia test market from your wallet without changing the canonical release.</p>${active}</div></section><section class="band blush-band asset-workflow"><div class="band-inner"><div class="asset-intro"><p class="eyebrow">{ what this does }</p><h2>Real contracts. Your wallet. No shortcut.</h2><p>The adapter has no asset custody. The factory has no owner. The new pool uses the existing valueless test collateral flow and the same permissionless recovery rules as the product.</p></div><ol class="setup-checklist"><li><strong>01</strong><span>Connect a Sepolia wallet with enough test ETH for two deployment transactions.</span></li><li><strong>02</strong><span>Create the market, then mint and wrap QSFC into confidential QSCC.</span></li><li><strong>03</strong><span>Use two wallets to submit signals before the immutable commit deadline.</span></li><li><strong>04</strong><span>Follow the public lifecycle, settlement, owner score, claim, or refund path.</span></li></ol></div></section>`;
+}
+
+function refreshSelfTestRoute(): void {
+  const joinAddress = selfTestJoinAddress();
+  if (
+    joinAddress &&
+    (!selfTestMarket || selfTestMarket.poolAddress.toLowerCase() !== joinAddress.toLowerCase())
+  ) {
+    void runSelfTestJoin(joinAddress, false);
+  } else if (location.pathname.startsWith('/self-test/') && selfTestMarket) {
+    void refreshLifecycle(selfTestMarket.poolAddress);
+  }
 }
 
 function renderRoute(): void {
   render();
-  if (location.pathname.startsWith('/self-test/') && selfTestMarket)
-    void refreshLifecycle(selfTestMarket.poolAddress);
+  refreshSelfTestRoute();
 }
 
 function handleInternalNavigation(event: MouseEvent): void {
@@ -277,7 +301,7 @@ function render(message?: string): void {
         })()
       : isPositionRoute && market
         ? `<section class="band blush-band signal-card owner"><div class="band-inner"><p class="eyebrow private">{ owner only }</p><h1>Your private position</h1><p class="route-lead">This route is intentionally masked until the connected wallet proves it can view this position. Nothing is revealed or moved by opening the page.</p><div class="owner-guidance"><span>01 · Connect the owner wallet</span><span>02 · Reveal for this session</span><span>03 · Choose an explicit terminal action</span></div><div class="panel"><p role="status">${ownerMessage}</p><button class="primary" id="reveal-owner">Reveal with owner wallet</button>${ownerActions}<p class="muted">No claim or refund is submitted automatically. Re-read public pool state before retrying a pending action.</p></div></div></section>`
-        : location.pathname === '/self-test' && market
+        : (location.pathname === '/self-test' || Boolean(selfTestJoinAddress())) && market
           ? selfTestContent(market)
           : isAssetRoute && market
             ? assetSetupContent(market, isSelfTestRoute)
@@ -356,6 +380,11 @@ function render(message?: string): void {
   document
     .querySelector<HTMLButtonElement>('#launch-self-test')
     ?.addEventListener('click', () => void runSelfTestLaunch());
+  document.querySelector<HTMLButtonElement>('#join-self-test')?.addEventListener('click', () => {
+    const address =
+      document.querySelector<HTMLInputElement>('#join-self-test-address')?.value ?? '';
+    void runSelfTestJoin(address, true);
+  });
   document.querySelectorAll<HTMLButtonElement>('[data-owner-action]').forEach((button) => {
     button.addEventListener('click', async () => {
       const provider = activeWallet();
@@ -549,6 +578,7 @@ async function runSelfTestLaunch(): Promise<void> {
     selfTestMarket = await launchSelfTestMarket(
       provider,
       {
+        canonicalPoolAddress: manifest.poolAddress,
         factoryAddress: manifest.factoryAddress,
         factoryRuntimeCodeHash: manifest.factoryRuntimeCodeHash,
         collateralAddress: manifest.collateralAddress,
@@ -572,6 +602,48 @@ async function runSelfTestLaunch(): Promise<void> {
       error instanceof Error
         ? `${error.message} No canonical release was changed; inspect any confirmed receipt before retrying.`
         : 'The self-test market was not confirmed. No canonical release was changed; retry only after checking your wallet history.';
+    render();
+  }
+}
+
+async function runSelfTestJoin(poolAddress: string, updateUrl: boolean): Promise<void> {
+  const address = poolAddress.trim();
+  if (!isSelfTestPoolAddress(address)) {
+    selfTestMessage =
+      'Enter a valid public self-test pool address. No wallet request or transaction was sent.';
+    render();
+    return;
+  }
+  if (!manifest) {
+    selfTestMessage = 'The canonical manifest must be validated before joining a self-test pool.';
+    render();
+    return;
+  }
+  if (updateUrl) history.pushState({}, '', `/self-test/join/${address}`);
+  selfTestMarket = undefined;
+  selfTestBusy = true;
+  selfTestMessage =
+    'Verifying the factory mapping and immutable self-test configuration from Sepolia. No wallet request is needed.';
+  render();
+  try {
+    selfTestMarket = await loadSelfTestMarket(address, {
+      canonicalPoolAddress: manifest.poolAddress,
+      factoryAddress: manifest.factoryAddress,
+      factoryRuntimeCodeHash: manifest.factoryRuntimeCodeHash,
+      collateralAddress: manifest.collateralAddress,
+      feedAddress: manifest.feedAddress,
+      threshold: manifest.threshold,
+      comparison: manifest.comparison,
+    });
+    selfTestBusy = false;
+    selfTestMessage = `Verified self-test pool ${selfTestMarket.poolAddress.slice(0, 10)}…. Refreshing its public lifecycle.`;
+    await refreshLifecycle(selfTestMarket.poolAddress);
+  } catch (error) {
+    selfTestBusy = false;
+    selfTestMessage =
+      error instanceof Error
+        ? `${error.message} No wallet request or transaction was sent.`
+        : 'The public self-test pool could not be verified. No wallet request or transaction was sent.';
     render();
   }
 }
@@ -702,7 +774,8 @@ loadManifest()
   .then(() => {
     manifestPhase = 'ready';
     render();
-    void refreshLifecycle();
+    if (selfTestJoinAddress()) refreshSelfTestRoute();
+    else void refreshLifecycle();
   })
   .catch(() => {
     manifestPhase = 'unavailable';

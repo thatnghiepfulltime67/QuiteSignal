@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { deriveSelfTestTiming } from '../src/self-test.js';
+import { deriveSelfTestTiming, isSelfTestPoolAddress } from '../src/self-test.js';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -42,4 +42,29 @@ test('T-WEB-10-03: self-test routing preserves the canonical release and uses se
   assert.match(source, /No canonical release was changed/);
   assert.match(source, /history\.pushState/);
   assert.doesNotMatch(source, /localStorage|sessionStorage/i);
+});
+
+test('T-WEB-11-01: shared pool links accept only complete public addresses', () => {
+  assert.equal(isSelfTestPoolAddress('0x0000000000000000000000000000000000000000'), true);
+  assert.equal(isSelfTestPoolAddress('0xnot-an-address'), false);
+  assert.equal(isSelfTestPoolAddress('0x0000000000000000000000000000000000000000/extra'), false);
+});
+
+test('T-WEB-11-02: a shared self-test pool is factory-verified before its participant routes open', () => {
+  const selfTest = readFileSync(resolve(root, 'src', 'self-test.ts'), 'utf8');
+  const main = readFileSync(resolve(root, 'src', 'main.ts'), 'utf8');
+
+  assert.match(selfTest, /export async function loadSelfTestMarket/);
+  assert.match(selfTest, /functionName: 'poolId'/);
+  assert.match(selfTest, /functionName: 'poolOf'/);
+  assert.match(selfTest, /not registered by the manifest-bound factory/);
+  assert.match(selfTest, /canonical release is not a self-test market/);
+  assert.match(selfTest, /fixed self-test policy/);
+  assert.match(main, /\/self-test\/join\//);
+  assert.match(main, /Verify and join pool/);
+  assert.match(main, /No wallet request or transaction was sent/);
+  assert.doesNotMatch(
+    `${selfTest}\n${main}`,
+    /localStorage|sessionStorage|privateKey|mnemonic|seed phrase|console\./i,
+  );
 });
