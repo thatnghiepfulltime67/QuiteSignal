@@ -273,7 +273,7 @@ async function main(): Promise<void> {
   ) => {
     appendSpend(ledger, {
       workItemId: workItem,
-      phase: 'P1',
+      phase: workItem === 'SDK-03' ? 'P2' : 'P1',
       sender,
       transactionHash: hash,
       blockNumber: receipt.blockNumber.toString(),

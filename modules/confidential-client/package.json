@@ -10,6 +10,7 @@
   "scripts": {
     "test": "tsx --test test/*.test.ts",
     "test:nox:sepolia": "tsx scripts/run-sdk02-confidential-input-sepolia.mts",
-    "test:transaction:sepolia": "tsx scripts/run-sdk03-transaction-sepolia.mts"
+    "test:transaction:sepolia": "tsx scripts/run-sdk03-transaction-sepolia.mts",
+    "verify:transaction:sepolia": "tsx scripts/verify-sdk03-transaction-sepolia.mts"
   }
 }
