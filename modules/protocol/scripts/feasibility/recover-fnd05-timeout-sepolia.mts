@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 
 import { createViemHandleClient } from '@iexec-nox/handle';
@@ -23,6 +24,8 @@ const EXPECTED_CHAIN_ID = 11_155_111;
 const CONFIRMATION_VALUE = 'yes';
 const EXPECTED_DEPLOYER_BALANCE = 120n;
 const EXPECTED_SECONDARY_BALANCE = 180n;
+const OWNER_DECRYPT_MAX_ATTEMPTS = 8;
+const RETRY_DELAY_MS = 5_000;
 
 interface Artifact {
   abi: Abi;
@@ -249,8 +252,9 @@ async function main(): Promise<void> {
   if (configuredUnderlying.toLowerCase() !== contracts.fixture.toLowerCase()) {
     fail('The timeout recovery wrapper does not bind the supplied fixture collateral.');
   }
-  if ((await read(contracts.timeoutSpike, spikeArtifact, 'state')) !== 2) {
-    fail('The supplied timeout recovery spike is not aggregate pending.');
+  const initialState = await read(contracts.timeoutSpike, spikeArtifact, 'state');
+  if (initialState !== 2 && initialState !== 4) {
+    fail('The supplied timeout recovery spike is neither aggregate pending nor refundable.');
   }
 
   const send = async (
@@ -294,28 +298,47 @@ async function main(): Promise<void> {
     return hash;
   };
 
+  const refundAvailable = async (account: Address): Promise<boolean> => {
+    try {
+      await publicClient.call({
+        account,
+        to: contracts.timeoutSpike,
+        data: spikeData('refund'),
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   assertCleanSourceTree();
-  await send(
-    secondary,
-    secondaryWallet,
-    contracts.timeoutSpike,
-    spikeData('cancelBeforeUnwrap'),
-    'permissionless legacy timeout cancellation',
-  );
-  await send(
-    deployer,
-    deployerWallet,
-    contracts.timeoutSpike,
-    spikeData('refund'),
-    'refund legacy timeout deployer fixture stake',
-  );
-  await send(
-    secondary,
-    secondaryWallet,
-    contracts.timeoutSpike,
-    spikeData('refund'),
-    'refund legacy timeout secondary fixture stake',
-  );
+  if (initialState === 2) {
+    await send(
+      secondary,
+      secondaryWallet,
+      contracts.timeoutSpike,
+      spikeData('cancelBeforeUnwrap'),
+      'permissionless legacy timeout cancellation',
+    );
+  }
+  if (await refundAvailable(deployer.address)) {
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.timeoutSpike,
+      spikeData('refund'),
+      'refund legacy timeout deployer fixture stake',
+    );
+  }
+  if (await refundAvailable(secondary.address)) {
+    await send(
+      secondary,
+      secondaryWallet,
+      contracts.timeoutSpike,
+      spikeData('refund'),
+      'refund legacy timeout secondary fixture stake',
+    );
+  }
 
   const ownerBalance = async (
     owner: Address,
@@ -324,10 +347,21 @@ async function main(): Promise<void> {
     const handle = (await read(contracts.wrapper, wrapperArtifact, 'confidentialBalanceOf', [
       owner,
     ])) as Hex;
-    const result = await handleClient.decrypt(handle);
-    if (typeof result.value !== 'bigint')
-      fail('The recovered owner balance did not decode as uint256.');
-    return result.value;
+    for (let attempt = 1; attempt <= OWNER_DECRYPT_MAX_ATTEMPTS; attempt += 1) {
+      try {
+        const result = await handleClient.decrypt(handle);
+        if (typeof result.value !== 'bigint') {
+          fail('The recovered owner balance did not decode as uint256.');
+        }
+        return result.value;
+      } catch {
+        if (attempt === OWNER_DECRYPT_MAX_ATTEMPTS) {
+          fail('The recovered owner balance was unavailable after the bounded retry window.');
+        }
+        await delay(RETRY_DELAY_MS);
+      }
+    }
+    fail('The recovered owner balance did not produce a result.');
   };
   if (
     (await read(contracts.timeoutSpike, spikeArtifact, 'state')) !== 4 ||

@@ -381,7 +381,8 @@ are verified, then deleted; it is never printed, committed, or included in evide
 
 Output files: `modules/protocol/contracts/feasibility/AggregateRecoverySpike.sol`,
 `modules/protocol/scripts/feasibility/run-aggregate-recovery-sepolia.mts`,
-`modules/protocol/scripts/feasibility/run-nox-sepolia.mts`, the narrowly required
+`modules/protocol/scripts/feasibility/run-nox-sepolia.mts`,
+`modules/protocol/scripts/feasibility/recover-fnd05-timeout-sepolia.mts`, the narrowly required
 protocol test/model files, `evidence/offline/G3/FND-05.json`,
 `evidence/sepolia/G3/FND-05.json`, `evidence/reports/G3-summary.md`,
 `evidence/sepolia/spend-ledger.json`, `docs/plans/evidence-ledger.md`, and this
@@ -517,6 +518,8 @@ It cancelled permissionlessly, returned both owner stakes exactly once, verified
 two terminal confidential balances locally, and deleted the ignored actor recovery
 record. It has no remaining fixture custody, but remains excluded from G3 evidence
 because the interrupted execution did not record its timeout negative assertion.
+The recovery runner retries boundedly for Nox owner decryption and can resume an
+already refundable fixture without repeating an on-chain cancellation or refund.
 
 ## FND-01 — Toolchain lock
 
