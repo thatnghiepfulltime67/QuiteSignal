@@ -1,6 +1,6 @@
 # P0 — Foundation and feasibility
 
-Status: `in_progress`
+Status: `complete`
 
 ## Objective
 
@@ -1015,7 +1015,7 @@ supersedes the original G4 definition; FND-06B is the only active G4 work item.
 
 ID: `FND-06B`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Prove that the canonical Ethereum Sepolia Chainlink ETH/USD price-feed
 proxy can serve as the unchanged, zero-custody resolution dependency defined by
@@ -1029,7 +1029,8 @@ verified public contracts, and Ethereum Sepolia state only until a separate guar
 Sepolia write plan is reviewed.
 
 Output files: `ops/scripts/assess-g4-resolution-target.mts`, the root package
-command, `modules/protocol/contracts/feasibility/PriceFeedResolutionSpike.sol`,
+commands, `ops/scripts/verify-g4-evidence.mts`,
+`modules/protocol/contracts/feasibility/PriceFeedResolutionSpike.sol`,
 `modules/protocol/scripts/feasibility/run-g4-resolution-sepolia.mts`,
 `evidence/offline/G4/FND-06-RESOLUTION.json`,
 `evidence/sepolia/G4/FND-06-RESOLUTION.json`,
@@ -1064,7 +1065,7 @@ is re-proven in P1/G5. The FND-06B spike has no asset balance, so failed or stal
 calls need no recovery beyond retaining the sanitized receipt.
 
 Checks: `npm run assess:g4:resolution:sepolia`, `npm run test:g4:resolution:sepolia`,
-`npm run compile`, `npm run check:offline`, `npm run check:sepolia:read`,
+`npm run verify:g4:evidence`, `npm run compile`, `npm run check:offline`, `npm run check:sepolia:read`,
 `npm run scan:secrets`, and `git diff --check`.
 
 Evidence path: `evidence/offline/G4/FND-06-RESOLUTION.json`,
@@ -1087,6 +1088,75 @@ embedded in deployed code. This is runner-validation failure, not a target or
 resolution result. The spike is not G4 evidence. The corrected runner compares the
 compiler-declared immutable-bytecode template and uses explicitly sequenced nonces;
 the next run must use fresh terminal evidence and retain this public partial record.
+
+Completion: The selected unchanged Chainlink ETH/USD proxy is
+`0x694AA1769357215DE4FAC081bf1f309aDC325306`; at verification block `11380856` its
+runtime hash was `0x9190afba2a699a9627d64ed68c7cc60e4005a8830b33183c4413b4e1a93b9ccd`.
+The four fresh terminal spikes at blocks `11380852` through `11380856` produced both
+immutable threshold outcomes, rejected zero target/age configuration, stale and
+premature resolution, and a value transfer, and retained zero balances. The
+read-only independent verifier rechecked the historical target round, receipts,
+runtime-template bindings, immutable configuration, outcomes, negative calls, and
+zero balances. Sanitized artifacts and the report record the complete result. G4
+passes under ADR-017; FND-07 records the P0 decision.
+
+## FND-07 work-item record
+
+ID: `FND-07`
+
+Status: `complete`
+
+Outcome: Record the user-authorized revised P0 feasibility decision after validating
+the committed G0–G4 evidence ledger. This item does not modify a contract or rerun a
+test; it reconciles the gate status, target provenance, risks, architecture, and
+evidence paths before production work starts.
+
+Prerequisites: G0–G3 passed and FND-06B provides committed G4 source, direct
+Sepolia smoke evidence, and independent read-only verification. ADR-017 defines the
+accepted zero-custody resolution boundary.
+
+Output files: `Plan.md`, this work-package record, `docs/plans/evidence-ledger.md`,
+`docs/plans/verification-matrix.md`, `evidence/reports/G4-resolution-feasibility.md`,
+`docs/operations/02-risk-register.md`, `docs/operations/03-decision-log.md`, and
+`docs/operations/04-source-and-assumption-register.md`.
+
+Acceptance criteria: Every G0–G4 ledger row names committed sanitized evidence;
+the selected target source/license, target runtime, ABI metadata, live smoke,
+historical evidence verifier, privacy impact, funds location, recovery behavior, and
+remaining trust assumption are recorded consistently. The P0 exit decision must not
+claim a market-execution, slippage, redemption, or oracle-guarantee property that
+ADR-017 removed or did not prove.
+
+Privacy/custody impact: This is documentation and read-only evidence validation.
+It introduces no plaintext, key, handle, proof, signature, asset movement, target
+custody, or new authority. The FND-06B spike balances are verified zero; product
+collateral remains outside P0 feasibility contracts.
+
+Funds location/recovery impact: No FND-07 write is sent. The selected product model
+keeps collateral in confidential pool custody pending settlement. An invalid or
+unavailable feed must reach the immutable permissionless resolution-grace refund
+path in P1/G5; this feasibility decision does not claim that product behavior has
+already been implemented.
+
+Checks: `npm run compile`, `npm run assess:g4:resolution:sepolia`,
+`npm run verify:g4:evidence`, `npm run check:offline`,
+`npm run check:sepolia:read`, `npm run scan:secrets`, and `git diff --check`.
+
+Evidence path: `evidence/offline/G4/FND-06-RESOLUTION.json`,
+`evidence/sepolia/G4/FND-06-RESOLUTION.json`, and
+`evidence/reports/G4-resolution-feasibility.md`.
+
+Intended commit: `test: prove public resolution adapter boundary`.
+
+Rollback/failure action: If a required record is inconsistent, retain the failed
+sanitized evidence, correct only the responsible record or verifier, and rerun the
+full G4 read-only verification. Do not enter P1, weaken the stated trust boundary,
+or replace a failing target with a mock or a result writer.
+
+Completion: The committed evidence validator passed against the historical Sepolia
+block and all G0–G4 artifacts are synchronized. The user's continuous-build
+authorization is the explicit P0-to-P1 transition approval. P0 is complete; PK-01
+is the next eligible work item.
 
 ## FND-01 — Toolchain lock
 
@@ -1184,10 +1254,10 @@ docs/operations/03-decision-log.md
 - [x] G1 passed: arithmetic, context binding, ACL, and persistence pass directly on Sepolia.
 - [x] G2 passed: confidential asset success and recovery conserve funds.
 - [x] G3 passed: aggregate-only disclosure and proof/recovery semantics pass.
-- [ ] G4 passed: one unchanged public protocol and zero-custody resolution-adapter boundary are selected.
-- [ ] Evidence ledger contains validated, sanitized records for G0–G4.
-- [ ] All P0 findings, risks, and architecture consequences are documented.
-- [ ] User explicitly approves transition to P1.
+- [x] G4 passed: one unchanged public protocol and zero-custody resolution-adapter boundary are selected.
+- [x] Evidence ledger contains validated, sanitized records for G0–G4.
+- [x] All P0 findings, risks, and architecture consequences are documented.
+- [x] User explicitly approves transition to P1.
 
 ## Exit decision
 

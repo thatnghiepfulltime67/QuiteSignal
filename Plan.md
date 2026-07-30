@@ -86,7 +86,7 @@ No downstream package may hide or compensate for a failed upstream gate.
 
 | ID  | Work package                                                              | Status        | Required gates | Exit gate                                                           |
 | --- | ------------------------------------------------------------------------- | ------------- | -------------- | ------------------------------------------------------------------- |
-| P0  | [Foundation and feasibility](docs/plans/00-foundation-and-feasibility.md) | `in_progress` | G0–G4          | Load-bearing primitives proven on Sepolia; pure models pass offline |
+| P0  | [Foundation and feasibility](docs/plans/00-foundation-and-feasibility.md) | `complete`    | G0–G4          | Load-bearing primitives proven on Sepolia; pure models pass offline |
 | P1  | [Protocol kernel](docs/plans/01-protocol-kernel.md)                       | `not_started` | G0–G4          | G5: Sepolia contract lifecycle and I1–I10 pass                      |
 | P2  | [Integration and SDK](docs/plans/02-integration-and-sdk.md)               | `not_started` | G5             | G6: repeatable multi-user Sepolia lifecycle                         |
 | P3  | [Web and read model](docs/plans/03-web-and-read-model.md)                 | `not_started` | G6             | G7: real primary flow without mock state                            |

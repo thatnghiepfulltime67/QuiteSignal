@@ -69,6 +69,16 @@ immutably. The pool never transfers collateral to the proxy. A stale or invalid 
 round must prevent settlement and eventually reach the pool's confidential refund
 path; it cannot be replaced by an operator-selected outcome.
 
+FND-06B passed at Ethereum Sepolia blocks `11380852` through `11380856`. The target
+proxy runtime hash was
+`0x9190afba2a699a9627d64ed68c7cc60e4005a8830b33183c4413b4e1a93b9ccd`; the observed
+historical round had 8 decimals, description `ETH / USD`, a positive answer, a
+complete round id, and an update age of 816 seconds. Four immutable no-custody
+spikes proved both threshold outcomes and the stale, premature, invalid-config, and
+value-transfer negative cases. `npm run verify:g4:evidence` independently rechecks
+that record. This proves integration feasibility only; P1 still must prove product
+state, confidential payout, and resolution-grace refund behavior.
+
 ## FND-01 verified toolchain baseline
 
 Verified on 2026-07-30 from the official npm release metadata and the committed

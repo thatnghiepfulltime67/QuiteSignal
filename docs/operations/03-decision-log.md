@@ -213,6 +213,8 @@ backend, relayer, indexer, or adapter may choose the result.
 This is a material state, custody, and public-interface change. FND-06B must prove
 the target's source/license provenance, Sepolia runtime, ABI, current round shape,
 positive/negative threshold behavior, stale-round rejection, and zero-custody
-boundary before G4 can pass. Product implementation remains blocked until that
-evidence is recorded. The external oracle remains an explicit public trust
-dependency; QuietSignal makes no claim that it independently verifies the feed.
+boundary before G4 can pass. FND-06B passed direct Sepolia smoke evidence at blocks
+`11380852` through `11380856` and independent historical read-only verification at
+block `11380856`. Product implementation may begin. The external oracle remains an
+explicit public trust dependency; QuietSignal makes no claim that it independently
+verifies the feed.

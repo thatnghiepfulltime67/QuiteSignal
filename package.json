@@ -29,6 +29,7 @@
     "assess:g4:sepolia": "tsx ops/scripts/assess-g4-candidates.mts",
     "assess:g4:resolution:sepolia": "tsx ops/scripts/assess-g4-resolution-target.mts",
     "verify:evidence": "tsx ops/scripts/verify-evidence.mts",
+    "verify:g4:evidence": "tsx ops/scripts/verify-g4-evidence.mts",
     "scan:secrets": "tsx ops/scripts/check-secrets.mts",
     "scan:dependencies": "npm audit --audit-level=critical && tsx ops/scripts/dependency-report.mts",
     "check:offline": "npm run format:check && npm run lint && npm run compile && npm run scan:secrets",

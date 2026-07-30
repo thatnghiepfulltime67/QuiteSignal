@@ -41,6 +41,8 @@ production-key configuration.
 | `npm run verify:deployment` | sepolia-read | Sources, runtime hashes, ABI/address sync | G6/G8 |
 | `npm run verify:evidence -- G3` | sepolia-read | G3 evidence shape, receipts, commit reachability, runtime/binding context, terminal custody | G3 |
 | `npm run assess:g4:sepolia` | sepolia-read | Public target runtime and configuration discovery; may record a feasibility blocker | G4 |
+| `npm run assess:g4:resolution:sepolia` | sepolia-read | Chainlink ETH/USD target metadata, runtime, and current round assessment | G4 |
+| `npm run verify:g4:evidence` | sepolia-read | G4 source/receipt/runtime-template/target-round/negative-case and zero-custody evidence | G4 |
 | `npm run scan:secrets` | offline | Repository/history/generated evidence scan | every commit/G8 |
 | `npm run scan:dependencies` | network/read | Advisories and licenses | G0/G8 |
 | `npm run check:offline` | offline | Complete no-chain merge gate | G0–G8 |
