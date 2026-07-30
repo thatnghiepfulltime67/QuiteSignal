@@ -12,13 +12,7 @@
   },
   "finalizedBlock": "11383634",
   "eventCount": 5,
-  "eventKinds": [
-    "epoch-opened",
-    "epoch-closed",
-    "aggregate-requested",
-    "refunded",
-    "refunded"
-  ],
+  "eventKinds": ["epoch-opened", "epoch-closed", "aggregate-requested", "refunded", "refunded"],
   "checkpoint": {
     "schemaVersion": 1,
     "reducerVersion": 1,
