@@ -189,6 +189,53 @@ same block after the successful expiry; both receipts remain in the append-only
 ledger, while the verifier requires the successful event and terminal public state.
 SDK-03 is complete and remains a G6 component only.
 
+## DEP-01 work-item record
+
+ID: `DEP-01`
+
+Status: `in_progress`
+
+Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
+canonical public manifest for the MVP's confidential collateral, immutable public
+adapter, permissionless factory, and one bound pool.
+
+Active slice: `DEP-01-PLAN-01`.
+
+Output files: deployment plan/write/verify scripts, generated canonical manifest and
+consumer bindings, deployment tests, this record, evidence ledger entries, and
+runbook updates.
+
+Acceptance criteria: A read-only plan validates chain, selected feed runtime/facts,
+compiled artifacts, constructor/configuration inputs, deterministic deployment order,
+estimated gas, and the committed spend budget before any write. Writes require the
+explicit Sepolia confirmation and a clean tree. The generated manifest records
+source/compiler/runtime hashes, constructor inputs, deployment receipts, and public
+pool state; consumers import it rather than copying addresses. A read-only verifier
+must reject altered runtime, receipt, binding, or public epoch values.
+
+Privacy/custody impact: Deployment has no owner decrypt, no input plaintext, and no
+relayer authority. The wrapper/pool own confidential collateral only after a later
+owner transaction; the deployer cannot move user assets through the manifest tool.
+
+Funds location/recovery impact: Deployment transactions retain only native gas at
+the signer. A pool is created empty; failed deployment stages have no user
+collateral. A failed post-deployment validation leaves the manifest unpublished and
+the named contracts visible for independent inspection, never silently substituted.
+
+Checks: manifest/unit mutations, artifact/runtime checks, `npm run typecheck`,
+`npm run check:offline`, read-only `deploy:sepolia:plan`, guarded Sepolia stages,
+independent manifest verification, and `git diff --check`.
+
+Evidence path: `deployments/sepolia/quiet-signal.json` and
+`evidence/{offline,sepolia}/G6/DEP-01-DEPLOYMENT.json`.
+
+Intended commit: `build: add guarded sepolia deployment`.
+
+Rollback/failure action: Do not publish a manifest or generated bindings. Record
+public receipts and the failed validation reason, then deploy a new explicitly named
+configuration only after correcting the cause; never rewrite a canonical manifest or
+point consumers at an unverified address.
+
 ## Dependency graph
 
 ```text
