@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -198,6 +198,26 @@ function reusedDeployments(): Deployment[] | undefined {
   ];
 }
 
+function verifiedDeployments(): Deployment[] | undefined {
+  const argument = process.argv.find((value) => value.startsWith('--verify='));
+  if (!argument) return undefined;
+  const addresses = argument.slice('--verify='.length).split(',');
+  if (addresses.length !== 4 || addresses.some((address) => !isAddress(address))) {
+    fail('The PK-03A verify option requires valid yes,no,stale,premature adapter addresses.');
+  }
+  return [
+    { name: 'yes', address: addresses[0] as Address, transactionHash: null, blockNumber: null },
+    { name: 'no', address: addresses[1] as Address, transactionHash: null, blockNumber: null },
+    { name: 'stale', address: addresses[2] as Address, transactionHash: null, blockNumber: null },
+    {
+      name: 'premature',
+      address: addresses[3] as Address,
+      transactionHash: null,
+      blockNumber: null,
+    },
+  ];
+}
+
 async function expectRevert(action: () => Promise<unknown>, scenario: string): Promise<void> {
   try {
     await action();
@@ -257,6 +277,8 @@ async function main(): Promise<void> {
   const artifact = loadArtifact();
   const ledger = loadLedger();
   const reused = reusedDeployments();
+  const verified = verifiedDeployments();
+  if (reused && verified) fail('PK-03A cannot use resume and verify modes together.');
   const constructorArguments = (
     target: Address,
     threshold: bigint,
@@ -330,14 +352,17 @@ async function main(): Promise<void> {
       maximumFeedAge: VALID_FEED_AGE,
     },
   ];
-  const definitions = reused
-    ? allDefinitions.filter(
-        (definition) => definition.name === 'stale' || definition.name === 'premature',
-      )
-    : allDefinitions;
-  if (reused) {
-    failureStage = 'reused adapter validation';
-    for (const deployment of reused) {
+  const definitions = verified
+    ? []
+    : reused
+      ? allDefinitions.filter(
+          (definition) => definition.name === 'stale' || definition.name === 'premature',
+        )
+      : allDefinitions;
+  const existing = verified ?? reused;
+  if (existing) {
+    failureStage = 'existing adapter validation';
+    for (const deployment of existing) {
       const [runtime, target, targetHash, direction, threshold, observation, age, balance] =
         await Promise.all([
           publicClient.getCode({ address: deployment.address }),
@@ -373,7 +398,12 @@ async function main(): Promise<void> {
           } as never),
           publicClient.getBalance({ address: deployment.address }),
         ]);
-      const expectedThreshold = deployment.name === 'yes' ? 1n : MAX_INT256;
+      const expectedThreshold = deployment.name === 'no' ? MAX_INT256 : 1n;
+      const expectedAge = deployment.name === 'stale' ? 1n : VALID_FEED_AGE;
+      const observationIsValid =
+        deployment.name === 'premature'
+          ? (observation as bigint) > block.timestamp
+          : (observation as bigint) <= block.timestamp;
       if (
         !runtime ||
         normalizedRuntimeTemplate(artifact, runtime).toLowerCase() !==
@@ -382,8 +412,8 @@ async function main(): Promise<void> {
         (targetHash as Hex).toLowerCase() !== keccak256(targetRuntime).toLowerCase() ||
         direction !== true ||
         threshold !== expectedThreshold ||
-        (observation as bigint) === 0n ||
-        age !== VALID_FEED_AGE ||
+        !observationIsValid ||
+        age !== expectedAge ||
         balance !== 0n
       ) {
         fail(
@@ -417,6 +447,7 @@ async function main(): Promise<void> {
       workItem: 'PK-03A',
       target: ETH_USD_FEED,
       resumed: reused !== undefined,
+      verificationOnly: verified !== undefined,
       estimatedMaximumTotalGasCostWei: plannedCost.toString(),
       remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
       actions: plans.map((plan) => ({
@@ -425,51 +456,55 @@ async function main(): Promise<void> {
       })),
     }),
   );
-  if (!write) return;
+  if (!write && !verified) return;
 
-  assertCleanSourceTree();
-  const walletClient = createWalletClient({
-    account: account!,
-    chain: sepolia,
-    transport: http(rpcUrl),
-  });
-  const deployments: Deployment[] = [...(reused ?? [])];
-  for (const plan of plans) {
-    failureStage = `${plan.name} deployment`;
-    const transactionHash = await walletClient.sendTransaction({
+  if (verified) assertCleanSourceTree();
+
+  const deployments: Deployment[] = [...(verified ?? reused ?? [])];
+  if (write) {
+    assertCleanSourceTree();
+    const walletClient = createWalletClient({
       account: account!,
-      data: plan.data,
-      gas: plan.gas,
-      maxFeePerGas,
+      chain: sepolia,
+      transport: http(rpcUrl),
     });
-    const receipt = await publicClient.waitForTransactionReceipt({ hash: transactionHash });
-    appendSpend(ledger, {
-      workItemId: 'PK-03A',
-      phase: 'P1',
-      sender: account!.address,
-      transactionHash,
-      blockNumber: receipt.blockNumber.toString(),
-      gasUsed: receipt.gasUsed.toString(),
-      effectiveGasPrice: receipt.effectiveGasPrice.toString(),
-      actualGasCostWei: (receipt.gasUsed * receipt.effectiveGasPrice).toString(),
-    });
-    if (receipt.status !== 'success' || !receipt.contractAddress) {
-      fail(`The ${plan.name} adapter deployment did not succeed.`);
+    for (const plan of plans) {
+      failureStage = `${plan.name} deployment`;
+      const transactionHash = await walletClient.sendTransaction({
+        account: account!,
+        data: plan.data,
+        gas: plan.gas,
+        maxFeePerGas,
+      });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: transactionHash });
+      appendSpend(ledger, {
+        workItemId: 'PK-03A',
+        phase: 'P1',
+        sender: account!.address,
+        transactionHash,
+        blockNumber: receipt.blockNumber.toString(),
+        gasUsed: receipt.gasUsed.toString(),
+        effectiveGasPrice: receipt.effectiveGasPrice.toString(),
+        actualGasCostWei: (receipt.gasUsed * receipt.effectiveGasPrice).toString(),
+      });
+      if (receipt.status !== 'success' || !receipt.contractAddress) {
+        fail(`The ${plan.name} adapter deployment did not succeed.`);
+      }
+      const runtime = await publicClient.getCode({ address: receipt.contractAddress });
+      if (
+        !runtime ||
+        normalizedRuntimeTemplate(artifact, runtime).toLowerCase() !==
+          normalizedRuntimeTemplate(artifact, artifact.deployedBytecode).toLowerCase()
+      ) {
+        fail(`The ${plan.name} adapter runtime does not match its compiled template.`);
+      }
+      deployments.push({
+        name: plan.name,
+        address: receipt.contractAddress,
+        transactionHash,
+        blockNumber: receipt.blockNumber,
+      });
     }
-    const runtime = await publicClient.getCode({ address: receipt.contractAddress });
-    if (
-      !runtime ||
-      normalizedRuntimeTemplate(artifact, runtime).toLowerCase() !==
-        normalizedRuntimeTemplate(artifact, artifact.deployedBytecode).toLowerCase()
-    ) {
-      fail(`The ${plan.name} adapter runtime does not match its compiled template.`);
-    }
-    deployments.push({
-      name: plan.name,
-      address: receipt.contractAddress,
-      transactionHash,
-      blockNumber: receipt.blockNumber,
-    });
   }
 
   failureStage = 'post-deployment resolution checks';
@@ -550,6 +585,8 @@ async function main(): Promise<void> {
     status: 'passed',
   };
   const serialized = `${JSON.stringify(evidence, null, 2)}\n`;
+  mkdirSync(dirname(offlineEvidencePath), { recursive: true });
+  mkdirSync(dirname(sepoliaEvidencePath), { recursive: true });
   writeFileSync(offlineEvidencePath, serialized);
   writeFileSync(sepoliaEvidencePath, serialized);
   console.log(
