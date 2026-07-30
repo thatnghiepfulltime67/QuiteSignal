@@ -516,6 +516,16 @@ Rollback/failure action: Do not mark G7/P3 complete. Preserve public receipts an
 stop at the documented on-chain recovery state; never replace browser evidence with
 a simulated provider or local chain.
 
+Blocker note: At Sepolia block `11384140`, DEP-02 remained OPEN with zero
+participants and 492 seconds before its commit deadline. The production browser
+read-only run is complete, but no user-approved externally unlocked EIP-1193 test
+wallet is available for the required signal and recovery writes. Importing the
+ignored deployment key into a browser, injecting a signing shim, or relaying wallet
+requests through a local service would violate WEB-08's privacy/custody boundary.
+No transaction was sent and no G7 claim is made. R-25 records this release blocker;
+the next permitted action is the documented external-wallet run against a fresh open
+release when such approval is available.
+
 ## WEB-08-READ-01 work-item record
 
 ID: `WEB-08-READ-01`
