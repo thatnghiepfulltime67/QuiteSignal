@@ -242,6 +242,24 @@ function contractSet(expectedAddressCount: 4 | 5): ContractSet | undefined {
   };
 }
 
+function recoveryResumeSet(): ContractSet | undefined {
+  const argument = process.argv.find((value) => value.startsWith('--resume-recovery='));
+  if (!argument) return undefined;
+  const values = argument.slice('--resume-recovery='.length).split(',');
+  if (values.length !== 4 || values.some((value) => !isAddress(value))) {
+    fail(
+      'Four comma-separated FND-05C fixture, wrapper, recovery, and peer addresses are required.',
+    );
+  }
+  return {
+    fixture: values[0] as Address,
+    wrapper: values[1] as Address,
+    belowKSpike: values[2] as Address,
+    timeoutSpike: values[3] as Address,
+    recoverySpike: values[2] as Address,
+  };
+}
+
 function loadOrCreateSecondaryPrivateKey(): Hex {
   if (existsSync(secondaryActorPath)) {
     const stored = JSON.parse(
@@ -396,13 +414,27 @@ async function main(): Promise<void> {
   const dryRun = process.argv.includes('--dry-run');
   const requestedCase = process.argv.find(
     (argument) =>
-      argument === 'FND-05' || argument === 'FND-05-TIMEOUT' || argument === 'FND-05-RECOVERY',
+      argument === 'FND-05' ||
+      argument === 'FND-05-TIMEOUT' ||
+      argument === 'FND-05-RECOVERY' ||
+      argument === 'FND-05-RECOVERY-RESUME',
   );
   const timeoutOnly = requestedCase === 'FND-05-TIMEOUT';
-  const recoveryOnly = requestedCase === 'FND-05-RECOVERY';
+  const recoveryOnly =
+    requestedCase === 'FND-05-RECOVERY' || requestedCase === 'FND-05-RECOVERY-RESUME';
+  const recoveryResume = requestedCase === 'FND-05-RECOVERY-RESUME';
   const ledgerWorkItemId = timeoutOnly ? 'FND-05B' : recoveryOnly ? 'FND-05C' : 'FND-05';
   const verifiedContracts = contractSet(recoveryOnly ? 4 : 5);
+  const recoveryResumeContracts = recoveryResume ? recoveryResumeSet() : undefined;
   if (!requestedCase) fail('An FND-05 aggregate feasibility case identifier is required.');
+  if (recoveryResume && !recoveryResumeContracts) {
+    fail(
+      'FND-05C recovery resume requires --resume-recovery=<fixture>,<wrapper>,<recovery>,<peer>.',
+    );
+  }
+  if (verifiedContracts && recoveryResumeContracts) {
+    fail('FND-05C recovery resume cannot be combined with read-only contract verification.');
+  }
   if (dryRun && verifiedContracts) {
     fail('Read-only verification cannot be combined with the deployment dry-run.');
   }
@@ -478,6 +510,73 @@ async function main(): Promise<void> {
       fail('An existing FND-05 harness runtime does not match the compiled artifact.');
     }
     contracts = verifiedContracts;
+  } else if (recoveryResumeContracts) {
+    failureStage = 'existing FND-05C recovery fixture verification';
+    const [fixtureRuntime, wrapperRuntime, recoveryRuntime, contextPeerRuntime] = await Promise.all(
+      [
+        publicClient.getCode({ address: recoveryResumeContracts.fixture }),
+        publicClient.getCode({ address: recoveryResumeContracts.wrapper }),
+        publicClient.getCode({ address: recoveryResumeContracts.recoverySpike }),
+        publicClient.getCode({ address: recoveryResumeContracts.timeoutSpike }),
+      ],
+    );
+    const [underlying, state, participants, peerState, peerParticipants] = await Promise.all([
+      publicClient.readContract({
+        address: recoveryResumeContracts.wrapper,
+        abi: wrapperArtifact.abi,
+        functionName: 'underlying',
+      } as never),
+      publicClient.readContract({
+        address: recoveryResumeContracts.recoverySpike,
+        abi: spikeArtifact.abi,
+        functionName: 'state',
+      } as never),
+      publicClient.readContract({
+        address: recoveryResumeContracts.recoverySpike,
+        abi: spikeArtifact.abi,
+        functionName: 'participantCount',
+      } as never),
+      publicClient.readContract({
+        address: recoveryResumeContracts.timeoutSpike,
+        abi: spikeArtifact.abi,
+        functionName: 'state',
+      } as never),
+      publicClient.readContract({
+        address: recoveryResumeContracts.timeoutSpike,
+        abi: spikeArtifact.abi,
+        functionName: 'participantCount',
+      } as never),
+    ]);
+    if (
+      !fixtureRuntime ||
+      !wrapperRuntime ||
+      !recoveryRuntime ||
+      !contextPeerRuntime ||
+      !runtimeMatchesArtifact(fixtureRuntime, fixtureArtifact) ||
+      !runtimeMatchesArtifact(wrapperRuntime, wrapperArtifact) ||
+      !runtimeMatchesArtifact(recoveryRuntime, spikeArtifact) ||
+      !runtimeMatchesArtifact(contextPeerRuntime, spikeArtifact) ||
+      (underlying as Address).toLowerCase() !== recoveryResumeContracts.fixture.toLowerCase() ||
+      state !== 0 ||
+      participants !== K_MIN ||
+      peerState !== 0 ||
+      peerParticipants !== 0n
+    ) {
+      fail('The FND-05C fixture is not the documented resumable Open recovery state.');
+    }
+    if (dryRun) {
+      console.log(
+        JSON.stringify({
+          contracts: recoveryResumeContracts,
+          mode: 'confirmed-resume',
+          status: 'ready',
+          workItem: requestedCase,
+        }),
+      );
+      return;
+    }
+    assertCleanSourceTree();
+    contracts = recoveryResumeContracts;
   } else {
     failureStage = 'deployment dry-run planning';
     const nonce = BigInt(await publicClient.getTransactionCount({ address: deployer.address }));
@@ -1086,24 +1185,26 @@ async function main(): Promise<void> {
   }
 
   failureStage = 'aggregate proof and unwrap recovery path';
-  await commit(
-    contracts.recoverySpike,
-    deployer,
-    deployerWallet,
-    deployerHandleClient,
-    MEMBER_ONE_STAKE,
-    MEMBER_ONE_PROBABILITY_BPS,
-    'recovery first member',
-  );
-  await commit(
-    contracts.recoverySpike,
-    secondary,
-    secondaryWallet,
-    secondaryHandleClient,
-    MEMBER_TWO_STAKE,
-    MEMBER_TWO_PROBABILITY_BPS,
-    'recovery independent member',
-  );
+  if (!recoveryResumeContracts) {
+    await commit(
+      contracts.recoverySpike,
+      deployer,
+      deployerWallet,
+      deployerHandleClient,
+      MEMBER_ONE_STAKE,
+      MEMBER_ONE_PROBABILITY_BPS,
+      'recovery first member',
+    );
+    await commit(
+      contracts.recoverySpike,
+      secondary,
+      secondaryWallet,
+      secondaryHandleClient,
+      MEMBER_TWO_STAKE,
+      MEMBER_TWO_PROBABILITY_BPS,
+      'recovery independent member',
+    );
+  }
   const recoveryDeadline = (await read(
     contracts.recoverySpike,
     spikeArtifact,
