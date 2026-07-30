@@ -123,3 +123,8 @@ read-only state, and returned the sole committed stake. The runner was then stop
 before a threshold commitment because the remaining negative checks still used RPC
 simulation. This attempt is excluded from G3 evidence. Its independent actor never
 committed; its ignored local key was deleted without being printed or recorded.
+
+The next runner revision records every contract-state negative assertion as a
+bounded Sepolia transaction with an expected-revert receipt. Nox gateway decryption
+denials remain an off-chain observation, but are bounded and fail the run if the
+gateway does not return a result; no transport timeout is accepted as evidence.

@@ -546,6 +546,10 @@ The sixth attempt from `ecefae9` deployed fixture
 returned its committed stake. It was stopped before threshold work so every remaining
 negative simulation can be replaced with a chain-native expected-revert receipt.
 The fixture is excluded from G3 evidence and its uncommitted actor key was deleted.
+The runner now records every contract-state negative assertion through a bounded
+Sepolia transaction with an expected-revert receipt. Only Nox gateway decryption
+denials remain off-chain observations; they have a hard timeout and fail the run if
+the gateway cannot return a result.
 
 ## FND-01 — Toolchain lock
 

@@ -40,7 +40,7 @@ const PENDING_COMMIT_TIMEOUT_SECONDS = 45n;
 const PUBLIC_DECRYPT_MAX_ATTEMPTS = 8;
 const PUBLIC_DECRYPT_RETRY_DELAY_MS = 5_000;
 const RPC_TIMEOUT_MS = 30_000;
-const EARLY_TIMEOUT_REVERT_GAS = 100_000n;
+const EXPECTED_REVERT_GAS = 2_000_000n;
 
 interface Artifact {
   abi: Abi;
@@ -259,18 +259,17 @@ function clearSecondaryPrivateKey(): void {
 }
 
 async function assertRejected(action: () => Promise<unknown>, scenario: string): Promise<void> {
+  let timedOut = false;
   try {
-    await action();
-  } catch (error) {
-    const message = error instanceof Error ? error.message.toLowerCase() : '';
-    if (
-      message.includes('timeout') ||
-      message.includes('timed out') ||
-      message.includes('fetch failed') ||
-      message.includes('network error') ||
-      message.includes('http request failed') ||
-      message.includes('econn')
-    ) {
+    await Promise.race([
+      action(),
+      delay(RPC_TIMEOUT_MS).then(() => {
+        timedOut = true;
+        throw new Error('negative assertion observation timed out');
+      }),
+    ]);
+  } catch {
+    if (timedOut) {
       fail(`${scenario} could not be observed on Ethereum Sepolia.`);
     }
     return;
@@ -650,7 +649,7 @@ async function main(): Promise<void> {
     failureStage = `${action} dry-run planning`;
     const fees = await publicClient.estimateFeesPerGas();
     const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
-    const maximumCost = EARLY_TIMEOUT_REVERT_GAS * maxFeePerGas;
+    const maximumCost = EXPECTED_REVERT_GAS * maxFeePerGas;
     assertBudget(ledger, maximumCost);
     assertSingleTransactionBudget(maximumCost, singleTransactionCapWei);
     failureStage = action;
@@ -658,7 +657,7 @@ async function main(): Promise<void> {
       account,
       to,
       data,
-      gas: EARLY_TIMEOUT_REVERT_GAS,
+      gas: EXPECTED_REVERT_GAS,
       maxFeePerGas,
     });
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
@@ -837,15 +836,7 @@ async function main(): Promise<void> {
     action: string,
   ): Promise<void> => {
     await send(account, wallet, spike, spikeData('refund'), action);
-    await assertRejected(
-      () =>
-        publicClient.call({
-          account: account.address,
-          to: spike,
-          data: spikeData('refund'),
-        }),
-      `${action} duplicate`,
-    );
+    await sendExpectedRevert(account, wallet, spike, spikeData('refund'), `${action} duplicate`);
     if ((await ownerBalance(account.address, handleClient)) !== expectedBalance) {
       fail(`${action} did not restore the recorded confidential owner balance.`);
     }
@@ -862,13 +853,11 @@ async function main(): Promise<void> {
     'below-k first member',
   );
   const belowDeadline = (await read(contracts.belowKSpike, spikeArtifact, 'deadline')) as bigint;
-  await assertRejected(
-    () =>
-      publicClient.call({
-        account: deployer.address,
-        to: contracts.belowKSpike,
-        data: spikeData('closeEpoch'),
-      }),
+  await sendExpectedRevert(
+    deployer,
+    deployerWallet,
+    contracts.belowKSpike,
+    spikeData('closeEpoch'),
     'Below-k close before the deadline',
   );
   await waitUntil(publicClient, belowDeadline);
@@ -1061,35 +1050,31 @@ async function main(): Promise<void> {
     [wrongChainRequestId, 'Wrong-chain aggregate proof context'],
     [wrongEpochRequestId, 'Wrong-epoch aggregate proof context'],
   ] as const) {
-    await assertRejected(
-      () =>
-        publicClient.call({
-          account: deployer.address,
-          to: contracts.recoverySpike,
-          data: spikeData('finalizeAggregate', [
-            requestId,
-            publicYes.value,
-            publicNo.value,
-            publicYes.decryptionProof,
-            publicNo.decryptionProof,
-          ]),
-        }),
+    await sendExpectedRevert(
+      deployer,
+      deployerWallet,
+      contracts.recoverySpike,
+      spikeData('finalizeAggregate', [
+        requestId,
+        publicYes.value,
+        publicNo.value,
+        publicYes.decryptionProof,
+        publicNo.decryptionProof,
+      ]),
       scenario,
     );
   }
-  await assertRejected(
-    () =>
-      publicClient.call({
-        account: deployer.address,
-        to: contracts.recoverySpike,
-        data: spikeData('finalizeAggregate', [
-          recoveryRequestId,
-          publicYes.value + 1n,
-          publicNo.value,
-          publicYes.decryptionProof,
-          publicNo.decryptionProof,
-        ]),
-      }),
+  await sendExpectedRevert(
+    deployer,
+    deployerWallet,
+    contracts.recoverySpike,
+    spikeData('finalizeAggregate', [
+      recoveryRequestId,
+      publicYes.value + 1n,
+      publicNo.value,
+      publicYes.decryptionProof,
+      publicNo.decryptionProof,
+    ]),
     'Substituted aggregate plaintext',
   );
   await send(
@@ -1105,19 +1090,17 @@ async function main(): Promise<void> {
     ]),
     'finalize context-bound aggregate and request unwrap',
   );
-  await assertRejected(
-    () =>
-      publicClient.call({
-        account: deployer.address,
-        to: contracts.recoverySpike,
-        data: spikeData('finalizeAggregate', [
-          recoveryRequestId,
-          publicYes.value,
-          publicNo.value,
-          publicYes.decryptionProof,
-          publicNo.decryptionProof,
-        ]),
-      }),
+  await sendExpectedRevert(
+    deployer,
+    deployerWallet,
+    contracts.recoverySpike,
+    spikeData('finalizeAggregate', [
+      recoveryRequestId,
+      publicYes.value,
+      publicNo.value,
+      publicYes.decryptionProof,
+      publicNo.decryptionProof,
+    ]),
     'Replayed aggregate proof',
   );
   const [unwrapHandle, recoveryAvailableAt] = (await Promise.all([
@@ -1128,13 +1111,11 @@ async function main(): Promise<void> {
   if (unwrap.value !== EXPECTED_AGGREGATE_TOTAL) {
     fail('The unwrap request did not match the encrypted aggregate total.');
   }
-  await assertRejected(
-    () =>
-      publicClient.call({
-        account: secondary.address,
-        to: contracts.recoverySpike,
-        data: spikeData('recoverUnwrap', [unwrap.decryptionProof]),
-      }),
+  await sendExpectedRevert(
+    secondary,
+    secondaryWallet,
+    contracts.recoverySpike,
+    spikeData('recoverUnwrap', [unwrap.decryptionProof]),
     'Delayed unwrap recovery before the recovery window',
   );
   await waitUntil(publicClient, recoveryAvailableAt);
