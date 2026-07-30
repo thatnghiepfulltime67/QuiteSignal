@@ -29,6 +29,7 @@ depending on a mock, private database, or privileged backend.
 | WEB-03-UI-01         | Poster-system visual refresh   | Revised design system, responsive banded application presentation, visual assertions             | token/source audit, responsive build and interaction checks           | `feat: refresh web visual system`                   |
 | WEB-02-LANDING-01    | Product landing and navigation | Complete product narrative, task-oriented navigation, route guidance, accessibility improvements | route/source assertions, keyboard/navigation checks, production build | `feat: improve product landing and navigation`      |
 | WEB-08-DEPLOYMENT-02 | Revision command preparation   | Explicit append-only revision invocation and operator runbook                                    | static command policy test, formatter, typecheck, clean diff          | `build: prepare explicit release revision commands` |
+| WEB-08-EVIDENCE-03   | Browser evidence verifier      | Public-only G7 browser evidence schema and independent receipt/manifest validation               | parser mutation tests, verifier tests, typecheck, clean diff          | `test: add browser evidence verifier`               |
 
 ## WEB-01 work-item record
 
@@ -940,6 +941,56 @@ locks both command boundaries and rejects a release identifier in every protocol
 deployment command. The runbook specifies the exact read-only plan and guarded sender
 sequence for a future explicit revision. No Sepolia transaction, manifest change, or
 active-release promotion occurred.
+
+## WEB-08-EVIDENCE-03 work-item record
+
+ID: `WEB-08-EVIDENCE-03`
+
+Status: `in_progress`
+
+Prerequisite gates: G6 passed. This work prepares G7 evidence handling only and
+cannot claim a browser journey without a real external-wallet run.
+
+Outcome: Add a public-only evidence schema and independent verifier that can prove
+the recorded browser receipt sequence belongs to verified Sepolia release manifests
+while rejecting confidential/browser-sensitive fields.
+
+Output files: verifier parser and read-only CLI, focused mutation tests, root command
+metadata, the Sepolia browser runbook, this record, and the verification matrix.
+
+Acceptance criteria: The verifier accepts only Ethereum Sepolia, explicit release
+identifiers, verified manifest-bound pool and collateral addresses, unique successful
+receipt hashes, an external EIP-1193 wallet declaration, and a zero-error/no-artifact
+browser summary. It rejects raw calldata, plaintext, handles, proofs, signatures,
+keys, RPC configuration, wallet-provider simulation, non-Sepolia, stale manifest,
+wrong recipient, failed receipt, or non-permissionless recovery evidence. It never
+generates, signs, or submits a transaction.
+
+Negative cases: malformed schema, forbidden field/name, duplicate receipt, bad hash,
+wrong release/pool/collateral binding, wrong transaction selector/recipient, failed
+receipt, and an owner-only refund used as recovery evidence must fail closed.
+
+Privacy/custody impact: The verifier reads public manifests and transaction receipts
+only. Its evidence schema permits no form values, calldata, raw encrypted material,
+proof, signature, secret, wallet credential, or RPC URL. It has no wallet provider,
+storage, browser automation, signer, relayer, or transaction-write capability.
+
+Funds location/recovery impact: None. It observes already-submitted public receipts.
+A rejected evidence record leaves all on-chain funds and release pointers unchanged;
+the operator follows the contract's documented recovery path rather than retrying
+from verifier output.
+
+Checks: verifier parser mutation tests, `npm run test:verifier`, root typecheck,
+targeted Prettier validation, and `git diff --check`.
+
+Evidence location: future create-only records at `evidence/sepolia/G7/WEB-08-*.json`.
+This slice emits no G7 evidence and performs no Sepolia write.
+
+Intended commit: `test: add browser evidence verifier`.
+
+Rollback/failure action: Revert only the verifier/parser/runbook surface. Do not
+replace rejected evidence with a mock wallet, local chain, simulated provider, or
+browser-held key.
 
 ## Primary route contract
 
