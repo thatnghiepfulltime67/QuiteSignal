@@ -30,10 +30,24 @@ export interface ReceiptBinding {
   transactionHash: Hash;
 }
 
+export interface CanonicalDeployment {
+  workItemId: 'DEP-01';
+  deployer: Address;
+  feed: Address;
+  feedRuntimeCodeHash: Hash;
+  threshold: bigint;
+  comparison: 'greater-or-equal' | 'less-than';
+  observationNotBefore: bigint;
+  maximumFeedAgeSeconds: bigint;
+  poolId: Hash;
+  deploymentSalt: Hash;
+}
+
 export interface ProtocolManifest {
   schemaVersion: 1;
   chainId: number;
   epochVerificationBlock?: bigint;
+  canonicalDeployment?: CanonicalDeployment;
   contracts: ContractBinding[];
   pools: PoolBinding[];
   receipts: ReceiptBinding[];
@@ -118,6 +132,51 @@ function deploymentEpochBlock(value: unknown): bigint | undefined {
   return block;
 }
 
+function positiveBigint(value: unknown, path: string): bigint {
+  const parsed = BigInt(decimal(value, path));
+  if (parsed <= 0n) fail(`${path} must be positive.`);
+  return parsed;
+}
+
+function canonicalDeployment(value: unknown): CanonicalDeployment | undefined {
+  if (value === undefined) return undefined;
+  const deployment = record(value, 'manifest.deployment');
+  if (deployment.configuration === undefined) return undefined;
+  if (deployment.workItemId !== 'DEP-01') fail('manifest.deployment.workItemId must be DEP-01.');
+  const configuration = record(deployment.configuration, 'manifest.deployment.configuration');
+  const comparison = text(configuration.comparison, 'manifest.deployment.configuration.comparison');
+  if (comparison !== 'greater-or-equal' && comparison !== 'less-than') {
+    fail('manifest.deployment.configuration.comparison is unsupported.');
+  }
+  return {
+    workItemId: 'DEP-01',
+    deployer: address(deployment.deployer, 'manifest.deployment.deployer'),
+    feed: address(configuration.feed, 'manifest.deployment.configuration.feed'),
+    feedRuntimeCodeHash: hash(
+      configuration.feedRuntimeCodeHash,
+      'manifest.deployment.configuration.feedRuntimeCodeHash',
+    ),
+    threshold: positiveBigint(
+      configuration.threshold,
+      'manifest.deployment.configuration.threshold',
+    ),
+    comparison,
+    observationNotBefore: positiveBigint(
+      configuration.observationNotBefore,
+      'manifest.deployment.configuration.observationNotBefore',
+    ),
+    maximumFeedAgeSeconds: positiveBigint(
+      configuration.maximumFeedAgeSeconds,
+      'manifest.deployment.configuration.maximumFeedAgeSeconds',
+    ),
+    poolId: hash(configuration.poolId, 'manifest.deployment.configuration.poolId'),
+    deploymentSalt: hash(
+      configuration.deploymentSalt,
+      'manifest.deployment.configuration.deploymentSalt',
+    ),
+  };
+}
+
 export function parseManifest(value: unknown): ProtocolManifest {
   rejectForbiddenFields(value);
   const input = record(value, 'manifest');
@@ -176,10 +235,12 @@ export function parseManifest(value: unknown): ProtocolManifest {
   )
     fail('receipt transaction hashes must be unique.');
   const epochVerificationBlock = deploymentEpochBlock(input.deployment);
+  const canonical = canonicalDeployment(input.deployment);
   return {
     schemaVersion: 1,
     chainId: SEPOLIA_CHAIN_ID,
     ...(epochVerificationBlock === undefined ? {} : { epochVerificationBlock }),
+    ...(canonical === undefined ? {} : { canonicalDeployment: canonical }),
     contracts,
     pools,
     receipts,

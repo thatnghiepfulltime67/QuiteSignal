@@ -6,7 +6,7 @@ import { createPublicClient, http } from 'viem';
 import { sepolia } from 'viem/chains';
 
 import { parseManifest } from './manifest.js';
-import { verifyManifest, type ReadOnlyClient } from './verify.js';
+import { verifyManifest, verifyReleaseManifest, type ReadOnlyClient } from './verify.js';
 
 const ROOT = resolve(fileURLToPath(new URL('../../../', import.meta.url)));
 
@@ -30,7 +30,9 @@ async function main(): Promise<void> {
     chain: sepolia,
     transport: http(rpcUrl, { retryCount: 0, timeout: 30_000 }),
   });
-  const report = await verifyManifest(client as unknown as ReadOnlyClient, manifest);
+  const report = manifest.canonicalDeployment
+    ? await verifyReleaseManifest(client as never, manifest)
+    : await verifyManifest(client as unknown as ReadOnlyClient, manifest);
   const output = `${JSON.stringify(report, null, 2)}\n`;
   const outputPath = argument('out');
   if (outputPath) writeFileSync(resolve(ROOT, outputPath), output);

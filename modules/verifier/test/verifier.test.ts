@@ -4,14 +4,23 @@ import test from 'node:test';
 import { keccak256, type Address, type Hash, type Hex } from 'viem';
 
 import { parseManifest, type ProtocolManifest } from '../src/manifest.js';
-import { verifyManifest, type ReadOnlyClient } from '../src/verify.js';
+import {
+  verifyManifest,
+  verifyReleaseManifest,
+  type ReleaseReadOnlyClient,
+  type ReadOnlyClient,
+} from '../src/verify.js';
 
 const FIXTURE = '0x0000000000000000000000000000000000000001' as Address;
 const WRAPPER = '0x0000000000000000000000000000000000000002' as Address;
 const ADAPTER = '0x0000000000000000000000000000000000000003' as Address;
 const POOL = '0x0000000000000000000000000000000000000004' as Address;
+const FACTORY = '0x0000000000000000000000000000000000000005' as Address;
+const FEED = '0x0000000000000000000000000000000000000006' as Address;
 const TX = `0x${'11'.repeat(32)}` as Hash;
 const RUNTIME = '0x60006000' as Hex;
+const POOL_ID = `0x${'22'.repeat(32)}` as Hash;
+const DEPLOYMENT_SALT = `0x${'33'.repeat(32)}` as Hash;
 
 function manifest(): ProtocolManifest {
   return parseManifest({
@@ -159,5 +168,97 @@ test('T-VERIFIER-DEP-01-02: malformed deployment epoch blocks fail before an RPC
   assert.throws(
     () => parseManifest({ ...manifest(), deployment: { deployedAtBlock: '11.3' } }),
     /canonical decimal/,
+  );
+});
+
+function releaseManifest(): ProtocolManifest {
+  return parseManifest({
+    ...manifest(),
+    contracts: [
+      ...manifest().contracts,
+      { id: 'factory', address: FACTORY, runtimeCodeHash: keccak256(RUNTIME) },
+    ],
+    deployment: {
+      workItemId: 'DEP-01',
+      deployedAtBlock: '11383123',
+      deployer: FIXTURE,
+      configuration: {
+        feed: FEED,
+        feedRuntimeCodeHash: keccak256(RUNTIME),
+        threshold: '200000000000',
+        comparison: 'greater-or-equal',
+        observationNotBefore: '100',
+        maximumFeedAgeSeconds: '1000',
+        poolId: POOL_ID,
+        deploymentSalt: DEPLOYMENT_SALT,
+      },
+    },
+  });
+}
+
+function releaseClient(
+  options: {
+    unsupportedCollateral?: boolean;
+    wrongFactoryPool?: boolean;
+    staleFeed?: boolean;
+  } = {},
+): ReleaseReadOnlyClient {
+  const base = client();
+  return {
+    ...base,
+    getBalance: async () => 0n,
+    getBlock: async () => ({ timestamp: 1_000n }),
+    readContract: async (parameters: unknown) => {
+      const name = (parameters as { functionName: string }).functionName;
+      if (name === 'config') {
+        return {
+          confidentialCollateral: WRAPPER,
+          resolutionAdapter: ADAPTER,
+          deadline: 100n,
+          commitTimeout: 60n,
+          kMin: 2,
+          aggregateTimeout: 600n,
+          resolutionGrace: 600n,
+        };
+      }
+      if (name === 'epoch') return base.readContract(parameters);
+      if (name === 'poolIdFor') return POOL_ID;
+      if (name === 'poolOf') return options.wrongFactoryPool ? FIXTURE : POOL;
+      if (name === 'supportsInterface') return !options.unsupportedCollateral;
+      if (name === 'target') return FEED;
+      if (name === 'targetRuntimeCodeHash') return keccak256(RUNTIME);
+      if (name === 'greaterOrEqual') return true;
+      if (name === 'threshold') return 200_000_000_000n;
+      if (name === 'observationNotBefore') return 100n;
+      if (name === 'maximumFeedAge') return 1_000n;
+      if (name === 'latestRoundData')
+        return [1n, 200_000_000_000n, 1n, options.staleFeed ? 0n : 900n, 1n];
+      throw new Error(`Unexpected read: ${name}`);
+    },
+  };
+}
+
+test('T-VERIFIER-VER-01-01: canonical public release facts verify without confidential data', async () => {
+  const report = await verifyReleaseManifest(releaseClient(), releaseManifest());
+  assert.equal(report.status, 'passed');
+  assert.equal(report.checks.factoryPoolBinding, true);
+  assert.equal(report.checks.collateralInterface, true);
+  assert.equal(report.checks.adapterConfiguration, true);
+  assert.equal(report.checks.feedRuntimeAndRound, true);
+  assert.equal(report.checks.adapterZeroNativeCustody, true);
+});
+
+test('T-VERIFIER-VER-01-02: canonical factory, collateral, and feed mutations reject', async () => {
+  await assert.rejects(
+    verifyReleaseManifest(releaseClient({ wrongFactoryPool: true }), releaseManifest()),
+    /factory pool binding/,
+  );
+  await assert.rejects(
+    verifyReleaseManifest(releaseClient({ unsupportedCollateral: true }), releaseManifest()),
+    /does not support/,
+  );
+  await assert.rejects(
+    verifyReleaseManifest(releaseClient({ staleFeed: true }), releaseManifest()),
+    /feed latest round/,
   );
 });
