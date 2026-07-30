@@ -15,14 +15,15 @@
   ],
   "scripts": {
     "doctor": "tsx ops/scripts/doctor.mts",
-    "format:check": "prettier --check package.json package-lock.json tsconfig.base.json prettier.config.mjs ops evidence modules/domain modules/protocol modules/verifier",
-    "format:write": "prettier --write package.json package-lock.json tsconfig.base.json prettier.config.mjs ops evidence modules/domain modules/protocol modules/verifier",
+    "format:check": "prettier --check package.json package-lock.json tsconfig.base.json prettier.config.mjs ops evidence modules/domain modules/protocol modules/verifier modules/confidential-client",
+    "format:write": "prettier --write package.json package-lock.json tsconfig.base.json prettier.config.mjs ops evidence modules/domain modules/protocol modules/verifier modules/confidential-client",
     "lint": "npm run format:check && npm run typecheck",
     "typecheck": "tsc --noEmit --project tsconfig.base.json",
     "compile": "npm run typecheck && npm run --workspace @quitesignal/protocol compile",
     "test:unit": "node --test --test-reporter=spec",
     "test:interfaces": "npm run --workspace @quitesignal/protocol test:interfaces",
     "test:verifier": "npm run --workspace @quitesignal/verifier test",
+    "test:sdk": "npm run --workspace @quitesignal/confidential-client test",
     "verify:protocol:sepolia": "npm run --workspace @quitesignal/verifier verify:sepolia --",
     "verify:g5:evidence": "npm run --workspace @quitesignal/verifier verify:g5 --",
     "test:adapter:sepolia": "npm run --workspace @quitesignal/protocol test:adapter:sepolia --",
@@ -45,7 +46,7 @@
     "verify:g4:evidence": "tsx ops/scripts/verify-g4-evidence.mts",
     "scan:secrets": "tsx ops/scripts/check-secrets.mts",
     "scan:dependencies": "npm audit --audit-level=critical && tsx ops/scripts/dependency-report.mts",
-    "check:offline": "npm run format:check && npm run lint && npm run compile && npm run test:verifier && npm run scan:secrets",
+    "check:offline": "npm run format:check && npm run lint && npm run compile && npm run test:verifier && npm run test:sdk && npm run scan:secrets",
     "check:sepolia:read": "npm run doctor && npm run budget:status"
   },
   "devDependencies": {
