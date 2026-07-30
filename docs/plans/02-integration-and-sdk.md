@@ -199,8 +199,7 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: none; `VER-01` is complete and the next P2 item must be selected
-before implementation.
+Active slice: `AUT-01-PLAN-01`.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
 consumer bindings, deployment tests, this record, evidence ledger entries, and
@@ -498,6 +497,54 @@ block `11383180` and wrote
 checks plus factory pool binding, ERC-7984 support, immutable adapter configuration,
 feed runtime/round validity, and zero native adapter custody. VER-01 is complete as
 a G6 component; G6 remains `not_run` until automation, indexer, and live cases pass.
+
+## AUT-01 work-item record
+
+ID: `AUT-01`
+
+Status: `in_progress`
+
+Outcome: Add an optional, permissionless lifecycle runner that accelerates public
+pool transitions without becoming a correctness, custody, or decryption authority.
+
+### AUT-01-PLAN-01
+
+Status: `in_progress`
+
+Output files: this work-item record, public action policy/types, deterministic
+dry-run/race tests, a Sepolia command/runbook, and a later poll/once implementation.
+
+Acceptance criteria: The runner reads the canonical manifest or an explicitly named
+public pool, derives at most one action from current public state, and supports
+`dry-run`, `once`, `poll`, and `health` modes. It may call only permissionless pool
+transitions: pending expiry, close, aggregate-decrypt request, aggregate proof
+finalization using public-gateway proof output, resolution settlement, and immutable
+timeout/grace cancellation. It never calls owner `claim`, `refund`, score, wrap,
+transfer, or approval methods. Every write re-reads state, obeys per-pool/per-loop
+budgets, treats race/replacement as expected retryable outcomes, and creates no
+durable schema/log field for confidential input, handle, proof, position, payout,
+or score data.
+
+Privacy/custody impact: The runner holds at most an optional dedicated Sepolia gas
+signer. It does not hold user keys or confidential tokens, cannot obtain owner-only
+values, and invokes public Nox aggregate proof retrieval only after the pool itself
+has permitted public aggregate decryption. It persists no proof bytes or handles.
+
+Funds location/recovery impact: Automation cannot move assets to itself. It may
+advance a pool to an immutable refundable state only after its on-chain timeout/grace
+conditions; owners retain direct terminal action/recovery paths if the runner stops.
+
+Checks: pure action-policy/race/backoff/schema tests, static forbidden-field scan,
+`npm run check:offline`, named Sepolia dry-run/once evidence, and `git diff --check`.
+
+Evidence location: `evidence/{offline,sepolia}/G6/AUT-01-RELAYER.json` and later
+named lifecycle reports.
+
+Intended commit: `feat: add permissionless lifecycle relayer`.
+
+Rollback/failure action: Disable/remove the optional service only. Do not introduce
+a keeper role, service-held user signer, manual state transition, trusted proof
+cache, or direct asset call to compensate for a failed runner.
 
 ## Dependency graph
 
