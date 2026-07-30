@@ -2,9 +2,10 @@ import './styles.css';
 import { parsePublicManifest, type PublicManifest } from './manifest.js';
 import { presentMarket } from './market.js';
 import { validateSignalDraft } from './signal.js';
+import { submitSignalIntent } from './wallet.js';
 
 interface Eip1193Provider {
-  request(args: { method: string }): Promise<unknown>;
+  request(args: { method: string; params?: unknown[] }): Promise<unknown>;
   on(event: 'accountsChanged' | 'chainChanged', listener: () => void): void;
 }
 
@@ -37,21 +38,25 @@ function render(message?: string): void {
         : `<section class="hero"><p class="eyebrow">{ confidential forecasts }</p><h1>Quiet signals.<br />Public proof.</h1><p>Signals are encrypted locally. Wallet activity, timing, and the eventual aggregate are public.</p><a class="primary" href="/markets">View market</a></section>`;
   root.innerHTML = `<main class="shell"><header><a class="wordmark" href="/markets">QuietSignal</a><button class="wallet" id="wallet">${walletState}</button></header><nav aria-label="Primary"><a href="/markets">Market</a><a href="${manifest ? `/pool/${manifest.poolAddress}` : '/markets'}">Public facts</a></nav><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section>${content}<section class="panel"><p class="eyebrow public">{ canonical Sepolia deployment }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : 'Loading verified manifest…')}</p></section></main>`;
   document.querySelector<HTMLButtonElement>('#wallet')?.addEventListener('click', connectWallet);
-  document.querySelector<HTMLFormElement>('#signal-form')?.addEventListener('submit', (event) => {
+  document.querySelector<HTMLFormElement>('#signal-form')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const status = document.querySelector<HTMLParagraphElement>('#signal-status');
     try {
-      validateSignalDraft({
+      const values = validateSignalDraft({
         stake: String(data.get('stake') ?? ''),
         probability: String(data.get('probability') ?? ''),
       });
+      if (!window.ethereum || !manifest) throw new Error('Connect a Sepolia wallet first.');
+      if (status)
+        status.textContent = 'Encrypting locally and requesting one signal intent…';
+      const result = await submitSignalIntent(window.ethereum, manifest.poolAddress, values);
       event.currentTarget.reset();
       if (status)
-        status.textContent = 'Inputs are valid. Encryption is not started and no funds moved.';
+        status.textContent = `Signal intent submitted: ${result.transactionHash.slice(0, 10)}…. Collateral callback and finalization are still required.`;
     } catch (error) {
       if (status)
-        status.textContent = `${error instanceof Error ? error.message : 'Invalid input.'} No funds moved; retrying is safe.`;
+        status.textContent = `${error instanceof Error ? error.message : 'Unable to prepare signal.'} Inspect wallet activity before retrying.`;
     }
   });
 }
