@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "workItemId": "IDX-01",
+  "environment": "sepolia-read",
+  "status": "passed",
+  "sourceCommit": "0a9e2cf4f5c7cd2a169a9e97d44d7f41a524c3a0",
+  "manifest": {
+    "path": "evidence/sepolia/G6/LIVE-01-MANIFEST.json",
+    "fingerprint": "0x4cb496d009dd1c9c6775b81ea8b7a737f58c81475df429d2fbe3a1f0dedb1570",
+    "pool": "0xc900494624d7A785503104e7f98bb5C54Df950DB",
+    "epochVerificationBlock": "11383347"
+  },
+  "finalizedBlock": "11383447",
+  "eventCount": 5,
+  "eventKinds": [
+    "epoch-opened",
+    "epoch-closed",
+    "aggregate-requested",
+    "aggregate-finalized",
+    "settlement-finalized"
+  ],
+  "checkpoint": {
+    "schemaVersion": 1,
+    "reducerVersion": 1,
+    "chainId": 11155111,
+    "manifestHash": "0x4cb496d009dd1c9c6775b81ea8b7a737f58c81475df429d2fbe3a1f0dedb1570",
+    "blockNumber": "11383415",
+    "blockHash": "0xf9edcf831ed5b64c79948696a9b6ac11654cc756a1b7690fba03ef133904b9ae",
+    "model": {
+      "phase": "settled",
+      "deadline": "1785426084",
+      "minimumParticipants": 2,
+      "participantCount": 2,
+      "aggregateRequestId": "0x2d564f1d074588a4e6eeec563763841fc5ea083a7871ebddb8af762f073f7de5",
+      "publicYes": "25",
+      "publicNo": "15",
+      "winner": 1,
+      "settledRoundId": "18446744073709586474",
+      "settledAnswer": "191765280000"
+    }
+  },
+  "projection": {
+    "phase": "settled",
+    "deadline": "1785426084",
+    "minimumParticipants": 2,
+    "participantCount": 2,
+    "aggregateRequestId": "0x2d564f1d074588a4e6eeec563763841fc5ea083a7871ebddb8af762f073f7de5",
+    "publicYes": "25",
+    "publicNo": "15",
+    "winner": 1,
+    "settledRoundId": "18446744073709586474",
+    "settledAnswer": "191765280000"
+  },
+  "checks": {
+    "manifestRuntimeAndBinding": true,
+    "finalizedDepth": true,
+    "orderedPublicEvents": true,
+    "checkpointBlockHash": true
+  }
+}

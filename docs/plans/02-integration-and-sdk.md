@@ -199,7 +199,7 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `LIVE-01-PLAN-01`; AUT-01 awaits its separately verified public-result
+Active slice: `LIVE-02-PLAN-01`; AUT-01 awaits its separately verified public-result
 boundary and a fresh threshold lifecycle.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
@@ -965,7 +965,7 @@ family remain required before any G6 conclusion.
 
 ### LIVE-01-VERIFY-01
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Generate a public manifest for the fresh LIVE-01 deployment and verify
 its runtime, immutable pool configuration, historical initial epoch, and all named
@@ -1007,7 +1007,55 @@ verified; never fill a missing field manually.
 Partial evidence: Source commit `d4d78a0` generated the one-time manifest from 22
 LIVE-01 ledger receipts. The existing independent verifier passed at block
 `11383443`; both artifacts are recorded under `evidence/sepolia/G6/`. The exact
-manifest still requires IDX-01 replay before this slice completes.
+manifest replay passed at finalized block `11383447`, producing the settled
+two-participant projection in `evidence/sepolia/G6/LIVE-01-READ-MODEL.json`.
+LIVE-01 now has a complete success-lifecycle component set but does not pass G6
+without the independent recovery family and remaining P2 components.
+
+## LIVE-02 work-item record
+
+ID: `LIVE-02`
+
+Status: `in_progress`
+
+### LIVE-02-PLAN-01
+
+Status: `in_progress`
+
+Outcome: Plan a fresh, receipt-backed Sepolia recovery lifecycle that proves the
+mandatory below-threshold and timeout/recovery paths without reusing LIVE-01.
+
+Output files: named recovery case design, public manifest/verifier/indexer evidence
+plan, spend forecast, this record, and traceability updates. No protocol source or
+live pool is changed in this planning slice.
+
+Acceptance criteria: Select the smallest fresh case set that proves below-k
+non-disclosure/refundability plus one threshold timeout/recovery transition. Each
+case must use a separate immutable pool and known fund location, use the existing
+contract recovery function rather than a mock/manual transfer, and preserve all
+failed/reverted receipts. Existing G5 recovery fixtures may inform setup but cannot
+be relabeled as G6 evidence.
+
+Privacy/custody impact: Recovery cases retain the same Nox/contract privacy
+boundary. Evidence stores only public pool state, receipts, and runtime/configuration
+facts; it cannot contain owner inputs, Nox material, or owner views.
+
+Funds location/recovery impact: Each case explicitly documents whether collateral is
+still with its owner, held by the pool, or returned through the approved on-chain
+terminal path. The plan itself has no write or asset movement.
+
+Checks: historical G5 recovery runner audit, current budget status, exact named
+Sepolia preflight/write/read verifier plan, `npm run check:offline`, and
+`git diff --check`.
+
+Evidence location: `evidence/{offline,sepolia}/G6/LIVE-02-*.json`; no G6 conclusion
+is permitted until the public evidence verifies every named recovery receipt.
+
+Intended commit: `docs: plan live recovery lifecycle evidence`.
+
+Rollback/failure action: Stop at any failed case, retain the receipt and pool state,
+and use only its existing permissionless recovery transition. Never convert a
+success-case pool into recovery evidence or substitute an off-chain transfer.
 
 ## Dependency graph
 

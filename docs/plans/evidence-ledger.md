@@ -84,8 +84,10 @@ not a G6 pass. Its two-owner pool `0xc900494624d7A785503104e7f98bb5C54Df950DB`
 has 22 append-only P2 receipts. The generated manifest and independent verifier
 report, `evidence/sepolia/G6/LIVE-01-MANIFEST.json` and
 `evidence/sepolia/G6/LIVE-01-VERIFIER.json`, passed with the historical initial
-epoch at block `11383347` and verification at `11383443`. The required replay of
-this exact manifest and the separate recovery family remain pending.
+epoch at block `11383347` and verification at `11383443`. IDX-01 replayed this
+exact manifest into a settled two-participant projection at finalized block
+`11383447` in `evidence/sepolia/G6/LIVE-01-READ-MODEL.json`. The separate recovery
+family and remaining P2 components remain pending.
 
 ### G5 partial history
 
