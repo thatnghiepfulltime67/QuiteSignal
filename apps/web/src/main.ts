@@ -154,21 +154,21 @@ async function revealOwner(): Promise<void> {
 }
 
 async function refreshLifecycle(): Promise<void> {
-  if (!window.ethereum || !manifest) {
+  if (!manifest) {
     lifecycleMessage =
-      'Direct public read unavailable. Connect a Sepolia wallet, then retry; no funds moved.';
+      'The canonical public pool is unavailable. Reload the manifest, then retry; no funds moved.';
     render();
     return;
   }
-  lifecycleMessage = 'Refreshing direct public pool state…';
+  lifecycleMessage = 'Refreshing direct Ethereum Sepolia public pool state…';
   render();
   try {
-    const epoch = await readPublicEpoch(window.ethereum, manifest.poolAddress);
+    const epoch = await readPublicEpoch(manifest.poolAddress);
     const view = presentLifecycle(epoch.state);
     lifecycleMessage = `${view.label}: ${view.explanation} Participants: ${epoch.participantCount}. ${view.recovery}`;
   } catch {
     lifecycleMessage =
-      'Direct public read failed. Retry safely or verify the pool through a public explorer.';
+      'Direct public read is degraded. Retry safely or verify the canonical pool through an independent public explorer.';
   }
   render();
 }
@@ -211,7 +211,10 @@ window.ethereum?.on('chainChanged', () => {
   render('Reconnect after selecting Ethereum Sepolia.');
 });
 loadManifest()
-  .then(() => render())
+  .then(() => {
+    render();
+    void refreshLifecycle();
+  })
   .catch(() =>
     render('The canonical manifest could not be validated. Do not continue until it is available.'),
   );

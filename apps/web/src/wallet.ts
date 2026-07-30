@@ -3,6 +3,7 @@ import {
   createWalletClient,
   custom,
   encodeFunctionData,
+  http,
   type Address,
   type Hex,
 } from 'viem';
@@ -19,6 +20,8 @@ import {
   requestId,
 } from '@quitesignal/confidential-client';
 import type { ValidSignalDraft } from './signal.js';
+
+const SEPOLIA_PUBLIC_READ_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 
 export interface BrowserProvider {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
@@ -95,10 +98,12 @@ async function waitForConfirmedReceipt(
 }
 
 export async function readPublicEpoch(
-  provider: BrowserProvider,
   pool: string,
 ): Promise<{ state: number; participantCount: number; publicYes: bigint; publicNo: bigint }> {
-  const client = createPublicClient({ chain: sepolia, transport: custom(provider) });
+  const client = createPublicClient({
+    chain: sepolia,
+    transport: http(SEPOLIA_PUBLIC_READ_RPC, { retryCount: 0, timeout: 10_000 }),
+  });
   const epoch = await createViemProtocolPublicReader(client).readEpoch(publicAddress(pool));
   return {
     state: epoch.state,
