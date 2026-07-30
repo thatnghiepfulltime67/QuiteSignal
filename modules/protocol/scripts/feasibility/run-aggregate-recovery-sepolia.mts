@@ -41,6 +41,7 @@ const PUBLIC_DECRYPT_MAX_ATTEMPTS = 8;
 const PUBLIC_DECRYPT_RETRY_DELAY_MS = 5_000;
 const RPC_TIMEOUT_MS = 30_000;
 const EXPECTED_REVERT_GAS = 2_000_000n;
+const EXPECTED_PROOF_REVERT_GAS = 8_000_000n;
 const LIFECYCLE_WAIT_PADDING_MS = 5_000;
 
 interface Artifact {
@@ -836,11 +837,12 @@ async function main(): Promise<void> {
     to: Address,
     data: Hex,
     action: string,
+    gasLimit: bigint = EXPECTED_REVERT_GAS,
   ): Promise<Hash> => {
     failureStage = `${action} dry-run planning`;
     const fees = await publicClient.estimateFeesPerGas();
     const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
-    const maximumCost = EXPECTED_REVERT_GAS * maxFeePerGas;
+    const maximumCost = gasLimit * maxFeePerGas;
     assertBudget(ledger, maximumCost);
     assertSingleTransactionBudget(maximumCost, singleTransactionCapWei);
     failureStage = action;
@@ -848,7 +850,7 @@ async function main(): Promise<void> {
       account,
       to,
       data,
-      gas: EXPECTED_REVERT_GAS,
+      gas: gasLimit,
       maxFeePerGas,
     });
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
@@ -1322,6 +1324,7 @@ async function main(): Promise<void> {
       publicNo.decryptionProof,
     ]),
     'Substituted aggregate plaintext',
+    EXPECTED_PROOF_REVERT_GAS,
   );
   await send(
     deployer,
