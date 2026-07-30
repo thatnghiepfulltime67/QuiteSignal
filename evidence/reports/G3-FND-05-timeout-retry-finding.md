@@ -148,3 +148,13 @@ no remaining contract custody and remains excluded from G3 evidence.
 The public feasibility client now disables response caching. Every lifecycle wait
 must therefore observe a fresh Ethereum Sepolia block timestamp; an unavailable RPC
 response remains a failing observation rather than a pass condition.
+
+The eighth fresh attempt from source commit `5d719a7` deployed fixture
+`0x7030020b8def6ec1525139cab662a726b7eec68d`, unchanged wrapper
+`0xba9f988ecc52947537dcbebe9435d74bc7194cd6`, and timeout spike
+`0xfb9be2653c1d3cb183ab6d1917d7a20f825acb57` at blocks `11379697` through
+`11379735`. It completed the below-k path and recorded early close, duplicate refund,
+and early timeout expected-revert receipts. The Viem lifecycle polling loop again did
+not advance after the state-entry timeout elapsed, despite disabled cache. No timeout
+cancellation or refund was sent. This is an orchestration defect; the fixture is
+recoverable with its ignored actor record and excluded from G3 evidence.

@@ -566,6 +566,15 @@ confidential balances locally, and deleted the ignored actor record.
 The public feasibility client now disables response caching, so every lifecycle wait
 observes a fresh Ethereum Sepolia block timestamp.
 
+The eighth attempt from `5d719a7` deployed fixture
+`0x7030020b8def6ec1525139cab662a726b7eec68d`, unchanged wrapper
+`0xba9f988ecc52947537dcbebe9435d74bc7194cd6`, and timeout spike
+`0xfb9be2653c1d3cb183ab6d1917d7a20f825acb57` at blocks `11379697` through
+`11379735`. It completed below-k and recorded the expected early rejections, but
+Viem lifecycle polling did not advance after the on-chain timeout. No cancellation
+or refund was sent. The fixture is recoverable and excluded; replace lifecycle waits
+with bounded direct RPC latest-block reads before another fresh verification.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:
