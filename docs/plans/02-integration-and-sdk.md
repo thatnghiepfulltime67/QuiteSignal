@@ -193,14 +193,13 @@ SDK-03 is complete and remains a G6 component only.
 
 ID: `DEP-01`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: none; `DEP-01` is complete and the next P2 item must be selected
-before implementation.
+Active slice: `VER-01-PLAN-01`.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
 consumer bindings, deployment tests, this record, evidence ledger entries, and
@@ -443,6 +442,52 @@ successful receipts, and the empty initial epoch specifically at block `11383123
 The sanitized report is `evidence/sepolia/G6/DEP-01-DEPLOYMENT.json`. DEP-01 is
 complete as a G6 component; G6 remains `not_run` until every required P2 live item
 passes.
+
+## VER-01 work-item record
+
+ID: `VER-01`
+
+Status: `in_progress`
+
+Outcome: Turn the existing manifest checker into a public, read-only release
+verifier for the canonical factory, pool, collateral, adapter, and feed boundary.
+
+### VER-01-PLAN-01
+
+Status: `in_progress`
+
+Output files: this work-item record, verifier acceptance/test matrix additions, and
+the following implementation-slice design before verifier code changes.
+
+Acceptance criteria: The released verifier must independently validate the Sepolia
+chain, manifest schema and sanitization, all observed runtime hashes, every recorded
+receipt, factory pool-id/address binding, pool immutable config, ERC-7984 interface
+support, adapter target/runtime/configuration, target feed round shape, zero native
+adapter custody, and a manifest-declared public epoch snapshot. It must distinguish
+immutable baseline checks from state-specific lifecycle evidence and fail closed on
+wrong chain, hash, binding, target, state, or receipt. It can claim only observables;
+confidential conservation, private ACL, payout, and score conclusions remain bound
+to named Sepolia lifecycle evidence rather than guessed from public data.
+
+Privacy/custody impact: The verifier takes a public manifest and public RPC only. It
+has no signer, Nox client, decryption request, event-calldata storage, or schema that
+can accept confidential amounts, owner positions, handles, or proofs.
+
+Funds location/recovery impact: Read-only calls cannot affect any deployment or
+live pool. A failed verification signals a public release/evidence mismatch; direct
+on-chain recovery remains available without a verifier service.
+
+Checks: pure parser/mutation tests, static public-schema scan, `npm run check:offline`,
+canonical read-only Sepolia verifier run, and `git diff --check`.
+
+Evidence location: `evidence/{offline,sepolia}/G6/VER-01-PUBLIC-VERIFIER.json` and
+the relevant manifest/lifecycle reports.
+
+Intended commit: `feat: add public release verifier`.
+
+Rollback/failure action: Revert the verifier slice only; retain the already verified
+DEP-01 baseline. Do not add a trusted backend, relax schema sanitization, or report
+non-observable confidential facts as verifier output.
 
 ## Dependency graph
 
