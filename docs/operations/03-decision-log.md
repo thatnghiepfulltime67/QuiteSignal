@@ -290,3 +290,26 @@ resolver, or backend role. Historical P0/P1 fixtures are retained as evidence an
 are not silently relabeled as product deployment evidence. DEP-01 must record the
 new artifact/runtime hashes and independently verify interface support before the
 canonical manifest is published.
+
+## ADR-021 — Browser-native web shell with build-only tooling
+
+**Status:** Accepted
+
+The web product will use a small TypeScript single-page application built with a
+pinned Vite development dependency. It uses browser-standard DOM APIs and the
+EIP-1193 provider interface rather than adding a UI framework, analytics, hosted
+backend, wallet-custody SDK, or application database.
+
+Vite is a build/development tool only and receives no runtime authority, user
+plaintext, wallet credential, Nox material, or chain-writing role. The browser loads
+the canonical public manifest as an asset and validates it before use; addresses are
+not copied into application source. Wallet connection is initiated explicitly by the
+user and the shell persists neither account nor provider state. Later signal and
+owner flows remain browser-local and must preserve the existing Nox and wallet trust
+boundaries.
+
+This adds a limited supply-chain dependency, tracked as R-23. The lockfile,
+license/advisory scan, source boundary tests, and real Sepolia browser evidence are
+required before release. It changes presentation/build architecture only; it adds no
+custody, protocol authority, privacy claim, contract state transition, or public
+contract interface.

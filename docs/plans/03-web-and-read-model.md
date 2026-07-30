@@ -1,6 +1,6 @@
 # P3 — Web product and public verification experience
 
-Status: `not_started`
+Status: `in_progress`
 
 ## Objective
 
@@ -26,6 +26,57 @@ depending on a mock, private database, or privileged backend.
 | WEB-06 | Verification experience | Manifest/code hash/invariant/evidence view | stale manifest, wrong chain, verifier failure | `feat: add public verification view` |
 | WEB-07 | Accessibility/resilience | Keyboard, screen reader, mobile, offline/RPC/gateway states | automated a11y, console/log scan, responsive matrix | `test: harden accessible recovery ux` |
 | WEB-08 | Real browser lifecycle | Live browser e2e and sanitized result report | primary success plus one refund/recovery path | `test: prove live web user journey` |
+
+## WEB-01 work-item record
+
+ID: `WEB-01`
+
+Status: `in_progress`
+
+Outcome: Establish the browser-only application shell, canonical-manifest boundary,
+and wallet/network state boundary for the real Sepolia product flow.
+
+Output files: `apps/web/` workspace source, build configuration and package metadata,
+focused shell tests, root web scripts, dependency lockfile, this record, the
+dependency/source register, risk register, and decision log.
+
+Architecture decision: Use a small Vite-built TypeScript single-page application
+with browser-standard DOM APIs and EIP-1193 wallet discovery. This deliberately
+avoids an application server, a UI framework, a runtime demo fixture, an analytics
+SDK, and a wallet-custody dependency. The canonical deployment manifest remains the
+single source of addresses and is loaded from the repository asset rather than copied
+into source constants. Route names retain the documented public meaning while their
+implementation may adapt to the SPA router boundary.
+
+Acceptance criteria: The shell renders the DESIGN.md dark/cream semantic system,
+privacy legend, accessible navigation, and an explicit network/wallet status. It
+validates a public canonical-manifest asset before displaying pool facts, handles no
+provider, disconnected, connecting, wrong-chain, connected, account-change, and
+chain-change states, and offers a recovery-safe reconnect action. It contains no
+confidential input field, signer persistence, backend request, private store,
+fixture/demo import, handwritten address, or transaction action.
+
+Privacy/custody impact: The browser reads only public manifest and wallet state.
+It does not instantiate Nox, collect a signal, request an owner decrypt, log wallet
+events, persist an account, or transmit any wallet or confidential data to a service.
+Wallet connection remains an explicit user action.
+
+Funds location/recovery impact: WEB-01 cannot sign or submit a transaction and
+therefore cannot move funds. Provider or RPC loss leaves the user with a clear,
+retry-safe reconnect action; direct on-chain recovery remains outside this shell.
+
+Checks: focused TypeScript manifest/wallet-state tests, production web build,
+`npm run test:web`, `npm run typecheck`, `npm run check:offline`, dependency scan,
+and `git diff --check`.
+
+Evidence location: source/test output only. WEB-01 cannot claim browser lifecycle
+or G7 evidence; later WEB-08 must exercise a real Sepolia user journey.
+
+Intended commit: `feat: add application and wallet shell`.
+
+Rollback/failure action: Remove the isolated web workspace and its build dependency.
+Do not replace a failed manifest or wallet boundary with hard-coded addresses, a
+trusted backend, a demo mode, or a stored wallet/session record.
 
 ## Primary route contract
 
