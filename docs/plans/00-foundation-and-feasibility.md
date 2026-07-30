@@ -489,6 +489,13 @@ Evidence path: `evidence/offline/G3/FND-05-TIMEOUT.json` and
 
 Intended commit: `test: isolate threshold timeout evidence`.
 
+Core-path triage: FND-05B is not optional. It directly covers the G3 k-gate,
+aggregate disclosure scope, permissionless timeout, and confidential refund recovery.
+The previous coupled runner is supporting orchestration and has been replaced by
+bounded slices; further orchestration features that do not improve those acceptance
+criteria are deferred. Any future removal must follow Plan §2.2 and cannot waive
+`T-FND-05-AGGREGATE-01` or `T-FND-05-TIMEOUT-01`.
+
 Privacy impact: artificial test values are encrypted before submission and no
 owner-shaped handle is marked publicly decryptable. Public permission is granted
 only to cohort YES/NO aggregates after the threshold; public identities, membership,

@@ -40,6 +40,21 @@ and decision log; create an ADR when they alter trust, custody, privacy, state
 transitions, or a public interface. Update the plan, risks, traceability, and
 evidence requirements in the same independently reviewable slice.
 
+## 2.2 Core-path triage
+
+When a feature or implementation path repeatedly fails, classify it before adding
+another retry. Keep and repair work that is required by a product core flow, a named
+gate, a privacy claim, a funds-recovery guarantee, or a security invariant. Defer or
+remove work that is not required by any of those commitments when doing so reduces
+operational complexity and improves delivery confidence.
+
+Every deferral or removal records the affected requirements, user-facing impact,
+reason, replacement or absence of replacement, and rollback implications in the
+active work package. It must remove obsolete code, copy, tests, and claims rather
+than leave an unsupported optional path. A core-path requirement is never waived
+merely because its current implementation is unreliable; simplify its implementation
+or record a feasibility blocker instead.
+
 ## 3. Critical path
 
 ```text
