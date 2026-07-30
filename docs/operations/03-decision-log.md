@@ -410,3 +410,25 @@ receiving function or Nox access, the factory never holds collateral, and the po
 retains the immutable custody/recovery model. R-27 tracks cost, session loss, stale
 configuration, and confusion between an independently user-created pool and a
 published canonical release.
+
+## ADR-026 — Factory-verified public self-test participant links
+
+**Status:** Accepted before WEB-11 implementation
+
+A self-test cohort must be reachable by more than its creator's browser session;
+otherwise the fixed k=2 rule cannot be exercised independently. The web may accept a
+public pool address in `/self-test/join/:pool`, but it must never trust that address
+merely because it appears in a URL. Before exposing any participant action, the
+browser reads the pool's immutable `poolId` and proves that the manifest-bound
+canonical factory maps that id back to the same address. It then reads the pool and
+adapter configuration and requires the canonical wrapper/feed/runtime hash, fixed
+condition, future-observation relationship, k=2, and bounded timeout values. The
+published canonical pool is rejected even if it happens to share this configuration.
+
+The address is public chain data and is kept only in current browser memory after
+validation. Opening a link makes no wallet request and cannot move funds. The route
+adds neither a pool registry nor any persistent storage; it cannot promote a
+user-created pool to the canonical release or G7 evidence. Invalid or stale links
+fail closed, while a verified pool uses the unchanged asset, confidential signal,
+owner, settlement, and permissionless recovery paths. R-27 covers link tampering,
+stale state, and participant confusion.

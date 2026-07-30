@@ -34,6 +34,7 @@ depending on a mock, private database, or privileged backend.
 | WEB-08-EVIDENCE-03   | Browser evidence verifier      | Public-only G7 browser evidence schema and independent receipt/manifest validation               | parser mutation tests, verifier tests, typecheck, clean diff          | `test: add browser evidence verifier`               |
 | WEB-09               | Complete participant cockpit   | Live readiness, test-asset faucet/wrap, guarded signal journey, owner/recovery cockpit           | web tests, production build, offline gate, clean diff                 | `feat: complete the participant web journey`        |
 | WEB-10               | Permissionless self-test pool  | Browser-created adapter/pool, session route, public binding checks, full participant handoff     | deployment mutation tests, web tests, production build, offline gate | `feat: add a permissionless self-test market`       |
+| WEB-11               | Shared self-test entry         | Factory-verified public join route for a second participant                                       | mutation tests, web tests, production build, offline gate            | `feat: add verified self-test participant links`    |
 
 ## WEB-01 work-item record
 
@@ -1267,6 +1268,68 @@ it. `T-WEB-10-01` through `T-WEB-10-03`, all 35 web tests, production build,
 browser inspections pass. No launch transaction was sent during development, and this
 completion is not G7 evidence.
 
+## WEB-11 work-item record
+
+ID: `WEB-11`
+
+Status: `complete`
+
+Prerequisite gates: WEB-10 is complete. G7 remains blocked for the canonical
+release under R-25 and is not claimed by this item.
+
+Outcome: Let a second user independently open a public self-test-pool link and use
+the existing real participant journey, so the k=2 cohort is possible across browser
+sessions without a backend, static pool registry, or shared wallet.
+
+Output files: `apps/web/src/` self-test validation and route modules, focused
+`apps/web/test/` coverage, this work-item record, the decision log, and the risk
+register.
+
+Acceptance criteria: `/self-test/join/:pool` accepts only a syntactically valid
+Sepolia address and establishes session context only after public reads prove the
+pool's `poolId` maps back to the manifest-bound factory, its immutable wrapper,
+timeouts, k=2 gate, adapter feed/runtime hash/comparison/threshold, and observation
+boundary match the fixed self-test policy, and the address is not the canonical pool.
+The route requests no wallet permission
+until a participant selects an existing explicit action. It displays an inspectable
+public pool address, never persists it or treats it as a canonical release, and makes
+the existing asset, signal, lifecycle, owner, claim/refund, and recovery screens use
+the verified pool. Invalid, foreign, mismatched, unavailable, or stale pools fail
+closed without a transaction.
+
+Privacy/custody impact: The join route reads public on-chain code, configuration,
+and lifecycle only. It does not collect, persist, or transmit wallet accounts,
+signals, balances, handles, proofs, or keys. Later wallet actions retain their
+existing explicit user approval and contract-defined custody/recovery behavior.
+
+Funds location/recovery impact: Joining is read-only. It cannot create a pool or
+move collateral. A failed validation leaves the user on a safe, transaction-free
+state; a verified pool retains the immutable protocol recovery path.
+
+Commands/checks: focused route/validation tests, `npm run test:web`, production web
+build, root typecheck, `npm run check:offline`, sanitized browser inspection,
+`npm run check:sepolia:read`, and `git diff --check`. No user transaction is sent by
+development automation and local/simulated output is not evidence.
+
+Evidence path: source/test output and sanitized browser inspection only. A joined
+pool is not a release record or G7 evidence.
+
+Intended commit: `feat: add verified self-test participant links`.
+
+Rollback/failure action: Remove only the public join route and retain the existing
+local launcher. Do not add a backend registry, stored wallet, unverified address
+parameter, automatic wallet request, or mutable canonical pointer.
+
+Completion evidence: `/self-test/join/:pool` now establishes session context only
+after reading the pool's `poolId`, matching it to the manifest-bound factory, and
+checking its wrapper, fixed timeout/k policy, adapter condition, feed runtime binding,
+and observation boundary. It explicitly rejects the canonical pool and unknown-code
+addresses before any wallet action. `T-WEB-11-01` and `T-WEB-11-02`, all 37 web
+tests, production build, direct Sepolia rejection checks for canonical and
+unknown-code addresses, `npm run check:offline`, `npm run check:sepolia:read`, and
+sanitized desktop/mobile browser inspections pass. No user transaction was sent and
+this is not G7 evidence.
+
 ## Primary route contract
 
 Required routes or equivalent framework views:
@@ -1277,6 +1340,7 @@ Required routes or equivalent framework views:
 - `/position`: connected-owner private decrypt, score, claim/refund status.
 - `/verify/:address`: manifest, code hashes, public invariants, evidence references.
 - `/self-test`: session-only user-wallet launch of a fresh public test pool.
+- `/self-test/join/:pool`: factory-verified public entry to a shared self-test pool.
 - `/self-test/assets`, `/self-test/signal`, `/self-test/position`: existing
   participant functions bound to that in-memory pool.
 
