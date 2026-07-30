@@ -207,6 +207,43 @@ Intended commit: `feat: add public lifecycle timeline`.
 Rollback/failure action: Remove only the lifecycle presenter. Do not replace failed
 RPC reads with static state or introduce indexer authority.
 
+## WEB-05 work-item record
+
+ID: `WEB-05`
+
+Status: `in_progress`
+
+Outcome: Provide the connected-owner position and terminal-action experience without
+exposing owner values, weakening ACL, or confusing claims with recovery refunds.
+
+Output files: owner-state presenter, browser owner adapter/action UI and tests, this
+record, and privacy/recovery copy updates.
+
+Acceptance criteria: The position screen is masked by default and clears on account
+or chain change. It distinguishes wrong owner, decrypt pending, viewer denied,
+position ready, score materialization, claim, and refund. Each terminal action says
+whether funds move, whether it is safe to retry, and which public pool state permits
+it. The screen cannot render raw owner handles/proofs or persist decrypted values.
+
+Privacy/custody impact: Owner values remain in browser memory after an explicit
+connected-owner action. The UI has no service, analytics, durable cache, key, or
+alternate viewer authority.
+
+Funds location/recovery impact: Claim and refund remain user wallet transactions
+against the immutable pool; the UI never moves assets itself. Failed/dropped actions
+fall back to public pool state before retry.
+
+Checks: owner-state/privacy-source tests, action-state tests, production build,
+`npm run test:web`, typecheck, and named Sepolia browser owner/recovery evidence.
+
+Evidence location: source/test output now; sanitized owner/recovery browser evidence
+under G7 later.
+
+Intended commit: `feat: add private position and settlement`.
+
+Rollback/failure action: Remove the isolated owner presentation/action layer; do not
+replace it with a backend decrypt service or a cached private position.
+
 ## Primary route contract
 
 Required routes or equivalent framework views:
