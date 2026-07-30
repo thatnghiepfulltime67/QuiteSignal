@@ -183,11 +183,20 @@ deleted. This setup is excluded from G3 evidence; its public receipts remain in 
 append-only spend ledger. The next implementation replaces the monolithic runner
 with terminal, independently recoverable Sepolia evidence slices.
 
-The first FND-05A below-k slice execution from source commit `2a05bbe` stopped
-after deploying only fixture `0x25084db2acfd1c400e59d65d02310430996bb3e1` at block
-`11379845` (receipt `0x0b71cf8a322efcdc68e00f030e9b96f0ae548b95d8210f32fdb6fd2e826e0c9e`).
-It did not deploy a wrapper or spike, mint fixture collateral, create a secondary
-actor, submit a confidential input, or enter any lifecycle state. The runner's
-failure path did not expose its error message, so no protocol conclusion is made.
-The fixture has no supply or product custody and is excluded from FND-05A evidence.
-The runner must report a sanitized error cause before a fresh slice execution.
+The first FND-05A below-k slice execution began from source commit `2a05bbe` and
+then continued while source documentation was being recorded. It deployed fixture
+`0x25084db2acfd1c400e59d65d02310430996bb3e1`, unchanged wrapper
+`0x05ec79b891619657e30aad419b8a080c8dca6a15`, and below-k spike
+`0xdb9b227c90614ca0a17554bd8fc4ba2e634bf2e7` at blocks `11379845` through
+`11379847`. At blocks `11379849` through `11379856` it minted and wrapped only
+deterministic fixture collateral, registered and finalized one encrypted member,
+and recorded a real reverted early `closeEpoch` transaction at block `11379857`.
+
+The execution did not retain an active runner through its bounded deadline wait, so
+it made no close or refund write. A read at the recorded spike confirms `Open` state,
+one finalized participant, `PoolConfidentialCustody` for that member's fixture
+collateral, and no aggregate-decrypt access. The fixture is not terminal and cannot
+count as FND-05A evidence. Its deterministic collateral has a known location and is
+recoverable without a secondary actor: a resume command must close below k after the
+already reached deadline and refund the same owner exactly once before any fresh
+fixture is started.

@@ -637,13 +637,21 @@ excluded from G3 evidence. Its receipts are retained in the spend ledger. The ne
 implementation replaces the monolithic runner with independently terminal Sepolia
 evidence slices.
 
-The first FND-05A run from `2a05bbe` stopped after fixture deployment only at block
-`11379845`: fixture `0x25084db2acfd1c400e59d65d02310430996bb3e1`, receipt
-`0x0b71cf8a322efcdc68e00f030e9b96f0ae548b95d8210f32fdb6fd2e826e0c9e`.
-It did not deploy a wrapper or spike, mint collateral, create an actor, submit a
-confidential input, or enter a lifecycle state. The fixture has no supply and no
-product custody. The runner did not expose a sanitized error cause, so this attempt
-is excluded from FND-05A evidence; repair failure reporting before a fresh run.
+The first FND-05A execution began from `2a05bbe` and continued while source
+documentation was being recorded. It deployed fixture
+`0x25084db2acfd1c400e59d65d02310430996bb3e1`, unchanged wrapper
+`0x05ec79b891619657e30aad419b8a080c8dca6a15`, and below-k spike
+`0xdb9b227c90614ca0a17554bd8fc4ba2e634bf2e7` at blocks `11379845` through
+`11379847`. It then minted and wrapped deterministic fixture collateral, finalized
+one encrypted commitment, and recorded an expected reverted early close at block
+`11379857`. The execution did not retain an active runner through its bounded
+deadline wait, so no close or refund was sent.
+
+A read confirms `Open` state, one finalized participant, no aggregate-decrypt
+access, and the committed fixture collateral in `PoolConfidentialCustody`. The
+fixture is non-terminal and excluded from FND-05A evidence. Its funds location is
+known: a dedicated resume command must close below k after the reached deadline and
+refund the same owner exactly once before any fresh fixture may be started.
 
 ## FND-01 — Toolchain lock
 
