@@ -18,6 +18,16 @@ seed phrases, environment dumps, or unsanitized terminal history.
 | G7   | `not_run` | —                                | —                                                                                                                                                                                                                                 | —                                                                                                                                                                                                                                                           | —                                | —                                                                                                                                                                                                                                                                                                                                                        | —                                                                                                                                                                                                              | —                                                                                                                                   |
 | G8   | `not_run` | —                                | —                                                                                                                                                                                                                                 | —                                                                                                                                                                                                                                                           | —                                | —                                                                                                                                                                                                                                                                                                                                                        | —                                                                                                                                                                                                              | —                                                                                                                                   |
 
+### G3 active checkpoint
+
+The G3 row remains `running`. Its FND-05C detail is superseded by the latest
+append-only ledger entries from `5116871`: the recorded recovery spike is
+`AGGREGATE_PENDING` after successful `closeEpoch` and
+`requestAggregateDecrypt` at blocks `11380145` and `11380146`; cross-pool and
+wrong-chain `finalizeAggregate` receipts reverted at blocks `11380148` and
+`11380149`. The fixture is not terminal and remains excluded from G3 evidence until
+the remaining proof, delayed rewrap, and refund checks complete.
+
 ## Evidence artifact contract
 
 Each evidence artifact must include:

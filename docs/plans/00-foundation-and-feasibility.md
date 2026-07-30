@@ -812,6 +812,16 @@ revision must skip every setup write and reconstruct each terminal baseline from
 observed current confidential balance plus the known recorded stake. The fixture
 remains excluded until that exact recovery reaches terminal refunds.
 
+The corrected resume from `5116871` skipped setup and advanced the same spike at
+blocks `11380145` through `11380149`: `closeEpoch` and
+`requestAggregateDecrypt` succeeded, the exact YES/NO-only public-decrypt ACL was
+observed, and real cross-pool and wrong-chain aggregate-context finalizations
+reverted. The process stopped before wrong-epoch, substituted-value, valid-proof,
+unwrap, recovery, or refund actions. The spike is now `AGGREGATE_PENDING` with the
+actor record retained, so the next resume must accept that state and continue only
+the uncompleted proof and recovery operations. This remains a non-terminal fixture
+and is excluded from FND-05C evidence.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

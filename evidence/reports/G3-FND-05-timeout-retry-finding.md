@@ -265,3 +265,14 @@ wrapper and changes only the local test-owner baselines; it is not pool or produ
 custody. This unsuccessful resume is excluded from evidence. The correction skips
 all setup writes and derives each refund baseline from the observed owner balance
 plus its recorded committed stake before completing this same fixture.
+
+The corrected FND-05C resume from `5116871` made no setup write. At blocks
+`11380145` and `11380146`, it closed the already-expired epoch and requested
+aggregate disclosure. A read confirms the expected YES/NO-only public-decrypt scope.
+At blocks `11380148` and `11380149`, cross-pool and wrong-chain
+`finalizeAggregate` calls reverted on Ethereum Sepolia. The process stopped before
+the remaining wrong-epoch, substituted-value, valid-proof, unwrap, delayed recovery,
+and terminal refund checks. The spike is `AGGREGATE_PENDING` and its ignored actor
+record remains local. This is a resumable partial proof sequence, not FND-05C gate
+evidence; the next runner revision continues only the outstanding state-machine
+operations.
