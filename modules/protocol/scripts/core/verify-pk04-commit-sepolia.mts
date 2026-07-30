@@ -213,7 +213,14 @@ async function main(): Promise<void> {
     terminalEpochs.some((epoch) => epoch.state !== 0 || epoch.participantCount !== 0)
   )
     fail('The recorded pools do not have their expected terminal public epochs.');
-  if (!(acceptedPosition as readonly [boolean])[0]) fail('The accepted owner position is absent.');
+  const acceptedOwnerPosition = acceptedPosition as {
+    committed: boolean;
+    stake: Hex;
+    probabilityBps: Hex;
+    yesAllocation: Hex;
+    noAllocation: Hex;
+  };
+  if (!acceptedOwnerPosition.committed) fail('The accepted owner position is absent.');
   if (
     (pending as Array<readonly [Address]>).some(
       (value) => value[0] !== '0x0000000000000000000000000000000000000000',
@@ -229,9 +236,12 @@ async function main(): Promise<void> {
   const balance = await handles.decrypt(balanceHandle);
   if (balance.value !== EXPECTED_OWNER_BALANCE)
     fail('The terminal owner confidential balance is not conserved.');
-  const [, , , stakeHandle, probabilityHandle, yesAllocationHandle, noAllocationHandle] =
-    acceptedPosition as readonly [boolean, boolean, boolean, Hex, Hex, Hex, Hex];
-  for (const handle of [stakeHandle, probabilityHandle, yesAllocationHandle, noAllocationHandle]) {
+  for (const handle of [
+    acceptedOwnerPosition.stake,
+    acceptedOwnerPosition.probabilityBps,
+    acceptedOwnerPosition.yesAllocation,
+    acceptedOwnerPosition.noAllocation,
+  ]) {
     const value = await handles.decrypt(handle);
     if (typeof value.value !== 'bigint')
       fail('The owner viewer ACL could not decrypt a final position handle.');
