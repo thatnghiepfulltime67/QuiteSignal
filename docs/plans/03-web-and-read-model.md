@@ -16,17 +16,18 @@ depending on a mock, private database, or privileged backend.
 
 ## Work-item register
 
-| ID           | Outcome                      | Primary artifacts                                                                    | Required checks                                             | Intended commit                             |
-| ------------ | ---------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------- |
-| WEB-01       | Application/provider shell   | Routes, providers, error boundaries, manifest loader                                 | wrong chain, no wallet, provider discovery/reconnect        | `feat: add application and wallet shell`    |
-| WEB-02       | Market/privacy onboarding    | Market list/detail, privacy legend, trust/limitation copy                            | public/private copy audit, empty/loading/error              | `feat: add market privacy onboarding`       |
-| WEB-03       | Sealed signal flow           | Probability/stake form, encrypt, approve, commit progress                            | decimal boundaries, reject/retry/replacement/reload         | `feat: add encrypted signal journey`        |
-| WEB-04       | Public lifecycle view        | Epoch timeline, aggregate, adapter execution, resolution                             | event/reorg refresh, direct-RPC fallback                    | `feat: add public lifecycle timeline`       |
-| WEB-05       | Owner position/terminal flow | Owner decrypt, score materialize, claim/refund/recovery                              | account mismatch, ACL failure, duplicate, pending states    | `feat: add private position and settlement` |
-| WEB-06       | Verification experience      | Manifest/code hash/invariant/evidence view                                           | stale manifest, wrong chain, verifier failure               | `feat: add public verification view`        |
-| WEB-07       | Accessibility/resilience     | Keyboard, screen reader, mobile, offline/RPC/gateway states                          | automated a11y, console/log scan, responsive matrix         | `test: harden accessible recovery ux`       |
-| WEB-08       | Real browser lifecycle       | Live browser e2e and sanitized result report                                         | primary success plus one refund/recovery path               | `test: prove live web user journey`         |
-| WEB-03-UI-01 | Poster-system visual refresh | Revised design system, responsive banded application presentation, visual assertions | token/source audit, responsive build and interaction checks | `feat: refresh web visual system`           |
+| ID                | Outcome                        | Primary artifacts                                                                                | Required checks                                                       | Intended commit                                |
+| ----------------- | ------------------------------ | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | ---------------------------------------------- |
+| WEB-01            | Application/provider shell     | Routes, providers, error boundaries, manifest loader                                             | wrong chain, no wallet, provider discovery/reconnect                  | `feat: add application and wallet shell`       |
+| WEB-02            | Market/privacy onboarding      | Market list/detail, privacy legend, trust/limitation copy                                        | public/private copy audit, empty/loading/error                        | `feat: add market privacy onboarding`          |
+| WEB-03            | Sealed signal flow             | Probability/stake form, encrypt, approve, commit progress                                        | decimal boundaries, reject/retry/replacement/reload                   | `feat: add encrypted signal journey`           |
+| WEB-04            | Public lifecycle view          | Epoch timeline, aggregate, adapter execution, resolution                                         | event/reorg refresh, direct-RPC fallback                              | `feat: add public lifecycle timeline`          |
+| WEB-05            | Owner position/terminal flow   | Owner decrypt, score materialize, claim/refund/recovery                                          | account mismatch, ACL failure, duplicate, pending states              | `feat: add private position and settlement`    |
+| WEB-06            | Verification experience        | Manifest/code hash/invariant/evidence view                                                       | stale manifest, wrong chain, verifier failure                         | `feat: add public verification view`           |
+| WEB-07            | Accessibility/resilience       | Keyboard, screen reader, mobile, offline/RPC/gateway states                                      | automated a11y, console/log scan, responsive matrix                   | `test: harden accessible recovery ux`          |
+| WEB-08            | Real browser lifecycle         | Live browser e2e and sanitized result report                                                     | primary success plus one refund/recovery path                         | `test: prove live web user journey`            |
+| WEB-03-UI-01      | Poster-system visual refresh   | Revised design system, responsive banded application presentation, visual assertions             | token/source audit, responsive build and interaction checks           | `feat: refresh web visual system`              |
+| WEB-02-LANDING-01 | Product landing and navigation | Complete product narrative, task-oriented navigation, route guidance, accessibility improvements | route/source assertions, keyboard/navigation checks, production build | `feat: improve product landing and navigation` |
 
 ## WEB-01 work-item record
 
@@ -127,6 +128,56 @@ Completion evidence: This slice adds a manifest-bound market presenter and the
 the passed Sepolia manifest shape; `T-WEB-02-02` rejects anonymity/Sybil-resistance
 claims in presenter copy. The production build and typecheck pass. The signal link
 is descriptive only until WEB-03 supplies the real encrypted transaction flow.
+
+## WEB-02-LANDING-01 work-item record
+
+ID: `WEB-02-LANDING-01`
+
+Status: `complete`
+
+Outcome: Turn the root route into a complete, independently written product landing
+experience, then organize the application around clear public exploration, learning,
+verification, and owner tasks.
+
+Output files: landing and route markup in `apps/web/src/main.ts`, responsive
+navigation and interaction styling in `apps/web/src/styles.css`, focused
+source/navigation assertions, and this record.
+
+Acceptance criteria: The landing page describes the live product, lifecycle,
+privacy boundary, recovery posture, verification boundary, network, and safe first
+actions without implying anonymity, guaranteed execution, or transaction finality.
+Persistent navigation exposes the home, market, explainer, verification, and private
+position tasks with a visible current route, an accessible skip link, and useful
+mobile behaviour. The result remains typographic, banded, flat, and within the
+closed DESIGN.md palette; it adds no third-party asset, storage, analytics, backend,
+wallet authority, or confidential-data path.
+
+Privacy/custody impact: Presentation and public route organization only. It does not
+read a private value, create a Nox input, request a signature, retain any browser
+data, or alter funds/recovery behavior.
+
+Funds location/recovery impact: No funds move. All guidance names the existing
+on-chain recovery posture and requires public verification before a wallet action.
+
+Checks: focused navigation/landing source tests, `npm run test:web`, production web
+build, root typecheck, and `git diff --check`.
+
+Evidence location: source/test output only. This presentation work cannot claim a
+browser wallet journey or G7.
+
+Intended commit: `feat: improve product landing and navigation`.
+
+Rollback/failure action: Revert only the route presentation and styling. Retain the
+canonical manifest boundary and never replace live product facts with a mock.
+
+Completion evidence: The root route now provides a complete product explanation,
+privacy/recovery limits, lifecycle guidance, release facts, FAQs, and safe market or
+verification calls to action. `/how-it-works` adds task-oriented route guidance, and
+the persistent header provides explicit overview, market, explainer, verification,
+and position destinations with a current-route indicator, Sepolia label, and keyboard
+skip link. `T-WEB-02-LANDING-01`, all 22 web tests, root typecheck, production Vite
+build, targeted Prettier checks, and `git diff --check` pass. The content is
+independently written and presentation-only; it does not create G7 evidence.
 
 ## WEB-03 work-item record
 
