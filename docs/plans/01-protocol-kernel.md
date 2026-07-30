@@ -475,6 +475,51 @@ without aggregate disclosure, the two-member threshold aggregate proof result,
 request context, receipt ledger, and zero native balances. PK-05 is a completed G5
 component, not G5 itself.
 
+## PK-06 work-item record
+
+ID: `PK-06`
+
+Status: `in_progress`
+
+Outcome: Implement and Sepolia-test permissionless aggregate-timeout recovery and
+immutable-adapter resolution. Aggregate timeout may transition only an
+`AGGREGATE_PENDING` pool to `REFUNDABLE`; settlement may transition only a
+proof-finalized `RESOLUTION_PENDING` pool to `SETTLED` using the adapter's own
+read-only result; resolution grace may transition only an unresolved pool to
+`REFUNDABLE`.
+
+Output files: `modules/protocol/contracts/core/QuietSignalPool.sol`, ABI tests if
+needed, `modules/protocol/scripts/core/run-pk06-resolution-sepolia.mts`, package
+scripts, `evidence/{offline,sepolia}/G5/PK-06-RESOLUTION.json`, spend ledger,
+protocol/API/risk/traceability documents, and this record.
+
+Acceptance criteria: Early aggregate timeout and resolution grace revert. A valid,
+fresh, positive adapter round is the only source of the binary winner, round id, and
+answer; no caller input selects a result. Wrong/invalid adapter output, zero winning
+aggregate, or unavailable round preserves `RESOLUTION_PENDING`. Both recovery paths
+are permissionless, have no asset transfer, and preserve confidential pool custody.
+
+Privacy/custody impact: Resolution adds only public feed facts already returned by
+the immutable adapter. It does not decrypt any new Nox handle or reveal owner,
+stake, total collateral, transfer, payout, or refund values.
+
+Funds location/recovery impact: All three states retain confidential pool custody.
+`cancelBeforeResolution` and `cancelAfterResolutionGrace` only make owners eligible
+for PK-07 confidential refunds; they never transfer collateral themselves.
+
+Checks: `npm run test:interfaces`, `npm run compile`,
+`npm run test:resolution:sepolia`, `npm run check:offline`, and `git diff --check`.
+
+Evidence path: `evidence/{offline,sepolia}/G5/PK-06-RESOLUTION.json` plus append-only
+spend-ledger entries. This is a named G5 component only.
+
+Intended commits: `feat: add bounded resolution and recovery` and
+`test: record Sepolia resolution evidence`.
+
+Rollback/failure action: Revert this isolated slice and leave PK-06 incomplete. A
+caller-selected outcome, stale/unbound adapter result, premature recovery, any new
+public disclosure, or collateral transfer is stop-ship.
+
 ## Sequencing
 
 ```text

@@ -11,6 +11,7 @@ import {
 } from '@iexec-nox/nox-protocol-contracts/contracts/sdk/Nox.sol';
 
 import {IQuietSignalErrors} from '../interfaces/IQuietSignalErrors.sol';
+import {IResolutionAdapter} from '../interfaces/IResolutionAdapter.sol';
 import {QuietSignalTypes} from '../interfaces/QuietSignalTypes.sol';
 
 /// @notice Immutable one-epoch pool with bounded intent-bound confidential custody.
@@ -64,6 +65,14 @@ contract QuietSignalPool is IERC7984Receiver {
     bytes32 indexed requestId,
     uint256 publicYes,
     uint256 publicNo
+  );
+  event SettlementFinalized(
+    bytes32 indexed epochId,
+    uint8 winner,
+    uint256 aggregateCollateral,
+    uint256 winningAggregate,
+    uint80 roundId,
+    int256 answer
   );
 
   constructor(bytes32 poolId_, QuietSignalTypes.PoolConfig memory config_) {
@@ -349,6 +358,57 @@ contract QuietSignalPool is IERC7984Receiver {
     _epoch.resolutionPendingAt = uint64(block.timestamp);
     _epoch.state = QuietSignalTypes.EpochState.RESOLUTION_PENDING;
     emit AggregateFinalized(epochId, requestId, publicYes, publicNo);
+  }
+
+  /// @notice Makes a stalled aggregate request refundable after its immutable timeout.
+  function cancelBeforeResolution() external {
+    _requireState(QuietSignalTypes.EpochState.AGGREGATE_PENDING);
+    uint64 eligibleAt = _epoch.aggregatePendingAt + aggregateTimeout;
+    if (block.timestamp < eligibleAt) {
+      revert IQuietSignalErrors.AggregateTimeoutNotReached(eligibleAt, uint64(block.timestamp));
+    }
+    _epoch.state = QuietSignalTypes.EpochState.REFUNDABLE;
+  }
+
+  /// @notice Resolves exclusively from the immutable adapter and never caller input.
+  function settle() external {
+    _requireState(QuietSignalTypes.EpochState.RESOLUTION_PENDING);
+    (uint8 winnerValue, uint80 roundId, int256 answer, ) = IResolutionAdapter(resolutionAdapter)
+      .resolution();
+    QuietSignalTypes.Outcome winner;
+    uint256 winningAggregate;
+    if (winnerValue == uint8(QuietSignalTypes.Outcome.YES)) {
+      winner = QuietSignalTypes.Outcome.YES;
+      winningAggregate = _epoch.publicYes;
+    } else if (winnerValue == uint8(QuietSignalTypes.Outcome.NO)) {
+      winner = QuietSignalTypes.Outcome.NO;
+      winningAggregate = _epoch.publicNo;
+    } else {
+      revert IQuietSignalErrors.InvalidFeedRound();
+    }
+    if (winningAggregate == 0) revert IQuietSignalErrors.ZeroWinningPool(winner);
+    _epoch.winner = winner;
+    _epoch.settledRoundId = roundId;
+    _epoch.settledAnswer = answer;
+    _epoch.state = QuietSignalTypes.EpochState.SETTLED;
+    emit SettlementFinalized(
+      epochId,
+      winnerValue,
+      _epoch.publicYes + _epoch.publicNo,
+      winningAggregate,
+      roundId,
+      answer
+    );
+  }
+
+  /// @notice Makes an unresolved post-aggregate epoch refundable after immutable grace.
+  function cancelAfterResolutionGrace() external {
+    _requireState(QuietSignalTypes.EpochState.RESOLUTION_PENDING);
+    uint64 eligibleAt = _epoch.resolutionPendingAt + resolutionGrace;
+    if (block.timestamp < eligibleAt) {
+      revert IQuietSignalErrors.ResolutionGraceNotElapsed(eligibleAt, uint64(block.timestamp));
+    }
+    _epoch.state = QuietSignalTypes.EpochState.REFUNDABLE;
   }
 
   function _deriveAllocation(
