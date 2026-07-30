@@ -39,6 +39,8 @@ const RECOVERY_DELAY_SECONDS = 45n;
 const PENDING_COMMIT_TIMEOUT_SECONDS = 45n;
 const PUBLIC_DECRYPT_MAX_ATTEMPTS = 8;
 const PUBLIC_DECRYPT_RETRY_DELAY_MS = 5_000;
+const RPC_TIMEOUT_MS = 30_000;
+const EARLY_TIMEOUT_REVERT_GAS = 100_000n;
 
 interface Artifact {
   abi: Abi;
@@ -259,7 +261,18 @@ function clearSecondaryPrivateKey(): void {
 async function assertRejected(action: () => Promise<unknown>, scenario: string): Promise<void> {
   try {
     await action();
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message.toLowerCase() : '';
+    if (
+      message.includes('timeout') ||
+      message.includes('timed out') ||
+      message.includes('fetch failed') ||
+      message.includes('network error') ||
+      message.includes('http request failed') ||
+      message.includes('econn')
+    ) {
+      fail(`${scenario} could not be observed on Ethereum Sepolia.`);
+    }
     return;
   }
   fail(`${scenario} did not fail on Sepolia.`);
@@ -353,11 +366,14 @@ async function main(): Promise<void> {
   }
 
   const deployer = privateKeyToAccount(privateKey as Hex);
-  const publicClient = createPublicClient({ chain: sepolia, transport: http(rpcUrl) });
+  const publicClient = createPublicClient({
+    chain: sepolia,
+    transport: http(rpcUrl, { retryCount: 0, timeout: RPC_TIMEOUT_MS }),
+  });
   const deployerWallet = createWalletClient({
     account: deployer,
     chain: sepolia,
-    transport: http(rpcUrl),
+    transport: http(rpcUrl, { retryCount: 0, timeout: RPC_TIMEOUT_MS }),
   });
   const deployerHandleClient = await createViemHandleClient(deployerWallet);
   const fixtureArtifact = loadArtifact(fixtureArtifactPath, 'ERC-20 fixture');
@@ -579,7 +595,7 @@ async function main(): Promise<void> {
   const secondaryWallet = createWalletClient({
     account: secondary,
     chain: sepolia,
-    transport: http(rpcUrl),
+    transport: http(rpcUrl, { retryCount: 0, timeout: RPC_TIMEOUT_MS }),
   });
   const secondaryHandleClient = await createViemHandleClient(secondaryWallet);
 
@@ -621,6 +637,44 @@ async function main(): Promise<void> {
       actualGasCostWei: (receipt.gasUsed * receipt.effectiveGasPrice).toString(),
     });
     if (receipt.status !== 'success') fail(`The ${action} transaction did not succeed.`);
+    return hash;
+  };
+
+  const sendExpectedRevert = async (
+    account: typeof deployer,
+    wallet: typeof deployerWallet,
+    to: Address,
+    data: Hex,
+    action: string,
+  ): Promise<Hash> => {
+    failureStage = `${action} dry-run planning`;
+    const fees = await publicClient.estimateFeesPerGas();
+    const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
+    const maximumCost = EARLY_TIMEOUT_REVERT_GAS * maxFeePerGas;
+    assertBudget(ledger, maximumCost);
+    assertSingleTransactionBudget(maximumCost, singleTransactionCapWei);
+    failureStage = action;
+    const hash = await wallet.sendTransaction({
+      account,
+      to,
+      data,
+      gas: EARLY_TIMEOUT_REVERT_GAS,
+      maxFeePerGas,
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
+    appendSpend(ledger, {
+      workItemId: 'FND-05',
+      phase: 'P0',
+      sender: account.address,
+      transactionHash: hash,
+      blockNumber: receipt.blockNumber.toString(),
+      gasUsed: receipt.gasUsed.toString(),
+      effectiveGasPrice: receipt.effectiveGasPrice.toString(),
+      actualGasCostWei: (receipt.gasUsed * receipt.effectiveGasPrice).toString(),
+    });
+    if (receipt.status !== 'reverted') {
+      fail(`The ${action} transaction did not revert on Ethereum Sepolia.`);
+    }
     return hash;
   };
 
@@ -891,14 +945,12 @@ async function main(): Promise<void> {
   if (timeoutAccess.length !== 3 || !timeoutAccess[0] || !timeoutAccess[1] || timeoutAccess[2]) {
     fail('The threshold epoch did not expose exactly the YES and NO aggregate handles.');
   }
-  await assertRejected(
-    () =>
-      publicClient.call({
-        account: deployer.address,
-        to: contracts.timeoutSpike,
-        data: spikeData('cancelBeforeUnwrap'),
-      }),
-    'Pre-unwrap timeout before the recovery window',
+  await sendExpectedRevert(
+    deployer,
+    deployerWallet,
+    contracts.timeoutSpike,
+    spikeData('cancelBeforeUnwrap'),
+    'pre-unwrap timeout before the recovery window',
   );
   const timeoutAvailableAt =
     ((await read(contracts.timeoutSpike, spikeArtifact, 'aggregatePendingSince')) as bigint) +

@@ -534,6 +534,9 @@ real, bounded Sepolia transaction whose reverted receipt is the required evidenc
 The fifth-attempt recovery passed at blocks `11379571` through `11379574`, verified
 both terminal owner balances with bounded retries, and deleted the ignored actor
 record. The fixture has no remaining custody and remains excluded from G3 evidence.
+The revised runner bounds all RPC observation calls and treats a transport failure as
+a test failure. Its early-timeout negative case sends a fixed-gas, expected-revert
+Sepolia transaction and records the receipt cost in the spend ledger.
 
 ## FND-01 — Toolchain lock
 

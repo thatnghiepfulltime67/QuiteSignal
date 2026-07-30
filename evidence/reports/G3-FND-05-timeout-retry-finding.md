@@ -107,3 +107,9 @@ It cancelled permissionlessly, completed both one-time confidential refunds, che
 the two terminal owner balances locally with bounded gateway retries, and deleted
 the ignored recovery record. The fifth fixture has no remaining custody and remains
 excluded from G3 evidence.
+
+The runner now bounds RPC observation calls and treats a transport failure as a test
+failure rather than a negative assertion. Its next early-timeout check will send a
+fixed-gas Sepolia transaction that must have a `reverted` receipt before the timeout;
+the failed transaction cost is recorded in the spend ledger. This gives a stronger
+chain-native result without treating RPC availability as protocol evidence.
