@@ -280,6 +280,42 @@ Intended commit: `feat: add public verification view`.
 Rollback/failure action: Remove only the route/presenter. Never replace missing
 evidence with a fixture or claim an unverified manifest is valid.
 
+## WEB-07 work-item record
+
+ID: `WEB-07`
+
+Status: `in_progress`
+
+Outcome: Harden the primary browser experience for keyboard, screen-reader, mobile,
+reduced-motion, RPC/wallet/Nox failure, and confidential-data handling.
+
+Output files: accessibility/resilience source improvements, browser/static checks,
+responsive and privacy tests, this record, and verification-matrix updates.
+
+Acceptance criteria: Every primary action has a visible focus state, semantic label,
+44px target, and live status text; narrow layouts retain privacy/recovery content.
+Reduced-motion disables nonessential motion. Source checks reject console, storage,
+analytics, raw handle/proof, and private-value persistence paths. Wallet, RPC,
+gateway, account, and chain failures state safe next actions without false finality.
+
+Privacy/custody impact: No new data collection or state persistence is allowed.
+Resilience must preserve browser-local plaintext/decrypt lifetime and user-held wallet
+authority.
+
+Funds location/recovery impact: UX failure states cannot alter funds. Every terminal
+copy points to the existing on-chain claim/refund/recovery path.
+
+Checks: accessibility/privacy source tests, responsive stylesheet assertions,
+production build, `npm run test:web`, typecheck, and later manual/browser checks at
+360/768/1280/1440px.
+
+Evidence location: sanitized WEB-07 checks now and G7 browser evidence later.
+
+Intended commit: `test: harden accessible recovery ux`.
+
+Rollback/failure action: Revert only isolated UI hardening; never relax privacy
+checks or use an inaccessible fallback state.
+
 ## Primary route contract
 
 Required routes or equivalent framework views:
