@@ -37,7 +37,7 @@ lifecycle without introducing plaintext or privileged service authority.
 
 ID: `SDK-01`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Create the framework-independent public SDK type boundary: branded public
 identifiers and exact decimal/base-unit parsing that rejects unsafe JavaScript
@@ -71,6 +71,12 @@ Intended commit: `feat: add typed protocol sdk`.
 Rollback/failure action: Revert the isolated SDK package and retain P2 as
 `not_started`; do not replace type validation with permissive `string`/`number`
 values or serialize confidential input locally.
+
+Completion evidence: source commit `a4fe65d` added the public-only workspace with
+four passing `T-SDK-01-*` cases for identifier shape, exact decimal/base-unit
+conversion, malformed/unsafe value rejection, and prohibited confidential-shaped
+field/dependency absence. `npm run check:offline` passed. This remains pre-G5
+preparation; it makes no live-protocol or G6 claim.
 
 ## Dependency graph
 

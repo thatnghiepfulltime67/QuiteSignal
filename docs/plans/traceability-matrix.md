@@ -103,6 +103,18 @@ artifacts; it does not replace each component's named Sepolia verifier.
 | `T-VERIFIER-PK09-01` | Complete PK-03A through PK-08 artifact set produces a G5 report                                      | FR-08, I1–I10 observable evidence |
 | `T-VERIFIER-PK09-02` | Missing/failed component, wrong work item/chain, failed check, and prohibited-field mutations reject | FR-08, P1, P3, P7, I3, I5, I8, I9 |
 
+## SDK-01 preparation coverage
+
+`T-SDK-01-*` is offline public-value validation only; it performs no wallet, RPC,
+Nox, encryption, or contract operation and does not advance G5/G6.
+
+| Test family   | Coverage                                                                      | Requirements   |
+| ------------- | ----------------------------------------------------------------------------- | -------------- |
+| `T-SDK-01-01` | Fixed-size address, pool ID, request ID, and transaction-hash validation      | NFR-02         |
+| `T-SDK-01-02` | Exact decimal/base-unit conversion using bigint                               | NFR-02         |
+| `T-SDK-01-03` | Unsafe, signed, scientific, malformed, over-precision, and overflow rejection | NFR-02, NFR-04 |
+| `T-SDK-01-04` | No confidential-shaped field, Nox, wallet, or private-key dependency          | P1, NFR-04     |
+
 ## Evidence naming
 
 Evidence files use:
