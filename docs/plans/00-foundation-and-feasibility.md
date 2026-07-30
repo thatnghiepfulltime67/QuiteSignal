@@ -560,6 +560,9 @@ early close, duplicate refund, and early timeout cancellation. The runner then
 retained a cached block while the timeout was already elapsed on-chain, before it
 sent any cancellation or refund. The fixture is excluded and recoverable; set public
 client cache time to zero before a fresh run.
+The seventh-attempt recovery passed at blocks `11379685` through `11379687`,
+cancelled permissionlessly, refunded both recorded owners, verified terminal
+confidential balances locally, and deleted the ignored actor record.
 
 ## FND-01 — Toolchain lock
 

@@ -139,3 +139,8 @@ entered aggregate pending at `1785379632`, but the runner's block polling retain
 cached value after the on-chain timeout elapsed. No cancellation or timeout refund
 was sent. This is a runner cache defect, not a protocol outcome; the fixture remains
 recoverable through its retained ignored actor record and is excluded from G3.
+
+The seventh-attempt recovery completed at blocks `11379685` through `11379687`.
+It cancelled permissionlessly, refunded both owners once, verified the terminal
+confidential balances locally, and deleted the ignored actor record. The fixture has
+no remaining contract custody and remains excluded from G3 evidence.
