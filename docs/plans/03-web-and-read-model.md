@@ -33,6 +33,7 @@ depending on a mock, private database, or privileged backend.
 | WEB-08-DEPLOYMENT-02 | Revision command preparation   | Explicit append-only revision invocation and operator runbook                                    | static command policy test, formatter, typecheck, clean diff          | `build: prepare explicit release revision commands` |
 | WEB-08-EVIDENCE-03   | Browser evidence verifier      | Public-only G7 browser evidence schema and independent receipt/manifest validation               | parser mutation tests, verifier tests, typecheck, clean diff          | `test: add browser evidence verifier`               |
 | WEB-09               | Complete participant cockpit   | Live readiness, test-asset faucet/wrap, guarded signal journey, owner/recovery cockpit           | web tests, production build, offline gate, clean diff                 | `feat: complete the participant web journey`        |
+| WEB-10               | Permissionless self-test pool  | Browser-created adapter/pool, session route, public binding checks, full participant handoff     | deployment mutation tests, web tests, production build, offline gate | `feat: add a permissionless self-test market`       |
 
 ## WEB-01 work-item record
 
@@ -1190,6 +1191,82 @@ submission. G7 remains unclaimed and blocked by R-25: an externally unlocked wal
 and a fresh, operator-published open release are still required for real browser
 signal/recovery receipts.
 
+## WEB-10 work-item record
+
+ID: `WEB-10`
+
+Status: `complete`
+
+Prerequisite gates: G6 passed. WEB-09 provides the manifest-bound wallet, test-asset,
+signal, owner, lifecycle, and recovery surfaces. G7 remains blocked for the canonical
+release under R-25 and is not claimed by this item.
+
+Outcome: Let a user-controlled Sepolia wallet create a fresh, immutable test market
+through the verified canonical factory, so the local application can exercise a real
+OPEN epoch without importing a deployer key, relying on a backend, or changing the
+canonical active-release pointer.
+
+Output files: `apps/web/src/` self-test launch, route, manifest, and
+presentation modules; focused `apps/web/test/` coverage; this work-item record; the
+decision log; and the risk register.
+
+Acceptance criteria: The launcher derives the factory, wrapper, feed, threshold, and
+factory runtime commitment from the validated manifest. It re-reads the current
+Sepolia block, creates a unique salt in the browser, deploys only a standard immutable
+resolution adapter with a future observation boundary, then creates exactly one
+factory pool with a fresh 25-minute commit window, k=2, the canonical wrapper, and
+bounded timeout/grace values. It waits for each receipt, verifies the factory and
+created pool configuration, exposes the resulting public pool only in browser memory,
+and hands it to the existing real asset, signal, lifecycle, position, and recovery
+surfaces. A page reload clears the session market rather than persisting account or
+private data; the displayed pool address remains public and independently inspectable.
+
+Negative cases: Reject wrong chain/account, missing or runtime-mismatched factory,
+missing feed/wrapper code, unexpected factory return, expired or unsafe derived
+deadline, failed/replaced deployment receipt, incorrect pool binding, duplicate
+action, and configuration mismatch after either receipt. Local or simulated-chain
+output is never evidence. Never alter the canonical pointer or manifest, deploy a
+token/wrapper/factory duplicate, accept a
+caller-selected resolution outcome, send assets, hold a signer, or treat a self-test
+pool as canonical G7 evidence.
+
+Privacy/custody impact: The launcher uses a user wallet only for two explicit public
+contract deployments. It receives no probability, stake, encrypted input, private
+key, or Nox handle. The adapter has no asset or Nox access; the factory holds no
+assets; the later existing signal path remains browser-local and user-owned.
+
+Funds location/recovery impact: Launch writes consume only user-approved Sepolia gas.
+Before a later signal, test collateral remains in the owner wrapper balance. Once a
+signal is confirmed, the new immutable pool has the same documented custody and
+permissionless recovery rules as the canonical product. A launch failure stops at the
+last confirmed public receipt and does not mutate or replace existing releases.
+
+Commands/checks: focused launcher and source-boundary tests, `npm run test:web`,
+production web build, root typecheck, `npm run check:offline`, sanitized local browser
+inspection, `npm run check:sepolia:read`, and `git diff --check`. No user launch is
+performed by development automation; local or simulated-chain output is not evidence.
+
+Evidence path: source/test output and sanitized browser inspection only. Any user
+launch receipt is public but outside the canonical evidence ledger until independently
+verified under a dedicated release/evidence record.
+
+Intended commit: `feat: add a permissionless self-test market`.
+
+Rollback/failure action: Remove the self-test launcher and session route while
+retaining canonical Web-09 functions. Do not replace it with a stored key, relayer,
+mock pool, static address, automatic deployment, or mutation of the active-release
+pointer.
+
+Completion evidence: The browser validates the manifest-bound factory runtime,
+wrapper, and feed before requesting the first user-approved transaction. It deploys
+one adapter, rereads every immutable adapter input and the feed runtime binding, then
+creates and rereads one factory pool. Internal SPA navigation keeps this public pool in
+memory through its asset, signal, lifecycle, and owner routes; a browser reload clears
+it. `T-WEB-10-01` through `T-WEB-10-03`, all 35 web tests, production build,
+`npm run check:offline`, `npm run check:sepolia:read`, and sanitized desktop/mobile
+browser inspections pass. No launch transaction was sent during development, and this
+completion is not G7 evidence.
+
 ## Primary route contract
 
 Required routes or equivalent framework views:
@@ -1199,6 +1276,9 @@ Required routes or equivalent framework views:
 - `/pool/:address/signal`: encrypted probability/stake journey.
 - `/position`: connected-owner private decrypt, score, claim/refund status.
 - `/verify/:address`: manifest, code hashes, public invariants, evidence references.
+- `/self-test`: session-only user-wallet launch of a fresh public test pool.
+- `/self-test/assets`, `/self-test/signal`, `/self-test/position`: existing
+  participant functions bound to that in-memory pool.
 
 Route naming may change only with synchronized acceptance tests and documentation.
 Primary routes cannot import fixture, storybook, or runtime demo-mode modules.

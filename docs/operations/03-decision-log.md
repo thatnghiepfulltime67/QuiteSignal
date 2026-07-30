@@ -382,3 +382,31 @@ weaken Nox ACL. An unavailable or expired canonical pool disables signal submiss
 the faucet must never be presented as sufficient readiness without native Sepolia gas,
 confirmed wrapping, and an open chain-derived commit window. R-26 tracks confusion,
 unbounded test minting, allowance, and stale-release risks.
+
+## ADR-025 — Browser-created permissionless self-test market
+
+**Status:** Accepted before WEB-10 implementation
+
+The canonical deployment may expire before a user is ready to exercise the full
+browser journey. The existing `QuietSignalFactory` is permissionless and a new cohort
+is explicitly represented by a new one-epoch pool. WEB-10 may therefore let a
+connected Sepolia wallet deploy a new immutable `ChainlinkPriceFeedResolutionAdapter`
+and call the verified canonical factory's `createPool` with the canonical confidential
+wrapper, an automatically derived future deadline, k=2, and the fixed public ETH/USD
+condition. This reuses the audited contracts and does not deploy a new faucet, wrapper,
+factory, backend, relayer, or privileged role.
+
+The browser reads the current block before deriving the fixed 25-minute commit window
+and 35-minute adapter observation boundary. It generates a fresh salt locally,
+requires a successful receipt for the adapter before factory creation, then re-reads
+the created pool configuration. The resulting pool is a user-created public test
+market held only in memory for the browser session; it never changes the canonical
+manifest or active-release pointer and must never be called canonical, G6, or G7
+evidence. Refreshing clears the session state rather than persisting a wallet or
+private value.
+
+The user explicitly approves both gas-paying transactions. The adapter has no asset
+receiving function or Nox access, the factory never holds collateral, and the pool
+retains the immutable custody/recovery model. R-27 tracks cost, session loss, stale
+configuration, and confusion between an independently user-created pool and a
+published canonical release.
