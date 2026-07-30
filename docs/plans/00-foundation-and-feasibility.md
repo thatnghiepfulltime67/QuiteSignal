@@ -512,6 +512,12 @@ enables a permissionless timeout cancellation and both owner refunds before the 
 staged fresh run. The full sanitized finding is in
 `evidence/reports/G3-FND-05-timeout-retry-finding.md`.
 
+The fourth-attempt recovery completed at blocks `11379485` through `11379488`.
+It cancelled permissionlessly, returned both owner stakes exactly once, verified the
+two terminal confidential balances locally, and deleted the ignored actor recovery
+record. It has no remaining fixture custody, but remains excluded from G3 evidence
+because the interrupted execution did not record its timeout negative assertion.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

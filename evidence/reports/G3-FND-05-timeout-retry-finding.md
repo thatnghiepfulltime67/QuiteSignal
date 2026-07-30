@@ -78,3 +78,10 @@ to cancel the now-expired timeout spike and return both deterministic fixture
 stakes. The recovery must complete and be documented before a staged fresh run is
 attempted. This attempt remains excluded from gate evidence; it contains no product
 asset or customer custody.
+
+That recovery completed at blocks `11379485` through `11379488`. A permissionless
+secondary actor cancelled the expired timeout, then the deployer and secondary owner
+each refunded once. Local owner decryption verified the planned terminal fixture
+balances without recording plaintext or handles. The ignored recovery record was
+deleted only after that check. The fourth attempt therefore has no remaining fixture
+custody and remains excluded from G3 evidence because it was non-terminal.
