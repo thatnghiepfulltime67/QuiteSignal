@@ -40,9 +40,18 @@ contract or Nox evidence; the valid finalization must use the next committed bou
 fixed-gas path and obtain a successful Sepolia receipt.
 
 The `6a9b6a6` retry broadcast its fixed-gas valid finalization and reverted after
-318301 gas, so it is not an out-of-gas result. The fixture remains
-`AGGREGATE_PENDING`. The next attempt serializes the two gateway proof requests and
-must still obtain the same successful contract verification before it can advance.
+318301 gas, so it is not an out-of-gas result. The subsequent serialized retry from
+`35aadab` repeated the expected context and substituted-plaintext reverts at blocks
+`11380260` through `11380263`; its valid finalization again reverted after 318301
+gas at block `11380264`. The fixture remains `AGGREGATE_PENDING`.
+
+A read-only Sepolia diagnostic then verified that freshly retrieved YES and NO proofs
+each validate directly in Nox Compute, decode to a 32-byte result, and match the
+declared aggregate. It also confirmed the recovery spike has persistent access to
+the aggregate amount and the wrapper has persistent access to its balance. The
+configured public RPC does not return the nested revert selector. ADR-014 therefore
+authorizes one sanitized on-chain classifier call before any more repeated proof
+attempts; its result cannot count as FND-05C completion.
 
 ## Evidence artifact contract
 

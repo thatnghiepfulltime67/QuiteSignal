@@ -300,3 +300,19 @@ unlike the already-passing sequential FND-04 proof path. The next correction
 serializes those two gateway requests and repeats the same on-chain verification on
 this fixture. It is an orchestration hypothesis, not a relaxation or a protocol
 claim.
+
+The serialized retry from `35aadab` reached the same point without concurrent gateway
+requests. It retained the real context and substituted-value reverts at blocks
+`11380260` through `11380263`, then the valid finalization reverted after 318301 gas
+at block `11380264`. It therefore disproves the gateway-request ordering hypothesis;
+the fixture remains `AGGREGATE_PENDING` and no unwrap, recovery, or refund conclusion
+is recorded.
+
+Subsequent read-only Sepolia checks retrieved fresh YES and NO proofs sequentially.
+Nox Compute accepted both proofs, each resulting value was 32 bytes and matched the
+declared aggregate, and the necessary persistent ACLs for the recovery spike and
+wrapper were present. The configured public RPC did not expose a nested revert
+selector for the otherwise identical `eth_call`. ADR-014 permits one isolated,
+sanitized probe transaction to classify the caught target error without emitting or
+persisting a proof, handle, plaintext, or calldata. This is diagnostics only; a
+successful finalization, delayed rewrap recovery, and both refunds remain required.

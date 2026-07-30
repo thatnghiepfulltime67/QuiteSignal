@@ -126,3 +126,21 @@ interfaces. Shared implementation helpers may be used, but no live result may be
 reused across fixtures. Future delivery simplifications follow the same rule: retain
 all non-negotiable properties and record a material architecture decision before
 implementation.
+
+## ADR-014 — Sanitized live finalization failure classifier
+
+**Status:** Accepted with feasibility gate
+
+When an existing Sepolia aggregate fixture has a valid gateway proof but its real
+permissionless finalization reverts without an RPC-exposed reason, an isolated probe
+may call that same finalization once and catch its revert. The probe records only a
+fixed error-class enum and its own public address; it must not emit, store, return,
+or persist proof bytes, encrypted handles, plaintext, calldata, signatures, keys, or
+RPC configuration. It receives no custody and no privilege: the target transition is
+already permissionless, and a caught failure reverts the target subcall completely.
+
+This is diagnostic instrumentation, not a substitute path. If the target succeeds,
+it makes the same real transition as a direct finalization and normal delayed
+recovery, rewrap, and refund requirements remain. If it fails, its classification
+only informs the next real correction; it cannot pass G3 or relax privacy, custody,
+ACL, proof-context, or recovery requirements.

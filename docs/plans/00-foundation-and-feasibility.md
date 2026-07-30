@@ -514,16 +514,20 @@ local recovery record and is deleted only after both terminal refunds verify.
 Output files: `modules/protocol/scripts/feasibility/run-aggregate-recovery-sepolia.mts`,
 `modules/protocol/scripts/feasibility/run-fnd05-aggregate-recovery-sepolia.mts`,
 `modules/protocol/scripts/feasibility/resume-fnd05-aggregate-recovery-sepolia.mts`,
+`modules/protocol/contracts/feasibility/AggregateFinalizationProbe.sol`,
+`modules/protocol/scripts/feasibility/run-fnd05-aggregate-proof-diagnostic-sepolia.mts`,
 the required dispatcher/test support,
 `evidence/offline/G3/FND-05-RECOVERY.json`,
-`evidence/sepolia/G3/FND-05-RECOVERY.json`, the G3 report, and the append-only
-Sepolia spend ledger. A local ignored failure marker may contain only the work-item
-ID, sanitized stage, and error category; it never contains an error message, input,
-handle, proof, calldata, signature, key, or RPC value.
+`evidence/sepolia/G3/FND-05-RECOVERY.json`,
+`evidence/sepolia/G3/FND-05-PROOF-DIAGNOSTIC.json`, the G3 report, and the
+append-only Sepolia spend ledger. A local ignored failure marker may contain only the
+work-item ID, sanitized stage, and error category; it never contains an error
+message, input, handle, proof, calldata, signature, key, or RPC value.
 
 Checks: `npm run compile`,
 `npm run test:nox:sepolia -- FND-05-RECOVERY --dry-run`, the confirmed Sepolia
-command only after its reviewed dry run, then `npm run budget:status`,
+command only after its reviewed dry run, the proof-diagnostic dry run and its
+confirmed Sepolia command only after reviewed budget preflight, then `npm run budget:status`,
 `npm run check:offline`, `npm run check:sepolia:read`, `npm run scan:secrets`, and
 `git diff --check`.
 
@@ -546,6 +550,23 @@ conservation, rewrap, or terminal-refund failure is a G3 blocker, not an optiona
 feature eligible for triage.
 
 Intended commit: `test: isolate aggregate recovery evidence`.
+
+Diagnostic sub-slice: The serialized retry at blocks `11380260` through `11380264`
+again produced the required context and substituted-plaintext reverts, then the valid
+fixed-gas finalization reverted after 318301 gas. A read-only Sepolia probe validates
+both freshly obtained public proofs directly in Nox Compute, confirms each has a
+32-byte result matching the declared aggregate, and confirms the recovery spike has
+persistent access to the aggregate amount while the wrapper has persistent access to
+its balance. The public RPC does not expose the nested revert selector. Before any
+further recovery write, `AggregateFinalizationProbe` will call the existing
+permissionless finalization once and classify only its selector into a fixed public
+enum. It never emits, stores, or writes proof bytes, handles, plaintext, calldata,
+or keys. A caught failure leaves the target state unchanged; an unexpected success
+is the real target transition to `UNWRAP_PENDING` and must continue through the
+ordinary delayed recovery and refunds. This diagnostic is not gate evidence and
+does not weaken `T-FND-05-PROOF-01` or `T-FND-05-RECOVERY-01`.
+
+Diagnostic intended commit: `test: diagnose aggregate finalization failure`.
 
 Privacy impact: artificial test values are encrypted before submission and no
 owner-shaped handle is marked publicly decryptable. Public permission is granted
