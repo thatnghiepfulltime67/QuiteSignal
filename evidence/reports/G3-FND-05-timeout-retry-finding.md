@@ -240,3 +240,16 @@ balances locally and deleted the ignored secondary-actor record. The append-only
 ledger labels these three recovery receipts `FND-05` because the historical recovery
 command predates the FND-05B split; their fixture, source commit, senders, and report
 context bind them unambiguously to FND-05B. This is evidence, not a hidden relabel.
+
+The first independent FND-05C execution from `62aecd6` created a fresh fixture,
+unchanged wrapper, recovery spike, and no-custody proof-context peer at blocks
+`11380070` through `11380073`. It prepared deterministic test collateral and
+finalized two independently signing confidential commitments through block
+`11380086`, then exited before the close deadline and without an aggregate request,
+proof finalization, unwrap, recovery, or refund. A post-exit Ethereum Sepolia read
+confirmed the recovery spike remains `Open` with two participants and no aggregate
+public-decrypt access; the peer is `Open` with zero participants. No aggregate
+plaintext, handle, proof, calldata, or local actor material was recorded. This
+fixture is excluded from FND-05C evidence. The ignored actor record is retained so a
+dedicated resume command can complete this exact fixture terminally before another
+FND-05C fixture is considered.

@@ -513,6 +513,7 @@ local recovery record and is deleted only after both terminal refunds verify.
 
 Output files: `modules/protocol/scripts/feasibility/run-aggregate-recovery-sepolia.mts`,
 `modules/protocol/scripts/feasibility/run-fnd05-aggregate-recovery-sepolia.mts`,
+`modules/protocol/scripts/feasibility/resume-fnd05-aggregate-recovery-sepolia.mts`,
 the required dispatcher/test support,
 `evidence/offline/G3/FND-05-RECOVERY.json`,
 `evidence/sepolia/G3/FND-05-RECOVERY.json`, the G3 report, and the append-only
@@ -783,6 +784,21 @@ FND-05B scope. Sanitized artifacts are
 `evidence/offline/G3/FND-05-TIMEOUT.json` and
 `evidence/sepolia/G3/FND-05-TIMEOUT.json`. FND-05B is complete; G3 remains
 incomplete until FND-05C.
+
+The first FND-05C execution from `62aecd6` deployed fixture
+`0x60a87c453107ac0ead37940b727baa58c51949fc`, unchanged wrapper
+`0x8290cb8fb05e3873f744eb8c2ce5a5c7395e27a2`, recovery spike
+`0xbc1e525dedfa10eefb416ea89e6aef8cd4039878`, and no-custody context peer
+`0x9fddf9c438f005ab5eb0122522117fee9d7dbcf4` at blocks `11380070` through
+`11380073`. It prepared only deterministic fixture collateral and completed two
+independently signing confidential commitments through block `11380086`, but exited
+before the close deadline, aggregate request, proof checks, unwrap, recovery, or
+refund. A post-exit Sepolia read confirms `Open`, two participants, no aggregate
+public-decrypt permission, the expected wrapper binding, and an `Open` zero-member
+context peer. This fixture is excluded from FND-05C evidence. Its ignored actor
+record is retained only to resume this exact fixture; the next runner revision must
+close it after the deadline and complete every remaining proof and recovery
+assertion before a new C fixture is allowed.
 
 ## FND-01 — Toolchain lock
 
