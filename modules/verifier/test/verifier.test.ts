@@ -171,6 +171,48 @@ test('T-VERIFIER-DEP-01-02: malformed deployment epoch blocks fail before an RPC
   );
 });
 
+test('T-VERIFIER-DEP-02-01: an append-only deployment revision keeps canonical checks', () => {
+  const revision = parseManifest({
+    ...manifest(),
+    deployment: {
+      workItemId: 'DEP-02',
+      deployedAtBlock: '11383123',
+      deployer: FIXTURE,
+      configuration: {
+        feed: FEED,
+        feedRuntimeCodeHash: keccak256(RUNTIME),
+        threshold: '200000000000',
+        comparison: 'greater-or-equal',
+        observationNotBefore: '100',
+        maximumFeedAgeSeconds: '86400',
+        poolId: `0x${'01'.repeat(32)}`,
+        deploymentSalt: `0x${'02'.repeat(32)}`,
+      },
+    },
+  });
+  assert.equal(revision.canonicalDeployment?.workItemId, 'DEP-02');
+  assert.throws(() =>
+    parseManifest({
+      ...manifest(),
+      deployment: {
+        workItemId: 'WEB-08',
+        deployedAtBlock: '11383123',
+        deployer: FIXTURE,
+        configuration: {
+          feed: FEED,
+          feedRuntimeCodeHash: keccak256(RUNTIME),
+          threshold: '200000000000',
+          comparison: 'greater-or-equal',
+          observationNotBefore: '100',
+          maximumFeedAgeSeconds: '86400',
+          poolId: `0x${'01'.repeat(32)}`,
+          deploymentSalt: `0x${'02'.repeat(32)}`,
+        },
+      },
+    }),
+  );
+});
+
 function releaseManifest(): ProtocolManifest {
   return parseManifest({
     ...manifest(),

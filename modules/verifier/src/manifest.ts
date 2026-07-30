@@ -31,7 +31,7 @@ export interface ReceiptBinding {
 }
 
 export interface CanonicalDeployment {
-  workItemId: 'DEP-01';
+  workItemId: string;
   deployer: Address;
   feed: Address;
   feedRuntimeCodeHash: Hash;
@@ -142,14 +142,16 @@ function canonicalDeployment(value: unknown): CanonicalDeployment | undefined {
   if (value === undefined) return undefined;
   const deployment = record(value, 'manifest.deployment');
   if (deployment.configuration === undefined) return undefined;
-  if (deployment.workItemId !== 'DEP-01') fail('manifest.deployment.workItemId must be DEP-01.');
+  const workItemId = text(deployment.workItemId, 'manifest.deployment.workItemId');
+  if (!/^DEP-(?:0[1-9]|[1-9][0-9]*)$/.test(workItemId))
+    fail('manifest.deployment.workItemId must be an explicit DEP revision.');
   const configuration = record(deployment.configuration, 'manifest.deployment.configuration');
   const comparison = text(configuration.comparison, 'manifest.deployment.configuration.comparison');
   if (comparison !== 'greater-or-equal' && comparison !== 'less-than') {
     fail('manifest.deployment.configuration.comparison is unsupported.');
   }
   return {
-    workItemId: 'DEP-01',
+    workItemId,
     deployer: address(deployment.deployer, 'manifest.deployment.deployer'),
     feed: address(configuration.feed, 'manifest.deployment.configuration.feed'),
     feedRuntimeCodeHash: hash(
