@@ -9,6 +9,7 @@ import {
   createWalletClient,
   encodeFunctionData,
   http,
+  isAddress,
   type Abi,
   type Address,
   type Hash,
@@ -18,12 +19,6 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
 
 const CHAIN_ID = 11_155_111;
-const FIXTURE = '0xa0dc5ef160c9bac33fb243bae5bf010f9d0b442f' as const;
-const WRAPPER = '0x29edb47017ae32c0260d7e0aa29ba6f1afc741bd' as const;
-const ADAPTER = '0x036285bf998f62bad4a202e3c34af72588e0083c' as const;
-const FACTORY = '0x4ba9323a61f6cf75d84e94b4cc084a6e216d1b96' as const;
-const CLAIM_POOL = '0x84903e8a2480596309285f7152f6e5e7af38ea74' as const;
-const REFUND_POOL = '0x05c7a8bf74f9628f4dd06cef4dd856c29ea9304b' as const;
 const STAGED_PRIMARY_BALANCE = 100n;
 const PRIMARY_PROBABILITY_BPS = 7_500n;
 const BPS_SCALE = 10_000n;
@@ -70,6 +65,14 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
+function requiredAddress(name: string): Address {
+  const value = process.argv
+    .find((argument) => argument.startsWith(`--${name}=`))
+    ?.slice(name.length + 3);
+  if (!value || !isAddress(value)) fail(`A valid --${name}=0x... address is required.`);
+  return value as Address;
+}
+
 function loadArtifact(path: string): Artifact {
   const value = JSON.parse(readFileSync(path, 'utf8')) as Partial<Artifact>;
   if (!Array.isArray(value.abi) || typeof value.deployedBytecode !== 'string')
@@ -105,6 +108,12 @@ async function expectRevert(action: () => Promise<unknown>, scenario: string): P
 }
 
 async function main(): Promise<void> {
+  const fixture = requiredAddress('fixture');
+  const wrapper = requiredAddress('wrapper');
+  const adapter = requiredAddress('adapter');
+  const factory = requiredAddress('factory');
+  const claimPool = requiredAddress('claim-pool');
+  const refundPool = requiredAddress('refund-pool');
   const env = resolve(ROOT, '.env');
   if (existsSync(env)) process.loadEnvFile(env);
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
@@ -146,34 +155,34 @@ async function main(): Promise<void> {
       resolve(PROTOCOL, 'artifacts/contracts/core/QuietSignalPool.sol/QuietSignalPool.json'),
     ),
   };
-  const addresses = [FIXTURE, WRAPPER, ADAPTER, FACTORY, CLAIM_POOL, REFUND_POOL] as const;
+  const addresses = [fixture, wrapper, adapter, factory, claimPool, refundPool] as const;
   const [runtimes, claimEpochRaw, refundEpochRaw, claimPositionRaw, refundPositionRaw, configRaw] =
     await Promise.all([
       Promise.all(addresses.map((address) => client.getCode({ address }))),
       client.readContract({
-        address: CLAIM_POOL,
+        address: claimPool,
         abi: artifacts.pool.abi,
         functionName: 'epoch',
       } as never),
       client.readContract({
-        address: REFUND_POOL,
+        address: refundPool,
         abi: artifacts.pool.abi,
         functionName: 'epoch',
       } as never),
       client.readContract({
-        address: CLAIM_POOL,
+        address: claimPool,
         account: account.address,
         abi: artifacts.pool.abi,
         functionName: 'ownerPosition',
       } as never),
       client.readContract({
-        address: REFUND_POOL,
+        address: refundPool,
         account: account.address,
         abi: artifacts.pool.abi,
         functionName: 'ownerPosition',
       } as never),
       client.readContract({
-        address: CLAIM_POOL,
+        address: claimPool,
         abi: artifacts.pool.abi,
         functionName: 'config',
       } as never),
@@ -208,8 +217,8 @@ async function main(): Promise<void> {
     !refundPosition.committed ||
     refundPosition.claimed ||
     !refundPosition.refunded ||
-    config.confidentialCollateral.toLowerCase() !== WRAPPER.toLowerCase() ||
-    config.resolutionAdapter.toLowerCase() !== ADAPTER.toLowerCase()
+    config.confidentialCollateral.toLowerCase() !== wrapper.toLowerCase() ||
+    config.resolutionAdapter.toLowerCase() !== adapter.toLowerCase()
   ) {
     fail('The expected PK-07 terminal states, flags, or immutable bindings were not preserved.');
   }
@@ -221,7 +230,7 @@ async function main(): Promise<void> {
     handles.decrypt(claimPosition.scoreBps),
     (async () => {
       const balanceHandle = (await client.readContract({
-        address: WRAPPER,
+        address: wrapper,
         abi: artifacts.wrapper.abi,
         functionName: 'confidentialBalanceOf',
         args: [account.address],
@@ -260,12 +269,12 @@ async function main(): Promise<void> {
       data: encodeFunctionData({ abi: artifacts.pool.abi, functionName } as never),
     });
   await Promise.all([
-    expectRevert(() => call(CLAIM_POOL, 'claim'), 'Duplicate settled claim'),
-    expectRevert(() => call(CLAIM_POOL, 'refund'), 'Refund from a settled pool'),
-    expectRevert(() => call(REFUND_POOL, 'refund'), 'Duplicate refundable refund'),
-    expectRevert(() => call(REFUND_POOL, 'claim'), 'Claim from a refundable pool'),
-    expectRevert(() => call(CLAIM_POOL, 'claim', NON_MEMBER), 'Non-member settled claim'),
-    expectRevert(() => call(REFUND_POOL, 'refund', NON_MEMBER), 'Non-member refundable refund'),
+    expectRevert(() => call(claimPool, 'claim'), 'Duplicate settled claim'),
+    expectRevert(() => call(claimPool, 'refund'), 'Refund from a settled pool'),
+    expectRevert(() => call(refundPool, 'refund'), 'Duplicate refundable refund'),
+    expectRevert(() => call(refundPool, 'claim'), 'Claim from a refundable pool'),
+    expectRevert(() => call(claimPool, 'claim', NON_MEMBER), 'Non-member settled claim'),
+    expectRevert(() => call(refundPool, 'refund', NON_MEMBER), 'Non-member refundable refund'),
   ]);
 
   const ledger = JSON.parse(readFileSync(LEDGER, 'utf8')) as Ledger;
@@ -274,7 +283,7 @@ async function main(): Promise<void> {
     entries.map((entry) => client.getTransactionReceipt({ hash: entry.transactionHash })),
   );
   const nativeBalances = await Promise.all(
-    [FACTORY, CLAIM_POOL, REFUND_POOL].map((address) => client.getBalance({ address })),
+    [factory, claimPool, refundPool].map((address) => client.getBalance({ address })),
   );
   if (
     ledger.chainId !== CHAIN_ID ||
@@ -296,12 +305,12 @@ async function main(): Promise<void> {
       verificationBlock: (await client.getBlockNumber()).toString(),
     },
     contracts: {
-      fixture: FIXTURE,
-      wrapper: WRAPPER,
-      adapter: ADAPTER,
-      factory: FACTORY,
-      claimPool: CLAIM_POOL,
-      refundPool: REFUND_POOL,
+      fixture,
+      wrapper,
+      adapter,
+      factory,
+      claimPool,
+      refundPool,
     },
     checks: {
       runtimeTemplatesMatch: true,

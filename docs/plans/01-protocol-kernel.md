@@ -575,6 +575,15 @@ Checks: `npm run test:interfaces`, `npm run compile`, the staged
 `npm run test:terminals:sepolia` runner, `npm run verify:terminals:sepolia`,
 `npm run check:offline`, and `git diff --check`.
 
+Active slice: `PK-07-FIXTURE-ADDRESS-01` parameterizes the terminal verifier with
+required fixture, wrapper, adapter, factory, claim-pool, and refund-pool addresses.
+It prevents superseded test fixtures from being accepted as terminal evidence.
+Output: terminal verifier and this record. Checks: `npm run test:interfaces`,
+`npm run compile`, and `npm run check:offline`. Privacy and recovery behavior are
+unchanged because the verifier remains read-only and records only public facts.
+Evidence remains at `evidence/{offline,sepolia}/G5/PK-07-TERMINALS.json`. Intended
+commit: `test: require named PK-07 terminal fixtures`.
+
 PK-07 staging uses a 35-minute adapter observation lead: a 25-minute commit window
 and a 10-minute post-close observation interval. These harness-only immutable test
 configurations leave room for genuine Sepolia/Nox proof latency without imposing the
