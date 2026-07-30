@@ -380,14 +380,20 @@ only in an owner-readable, Git-ignored local recovery record until terminal refu
 are verified, then deleted; it is never printed, committed, or included in evidence.
 
 Output files: `modules/protocol/contracts/feasibility/AggregateRecoverySpike.sol`,
-`modules/protocol/scripts/feasibility/run-aggregate-recovery-sepolia.mts`,
-`modules/protocol/scripts/feasibility/run-nox-sepolia.mts`,
-`modules/protocol/scripts/feasibility/recover-fnd05-timeout-sepolia.mts`, the narrowly required
-protocol test/model files, `evidence/offline/G3/FND-05.json`,
+`modules/protocol/scripts/feasibility/run-fnd05-below-k-sepolia.mts`,
+`modules/protocol/scripts/feasibility/run-fnd05-timeout-sepolia.mts`,
+`modules/protocol/scripts/feasibility/run-fnd05-aggregate-recovery-sepolia.mts`,
+`modules/protocol/scripts/feasibility/run-nox-sepolia.mts`, and
+`modules/protocol/scripts/feasibility/recover-fnd05-timeout-sepolia.mts`, the
+narrowly required protocol test/model files,
+`evidence/offline/G3/FND-05-*.json`, `evidence/sepolia/G3/FND-05-*.json`, the
+combined `evidence/offline/G3/FND-05.json` and
 `evidence/sepolia/G3/FND-05.json`, `evidence/reports/G3-summary.md`,
 `evidence/sepolia/spend-ledger.json`, `docs/plans/evidence-ledger.md`, and this
-work-package record. Findings, risk, source, or decision records are added only if
-the live behavior changes an existing conclusion.
+work-package record. The historical monolithic runner is retained only for its
+documented recovery context; it cannot create new G3 gate evidence. Findings, risk,
+source, or decision records are added when live behavior changes an existing
+conclusion.
 
 Acceptance and test plan:
 
@@ -410,6 +416,43 @@ Acceptance and test plan:
   all released fixture collateral back into confidential custody, and enables each
   owner refund exactly once.
 
+Delivery slices under ADR-013 are sequential and independently terminal. They do
+not relax any acceptance criterion; G3 passes only when all three have verified
+evidence and the combined read verifier passes.
+
+| Slice     | Status        | Evidence scope                                 | Terminal requirement                                                                   |
+| --------- | ------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `FND-05A` | `in_progress` | `T-FND-05-BELOW-K-01`                          | One owner refund once; no aggregate disclosure; no secondary actor required.           |
+| `FND-05B` | `not_started` | `T-FND-05-AGGREGATE-01`, `T-FND-05-TIMEOUT-01` | Permissionless timeout cancellation and both owner refunds once.                       |
+| `FND-05C` | `not_started` | `T-FND-05-PROOF-01`, `T-FND-05-RECOVERY-01`    | Rewrapped confidential custody and both owner refunds once after delayed finalization. |
+
+### FND-05A work-item record
+
+Outcome: Prove the below-k branch on a fresh Ethereum Sepolia fixture with one
+confidential commitment, no public aggregate-decrypt permission, and one terminal
+confidential refund. It is intentionally independent of threshold, proof, and
+unwrap behavior.
+
+Output files: `modules/protocol/scripts/feasibility/run-fnd05-below-k-sepolia.mts`,
+the required dispatcher/test support,
+`evidence/offline/G3/FND-05-BELOW-K.json`,
+`evidence/sepolia/G3/FND-05-BELOW-K.json`, the G3 report and spend ledger.
+
+Checks: `npm run compile`, `npm run test:nox:sepolia -- FND-05-BELOW-K --dry-run`,
+the confirmed Sepolia command, `npm run budget:status`, `npm run check:offline`,
+`npm run check:sepolia:read`, `npm run scan:secrets`, and `git diff --check`.
+
+Privacy impact and funds: the single artificial test input is encrypted before
+submission; public identities, timing, and fixture addresses remain public. The
+fixture collateral is in the wrapper during the commitment and returns once to the
+same owner on terminal refund. A failure records the fixture location and blocks
+this slice; it introduces neither a mock nor a trusted recovery service.
+
+Evidence path: `evidence/offline/G3/FND-05-BELOW-K.json` and
+`evidence/sepolia/G3/FND-05-BELOW-K.json`.
+
+Intended commit: `test: isolate below-k Sepolia evidence`.
+
 Privacy impact: artificial test values are encrypted before submission and no
 owner-shaped handle is marked publicly decryptable. Public permission is granted
 only to cohort YES/NO aggregates after the threshold; public identities, membership,
@@ -429,15 +472,16 @@ location, and block G3/P1; do not introduce a mock adapter or trusted recovery
 service. Reverting this isolated source is the code rollback; deployed fixture
 contracts have no product custody.
 
-Commands/checks: `npm run compile`, `npm run test:nox:sepolia -- FND-05 --dry-run`,
-`npm run test:nox:sepolia -- FND-05`, `npm run budget:status`,
+Commands/checks: `npm run compile`, the three named FND-05 slice dry runs and
+confirmed Sepolia commands, `npm run budget:status`,
 `npm run check:offline`, `npm run check:sepolia:read`, `npm run scan:secrets`, and
 `git diff --check`.
 
-Evidence path: `evidence/offline/G3/FND-05.json`,
-`evidence/sepolia/G3/FND-05.json`, and `evidence/reports/G3-summary.md`.
+Evidence path: the three slice artifacts, combined
+`evidence/offline/G3/FND-05.json`, `evidence/sepolia/G3/FND-05.json`, and
+`evidence/reports/G3-summary.md`.
 
-Intended commit: `test: prove aggregate disclosure and recovery`.
+Intended commit: `test: complete aggregate disclosure and recovery evidence`.
 
 Checkpoint: The first FND-05 Sepolia attempt from source commit `e4ad2bf` deployed a
 fresh fixture at `0x63d3dd9dfce5c3e8daec5dbc4420df9d1e39e50e`, an unchanged wrapper

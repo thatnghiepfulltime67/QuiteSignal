@@ -100,3 +100,29 @@ requires the receiver to grant the verified wrapper transient access to that res
 for the callback transaction only; F-007 applies the same transaction-scoped grant
 to a receiver-held amount immediately before wrapper transfer or unwrap. No persistent
 wrapper compute authority is allowed.
+
+## ADR-013 — Independent terminal evidence slices for aggregate feasibility
+
+**Status:** Accepted
+
+G3 retains the same Sepolia requirements: confidential commitments, aggregate-only
+disclosure, context-bound proof handling, timeout refunds, delayed unwrap, and
+rewrap recovery. The earlier single runner coupled those independent conclusions
+into one long live execution. A transport or observation failure late in that run
+repeated completed setup, increased testnet spend, and left a non-terminal fixture
+to recover before any next observation.
+
+G3 therefore uses three independent, fresh-fixture Sepolia evidence slices: below-k
+close and refund; threshold aggregate disclosure with pre-unwrap timeout and
+refund; and proof binding with delayed unwrap finalization and rewrap recovery.
+Each slice must finish in a terminal funds location, write its own sanitized
+machine-readable evidence, and delete an unused or fully recovered secondary-actor
+record. A read-only verifier combines only completed slice artifacts into the G3
+conclusion; no partial run can satisfy a different slice.
+
+This is a verification-orchestration simplification, not a protocol change. It does
+not change product trust, custody, privacy, lifecycle semantics, or public
+interfaces. Shared implementation helpers may be used, but no live result may be
+reused across fixtures. Future delivery simplifications follow the same rule: retain
+all non-negotiable properties and record a material architecture decision before
+implementation.

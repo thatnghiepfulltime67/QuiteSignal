@@ -24,6 +24,14 @@ explicitly narrows them.
 6. Update documentation and plan status in the same slice when behavior changed.
 7. Commit the slice before starting an unrelated change.
 
+Treat the plan as a revisable delivery baseline, not an immutable architecture.
+Proactively simplify or replace an implementation approach when it reduces
+unnecessary complexity and improves product operability, security, recovery, or
+evidence quality. Preserve every non-negotiable gate and do not substitute mocks,
+trusted services, or weaker privacy claims. Record the decision in the plan and an
+ADR before implementation whenever it changes trust, custody, privacy, state
+transitions, or public interfaces.
+
 Every active work item must name its output files, checks, evidence location, privacy
 impact, rollback/recovery behavior, and intended commit message before implementation.
 

@@ -25,6 +25,21 @@ When documents disagree, resolve them in this order:
 Any conflict that changes custody, privacy, trust, state, or a public interface must
 be resolved by an ADR before code changes.
 
+## 2.1 Adaptive delivery and controlled simplification
+
+This plan is a delivery baseline, not an assertion that its initial architecture is
+optimal. The implementer may proactively simplify, replace, or reorder an
+implementation approach when that change makes the product more usable, operable,
+secure, recoverable, or straightforward to verify. Prefer the smallest design that
+preserves the product objective and produces stronger, more reproducible evidence.
+
+This authority never permits weakening a gate, replacing a failed Sepolia
+requirement with a mock, adding hidden trust or custody, or overstating a privacy
+claim. Before implementation, record material changes in the active work package
+and decision log; create an ADR when they alter trust, custody, privacy, state
+transitions, or a public interface. Update the plan, risks, traceability, and
+evidence requirements in the same independently reviewable slice.
+
 ## 3. Critical path
 
 ```text
@@ -48,13 +63,13 @@ No downstream package may hide or compensate for a failed upstream gate.
 
 ## 4. Work-package register
 
-| ID | Work package | Status | Required gates | Exit gate |
-|---|---|---|---|---|
-| P0 | [Foundation and feasibility](docs/plans/00-foundation-and-feasibility.md) | `in_progress` | G0–G4 | Load-bearing primitives proven on Sepolia; pure models pass offline |
-| P1 | [Protocol kernel](docs/plans/01-protocol-kernel.md) | `not_started` | G0–G4 | G5: Sepolia contract lifecycle and I1–I10 pass |
-| P2 | [Integration and SDK](docs/plans/02-integration-and-sdk.md) | `not_started` | G5 | G6: repeatable multi-user Sepolia lifecycle |
-| P3 | [Web and read model](docs/plans/03-web-and-read-model.md) | `not_started` | G6 | G7: real primary flow without mock state |
-| P4 | [Sepolia hardening](docs/plans/04-sepolia-hardening.md) | `not_started` | G7 | G8: clean-environment release verification |
+| ID  | Work package                                                              | Status        | Required gates | Exit gate                                                           |
+| --- | ------------------------------------------------------------------------- | ------------- | -------------- | ------------------------------------------------------------------- |
+| P0  | [Foundation and feasibility](docs/plans/00-foundation-and-feasibility.md) | `in_progress` | G0–G4          | Load-bearing primitives proven on Sepolia; pure models pass offline |
+| P1  | [Protocol kernel](docs/plans/01-protocol-kernel.md)                       | `not_started` | G0–G4          | G5: Sepolia contract lifecycle and I1–I10 pass                      |
+| P2  | [Integration and SDK](docs/plans/02-integration-and-sdk.md)               | `not_started` | G5             | G6: repeatable multi-user Sepolia lifecycle                         |
+| P3  | [Web and read model](docs/plans/03-web-and-read-model.md)                 | `not_started` | G6             | G7: real primary flow without mock state                            |
+| P4  | [Sepolia hardening](docs/plans/04-sepolia-hardening.md)                   | `not_started` | G7             | G8: clean-environment release verification                          |
 
 Only one work package and one independently reviewable slice may be `in_progress`.
 P0 requires explicit acceptance before product implementation starts.
