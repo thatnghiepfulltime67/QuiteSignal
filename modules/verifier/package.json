@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "tsx --test test/*.test.ts",
+    "verify:g5": "tsx src/g5-cli.ts",
     "verify:sepolia": "tsx src/cli.ts"
   }
 }
