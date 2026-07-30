@@ -572,6 +572,11 @@ custody unchanged and is retryable by that owner.
 Checks: `npm run test:interfaces`, `npm run compile`, named Sepolia terminal runner
 and verifier, `npm run check:offline`, and `git diff --check`.
 
+PK-07 staging uses a six-hour adapter observation lead and a five-hour commit window.
+These are harness-only immutable test configurations that prevent genuine Sepolia
+network and Nox proof latency from invalidating a terminal lifecycle before evidence
+can be collected.
+
 Evidence path: `evidence/{offline,sepolia}/G5/PK-07-TERMINALS.json` plus append-only
 spend-ledger entries. Intended commit: `feat: add private settlement and score`.
 
