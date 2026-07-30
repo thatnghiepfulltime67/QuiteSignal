@@ -103,6 +103,40 @@ The manifest records the deployment epoch at its deployment block. Future users 
 advance the live pool state without invalidating that immutable deployment baseline;
 live lifecycle evidence uses its own state-specific reports.
 
+## Browser acceptance wallet runbook
+
+G7 uses a real, disposable Ethereum Sepolia wallet extension connected directly to
+the production web build. It is deliberately separate from the ignored deployment
+key in `.env`: no browser test, browser source file, injected provider, local bridge,
+or automation script may read, import, expose, or relay that key.
+
+1. Create or select a disposable Sepolia-only account in an installed EIP-1193
+   wallet. Confirm its address and Sepolia chain in the wallet UI; do not place its
+   secret material in this repository, a browser test, or a screenshot.
+2. Fund only the amount needed for the named test and connect the wallet by pressing
+   the visible application control. Every wallet approval remains an explicit action
+   in the extension.
+3. Start the production build, not a static mock: run `npm run --workspace
+   @quitesignal/web build`, serve `apps/web/dist`, then open the active `/markets`,
+   `/pool/:address/signal`, `/position`, and `/verify/:address` routes in a normal
+   browser profile with the extension enabled.
+4. Before each write, re-read `deployments/sepolia/active-release.json`, verify the
+   selected manifest with `npm run verify:protocol:sepolia -- --manifest=<path>`,
+   confirm the epoch is `OPEN`, and check the spend ledger. Stop if any binding,
+   chain, account, deadline, or budget check differs.
+5. Capture only public route state, wallet address if needed for a public receipt,
+   receipt hashes, public epoch transitions, and sanitized console summaries. Do not
+   capture form values, encrypted handles, proofs, calldata, signatures, private
+   keys, seed phrases, RPC URLs, extension screens, or local storage.
+6. Scan the saved browser artifacts for prohibited material before committing them.
+   If a primary write fails, record its public receipt and use only the documented
+   permissionless recovery selector; never substitute a local chain, fake provider,
+   manual state edit, or an application-side signer.
+
+The required G7 record is a primary browser signal journey plus a separate
+permissionless recovery observation or completion. A route-only read check is useful
+deployment evidence but cannot satisfy G7 by itself.
+
 ## Rotation and incident response
 
 If a key or mnemonic appears in source, Git history, logs, screenshots, evidence, or

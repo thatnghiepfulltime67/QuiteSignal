@@ -484,9 +484,9 @@ Status: `in_progress`
 Outcome: Produce sanitized, real-browser Ethereum Sepolia evidence for the primary
 signal journey and one documented recovery path without a mock wallet or chain.
 
-Output files: browser harness/configuration, explicit test-wallet runbook, sanitized
-evidence writer, G7 evidence artifact, this record, evidence ledger, and verification
-matrix updates.
+Output files: browser harness/configuration, the explicit test-wallet runbook in
+`docs/setup-sepolia.md`, sanitized evidence writer, G7 evidence artifact, this
+record, evidence ledger, and verification matrix updates.
 
 Acceptance criteria: The browser starts from the production web build and canonical
 manifest, connects a disposable Sepolia wallet, drives encryption and the real
