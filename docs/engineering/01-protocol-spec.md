@@ -21,8 +21,10 @@ deployment. The pool has no upgrade proxy in the MVP; a new version deploys a ne
 interface IResolutionAdapter {
   function target() external view returns (address);
   function targetRuntimeCodeHash() external view returns (bytes32);
+  function greaterOrEqual() external view returns (bool);
+  function threshold() external view returns (int256);
   function observationNotBefore() external view returns (uint256);
-  function maxFeedAge() external view returns (uint256);
+  function maximumFeedAge() external view returns (uint256);
   function resolution()
     external
     view
@@ -36,6 +38,13 @@ asset-receiving function, and cannot write an outcome. `resolution` reads the
 unchanged target and reverts unless the immutable observation time, complete-round,
 positive-answer, and maximum-age checks succeed. The pool never trusts a
 caller-supplied result.
+
+The stable ABI lives in `contracts/interfaces`. `IQuietSignalFactory` creates one
+pool from `PoolConfig` and a deployment salt; `IQuietSignalPool` accepts encrypted
+Nox external handles plus their proofs for `commitSignal`, a request id plus proof
+for aggregate finalization, and no input at all for `settle`. `IQuietSignalErrors`
+is the single custom-error ABI. The pinned Nox `IERC7984` interface is imported as
+the confidential-collateral standard and is not copied locally.
 
 ## Storage model
 
@@ -144,7 +153,8 @@ sweep path. A future immutable expiry policy requires a separate decision record
 ## Stable error taxonomy
 
 `InvalidConfiguration`, `InvalidState`, `CommitWindowClosed`, `AlreadyCommitted`,
-`KThresholdNotMet`, `ProofContextMismatch`, `ProofAlreadyConsumed`,
-`ConservationViolation`, `InvalidFeedRound`, `ResolutionNotReady`,
-`ResolutionGraceNotElapsed`, `ZeroWinningPool`, `AlreadyClaimed`, and
-`AlreadyRefunded`.
+`AggregateRequestMissing`, `DuplicateAggregateRequest`, `ProofContextMismatch`,
+`ProofAlreadyConsumed`, `ConservationViolation`, `InvalidFeedRound`,
+`InvalidResolutionAdapter`, `ResolutionNotReady`, `ResolutionGraceNotElapsed`,
+`ZeroWinningPool`, `AlreadyClaimed`, `AlreadyRefunded`, `TerminalActionConflict`,
+`UnauthorizedCollateral`, `PoolAlreadyExists`, and `NativeValueNotAccepted`.

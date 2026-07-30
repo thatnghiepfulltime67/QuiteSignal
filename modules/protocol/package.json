@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "compile": "hardhat build --force",
+    "test:interfaces": "hardhat build --force && tsx --test test/unit/interface-compatibility.test.ts",
     "test:model": "tsx --test test/feasibility/reference-model.test.ts",
     "test:nox:sepolia": "tsx scripts/feasibility/run-nox-sepolia.mts",
     "recover:nox:sepolia": "tsx scripts/feasibility/recover-fnd05-timeout-sepolia.mts"

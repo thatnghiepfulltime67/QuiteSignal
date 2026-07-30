@@ -19,20 +19,29 @@ proofs, the pool domain separator, and a client nonce.
 
 ## Events
 
-Events may contain addresses, ids, states, and opaque handles; never plaintext
-signals or decrypted owner positions.
+Events may contain only public addresses, ids, states, aggregate totals, and public
+feed facts; they never contain plaintext signals, encrypted handles, proofs, or
+decrypted owner positions.
 
 ```text
+PoolCreated(poolId, pool, configHash, confidentialCollateral, resolutionAdapter, deadline, kMin)
 EpochOpened(epochId, pool, deadline, kMin)
 SignalCommitted(epochId, sender, commitmentId)
 EpochClosed(epochId, participantCount)
 AggregateDecryptRequested(epochId, requestId)
 AggregateFinalized(epochId, requestId, publicYes, publicNo)
-SettlementFinalized(epochId, winner, aggregateCollateral, winningAggregate, roundId)
+SettlementFinalized(epochId, winner, aggregateCollateral, winningAggregate, roundId, answer)
 ScoreMaterialized(epochId, owner)
 PayoutClaimed(epochId, owner, claimId)
 Refunded(epochId, owner, refundId)
 ```
+
+The stable ABI deliberately excludes encrypted handles, proofs, stake,
+probability, payout, refund, and score values from every event. `commitSignal`
+accepts `(externalEncryptedStake, stakeProof, externalEncryptedProbability,
+probabilityProof)` only; all four values are opaque Nox/proof data, never plaintext
+amounts. `finalizeAggregate` accepts only its request id and bound proof. `settle`
+has no result parameter and reads the immutable adapter condition itself.
 
 ## Read API
 

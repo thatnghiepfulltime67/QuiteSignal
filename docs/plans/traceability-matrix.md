@@ -69,6 +69,19 @@ contract, Nox, ACL, or Sepolia evidence and do not advance G5 by themselves.
 | `T-DOMAIN-PK01-05` | Request binding, premature/stale/incomplete round, zero-winner grace recovery | I4, I5, I7, I8, FR-04, FR-05, FR-07 |
 | `T-DOMAIN-PK01-06` | 1,000 deterministic conservation, payout-bound, and terminal-flag vectors | I1, I2, I6, I8 |
 
+## PK-02 ABI coverage
+
+`T-ABI-PK02-*` is static/offline ABI compatibility coverage only. It cannot prove
+contract behavior, Nox ACL, confidential asset handling, or Sepolia lifecycle
+requirements.
+
+| Test family | Coverage | Invariants/requirements |
+|---|---|---|
+| `T-ABI-PK02-01` | Pool selectors; encrypted commit shape; proof-only aggregate finalization; input-free settlement | P1, I4, I5, I7 |
+| `T-ABI-PK02-02` | Factory selectors; read-only zero-custody adapter; no duplicate ERC-7984 ABI or payable adapter entry | P4, I5, I9 |
+| `T-ABI-PK02-03` | Event topics and absence of confidential event fields | P1, P3, P7, I3 |
+| `T-ABI-PK02-04` | Common custom-error selectors | I7, I8, I9 |
+
 ## Evidence naming
 
 Evidence files use:

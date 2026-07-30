@@ -91,6 +91,70 @@ Rollback/failure action: Revert only this isolated domain-model commit. A model
 counterexample, undefined funds location, or conflict with a privacy/custody
 invariant blocks PK-02 onward until a documented architecture decision resolves it.
 
+## PK-02 work-item record
+
+ID: `PK-02`
+
+Status: `complete`
+
+Outcome: Freeze the smallest public Solidity ABI for factory, pool, direct
+price-feed resolution, common types, events, and stable errors before any custody or
+lifecycle implementation. The pinned Nox `IERC7984` interface remains the canonical
+confidential-collateral ABI; this slice references it rather than copying it.
+
+Output files: `modules/protocol/contracts/interfaces/QuietSignalTypes.sol`,
+`modules/protocol/contracts/interfaces/IQuietSignalErrors.sol`,
+`modules/protocol/contracts/interfaces/IQuietSignalFactory.sol`,
+`modules/protocol/contracts/interfaces/IQuietSignalPool.sol`,
+`modules/protocol/contracts/interfaces/IResolutionAdapter.sol`,
+`modules/protocol/test/unit/interface-compatibility.test.ts`,
+`modules/protocol/package.json`, root `package.json`,
+`docs/engineering/01-protocol-spec.md`, `docs/engineering/02-api-and-events.md`,
+this work-package record, and the traceability matrix if named ABI tests clarify a
+requirement.
+
+Acceptance criteria: Factory creation, pool lifecycle, owner terminal actions,
+read models, direct resolution metadata, events, common state/outcome/config types,
+and custom errors have one ABI definition. `commitSignal` accepts only encrypted
+Nox external handles and proof bytes; it exposes no plaintext stake or probability
+parameter. Finalization accepts a request id and proof only; settlement accepts no
+caller-supplied outcome. The adapter exposes immutable target, code-hash, condition,
+and fresh-resolution fields only and has no asset method. ABI tests snapshot every
+function selector, event topic, error selector, state mutability, and critical
+parameter shape.
+
+Negative cases: ABI test rejects a changed selector, event topic, error selector,
+parameter order, mutability, a plaintext numeric commit parameter, a caller-supplied
+settlement result, a duplicate collateral interface, or a payable adapter method.
+
+Privacy/custody impact: This slice creates declarations and static ABI artifacts
+only. It never imports/decrypts a confidential value, moves collateral, grants ACL,
+deploys a production contract, or adds a resolver/backend authority. Events must not
+include proofs, raw confidential handles, stake, probability, payout, refund, or
+score values.
+
+Funds location/recovery impact: No funds can move through an interface declaration.
+The ABI exposes only the previously documented permissionless timeout and
+resolution-grace recovery operations; actual funds behavior stays unimplemented and
+unproven until named Sepolia tests in PK-04 through PK-07.
+
+Checks: `npm run test:interfaces`, `npm run typecheck`, `npm run compile`,
+`npm run check:offline`, and `git diff --check`.
+
+Evidence path: `modules/protocol/test/unit/interface-compatibility.test.ts` output.
+This is static/offline ABI evidence only; no G5 or Sepolia claim is made.
+
+Recorded checks: `npm run test:interfaces`, `npm run typecheck`, `npm run compile`,
+and `npm run check:offline` passed before this work-item was completed. `git diff
+--check` is run immediately before its commit.
+
+Intended commit: `feat: define protocol interfaces and events`.
+
+Rollback/failure action: Revert this isolated ABI commit before any production pool
+deployment. Any interface conflict with the P0 Nox/ACL feasibility findings, the
+reference model, or the zero-custody adapter boundary blocks PK-03 and requires an
+ADR if resolution changes trust, custody, privacy, state, or a public interface.
+
 ## Sequencing
 
 ```text
