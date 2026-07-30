@@ -289,7 +289,6 @@ contract AggregateRecoverySpike is IERC7984Receiver {
     publicNo = provenNo;
     Nox.allowTransient(aggregateTotal, address(wrapper));
     unwrapRequest = wrapper.unwrap(address(this), address(this), aggregateTotal);
-    Nox.allowThis(unwrapRequest);
     recoveryAvailableAt = uint48(block.timestamp) + recoveryDelay;
     state = LifecycleState.UnwrapPending;
   }
