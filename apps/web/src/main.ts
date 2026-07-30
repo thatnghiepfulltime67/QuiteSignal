@@ -4,14 +4,25 @@ import { presentMarket } from './market.js';
 import { validateSignalDraft } from './signal.js';
 import { presentVerification } from './verification.js';
 import { presentLifecycle } from './lifecycle.js';
+import {
+  formatTokenAmount,
+  parseTestAssetAmount,
+  presentAssetReadiness,
+  presentMarketReadiness,
+} from './participant.js';
 import { parseActiveRelease } from './release.js';
 import {
+  approveTestAsset,
   decryptOwnerPosition,
   finalizePendingSignal,
+  mintTestAsset,
+  readTestAssetState,
   readPublicEpoch,
   SignalJourneyError,
   submitOwnerTerminalAction,
   submitSignalJourney,
+  wrapTestAsset,
+  type TestAssetState,
 } from './wallet.js';
 
 interface Eip1193Provider {
@@ -45,8 +56,16 @@ let selectedWallet: Eip1193Provider | undefined;
 const walletCandidates: WalletCandidate[] = [];
 const boundWalletProviders = new WeakSet<Eip1193Provider>();
 let lifecycleMessage = 'Connect a Sepolia wallet to refresh public pool state.';
+let marketActionable = false;
+let marketReadinessMessage = 'Checking whether the canonical market is accepting signals.';
+let marketCohortGate = 'Loading public cohort rule…';
 let ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
 let ownerActions = '';
+let assetState: TestAssetState | undefined;
+let assetMessage =
+  'Connect a Sepolia wallet, then explicitly refresh the asset state before minting or revealing confidential collateral.';
+let assetAmount = '100';
+let assetBusy = false;
 
 async function loadManifest(): Promise<void> {
   const pointerResponse = await fetch('/active-release.json');
@@ -70,6 +89,9 @@ function resetWalletContext(message: string): void {
   walletState = 'Reconnect wallet';
   ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
   ownerActions = '';
+  assetState = undefined;
+  assetMessage =
+    'Wallet context changed. Refresh the test-asset state before minting, approving, wrapping, or revealing a confidential balance.';
   render(message);
 }
 
@@ -162,13 +184,30 @@ function explainerContent(market?: ReturnType<typeof presentMarket>): string {
   return `<section class="band petal-band explainer-hero"><div class="band-inner"><p class="eyebrow">{ how QuietSignal works }</p><h1>Make a signal without turning it into a public number.</h1><p>Use this guide to understand the information boundary and safe actions before a wallet approval.</p></div></section><section class="band plum-band explainer-sequence"><div class="band-inner landing-heading"><p class="eyebrow compute">{ the participant journey }</p><h2>Four moments, each with a different trust boundary.</h2></div><div class="band-inner sequence-grid"><article><span>01</span><h3>Check the market</h3><p>Read the condition, deadline, cohort rule, and public lifecycle from the active deployment. This step is wallet-free.</p></article><article><span>02</span><h3>Prepare locally</h3><p>Enter a probability and collateral amount only when you choose to signal. Nox encryption is browser-local.</p></article><article><span>03</span><h3>Approve explicitly</h3><p>Your browser wallet shows each on-chain request. The page waits for receipts and never labels a pending request as completed.</p></article><article><span>04</span><h3>Follow public state</h3><p>Use the lifecycle and independent verification facts to determine aggregation, settlement, claim, refund, or recovery next steps.</p></article></div></section><section class="band blush-band explainer-actions"><div class="band-inner"><p class="eyebrow">{ route guide }</p><h2>Use the smallest surface that answers your question.</h2><div class="action-guide"><a href="${marketLink}"><span>PUBLIC</span><strong>Market</strong><p>Condition, cohort rule, public lifecycle, and signal entry.</p></a><a href="${verifyLink}"><span>PUBLIC</span><strong>Verify</strong><p>Manifest-bound deployment facts and the independent verification boundary.</p></a><a href="/position"><span>PRIVATE</span><strong>Position</strong><p>Owner-only reveal, score, claim, and refund controls after a wallet connection.</p></a></div></div></section><section class="band cocoa-band landing-cta"><div class="band-inner"><p class="eyebrow">{ ready to inspect }</p><h2>Start from the live public state.</h2><div class="hero-actions"><a class="primary" href="${marketLink}">Explore the market</a><a class="secondary light-secondary" href="${verifyLink}">Verify the release</a></div></div></section>`;
 }
 
+function assetSetupContent(market: ReturnType<typeof presentMarket>): string {
+  const readiness = assetState
+    ? presentAssetReadiness(assetState)
+    : {
+        label: 'Asset state is not loaded',
+        explanation:
+          'Refresh with your connected wallet to read public test tokens and reveal your own confidential collateral for this session.',
+      };
+  const stateRows = assetState
+    ? `<dl class="asset-facts"><div><dt>PUBLIC QSFC</dt><dd>${formatTokenAmount(assetState.publicBalance)}</dd></div><div><dt>WRAPPER ALLOWANCE</dt><dd>${formatTokenAmount(assetState.allowance)}</dd></div><div><dt>PRIVATE QSCC</dt><dd>${formatTokenAmount(assetState.confidentialBalance)}</dd></div><div><dt>SEPOLIA GAS</dt><dd>${formatTokenAmount(assetState.nativeBalance)} ETH</dd></div></dl>`
+    : `<p class="muted">No owner balance has been read. This page does not store account or balance data between sessions.</p>`;
+  const busy = assetBusy ? ' disabled' : '';
+  return `<section class="band petal-band asset-hero"><div class="band-inner"><p class="eyebrow compute">{ test asset preparation }</p><h1>Prepare collateral you control.</h1><p class="route-lead">Mint a valueless Sepolia test token to your own wallet, then approve and wrap only the amount you choose. The wrapper creates confidential collateral; this page never holds an asset or a key.</p><div class="route-callout"><p class="eyebrow public">{ current setup state }</p><h2>${readiness.label}</h2><p>${readiness.explanation}</p></div></div></section><section class="band blush-band asset-workflow"><div class="band-inner"><div class="asset-intro"><p class="eyebrow">{ wallet-guided setup }</p><h2>Mint → approve → wrap.</h2><p>All four figures below belong only to the connected wallet. Public QSFC and allowance are public ERC-20 facts; QSCC is revealed only after your explicit refresh for this browser session.</p></div><div class="panel asset-panel"><label>Amount to prepare <input id="asset-amount" name="assetAmount" inputmode="decimal" autocomplete="off" value="${escapeHtml(assetAmount)}" /></label><p class="sealed">TESTNET ONLY · QSFC has no value. You still need Sepolia ETH for transaction gas.</p><div class="asset-actions"><button class="primary" type="button" data-asset-action="mint"${busy}>1 · Mint QSFC</button><button class="secondary" type="button" data-asset-action="approve"${busy}>2 · Approve exact amount</button><button class="secondary" type="button" data-asset-action="wrap"${busy}>3 · Wrap into QSCC</button><button class="text-button" type="button" data-asset-action="refresh"${busy}>Refresh owner asset state</button></div><p role="status" class="asset-status">${assetMessage}</p>${stateRows}</div><ol class="setup-checklist" aria-label="Self-test checklist"><li><strong>01</strong><span>Connect a wallet on Ethereum Sepolia with a small amount of test ETH.</span></li><li><strong>02</strong><span>Mint QSFC, then approve and wrap an amount you are comfortable testing with.</span></li><li><strong>03</strong><span>Return to the market. Signal submission becomes available only when the immutable commit window is open.</span></li><li><strong>04</strong><span>After a confirmed signal, use Position and public lifecycle views for owner and recovery actions.</span></li></ol><div class="route-actions"><a class="primary" href="/pool/${market.poolAddress}">Back to the market</a><a class="text-action dark-action" href="/pool/${market.poolAddress}/signal">Open signal route <span aria-hidden="true">↗</span></a></div></div></section>`;
+}
+
 function render(message?: string): void {
   const root = document.querySelector<HTMLDivElement>('#app');
   if (!root) return;
-  const market = manifest ? presentMarket(manifest) : undefined;
-  const isMarketRoute =
-    location.pathname.startsWith('/markets') || location.pathname.startsWith('/pool/');
+  const market = manifest ? presentMarket(manifest, marketCohortGate) : undefined;
   const isSignalRoute = location.pathname.endsWith('/signal');
+  const isAssetRoute = location.pathname.endsWith('/assets');
+  const isMarketRoute =
+    location.pathname.startsWith('/markets') ||
+    (location.pathname.startsWith('/pool/') && !isSignalRoute && !isAssetRoute);
   const isPositionRoute = location.pathname === '/position';
   const isExplainerRoute = location.pathname === '/how-it-works';
   const isHomeRoute = location.pathname === '/';
@@ -188,24 +227,26 @@ function render(message?: string): void {
         })()
       : isPositionRoute && market
         ? `<section class="band blush-band signal-card owner"><div class="band-inner"><p class="eyebrow private">{ owner only }</p><h1>Your private position</h1><p class="route-lead">This route is intentionally masked until the connected wallet proves it can view this position. Nothing is revealed or moved by opening the page.</p><div class="owner-guidance"><span>01 · Connect the owner wallet</span><span>02 · Reveal for this session</span><span>03 · Choose an explicit terminal action</span></div><div class="panel"><p role="status">${ownerMessage}</p><button class="primary" id="reveal-owner">Reveal with owner wallet</button>${ownerActions}<p class="muted">No claim or refund is submitted automatically. Re-read public pool state before retrying a pending action.</p></div></div></section>`
-        : isSignalRoute && market
-          ? `<section class="band plum-band signal-card"><div class="band-inner"><p class="eyebrow compute">{ encrypted locally }</p><h1>Prepare your signal</h1><p class="route-lead">Probability and collateral stay in this browser until Nox encrypts them. The process deliberately separates validation, encryption, and wallet approval.</p><ol class="journey-steps" aria-label="Signal journey steps"><li><strong>01</strong><span>Validate locally</span><small>No funds move.</small></li><li><strong>02</strong><span>Encrypt in browser</span><small>Separate pool and collateral inputs.</small></li><li><strong>03</strong><span>Confirm in wallet</span><small>Each receipt is awaited before the next stage.</small></li></ol><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required /></label><label>Probability (basis points) <input name="probability" inputmode="numeric" autocomplete="off" placeholder="7500" required /></label><p class="sealed">COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.</p><button class="primary" type="submit">Encrypt and submit signal</button><button class="secondary" id="retry-finalize" type="button" hidden>Retry pending finalization</button><p id="signal-status" class="muted" role="status">No funds moved.</p></form></div></section>`
-          : isMarketRoute && market
-            ? `<section class="band blush-band market"><div class="band-inner"><p class="eyebrow public">{ public market }</p><h1>${market.condition}</h1><p class="route-lead">Start by reading the public condition and lifecycle. Connect a wallet only after the market, release, and privacy boundary make sense to you.</p><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><ol class="market-path" aria-label="Recommended market path"><li><strong>01</strong><span>Read the public state</span></li><li><strong>02</strong><span>Check the active release</span></li><li><strong>03</strong><span>Prepare an encrypted signal</span></li></ol><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><section class="timeline"><p class="eyebrow public">{ public lifecycle }</p><p id="lifecycle-status" role="status">${lifecycleMessage}</p><button class="wallet" id="refresh-lifecycle">Refresh public state</button></section><div class="route-actions"><a class="primary" href="/pool/${market.poolAddress}/signal">Prepare encrypted signal</a><a class="text-action dark-action" href="/verify/${market.poolAddress}">Verify this release <span aria-hidden="true">↗</span></a></div></div></section>`
-            : isExplainerRoute
-              ? explainerContent(market)
-              : landingContent(market);
+        : isAssetRoute && market
+          ? assetSetupContent(market)
+          : isSignalRoute && market
+            ? `<section class="band plum-band signal-card"><div class="band-inner"><p class="eyebrow compute">{ encrypted locally }</p><h1>Prepare your signal</h1><p class="route-lead">Probability and collateral stay in this browser until Nox encrypts them. The process deliberately separates validation, encryption, and wallet approval.</p><div class="route-callout"><p class="eyebrow ${marketActionable ? 'public' : 'private'}">{ signal readiness }</p><h2>${marketActionable ? 'Commit window is open' : 'Signal is currently unavailable'}</h2><p>${marketReadinessMessage}</p><a class="text-action" href="/pool/${market.poolAddress}/assets">Prepare test collateral <span aria-hidden="true">↗</span></a></div><ol class="journey-steps" aria-label="Signal journey steps"><li><strong>01</strong><span>Validate locally</span><small>No funds move.</small></li><li><strong>02</strong><span>Encrypt in browser</span><small>Separate pool and collateral inputs.</small></li><li><strong>03</strong><span>Confirm in wallet</span><small>Each receipt is awaited before the next stage.</small></li></ol><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required${marketActionable ? '' : ' disabled'} /></label><label>Probability (basis points) <input name="probability" inputmode="numeric" autocomplete="off" placeholder="7500" required${marketActionable ? '' : ' disabled'} /></label><p class="sealed">COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.</p><button class="primary" type="submit"${marketActionable ? '' : ' disabled'}>${marketActionable ? 'Encrypt and submit signal' : 'Await a fresh market release'}</button><button class="secondary" id="retry-finalize" type="button" hidden>Retry pending finalization</button><p id="signal-status" class="muted" role="status">${marketActionable ? 'No funds moved.' : 'No signal can be submitted while the chain-derived market is unavailable or closed.'}</p></form></div></section>`
+            : isMarketRoute && market
+              ? `<section class="band blush-band market"><div class="band-inner"><p class="eyebrow public">{ canonical MVP market }</p><h1>${market.condition}</h1><p class="route-lead">This product intentionally exposes one verified test market per release. Start with its real public lifecycle, then prepare collateral only when the chain says the commit window is open.</p><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><ol class="market-path" aria-label="Recommended market path"><li><strong>01</strong><span>Read the public state</span></li><li><strong>02</strong><span>Mint and wrap test collateral</span></li><li><strong>03</strong><span>Prepare an encrypted signal</span></li></ol><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><section class="timeline"><p class="eyebrow public">{ public lifecycle }</p><p id="lifecycle-status" role="status">${lifecycleMessage}</p><button class="wallet" id="refresh-lifecycle">Refresh public state</button></section><div class="route-callout market-readiness"><p class="eyebrow ${marketActionable ? 'public' : 'private'}">{ actionability }</p><h2>${marketActionable ? 'Ready for participant setup' : 'Signal path is safely paused'}</h2><p>${marketReadinessMessage}</p></div><div class="route-actions"><a class="primary" href="/pool/${market.poolAddress}/assets">Get test collateral</a>${marketActionable ? `<a class="secondary dark-secondary" href="/pool/${market.poolAddress}/signal">Prepare encrypted signal</a>` : ''}<a class="text-action dark-action" href="/verify/${market.poolAddress}">Verify this release <span aria-hidden="true">↗</span></a></div></div></section>`
+              : isExplainerRoute
+                ? explainerContent(market)
+                : landingContent(market);
   const canonicalPoolPath = manifest ? `/pool/${manifest.poolAddress}` : '/markets';
   const canonicalVerifyPath = manifest ? `/verify/${manifest.poolAddress}` : '/markets';
   const isWorkspaceRoute =
-    isMarketRoute || isExplainerRoute || Boolean(verifyAddress) || isPositionRoute;
+    isMarketRoute || isAssetRoute || isExplainerRoute || Boolean(verifyAddress) || isPositionRoute;
   const navigation = [
     navigationLink('/', 'Overview', isHomeRoute),
     navigationLink('/markets', 'Workspace', isWorkspaceRoute),
   ].join('');
   const workspaceSubnav = isWorkspaceRoute
     ? workspaceSubnavigation(canonicalPoolPath, canonicalVerifyPath, {
-        market: isMarketRoute,
+        market: isMarketRoute || isAssetRoute,
         guide: isExplainerRoute,
         verify: Boolean(verifyAddress),
         position: isPositionRoute,
@@ -297,6 +338,13 @@ function render(message?: string): void {
               : 'Pending finalization is unavailable. Read public pool state before retrying.';
       }
     });
+  document.querySelectorAll<HTMLButtonElement>('[data-asset-action]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = button.dataset.assetAction;
+      if (action === 'mint' || action === 'approve' || action === 'wrap' || action === 'refresh')
+        void runAssetAction(action);
+    });
+  });
   document
     .querySelector<HTMLFormElement>('#signal-form')
     ?.addEventListener('submit', async (event) => {
@@ -304,6 +352,10 @@ function render(message?: string): void {
       const data = new FormData(event.currentTarget);
       const status = document.querySelector<HTMLParagraphElement>('#signal-status');
       try {
+        if (!marketActionable)
+          throw new Error(
+            'This market is not accepting a signal. Refresh the public lifecycle and wait for a verified fresh release before retrying.',
+          );
         const values = validateSignalDraft({
           stake: String(data.get('stake') ?? ''),
           probability: String(data.get('probability') ?? ''),
@@ -335,6 +387,77 @@ function render(message?: string): void {
     });
 }
 
+async function refreshAssetState(): Promise<void> {
+  const provider = activeWallet();
+  if (!provider || !manifest) {
+    assetState = undefined;
+    assetMessage = 'Connect a Sepolia wallet before refreshing owner asset state. No funds moved.';
+    render();
+    return;
+  }
+  assetMessage =
+    'Reading public test-asset state and requesting owner-only confidential balance access for this session…';
+  render();
+  try {
+    assetState = await readTestAssetState(
+      provider,
+      manifest.faucetAddress,
+      manifest.collateralAddress,
+    );
+    const readiness = presentAssetReadiness(assetState);
+    assetMessage = `${readiness.label}: ${readiness.explanation}`;
+  } catch (error) {
+    assetState = undefined;
+    assetMessage =
+      error instanceof Error
+        ? `${error.message} No funds moved; confirm the connected owner account and retry safely.`
+        : 'Asset state could not be refreshed. No funds moved; retry with the connected owner wallet.';
+  }
+  render();
+}
+
+async function runAssetAction(action: 'mint' | 'approve' | 'wrap' | 'refresh'): Promise<void> {
+  if (action === 'refresh') {
+    await refreshAssetState();
+    return;
+  }
+  const amountInput = document.querySelector<HTMLInputElement>('#asset-amount');
+  assetAmount = amountInput?.value ?? assetAmount;
+  const provider = activeWallet();
+  if (!provider || !manifest) {
+    assetMessage = 'Connect a Sepolia wallet before preparing test collateral. No funds moved.';
+    render();
+    return;
+  }
+  try {
+    const amount = parseTestAssetAmount(assetAmount);
+    assetBusy = true;
+    assetMessage = {
+      mint: 'Requesting a valueless QSFC mint to your connected wallet. Confirm it in the wallet, then wait for the public Sepolia receipt.',
+      approve:
+        'Requesting an exact QSFC allowance for the immutable confidential wrapper. Confirm it in the wallet, then wait for the receipt.',
+      wrap: 'Requesting a 1:1 confidential wrap. Public QSFC remains yours until this wallet transaction confirms.',
+    }[action];
+    render();
+    const transactionHash = await {
+      mint: mintTestAsset,
+      approve: approveTestAsset,
+      wrap: wrapTestAsset,
+    }[action](provider, manifest.faucetAddress, manifest.collateralAddress, amount);
+    assetMessage = `${action === 'mint' ? 'Mint' : action === 'approve' ? 'Approval' : 'Wrap'} confirmed on Sepolia: ${transactionHash.slice(0, 10)}…. Refreshing the owner asset state.`;
+    assetBusy = false;
+    render();
+    await refreshAssetState();
+  } catch (error) {
+    assetBusy = false;
+    assetMessage =
+      error instanceof Error
+        ? `${error.message} Read the current wallet and public state before retrying.`
+        : 'The asset action was not confirmed. No application-controlled transfer occurred; refresh before retrying.';
+    render();
+  }
+}
+
 async function revealOwner(): Promise<void> {
   const provider = activeWallet();
   if (!provider || !manifest) {
@@ -345,13 +468,23 @@ async function revealOwner(): Promise<void> {
   ownerMessage = 'Requesting owner-only decrypt authorization…';
   render();
   try {
-    const position = await decryptOwnerPosition(provider, manifest.poolAddress);
+    const [position, epoch] = await Promise.all([
+      decryptOwnerPosition(provider, manifest.poolAddress),
+      readPublicEpoch(manifest.poolAddress),
+    ]);
     ownerMessage = position.committed
-      ? `Position revealed for this session. Score: ${position.scoreBps.toString()} bps. ${position.claimed ? 'Claimed.' : position.refunded ? 'Refunded.' : 'No terminal action submitted.'}`
+      ? `Position revealed for this session. Collateral: ${formatTokenAmount(position.stake)} QSCC. Forecast: ${position.probabilityBps.toString()} bps. ${position.scoreAvailable ? `Score: ${position.scoreBps.toString()} bps.` : 'Score has not been materialized.'} ${position.claimed ? 'Claimed.' : position.refunded ? 'Refunded.' : 'No terminal action submitted.'}`
       : 'This wallet has no committed position for the canonical pool.';
-    ownerActions = position.committed
-      ? `<div class="owner-actions"><button class="secondary" data-owner-action="materializeScore">Materialize score</button><button class="secondary" data-owner-action="claim">Claim payout</button><button class="secondary" data-owner-action="refund">Request refund</button></div>`
-      : '';
+    ownerActions = '';
+    if (position.committed && !position.claimed && !position.refunded) {
+      if (epoch.state === 4) {
+        ownerActions = `<div class="owner-actions"><button class="secondary" data-owner-action="materializeScore">Materialize score</button><button class="secondary" data-owner-action="claim">Claim payout</button></div><p class="muted">Settlement is public. Score materialization and payout are separate explicit owner-wallet requests.</p>`;
+      } else if (epoch.state === 5) {
+        ownerActions = `<div class="owner-actions"><button class="secondary" data-owner-action="refund">Request refund</button></div><p class="muted">This epoch is publicly refundable. The refund returns confidential collateral to the connected owner after its receipt confirms.</p>`;
+      } else {
+        ownerActions = `<p class="muted">Terminal actions are unavailable in the current public lifecycle state. Refresh the public market before trying again.</p>`;
+      }
+    }
   } catch {
     ownerMessage =
       'Viewer access was denied or unavailable. Verify the connected owner account, then retry safely.';
@@ -367,6 +500,7 @@ async function refreshLifecycle(): Promise<void> {
     return;
   }
   lifecycleMessage = 'Refreshing direct Ethereum Sepolia public pool state…';
+  marketReadinessMessage = 'Checking the immutable commit window against the latest Sepolia block…';
   render();
   try {
     const epoch = await readPublicEpoch(manifest.poolAddress);
@@ -374,8 +508,19 @@ async function refreshLifecycle(): Promise<void> {
       deadline: epoch.deadline,
       observedAt: epoch.observedAt,
     });
+    const readiness = presentMarketReadiness({
+      state: epoch.state,
+      deadline: epoch.deadline,
+      observedAt: epoch.observedAt,
+    });
+    marketActionable = readiness.actionable;
+    marketCohortGate = `At least ${epoch.kMin} participants`;
+    marketReadinessMessage = `${readiness.label}: ${readiness.explanation}`;
     lifecycleMessage = `${view.label}: ${view.explanation} Participants: ${epoch.participantCount}. ${view.recovery}`;
   } catch {
+    marketActionable = false;
+    marketReadinessMessage =
+      'The latest public market state could not be read. Signal submission stays disabled until a direct Sepolia refresh succeeds.';
     lifecycleMessage =
       'Direct public read is degraded. Retry safely or verify the canonical pool through an independent public explorer.';
   }
@@ -398,11 +543,18 @@ async function connectWallet(provider?: Eip1193Provider): Promise<void> {
   walletState = 'Connecting…';
   render();
   try {
-    const chainId = await wallet.request({ method: 'eth_chainId' });
+    let chainId = await wallet.request({ method: 'eth_chainId' });
     if (chainId !== '0xaa36a7') {
-      walletState = 'Switch to Sepolia';
-      render('This product only works on Ethereum Sepolia.');
-      return;
+      walletState = 'Switching to Sepolia…';
+      render(
+        'Requesting the Ethereum Sepolia network in your wallet. No transaction is being submitted.',
+      );
+      await wallet.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0xaa36a7' }],
+      });
+      chainId = await wallet.request({ method: 'eth_chainId' });
+      if (chainId !== '0xaa36a7') throw new Error('Wallet did not switch to Ethereum Sepolia.');
     }
     const accounts = await wallet.request({ method: 'eth_requestAccounts' });
     walletState =

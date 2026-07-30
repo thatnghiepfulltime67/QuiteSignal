@@ -355,3 +355,30 @@ Each revision has a fresh deterministic deployment plan and native-gas budget gu
 The old deployment remains visible and its refund state is not relabelled as current
 product success. This changes release artifact selection, but not custody, privacy,
 Nox ACL, contract interfaces, or protocol state transitions.
+
+## ADR-024 — User-controlled valueless test-asset preparation
+
+**Status:** Accepted before WEB-09 implementation
+
+The canonical release already deploys a manifest-recorded, valueless Sepolia ERC-20
+whose permissionless `mint(to, amount)` function exists solely for testing, and an
+immutable 1:1 confidential wrapper bound to that underlying token. The web may expose
+an explicit participant setup flow that calls this existing faucet, grants the
+wrapper an exact selected allowance, and calls `wrap(to, amount)` from the connected
+user wallet. The manifest parser must bind both contracts and the browser must verify
+the wrapper's public `underlying()` value before enabling any asset action.
+
+Each write remains a separate user-approved EIP-1193 transaction and is considered
+complete only after a successful Sepolia receipt. The application has no faucet key,
+admin role, relayer, backend, native-gas source, allowance escalation, or custody.
+Public faucet balance and allowance may be read normally; confidential balance may
+be decrypted only for the connected owner after an explicit session action and must
+not be logged, persisted, placed in a URL, or included in evidence. The test token is
+always described as valueless and testnet-only.
+
+This changes the public web journey and makes the existing asset custody transition
+usable, but it does not change a contract ABI, trust the application with assets, or
+weaken Nox ACL. An unavailable or expired canonical pool disables signal submission;
+the faucet must never be presented as sufficient readiness without native Sepolia gas,
+confirmed wrapping, and an open chain-derived commit window. R-26 tracks confusion,
+unbounded test minting, allowance, and stale-release risks.

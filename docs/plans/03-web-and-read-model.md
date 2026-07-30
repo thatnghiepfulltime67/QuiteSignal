@@ -32,6 +32,7 @@ depending on a mock, private database, or privileged backend.
 | WEB-02-NAV-03        | Persistent workspace subnav    | Workspace defaults to Market and exposes its functions in a secondary navigation bar             | source/navigation tests, production build, typecheck, clean diff      | `feat: add persistent workspace navigation`         |
 | WEB-08-DEPLOYMENT-02 | Revision command preparation   | Explicit append-only revision invocation and operator runbook                                    | static command policy test, formatter, typecheck, clean diff          | `build: prepare explicit release revision commands` |
 | WEB-08-EVIDENCE-03   | Browser evidence verifier      | Public-only G7 browser evidence schema and independent receipt/manifest validation               | parser mutation tests, verifier tests, typecheck, clean diff          | `test: add browser evidence verifier`               |
+| WEB-09               | Complete participant cockpit   | Live readiness, test-asset faucet/wrap, guarded signal journey, owner/recovery cockpit           | web tests, production build, offline gate, clean diff                 | `feat: complete the participant web journey`        |
 
 ## WEB-01 work-item record
 
@@ -511,7 +512,7 @@ diff --check` pass. This remains read-only evidence, not G7 wallet evidence.
 
 ID: `WEB-03`
 
-Status: `in_progress`
+Status: `blocked`
 
 Outcome: Provide the browser-local sealed signal journey using the production Nox
 SDK and the protocol's real two-step commit/collateral callback lifecycle.
@@ -662,7 +663,7 @@ layout legible. This does not constitute browser lifecycle evidence or a G7 clai
 
 ID: `WEB-04`
 
-Status: `in_progress`
+Status: `blocked`
 
 Outcome: Render a chain-derived public epoch timeline with clear aggregate,
 verification, settlement, pending, and recovery states.
@@ -702,7 +703,7 @@ RPC reads with static state or introduce indexer authority.
 
 ID: `WEB-05`
 
-Status: `in_progress`
+Status: `blocked`
 
 Outcome: Provide the connected-owner position and terminal-action experience without
 exposing owner values, weakening ACL, or confusing claims with recovery refunds.
@@ -786,7 +787,7 @@ and no G7 claim is made.
 
 ID: `WEB-06`
 
-Status: `in_progress`
+Status: `blocked`
 
 Outcome: Provide a public verification route that exposes canonical manifest facts,
 runtime/evidence status, and clear failure handling without treating the web app as
@@ -822,7 +823,7 @@ evidence with a fixture or claim an unverified manifest is valid.
 
 ID: `WEB-07`
 
-Status: `in_progress`
+Status: `blocked`
 
 Outcome: Harden the primary browser experience for keyboard, screen-reader, mobile,
 reduced-motion, RPC/wallet/Nox failure, and confidential-data handling.
@@ -858,7 +859,7 @@ checks or use an inaccessible fallback state.
 
 ID: `WEB-08`
 
-Status: `in_progress`
+Status: `blocked`
 
 Outcome: Produce sanitized, real-browser Ethereum Sepolia evidence for the primary
 signal journey and one documented recovery path without a mock wallet or chain.
@@ -1096,6 +1097,83 @@ receipt selectors. `T-VERIFIER-WEB-08-02` rejects an extra sensitive field, simu
 provider declaration, duplicate receipt, and owner-only refund selector. The
 read-only verifier never writes to Sepolia or prints transaction input. This is
 evidence infrastructure, not a browser run or G7 claim.
+
+Status normalization: WEB-03 through WEB-07 retain their implemented source and
+offline completion evidence, but their remaining live-browser acceptance criteria
+are blocked by WEB-08, G7, and R-25. WEB-08 is blocked directly by R-25. They are not
+active engineering slices while WEB-09 completes the dependency-independent local
+participant experience.
+
+## WEB-09 work-item record
+
+ID: `WEB-09`
+
+Status: `in_progress`
+
+Prerequisite gates: G6 passed. Existing manifest, browser wallet, confidential-input,
+public-reader, and owner-action boundaries are available. G7 remains blocked by R-25
+and is not claimed by this slice.
+
+Outcome: Deliver one coherent local participant experience that detects whether the
+canonical Sepolia market is actionable, guides a user-controlled wallet through
+obtaining valueless test collateral and wrapping it confidentially, gates signal
+submission on real readiness, and exposes clear owner, terminal, and recovery next
+actions without a mock state or application-held secret.
+
+Output files: `apps/web/src/` participant-domain, rendering, wallet, and style files;
+focused `apps/web/test/` coverage; the web package metadata only if required; this
+work-item record; the decision log; and the risk register.
+
+Acceptance criteria: The application presents the single canonical MVP market with
+its chain-derived state, immutable deadline, condition, participant count, and
+actionability. A connected Sepolia wallet can mint the manifest-bound valueless test
+ERC-20, approve only the selected wrapping amount, wrap it 1:1 into confidential
+collateral, refresh public and owner-authorized balances, and proceed to signal only
+when the market is open and collateral is sufficient. Every wallet request is an
+explicit step with receipt confirmation, disabled duplicate submission, progress,
+failure, retry, and safe-next-action copy. Expired or terminal markets never expose
+an enabled signal action. Owner reveal and terminal controls remain session-only and
+state-aware. The UI includes a concise self-test checklist, truthful single-market
+scope, responsive navigation, visible focus, reduced motion, and no dead link or
+mock-data branch.
+
+Negative cases: Reject malformed or mismatched underlying/wrapper manifest bindings,
+wrong chain, no account, invalid amount, zero amount, insufficient confidential
+collateral, expired market, pending wallet request, reverted/dropped receipt, and
+denied owner ACL. Never continue from a failed mint/approve/wrap step, resubmit a
+possibly pending signal blindly, label a receipt as protocol finality prematurely,
+or expose raw confidential handles/proofs.
+
+Privacy/custody impact: The faucet mints a public, valueless Sepolia test ERC-20 to
+the explicitly connected account. Approval is limited to the user-selected amount;
+wrapping transfers that public test amount into the immutable manifest-bound wrapper
+and creates owner-authorized confidential collateral. Balance decryption occurs only
+after an explicit owner action and remains in memory. There is no backend, relayer,
+analytics, persistent account, plaintext signal store, app signer, or alternate ACL.
+
+Funds location/recovery impact: Before mint, no test asset exists. After mint it is
+public ERC-20 in the user's wallet; after approval it remains there until wrap; after
+wrap it is confidential collateral owned by the user; after a confirmed callback it
+is held by the pool under the documented pending/terminal recovery rules. Failures
+always re-read public state before a retry. The faucet has no value claim and cannot
+mint native Sepolia gas.
+
+Commands/checks: focused web tests, `npm run test:web`, production web build, root
+typecheck, `npm run check:offline`, targeted browser inspection at 360/768/1280/1440,
+secret/dependency source scans, and `git diff --check`. No local chain or simulated
+wallet output may be used as contract/privacy evidence.
+
+Evidence path: source/test output and sanitized local browser inspection only. A
+future externally unlocked wallet run must create the named G7 artifacts under
+`evidence/sepolia/G7/`; WEB-09 cannot substitute for or claim G7.
+
+Intended commit: `feat: complete the participant web journey`.
+
+Rollback/failure action: Revert the participant cockpit and retain the immutable
+contracts and manifest history. Never compensate with mock balances, a hidden faucet
+signer, imported deployment key, persisted confidential values, or an unverified
+pool. If the active release is expired, keep transaction actions disabled and follow
+ADR-023 for a later explicitly budgeted append-only release.
 
 ## Primary route contract
 
