@@ -541,6 +541,40 @@ Rollback/failure action: Revert this isolated slice and leave PK-06 incomplete. 
 caller-selected outcome, stale/unbound adapter result, premature recovery, any new
 public disclosure, or collateral transfer is stop-ship.
 
+## PK-07 work-item record
+
+ID: `PK-07`
+
+Status: `in_progress`
+
+Outcome: Implement confidential score materialization, winner-only confidential
+payout claims, and refundable-owner returns without public owner amounts or an
+administrator settlement path.
+
+Output files: `QuietSignalPool.sol`, stable ABI/error tests where required, a staged
+Sepolia owner-terminal runner and verifier, `evidence/{offline,sepolia}/G5/PK-07-TERMINALS.json`,
+spend ledger, protocol/API/risk/traceability documents, and this record.
+
+Acceptance criteria: Only a settled owner may materialize its encrypted score and
+claim once; only a refundable owner may refund once; the two terminal actions are
+mutually exclusive. Transfers remain ERC-7984 confidential transfers, are bounded
+by encrypted stake/allocation math, and do not reveal payout, refund, score, or
+owner position values. Invalid state, duplicate, opposing terminal action, and
+non-winner paths preserve custody and state.
+
+Privacy/custody impact: Owner score, payout, and refund values remain Nox handles
+visible only to the owner and pool. Public events contain identifiers only.
+
+Funds location/recovery impact: Collateral stays in confidential pool custody until
+one owner-scoped confidential terminal transfer. A failed terminal action leaves
+custody unchanged and is retryable by that owner.
+
+Checks: `npm run test:interfaces`, `npm run compile`, named Sepolia terminal runner
+and verifier, `npm run check:offline`, and `git diff --check`.
+
+Evidence path: `evidence/{offline,sepolia}/G5/PK-07-TERMINALS.json` plus append-only
+spend-ledger entries. Intended commit: `feat: add private settlement and score`.
+
 ## Sequencing
 
 ```text
