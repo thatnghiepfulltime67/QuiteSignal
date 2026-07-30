@@ -27,6 +27,7 @@ declare global {
 
 let manifest: PublicManifest | undefined;
 let releaseId = 'unselected';
+let manifestPhase: 'loading' | 'ready' | 'unavailable' = 'loading';
 let walletState = 'No wallet detected';
 let lifecycleMessage = 'Connect a Sepolia wallet to refresh public pool state.';
 let ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
@@ -42,6 +43,12 @@ async function loadManifest(): Promise<void> {
 
 function navigationLink(path: string, label: string, active: boolean): string {
   return `<a href="${path}"${active ? ' aria-current="page"' : ''}>${label}</a>`;
+}
+
+function releaseStatusContent(): string {
+  return manifestPhase === 'loading'
+    ? `<section class="band cocoa-band release-status"><div class="band-inner"><p class="eyebrow compute">{ verifying active release }</p><h1>Checking the live deployment.</h1><p role="status">Loading the canonical Sepolia release and public manifest. No wallet action is available during this check.</p><div class="status-rule" aria-hidden="true"><span></span><span></span><span></span></div></div></section>`
+    : `<section class="band petal-band release-status unavailable"><div class="band-inner"><p class="eyebrow private">{ release unavailable }</p><h1>Do not connect or submit yet.</h1><p role="alert">The active Sepolia release could not be validated from its canonical public manifest. Reload when the deployment record is available, then verify it before a wallet action.</p><a class="text-action dark-action" href="/how-it-works">Read how the product works <span aria-hidden="true">↗</span></a></div></section>`;
 }
 
 function landingContent(market?: ReturnType<typeof presentMarket>): string {
@@ -69,8 +76,9 @@ function render(message?: string): void {
   const verifyAddress = location.pathname.startsWith('/verify/')
     ? location.pathname.slice('/verify/'.length)
     : undefined;
-  const content =
-    verifyAddress && manifest
+  const content = !manifest
+    ? releaseStatusContent()
+    : verifyAddress
       ? (() => {
           try {
             const view = presentVerification(manifest, verifyAddress);
@@ -97,7 +105,7 @@ function render(message?: string): void {
     navigationLink(canonicalVerifyPath, 'Verify', Boolean(verifyAddress)),
     navigationLink('/position', 'Position', isPositionRoute),
   ].join('');
-  root.innerHTML = `<a class="skip-link" href="#main-content">Skip to content</a><main class="app-shell"><header class="site-header"><a class="wordmark" href="/" aria-label="QuietSignal overview">QuietSignal</a><div class="header-actions"><span class="network-status" aria-label="Network: Ethereum Sepolia">Sepolia</span><button class="wallet" id="wallet">${walletState}</button></div></header><nav class="site-nav" aria-label="Primary">${navigation}</nav><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section><div id="main-content" tabindex="-1">${content}</div><section class="deployment-band"><div><p class="eyebrow">{ active Sepolia release ${releaseId} }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : 'Loading verified manifest…')}</p><a class="deployment-link" href="${canonicalPoolPath}">Read public lifecycle <span aria-hidden="true">↗</span></a></div></section></main>`;
+  root.innerHTML = `<a class="skip-link" href="#main-content">Skip to content</a><main class="app-shell"><header class="site-header"><a class="wordmark" href="/" aria-label="QuietSignal overview">QuietSignal</a><div class="header-actions"><span class="network-status" aria-label="Network: Ethereum Sepolia">Sepolia</span><button class="wallet" id="wallet"${manifest ? '' : ' disabled'}>${manifest ? walletState : 'Release check'}</button></div></header><nav class="site-nav" aria-label="Primary">${navigation}</nav><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section><div id="main-content" tabindex="-1">${content}</div><section class="deployment-band"><div><p class="eyebrow">{ active Sepolia release ${releaseId} }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : manifestPhase === 'loading' ? 'Checking the canonical manifest…' : 'Canonical manifest unavailable. Do not continue with a wallet action.')}</p>${manifest ? `<a class="deployment-link" href="${canonicalPoolPath}">Read public lifecycle <span aria-hidden="true">↗</span></a>` : ''}</div></section></main>`;
   document.querySelector<HTMLButtonElement>('#wallet')?.addEventListener('click', connectWallet);
   document
     .querySelector<HTMLButtonElement>('#refresh-lifecycle')
@@ -278,11 +286,14 @@ window.ethereum?.on('chainChanged', () => {
   ownerActions = '';
   render('Reconnect after selecting Ethereum Sepolia.');
 });
+render('Checking the canonical Sepolia release. No wallet action is available yet.');
 loadManifest()
   .then(() => {
+    manifestPhase = 'ready';
     render();
     void refreshLifecycle();
   })
-  .catch(() =>
-    render('The canonical manifest could not be validated. Do not continue until it is available.'),
-  );
+  .catch(() => {
+    manifestPhase = 'unavailable';
+    render('The canonical manifest could not be validated. Do not continue until it is available.');
+  });

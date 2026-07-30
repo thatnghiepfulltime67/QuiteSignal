@@ -223,6 +223,49 @@ all 23 web tests, root typecheck, production Vite build, targeted Prettier check
 and `git diff --check` pass. The slice has no wallet or chain write and does not
 claim G7 evidence.
 
+## WEB-01-UX-03 work-item record
+
+ID: `WEB-01-UX-03`
+
+Status: `complete`
+
+Outcome: Replace the blank pre-manifest interval and generic failure rendering with
+explicit release loading and unavailable states that preserve public education but
+prevent a wallet-action path before canonical manifest validation.
+
+Output files: application state/markup in `apps/web/src/main.ts`, corresponding
+poster-system status styles in `apps/web/src/styles.css`, focused assertions, and
+this record.
+
+Acceptance criteria: The first render announces a non-writing verification/loading
+state; a manifest failure gives a clear stop action and no market, signal, owner, or
+verification CTA; and a validated manifest restores the normal route experience.
+States remain keyboard readable and do not introduce storage, analytics, a service,
+or a wallet request.
+
+Privacy/custody impact: Presentation-only state derived from the existing manifest
+fetch. No confidential value, wallet account, key, signature, or transaction payload
+is read or retained.
+
+Funds location/recovery impact: No funds move. The unavailable state explicitly
+prevents a new action until the canonical public release can be read again.
+
+Checks: focused source assertions, `npm run test:web`, production web build, root
+typecheck, and `git diff --check`.
+
+Evidence location: source/test output only; this work is not G7 evidence.
+
+Intended commit: `feat: clarify release loading states`.
+
+Rollback/failure action: Revert only the status presentation. Never make an
+unvalidated fallback manifest or stored deployment address available to restore a CTA.
+
+Completion evidence: Initial render now announces canonical release verification;
+the wallet control is disabled until a validated manifest exists; and unavailable
+state blocks route actions with a clear reload/verify instruction. `T-WEB-01-UX-03`,
+all 24 web tests, root typecheck, production Vite build, targeted Prettier checks,
+and `git diff --check` pass. No stored fallback or wallet/chain action was added.
+
 ## WEB-03 work-item record
 
 ID: `WEB-03`
