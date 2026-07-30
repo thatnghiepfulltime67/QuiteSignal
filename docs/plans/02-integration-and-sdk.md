@@ -199,7 +199,8 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `VER-01-PLAN-01`.
+Active slice: none; `VER-01` is complete and the next P2 item must be selected
+before implementation.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
 consumer bindings, deployment tests, this record, evidence ledger entries, and
@@ -488,6 +489,15 @@ Intended commit: `feat: add public release verifier`.
 Rollback/failure action: Revert the verifier slice only; retain the already verified
 DEP-01 baseline. Do not add a trusted backend, relax schema sanitization, or report
 non-observable confidential facts as verifier output.
+
+Completion evidence: source commit `9ca7114` adds canonical manifest parsing and
+the public release verifier. Its nine offline verifier tests include factory,
+collateral, and stale-feed mutations. The read-only canonical command passed at
+block `11383180` and wrote
+`evidence/sepolia/G6/VER-01-PUBLIC-VERIFIER.json`: runtime/receipt/pool baseline
+checks plus factory pool binding, ERC-7984 support, immutable adapter configuration,
+feed runtime/round validity, and zero native adapter custody. VER-01 is complete as
+a G6 component; G6 remains `not_run` until automation, indexer, and live cases pass.
 
 ## Dependency graph
 

@@ -52,6 +52,16 @@ historical epoch mode prevents normal future lifecycle transitions from invalida
 this deployment baseline. G6 remains `not_run` until all P2 live lifecycle components
 pass.
 
+VER-01 is a completed G6 component, not G6 itself. The public release verifier
+source commit `9ca7114` and report
+`evidence/sepolia/G6/VER-01-PUBLIC-VERIFIER.json` passed at block `11383180` against
+the canonical manifest. In addition to baseline runtime/binding/receipt checks, it
+verified factory pool-id/address derivation, ERC-7984 collateral interface support,
+immutable adapter/feed configuration, a current valid feed round, and zero adapter
+native balance. Its mutation suite rejects factory, collateral, and stale-feed
+substitutions without modelling confidential input. G6 remains `not_run` until all
+P2 lifecycle components pass.
+
 ### G5 partial history
 
 PK-03A is a completed G5 component, not G5 itself. The source commit `4ef78df`

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "chainId": 11155111,
+  "verificationBlock": "11383180",
+  "epochVerificationBlock": "11383123",
+  "contractCount": 5,
+  "poolCount": 1,
+  "receiptCount": 5,
+  "checks": {
+    "runtimeCodeHashes": true,
+    "immutablePoolBindings": true,
+    "publicEpochFacts": true,
+    "receiptStatuses": true,
+    "factoryPoolBinding": true,
+    "collateralInterface": true,
+    "adapterConfiguration": true,
+    "feedRuntimeAndRound": true,
+    "adapterZeroNativeCustody": true
+  },
+  "status": "passed"
+}
