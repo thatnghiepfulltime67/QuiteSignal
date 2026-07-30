@@ -29,6 +29,7 @@ depending on a mock, private database, or privileged backend.
 | WEB-03-UI-01         | Poster-system visual refresh   | Revised design system, responsive banded application presentation, visual assertions             | token/source audit, responsive build and interaction checks           | `feat: refresh web visual system`                   |
 | WEB-02-LANDING-01    | Product landing and navigation | Complete product narrative, task-oriented navigation, route guidance, accessibility improvements | route/source assertions, keyboard/navigation checks, production build | `feat: improve product landing and navigation`      |
 | WEB-02-NAV-02        | Two-level product navigation   | Overview plus a task-described Workspace menu                                                    | source/navigation tests, production build, typecheck, clean diff      | `feat: clarify workspace navigation`                |
+| WEB-02-NAV-03        | Persistent workspace subnav    | Workspace defaults to Market and exposes its functions in a secondary navigation bar             | source/navigation tests, production build, typecheck, clean diff      | `feat: add persistent workspace navigation`         |
 | WEB-08-DEPLOYMENT-02 | Revision command preparation   | Explicit append-only revision invocation and operator runbook                                    | static command policy test, formatter, typecheck, clean diff          | `build: prepare explicit release revision commands` |
 | WEB-08-EVIDENCE-03   | Browser evidence verifier      | Public-only G7 browser evidence schema and independent receipt/manifest validation               | parser mutation tests, verifier tests, typecheck, clean diff          | `test: add browser evidence verifier`               |
 
@@ -233,6 +234,42 @@ boundary. `T-WEB-02-LANDING-01` checks the two-level source contract and its tas
 labels; `T-WEB-07-TARGETS-01` checks the shared top-level target contract. All 27 web
 tests, production Vite build, root typecheck, targeted Prettier validation, and `git
 diff --check` pass. No wallet, storage, backend, or chain behaviour changed.
+
+## WEB-02-NAV-03 work-item record
+
+ID: `WEB-02-NAV-03`
+
+Status: `in_progress`
+
+Prerequisite gates: G6 passed. This presentation-only P3 slice cannot claim G7.
+
+Outcome: Make Workspace a direct Market entry point and present its functions in a
+visible secondary navigation bar instead of a transient overlay menu.
+
+Output files: `apps/web/src/main.ts`, `apps/web/src/styles.css`, focused navigation
+tests, and this work-item record.
+
+Acceptance criteria: The primary navigation has Overview and a Workspace link to
+`/markets`. Every Workspace route renders a visible secondary bar for Market, Guide,
+Verify, and Position; Market is current after entering Workspace. The current task is
+announced semantically, all controls remain at least 44px, and narrow layouts keep
+the bar readable without horizontal overflow.
+
+Privacy/custody impact: None. This changes only in-memory route presentation and
+does not request a wallet, store data, or introduce a service.
+
+Funds location/recovery impact: None. The subnavigation has no transaction action;
+existing recovery guidance remains contract-directed.
+
+Checks: focused navigation tests, `npm run test:web`, production web build, root
+typecheck, targeted Prettier validation, and `git diff --check`.
+
+Evidence location: source/test output only; this cannot satisfy G7.
+
+Intended commit: `feat: add persistent workspace navigation`.
+
+Rollback/failure action: Revert only the navigation presentation. Do not substitute
+hidden routes, wallet gating, or a retained client session.
 
 ## WEB-03-UX-02 work-item record
 
