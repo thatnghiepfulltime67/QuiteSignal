@@ -2,6 +2,11 @@
 
 Status: `not_started`
 
+Pre-G5 preparation exception: While P1 is explicitly `awaiting_chain`, one
+dependency-independent pure TypeScript SDK slice may be `in_progress`. It cannot
+send a transaction, bind an address as a deployment, accept confidential input, or
+claim G6/P2 completion. The phase remains `not_started` until G5 passes.
+
 ## Objective
 
 Turn the G5 protocol into a typed, automatable, independently verifiable Sepolia
@@ -15,18 +20,57 @@ lifecycle without introducing plaintext or privileged service authority.
 
 ## Work-item register
 
-| ID | Outcome | Primary artifacts | Required checks | Intended commit |
-|---|---|---|---|---|
-| INT-01 | Production resolution adapter | Selected adapter, target config, integration tests | Runtime hash, freshness, resolution, zero custody, residual collateral | `feat: integrate selected public resolution feed` |
-| SDK-01 | Safe public types | Branded types, schemas, decimal parser, domain config | Compile-time misuse tests, boundary vectors | `feat: add typed protocol sdk` |
-| SDK-02 | Confidential client | Encrypt/import preparation, owner decrypt, ACL reads | Context binding, no plaintext serialization, live smoke | `feat: add nox signal client` |
-| SDK-03 | Transaction/read client | Prepare/send/replacement/retry, public reads | ABI compatibility, idempotency, chain/account changes | `feat: add protocol transaction client` |
-| VER-01 | Public verifier CLI | RPC reader, I1–I10 observable checks, report | Mutated manifest/event/receipt rejection | `feat: add public verification cli` |
-| AUT-01 | Permissionless relayer | dry-run/once/poll/health, policy, bounded budget | race, duplicate, stale request, RPC failure | `feat: add permissionless lifecycle relayer` |
-| IDX-01 | Rebuildable read model | event reducer, checkpoint, reorg, rebuild | deterministic replay, checkpoint reset, no private schema | `feat: add chain derived read model` |
-| DEP-01 | Deterministic Sepolia deploy | deploy plan/write scripts, manifest generation | chain guard, cost plan, source/runtime verification | `build: add guarded sepolia deployment` |
-| LIVE-01 | Success lifecycle | Multi-user live lifecycle and evidence | signal → aggregate → resolve → settle → score/claim | `test: prove live sepolia lifecycle` |
-| LIVE-02 | Failure/recovery lifecycle | Named live negative cases and evidence | below-k, unauthorized, replay, timeout/recovery, stale feed | `test: prove live failure recovery paths` |
+| ID      | Outcome                       | Primary artifacts                                     | Required checks                                                        | Intended commit                                   |
+| ------- | ----------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------- |
+| INT-01  | Production resolution adapter | Selected adapter, target config, integration tests    | Runtime hash, freshness, resolution, zero custody, residual collateral | `feat: integrate selected public resolution feed` |
+| SDK-01  | Safe public types             | Branded types, schemas, decimal parser, domain config | Compile-time misuse tests, boundary vectors                            | `feat: add typed protocol sdk`                    |
+| SDK-02  | Confidential client           | Encrypt/import preparation, owner decrypt, ACL reads  | Context binding, no plaintext serialization, live smoke                | `feat: add nox signal client`                     |
+| SDK-03  | Transaction/read client       | Prepare/send/replacement/retry, public reads          | ABI compatibility, idempotency, chain/account changes                  | `feat: add protocol transaction client`           |
+| VER-01  | Public verifier CLI           | RPC reader, I1–I10 observable checks, report          | Mutated manifest/event/receipt rejection                               | `feat: add public verification cli`               |
+| AUT-01  | Permissionless relayer        | dry-run/once/poll/health, policy, bounded budget      | race, duplicate, stale request, RPC failure                            | `feat: add permissionless lifecycle relayer`      |
+| IDX-01  | Rebuildable read model        | event reducer, checkpoint, reorg, rebuild             | deterministic replay, checkpoint reset, no private schema              | `feat: add chain derived read model`              |
+| DEP-01  | Deterministic Sepolia deploy  | deploy plan/write scripts, manifest generation        | chain guard, cost plan, source/runtime verification                    | `build: add guarded sepolia deployment`           |
+| LIVE-01 | Success lifecycle             | Multi-user live lifecycle and evidence                | signal → aggregate → resolve → settle → score/claim                    | `test: prove live sepolia lifecycle`              |
+| LIVE-02 | Failure/recovery lifecycle    | Named live negative cases and evidence                | below-k, unauthorized, replay, timeout/recovery, stale feed            | `test: prove live failure recovery paths`         |
+
+## SDK-01 pre-G5 work-item record
+
+ID: `SDK-01`
+
+Status: `in_progress`
+
+Outcome: Create the framework-independent public SDK type boundary: branded public
+identifiers and exact decimal/base-unit parsing that rejects unsafe JavaScript
+numbers and all confidential-value-shaped fields.
+
+Files/modules allowed: `modules/confidential-client/package.json`,
+`modules/confidential-client/src/{public,index}.ts`,
+`modules/confidential-client/test/public.test.ts`, root workspace scripts/lockfile,
+this record, and the traceability matrix.
+
+Acceptance criteria: Addresses, pool IDs, request IDs, transaction hashes, and
+decimal values use explicit brands; public decimal parsing is exact and rejects
+scientific notation, unsafe precision, negative values, malformed decimals, and
+values exceeding declared decimals. No public SDK type contains `stake`,
+`probability`, `position`, `payout`, `refund`, `score`, `handle`, or `proof` fields.
+
+Privacy/custody impact: This slice has no RPC, wallet, Nox, encryption, secret, or
+confidential-input dependency. It provides validation only and cannot move funds.
+
+Funds location/recovery impact: No funds or chain state exist in this slice. A parse
+failure is local, deterministic, and retryable with corrected public input.
+
+Checks: public SDK unit tests, `npm run typecheck`, `npm run check:offline`, and
+`git diff --check`.
+
+Evidence path: `modules/confidential-client/test/public.test.ts` output. This is
+offline SDK preparation evidence only and cannot advance G5 or G6.
+
+Intended commit: `feat: add typed protocol sdk`.
+
+Rollback/failure action: Revert the isolated SDK package and retain P2 as
+`not_started`; do not replace type validation with permissive `string`/`number`
+values or serialize confidential input locally.
 
 ## Dependency graph
 
@@ -82,15 +126,15 @@ Sepolia suites pass.
 
 ## Live case register
 
-| Case ID | Required result | Evidence |
-|---|---|---|
-| LIVE-SUCCESS-01 | At least k distinct wallets commit; aggregate finalizes; fresh feed outcome settles; owner score/claim succeeds | G6 lifecycle JSON/report |
-| LIVE-K-01 | Below-k closes to refund and no aggregate public-decrypt permission exists | G6 failure JSON/report |
-| LIVE-ACL-01 | Unrelated wallet cannot view/compute owner position or score | G6 ACL report |
-| LIVE-REPLAY-01 | Reused/wrong-context request fails without state/fund movement | G6 receipt/report |
-| LIVE-RECOVERY-01 | Resolution grace expiry reaches confidential refund without target custody | G6 recovery report |
-| LIVE-FEED-01 | Stale or invalid feed rejection preserves state and confidential funds | G6 receipt/balance report |
-| LIVE-VERIFY-01 | Independent CLI validates manifest and observable invariants | G6 verifier report |
+| Case ID          | Required result                                                                                                 | Evidence                  |
+| ---------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| LIVE-SUCCESS-01  | At least k distinct wallets commit; aggregate finalizes; fresh feed outcome settles; owner score/claim succeeds | G6 lifecycle JSON/report  |
+| LIVE-K-01        | Below-k closes to refund and no aggregate public-decrypt permission exists                                      | G6 failure JSON/report    |
+| LIVE-ACL-01      | Unrelated wallet cannot view/compute owner position or score                                                    | G6 ACL report             |
+| LIVE-REPLAY-01   | Reused/wrong-context request fails without state/fund movement                                                  | G6 receipt/report         |
+| LIVE-RECOVERY-01 | Resolution grace expiry reaches confidential refund without target custody                                      | G6 recovery report        |
+| LIVE-FEED-01     | Stale or invalid feed rejection preserves state and confidential funds                                          | G6 receipt/balance report |
+| LIVE-VERIFY-01   | Independent CLI validates manifest and observable invariants                                                    | G6 verifier report        |
 
 ## Verification
 

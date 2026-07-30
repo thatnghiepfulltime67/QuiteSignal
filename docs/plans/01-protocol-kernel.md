@@ -639,7 +639,7 @@ failed-receipt mutations. PK-08 is a completed G5 component, not G5 itself.
 
 ID: `PK-09`
 
-Status: `in_progress`
+Status: `awaiting_chain`
 
 Outcome: Close the protocol correctness gate with reproducible model invariants,
 source-policy checks, and named Sepolia adversarial conclusions for every observable

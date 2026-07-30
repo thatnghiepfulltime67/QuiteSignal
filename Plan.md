@@ -102,6 +102,11 @@ An `awaiting_chain` package is not an active engineering slice and may coexist o
 with one dependency-independent `in_progress` package; no gate can use its pending
 evidence. P0 requires explicit acceptance before product implementation starts.
 
+While P1 is `awaiting_chain`, one P2 preparation slice may be active only when it is
+pure TypeScript, sends no chain transaction, accepts no confidential input, creates
+no deployment binding, and makes no G6 claim. P2 itself remains `not_started` until
+G5 passes.
+
 ## 5. Planning control documents
 
 - [Gate register and kill conditions](docs/plans/gates-and-kill-conditions.md)
