@@ -1,6 +1,6 @@
 # P1 — Protocol kernel
 
-Status: `completed`
+Status: `in_progress`
 
 ## Objective
 
@@ -307,7 +307,7 @@ PK-03B is a completed G5 component and does not pass G5 by itself.
 
 ID: `PK-04`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Implement and Sepolia-test the intent-bound two-step confidential commit
 defined by ADR-018. This is the smallest real custody slice: it may import owner
@@ -545,7 +545,7 @@ public disclosure, or collateral transfer is stop-ship.
 
 ID: `PK-07`
 
-Status: `in_progress`
+Status: `awaiting_chain`
 
 Outcome: Implement confidential score materialization, winner-only confidential
 payout claims, and refundable-owner returns without public owner amounts or an
@@ -582,6 +582,47 @@ can be collected.
 
 Evidence path: `evidence/{offline,sepolia}/G5/PK-07-TERMINALS.json` plus append-only
 spend-ledger entries. Intended commit: `feat: add private settlement and score`.
+
+Chain-wait record: The source implementation, staged owner commits, static terminal
+policy checks, and independent terminal verifier are committed. Its two immutable
+Sepolia pools are awaiting their configured deadline and observation time before
+close, aggregate finalization, settlement, terminal transfers, and evidence can run.
+This is not a PK-07 or G5 pass claim. The next active package may only be independent
+of those pending state transitions and must not use their incomplete evidence.
+
+## PK-08 work-item record
+
+ID: `PK-08`
+
+Status: `in_progress`
+
+Outcome: Build a standalone, read-only protocol manifest schema and verifier CLI
+which binds deployed runtime templates, immutable pool configuration, public epoch
+facts, and receipt-ledger records without importing pool accounting helpers.
+
+Output files: a verifier workspace/module, manifest schema and fixture, CLI command,
+static mutation tests, `evidence/{offline,sepolia}/G5/PK-08-VERIFIER.json`, protocol
+and traceability documentation, the evidence ledger, and this record.
+
+Acceptance criteria: The CLI rejects a wrong chain, malformed manifest, missing
+runtime, stale runtime hash, wrong immutable binding, invalid receipt, or altered
+observable public state. It performs only Sepolia reads when checking live
+deployments and stores no key, plaintext, Nox handle, proof, or signature.
+
+Privacy/custody impact: The verifier accepts only public addresses, runtime hashes,
+public epoch facts, and transaction hashes. It has no signer, no write path, no
+confidential-value field, and no custody authority.
+
+Funds location/recovery impact: The verifier cannot move funds. A rejected manifest
+does not alter chain state; an operator corrects public metadata and re-runs the
+read-only command.
+
+Checks: schema/static mutation tests, `npm run check:offline`, named read-only
+Sepolia verifier execution, and `git diff --check`.
+
+Evidence path: `evidence/{offline,sepolia}/G5/PK-08-VERIFIER.json`. Intended commits:
+`docs: define independent verifier manifest`, `feat: add public protocol verifier`,
+and `test: record verifier mutation evidence`.
 
 ## Sequencing
 

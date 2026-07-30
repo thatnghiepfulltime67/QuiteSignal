@@ -1,6 +1,11 @@
 # QuietSignal execution plan
 
-Status values: `not_started`, `in_progress`, `blocked`, `complete`.
+Status values: `not_started`, `in_progress`, `awaiting_chain`, `blocked`, `complete`.
+
+`awaiting_chain` records a fully staged Sepolia-only action whose next valid action
+is gated by an immutable on-chain time or finality condition. It never means passed,
+does not satisfy a gate, and must state the exact remaining evidence. While it is
+awaiting chain, one dependency-independent work package may be `in_progress`.
 
 ## 1. Objective
 
@@ -93,7 +98,9 @@ No downstream package may hide or compensate for a failed upstream gate.
 | P4  | [Sepolia hardening](docs/plans/04-sepolia-hardening.md)                   | `not_started` | G7             | G8: clean-environment release verification                          |
 
 Only one work package and one independently reviewable slice may be `in_progress`.
-P0 requires explicit acceptance before product implementation starts.
+An `awaiting_chain` package is not an active engineering slice and may coexist only
+with one dependency-independent `in_progress` package; no gate can use its pending
+evidence. P0 requires explicit acceptance before product implementation starts.
 
 ## 5. Planning control documents
 
