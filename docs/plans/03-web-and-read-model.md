@@ -28,6 +28,7 @@ depending on a mock, private database, or privileged backend.
 | WEB-08               | Real browser lifecycle         | Live browser e2e and sanitized result report                                                     | primary success plus one refund/recovery path                         | `test: prove live web user journey`                 |
 | WEB-03-UI-01         | Poster-system visual refresh   | Revised design system, responsive banded application presentation, visual assertions             | token/source audit, responsive build and interaction checks           | `feat: refresh web visual system`                   |
 | WEB-02-LANDING-01    | Product landing and navigation | Complete product narrative, task-oriented navigation, route guidance, accessibility improvements | route/source assertions, keyboard/navigation checks, production build | `feat: improve product landing and navigation`      |
+| WEB-02-NAV-02        | Two-level product navigation   | Overview plus a task-described Workspace menu                                                    | source/navigation tests, production build, typecheck, clean diff      | `feat: clarify workspace navigation`                |
 | WEB-08-DEPLOYMENT-02 | Revision command preparation   | Explicit append-only revision invocation and operator runbook                                    | static command policy test, formatter, typecheck, clean diff          | `build: prepare explicit release revision commands` |
 | WEB-08-EVIDENCE-03   | Browser evidence verifier      | Public-only G7 browser evidence schema and independent receipt/manifest validation               | parser mutation tests, verifier tests, typecheck, clean diff          | `test: add browser evidence verifier`               |
 
@@ -180,6 +181,50 @@ and position destinations with a current-route indicator, Sepolia label, and key
 skip link. `T-WEB-02-LANDING-01`, all 22 web tests, root typecheck, production Vite
 build, targeted Prettier checks, and `git diff --check` pass. The content is
 independently written and presentation-only; it does not create G7 evidence.
+
+## WEB-02-NAV-02 work-item record
+
+ID: `WEB-02-NAV-02`
+
+Status: `in_progress`
+
+Prerequisite gates: G6 passed. This is a presentation-only P3 slice and cannot claim
+G7 browser-wallet evidence.
+
+Outcome: Replace the crowded primary navigation with two clear entry points:
+`Overview` and a named `Workspace` menu that explains each available product task
+before navigation.
+
+Output files: `apps/web/src/main.ts`, `apps/web/src/styles.css`, focused navigation
+and accessibility tests, and this work-item record.
+
+Acceptance criteria: The primary bar exposes only Overview and Workspace. Workspace
+has an explicit expand/collapse control, exposes Market, Guide, Verify, and Position
+with a one-sentence purpose for each, marks its active task context, remains keyboard
+accessible, and keeps every menu/action target at least 44px. It must not add a
+wallet request, storage, backend call, tracker, route mock, or confidential-data
+path.
+
+Negative cases: The menu must not hide the current task, trap keyboard focus, imply
+that a wallet is required for public exploration, or treat owner-only functions as
+public facts.
+
+Privacy/custody impact: None. Labels describe existing public/owner boundaries only;
+no wallet/provider state or confidential input is read or persisted.
+
+Funds location/recovery impact: None. Navigation cannot submit a transaction; its
+recovery copy continues to direct users to the documented on-chain path.
+
+Checks: focused source/navigation tests, `npm run test:web`, production web build,
+root typecheck, targeted Prettier validation, and `git diff --check`.
+
+Evidence location: source/test output only. This work item cannot satisfy G7.
+
+Intended commit: `feat: clarify workspace navigation`.
+
+Rollback/failure action: Revert only the navigation presentation. Do not restore a
+route-only hidden menu by adding a wallet dependency, backend navigation service, or
+stored session state.
 
 ## WEB-03-UX-02 work-item record
 
