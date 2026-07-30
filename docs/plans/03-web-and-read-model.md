@@ -356,7 +356,10 @@ Sepolia block timestamp together. `presentLifecycle` represents elapsed OPEN epo
 as `Commit deadline reached`, tells users not to submit, and names the existing
 permissionless close path. `T-WEB-04-DEADLINE-01`, all 26 web tests, root typecheck,
 production Vite build, targeted Prettier checks, and `git diff --check` pass. No
-wallet or chain write was performed.
+wallet or chain write was performed. A production browser with no wallet provider
+then refreshed DEP-02 directly from Sepolia at block `11384280`, rendered `Commit
+deadline reached`, and emitted no console/exception event; its sanitized report is
+`evidence/sepolia/G7/WEB-04-DEADLINE-DEP-02.json`.
 
 ## WEB-03 work-item record
 
