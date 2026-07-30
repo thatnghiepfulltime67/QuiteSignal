@@ -83,7 +83,11 @@ test('T-ABI-PK02-01: pool selectors preserve encrypted commit and caller-indepen
     ['config', 'config()'],
     ['epoch', 'epoch()'],
     ['ownerPosition', 'ownerPosition()'],
+    ['pendingCommit', 'pendingCommit()'],
     ['commitSignal', 'commitSignal(bytes32,bytes,bytes32,bytes)'],
+    ['finalizeCommit', 'finalizeCommit(bytes)'],
+    ['rejectPendingCommit', 'rejectPendingCommit(bytes)'],
+    ['expirePendingCommit', 'expirePendingCommit()'],
     ['closeEpoch', 'closeEpoch()'],
     ['requestAggregateDecrypt', 'requestAggregateDecrypt()'],
     ['finalizeAggregate', 'finalizeAggregate(bytes32,bytes)'],
@@ -121,12 +125,12 @@ test('T-ABI-PK02-02: factory and direct-resolution adapter retain their narrow b
   assertFunctionSelector(
     factory,
     'createPool',
-    'createPool((address,address,uint64,uint32,uint64,uint64),bytes32)',
+    'createPool((address,address,uint64,uint64,uint32,uint64,uint64),bytes32)',
   );
   assertFunctionSelector(
     factory,
     'poolIdFor',
-    'poolIdFor((address,address,uint64,uint32,uint64,uint64),bytes32)',
+    'poolIdFor((address,address,uint64,uint64,uint32,uint64,uint64),bytes32)',
   );
   assertFunctionSelector(factory, 'poolOf', 'poolOf(bytes32)');
 
@@ -170,6 +174,12 @@ test('T-ABI-PK02-02: factory and direct-resolution adapter retain their narrow b
 test('T-ABI-PK02-03: events expose chain facts without confidential values or proofs', () => {
   const pool = loadInterface('IQuietSignalPool');
   assertEventTopic(pool, 'EpochOpened', 'EpochOpened(bytes32,address,uint64,uint32)');
+  assertEventTopic(
+    pool,
+    'SignalIntentRegistered',
+    'SignalIntentRegistered(bytes32,address,uint64)',
+  );
+  assertEventTopic(pool, 'SignalIntentCleared', 'SignalIntentCleared(bytes32,address,bool)');
   assertEventTopic(pool, 'SignalCommitted', 'SignalCommitted(bytes32,address,bytes32)');
   assertEventTopic(pool, 'EpochClosed', 'EpochClosed(bytes32,uint32)');
   assertEventTopic(pool, 'AggregateDecryptRequested', 'AggregateDecryptRequested(bytes32,bytes32)');
@@ -215,14 +225,20 @@ test('T-ABI-PK02-04: stable error selectors remain available from one common ABI
     ['AlreadyClaimed', 'AlreadyClaimed(address)'],
     ['AlreadyCommitted', 'AlreadyCommitted(address)'],
     ['AlreadyRefunded', 'AlreadyRefunded(address)'],
+    ['CallbackOwnerMismatch', 'CallbackOwnerMismatch(address,address)'],
+    ['CommitRejected', 'CommitRejected()'],
     ['CommitWindowClosed', 'CommitWindowClosed(uint64,uint64)'],
     ['ConservationViolation', 'ConservationViolation()'],
     ['DuplicateAggregateRequest', 'DuplicateAggregateRequest(bytes32)'],
     ['InvalidConfiguration', 'InvalidConfiguration()'],
     ['InvalidFeedRound', 'InvalidFeedRound()'],
+    ['InvalidInputHandle', 'InvalidInputHandle()'],
     ['InvalidResolutionAdapter', 'InvalidResolutionAdapter(address)'],
     ['InvalidState', 'InvalidState(uint8,uint8)'],
     ['NativeValueNotAccepted', 'NativeValueNotAccepted()'],
+    ['PendingCommitExists', 'PendingCommitExists(address)'],
+    ['PendingCommitMissing', 'PendingCommitMissing()'],
+    ['PendingCommitTimeoutNotReached', 'PendingCommitTimeoutNotReached(uint64,uint64)'],
     ['PoolAlreadyExists', 'PoolAlreadyExists(bytes32)'],
     ['ProofAlreadyConsumed', 'ProofAlreadyConsumed(bytes32)'],
     ['ProofContextMismatch', 'ProofContextMismatch(bytes32)'],
@@ -230,6 +246,7 @@ test('T-ABI-PK02-04: stable error selectors remain available from one common ABI
     ['ResolutionNotReady', 'ResolutionNotReady(uint64,uint64)'],
     ['TerminalActionConflict', 'TerminalActionConflict(address)'],
     ['UnauthorizedCollateral', 'UnauthorizedCollateral(address)'],
+    ['WrongCallbackOperator', 'WrongCallbackOperator()'],
     ['ZeroWinningPool', 'ZeroWinningPool(uint8)'],
   ]) {
     assertErrorSelector(errors, name, signature);

@@ -70,6 +70,7 @@ contract QuietSignalFactory is IQuietSignalFactory {
       config_.confidentialCollateral == address(0) ||
       config_.resolutionAdapter == address(0) ||
       config_.deadline <= block.timestamp ||
+      config_.commitTimeout == 0 ||
       config_.kMin == 0 ||
       config_.aggregateTimeout == 0 ||
       config_.resolutionGrace == 0

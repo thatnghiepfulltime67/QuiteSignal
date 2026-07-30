@@ -34,6 +34,7 @@ const OBSERVATION_DELAY = 30n * 24n * 60n * 60n;
 const DEADLINE_LEAD = 7n * 24n * 60n * 60n;
 const AGGREGATE_TIMEOUT = 24n * 60n * 60n;
 const RESOLUTION_GRACE = 24n * 60n * 60n;
+const COMMIT_TIMEOUT = 15n * 60n;
 const DEPLOYMENT_SALT = keccak256(toHex('QuietSignal PK-03B Sepolia factory shell v1'));
 const CREATE_POOL_DRY_RUN_GAS_CEILING = 3_000_000n;
 
@@ -76,6 +77,7 @@ interface PoolConfig {
   confidentialCollateral: Address;
   resolutionAdapter: Address;
   deadline: bigint;
+  commitTimeout: bigint;
   kMin: number;
   aggregateTimeout: bigint;
   resolutionGrace: bigint;
@@ -364,6 +366,7 @@ async function main(): Promise<void> {
     confidentialCollateral: ERC7984_WRAPPER,
     resolutionAdapter: adapter?.address ?? ETH_USD_FEED,
     deadline,
+    commitTimeout: COMMIT_TIMEOUT,
     kMin: 2,
     aggregateTimeout: AGGREGATE_TIMEOUT,
     resolutionGrace: RESOLUTION_GRACE,
@@ -648,6 +651,7 @@ async function main(): Promise<void> {
     stored.confidentialCollateral.toLowerCase() !== config.confidentialCollateral.toLowerCase() ||
     stored.resolutionAdapter.toLowerCase() !== config.resolutionAdapter.toLowerCase() ||
     stored.deadline !== config.deadline ||
+    stored.commitTimeout !== config.commitTimeout ||
     Number(stored.kMin) !== config.kMin ||
     stored.aggregateTimeout !== config.aggregateTimeout ||
     stored.resolutionGrace !== config.resolutionGrace ||
@@ -724,6 +728,10 @@ async function main(): Promise<void> {
       'Zero aggregate timeout',
     ),
     expectRevert(
+      () => simulateCreate(withConfig(config, { commitTimeout: 0n }), differentSalt),
+      'Zero commit timeout',
+    ),
+    expectRevert(
       () => simulateCreate(withConfig(config, { resolutionGrace: 0n }), differentSalt),
       'Zero resolution grace',
     ),
@@ -788,6 +796,7 @@ async function main(): Promise<void> {
       poolId,
       deploymentSalt: DEPLOYMENT_SALT,
       deadline: config.deadline.toString(),
+      commitTimeout: config.commitTimeout.toString(),
       kMin: config.kMin,
       aggregateTimeout: config.aggregateTimeout.toString(),
       resolutionGrace: config.resolutionGrace.toString(),

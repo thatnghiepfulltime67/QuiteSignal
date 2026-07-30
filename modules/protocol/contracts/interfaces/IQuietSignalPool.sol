@@ -9,6 +9,8 @@ import {QuietSignalTypes} from './QuietSignalTypes.sol';
 /// @notice Public ABI for one immutable confidential epoch.
 interface IQuietSignalPool is IERC7984Receiver {
   event EpochOpened(bytes32 indexed epochId, address indexed pool, uint64 deadline, uint32 kMin);
+  event SignalIntentRegistered(bytes32 indexed epochId, address indexed owner, uint64 availableAt);
+  event SignalIntentCleared(bytes32 indexed epochId, address indexed owner, bool callbackReceived);
   event SignalCommitted(bytes32 indexed epochId, address indexed owner, bytes32 commitmentId);
   event EpochClosed(bytes32 indexed epochId, uint32 participantCount);
   event AggregateDecryptRequested(bytes32 indexed epochId, bytes32 indexed requestId);
@@ -41,6 +43,11 @@ interface IQuietSignalPool is IERC7984Receiver {
   /// @notice Returns encrypted handles only to the calling owner.
   function ownerPosition() external view returns (QuietSignalTypes.OwnerPosition memory);
 
+  function pendingCommit()
+    external
+    view
+    returns (address owner, uint64 availableAt, bool callbackReceived);
+
   /// @notice Accepts encrypted Nox input handles and their owner-bound proofs only.
   function commitSignal(
     externalEuint256 encryptedStake,
@@ -48,6 +55,12 @@ interface IQuietSignalPool is IERC7984Receiver {
     externalEuint256 encryptedProbabilityBps,
     bytes calldata probabilityProof
   ) external;
+
+  function finalizeCommit(bytes calldata acceptanceProof) external;
+
+  function rejectPendingCommit(bytes calldata acceptanceProof) external;
+
+  function expirePendingCommit() external;
 
   function closeEpoch() external;
 

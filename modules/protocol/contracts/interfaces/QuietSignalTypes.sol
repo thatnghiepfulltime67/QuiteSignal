@@ -7,6 +7,7 @@ import {euint256} from '@iexec-nox/nox-protocol-contracts/contracts/sdk/Nox.sol'
 library QuietSignalTypes {
   enum EpochState {
     OPEN,
+    COMMIT_PENDING,
     AGGREGATE_PENDING,
     RESOLUTION_PENDING,
     SETTLED,
@@ -23,6 +24,7 @@ library QuietSignalTypes {
     address confidentialCollateral;
     address resolutionAdapter;
     uint64 deadline;
+    uint64 commitTimeout;
     uint32 kMin;
     uint64 aggregateTimeout;
     uint64 resolutionGrace;

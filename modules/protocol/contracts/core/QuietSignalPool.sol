@@ -1,24 +1,62 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {IERC7984} from '@iexec-nox/nox-confidential-contracts/contracts/interfaces/IERC7984.sol';
+import {IERC7984Receiver} from '@iexec-nox/nox-confidential-contracts/contracts/interfaces/IERC7984Receiver.sol';
+import {
+  Nox,
+  ebool,
+  euint256,
+  externalEuint256
+} from '@iexec-nox/nox-protocol-contracts/contracts/sdk/Nox.sol';
+
 import {IQuietSignalErrors} from '../interfaces/IQuietSignalErrors.sol';
 import {QuietSignalTypes} from '../interfaces/QuietSignalTypes.sol';
 
-/// @notice Immutable configuration container for one future confidential epoch.
-/// @dev PK-03B intentionally exposes no custody callback or lifecycle mutation.
-contract QuietSignalPool {
+/// @notice Immutable one-epoch pool with bounded intent-bound confidential custody.
+/// @dev PK-04 implements only the commit boundary; later lifecycle transitions remain absent.
+contract QuietSignalPool is IERC7984Receiver {
+  using Nox for ebool;
+  using Nox for euint256;
+
+  uint256 private constant BPS_SCALE = 10_000;
+
   bytes32 public immutable poolId;
   bytes32 public immutable epochId;
-  address public immutable confidentialCollateral;
+  IERC7984 public immutable confidentialCollateral;
   address public immutable resolutionAdapter;
   uint64 public immutable deadline;
+  uint64 public immutable commitTimeout;
   uint32 public immutable kMin;
   uint64 public immutable aggregateTimeout;
   uint64 public immutable resolutionGrace;
 
   QuietSignalTypes.PublicEpoch private _epoch;
+  mapping(address owner => QuietSignalTypes.OwnerPosition position) private _positions;
+
+  struct PendingCommit {
+    address owner;
+    uint64 availableAt;
+    bool callbackReceived;
+    euint256 stake;
+    euint256 probabilityBps;
+    euint256 yesAllocation;
+    euint256 noAllocation;
+    euint256 balanceBeforeTransfer;
+    euint256 conditionallyHeldStake;
+    ebool accepted;
+  }
+
+  PendingCommit private _pending;
+  euint256 private _aggregateYes;
+  euint256 private _aggregateNo;
+  euint256 private _aggregateTotal;
+  bool private _aggregatesInitialized;
 
   event EpochOpened(bytes32 indexed epochId, address indexed pool, uint64 deadline, uint32 kMin);
+  event SignalIntentRegistered(bytes32 indexed epochId, address indexed owner, uint64 availableAt);
+  event SignalIntentCleared(bytes32 indexed epochId, address indexed owner, bool callbackReceived);
+  event SignalCommitted(bytes32 indexed epochId, address indexed owner, bytes32 commitmentId);
 
   constructor(bytes32 poolId_, QuietSignalTypes.PoolConfig memory config_) {
     if (
@@ -26,6 +64,7 @@ contract QuietSignalPool {
       config_.confidentialCollateral == address(0) ||
       config_.resolutionAdapter == address(0) ||
       config_.deadline <= block.timestamp ||
+      config_.commitTimeout == 0 ||
       config_.kMin == 0 ||
       config_.aggregateTimeout == 0 ||
       config_.resolutionGrace == 0
@@ -35,9 +74,10 @@ contract QuietSignalPool {
 
     poolId = poolId_;
     epochId = keccak256(abi.encode(block.chainid, address(this), poolId_));
-    confidentialCollateral = config_.confidentialCollateral;
+    confidentialCollateral = IERC7984(config_.confidentialCollateral);
     resolutionAdapter = config_.resolutionAdapter;
     deadline = config_.deadline;
+    commitTimeout = config_.commitTimeout;
     kMin = config_.kMin;
     aggregateTimeout = config_.aggregateTimeout;
     resolutionGrace = config_.resolutionGrace;
@@ -61,9 +101,10 @@ contract QuietSignalPool {
   function config() external view returns (QuietSignalTypes.PoolConfig memory) {
     return
       QuietSignalTypes.PoolConfig({
-        confidentialCollateral: confidentialCollateral,
+        confidentialCollateral: address(confidentialCollateral),
         resolutionAdapter: resolutionAdapter,
         deadline: deadline,
+        commitTimeout: commitTimeout,
         kMin: kMin,
         aggregateTimeout: aggregateTimeout,
         resolutionGrace: resolutionGrace
@@ -72,5 +113,212 @@ contract QuietSignalPool {
 
   function epoch() external view returns (QuietSignalTypes.PublicEpoch memory) {
     return _epoch;
+  }
+
+  /// @notice Returns only the caller's opaque owner position handles.
+  function ownerPosition() external view returns (QuietSignalTypes.OwnerPosition memory) {
+    return _positions[msg.sender];
+  }
+
+  function pendingCommit()
+    external
+    view
+    returns (address owner, uint64 availableAt, bool callbackReceived)
+  {
+    return (_pending.owner, _pending.availableAt, _pending.callbackReceived);
+  }
+
+  /// @notice Registers an owner-bound encrypted signal before its token callback.
+  function commitSignal(
+    externalEuint256 encryptedStake,
+    bytes calldata stakeProof,
+    externalEuint256 encryptedProbabilityBps,
+    bytes calldata probabilityProof
+  ) external {
+    _requireState(QuietSignalTypes.EpochState.OPEN);
+    if (_pending.owner != address(0)) revert IQuietSignalErrors.PendingCommitExists(_pending.owner);
+    if (_positions[msg.sender].committed) revert IQuietSignalErrors.AlreadyCommitted(msg.sender);
+    if (block.timestamp >= deadline) {
+      revert IQuietSignalErrors.CommitWindowClosed(deadline, uint64(block.timestamp));
+    }
+    if (
+      externalEuint256.unwrap(encryptedStake) == bytes32(0) ||
+      externalEuint256.unwrap(encryptedProbabilityBps) == bytes32(0)
+    ) revert IQuietSignalErrors.InvalidInputHandle();
+
+    euint256 stake = Nox.fromExternal(encryptedStake, stakeProof);
+    euint256 probability = Nox.fromExternal(encryptedProbabilityBps, probabilityProof);
+    euint256 scale = Nox.toEuint256(BPS_SCALE);
+    euint256 clampedProbability = Nox.select(Nox.le(probability, scale), probability, scale);
+    (euint256 yesAllocation, euint256 noAllocation) = _deriveAllocation(
+      stake,
+      clampedProbability,
+      scale
+    );
+    euint256 balanceBeforeTransfer = confidentialCollateral.confidentialBalanceOf(address(this));
+    if (!Nox.isAllowed(balanceBeforeTransfer, address(this))) {
+      revert IQuietSignalErrors.UnauthorizedCollateral(address(confidentialCollateral));
+    }
+
+    _initializeAggregates();
+    _pending.owner = msg.sender;
+    _pending.availableAt = uint64(block.timestamp) + commitTimeout;
+    _pending.stake = stake;
+    _pending.probabilityBps = clampedProbability;
+    _pending.yesAllocation = yesAllocation;
+    _pending.noAllocation = noAllocation;
+    _pending.balanceBeforeTransfer = balanceBeforeTransfer;
+    Nox.allowThis(stake);
+    Nox.allowThis(clampedProbability);
+    Nox.allowThis(yesAllocation);
+    Nox.allowThis(noAllocation);
+    Nox.allowThis(balanceBeforeTransfer);
+    _epoch.state = QuietSignalTypes.EpochState.COMMIT_PENDING;
+    emit SignalIntentRegistered(epochId, msg.sender, _pending.availableAt);
+  }
+
+  /// @inheritdoc IERC7984Receiver
+  function onConfidentialTransferReceived(
+    address operator,
+    address from,
+    euint256,
+    bytes calldata
+  ) external returns (ebool) {
+    if (msg.sender != address(confidentialCollateral)) {
+      revert IQuietSignalErrors.UnauthorizedCollateral(msg.sender);
+    }
+    if (operator != from) revert IQuietSignalErrors.WrongCallbackOperator();
+    _requireState(QuietSignalTypes.EpochState.COMMIT_PENDING);
+    if (from != _pending.owner) {
+      revert IQuietSignalErrors.CallbackOwnerMismatch(_pending.owner, from);
+    }
+
+    euint256 balanceAfterTransfer = confidentialCollateral.confidentialBalanceOf(address(this));
+    if (!Nox.isAllowed(balanceAfterTransfer, address(this))) {
+      revert IQuietSignalErrors.UnauthorizedCollateral(address(confidentialCollateral));
+    }
+    euint256 receivedStake = Nox.sub(balanceAfterTransfer, _pending.balanceBeforeTransfer);
+    euint256 zero = Nox.toEuint256(0);
+    euint256 expectedStake = Nox.select(
+      Nox.ne(_pending.stake, zero),
+      _pending.stake,
+      Nox.toEuint256(1)
+    );
+    _pending.accepted = Nox.eq(receivedStake, expectedStake);
+    _pending.conditionallyHeldStake = Nox.select(_pending.accepted, receivedStake, zero);
+    _pending.callbackReceived = true;
+    Nox.allowThis(_pending.accepted);
+    Nox.allowThis(_pending.conditionallyHeldStake);
+    Nox.allowPublicDecryption(_pending.accepted);
+    Nox.allowTransient(_pending.accepted, msg.sender);
+    return _pending.accepted;
+  }
+
+  /// @notice Finalizes a callback whose amount-free acceptance proof is true.
+  function finalizeCommit(bytes calldata acceptanceProof) external {
+    _requirePendingCallback();
+    if (!Nox.publicDecrypt(_pending.accepted, acceptanceProof)) {
+      revert IQuietSignalErrors.CommitRejected();
+    }
+
+    address owner = _pending.owner;
+    QuietSignalTypes.OwnerPosition storage position = _positions[owner];
+    position.committed = true;
+    position.stake = _pending.stake;
+    position.probabilityBps = _pending.probabilityBps;
+    position.yesAllocation = _pending.yesAllocation;
+    position.noAllocation = _pending.noAllocation;
+    Nox.allowThis(position.stake);
+    Nox.allowThis(position.probabilityBps);
+    Nox.allowThis(position.yesAllocation);
+    Nox.allowThis(position.noAllocation);
+    Nox.addViewer(position.stake, owner);
+    Nox.addViewer(position.probabilityBps, owner);
+    Nox.addViewer(position.yesAllocation, owner);
+    Nox.addViewer(position.noAllocation, owner);
+
+    _aggregateYes = Nox.add(_aggregateYes, _pending.yesAllocation);
+    _aggregateNo = Nox.add(_aggregateNo, _pending.noAllocation);
+    _aggregateTotal = Nox.add(_aggregateTotal, _pending.stake);
+    Nox.allowThis(_aggregateYes);
+    Nox.allowThis(_aggregateNo);
+    Nox.allowThis(_aggregateTotal);
+    _epoch.participantCount += 1;
+    bytes32 commitmentId = keccak256(abi.encode(epochId, owner, _epoch.participantCount));
+    _clearPending();
+    emit SignalCommitted(epochId, owner, commitmentId);
+  }
+
+  /// @notice Clears a callback whose amount-free acceptance proof is false.
+  function rejectPendingCommit(bytes calldata acceptanceProof) external {
+    _requirePendingCallback();
+    if (Nox.publicDecrypt(_pending.accepted, acceptanceProof)) {
+      revert IQuietSignalErrors.CommitRejected();
+    }
+    _clearPending();
+  }
+
+  /// @notice Permissionlessly clears or returns a stalled pending intent after timeout.
+  function expirePendingCommit() external {
+    _requireState(QuietSignalTypes.EpochState.COMMIT_PENDING);
+    if (_pending.owner == address(0)) revert IQuietSignalErrors.PendingCommitMissing();
+    if (block.timestamp < _pending.availableAt) {
+      revert IQuietSignalErrors.PendingCommitTimeoutNotReached(
+        _pending.availableAt,
+        uint64(block.timestamp)
+      );
+    }
+    if (_pending.callbackReceived) {
+      Nox.allowTransient(_pending.conditionallyHeldStake, address(confidentialCollateral));
+      confidentialCollateral.confidentialTransfer(_pending.owner, _pending.conditionallyHeldStake);
+    }
+    _clearPending();
+  }
+
+  function _deriveAllocation(
+    euint256 stake,
+    euint256 probabilityBps,
+    euint256 scale
+  ) private returns (euint256 yesAllocation, euint256 noAllocation) {
+    // Splitting stake into quotient and remainder prevents stake * probability overflow.
+    euint256 quotient = Nox.div(stake, scale);
+    euint256 remainder = Nox.sub(stake, Nox.mul(quotient, scale));
+    yesAllocation = Nox.add(
+      Nox.mul(quotient, probabilityBps),
+      Nox.div(Nox.mul(remainder, probabilityBps), scale)
+    );
+    noAllocation = Nox.sub(stake, yesAllocation);
+  }
+
+  function _initializeAggregates() private {
+    if (_aggregatesInitialized) return;
+    _aggregateYes = Nox.toEuint256(0);
+    _aggregateNo = Nox.toEuint256(0);
+    _aggregateTotal = Nox.toEuint256(0);
+    Nox.allowThis(_aggregateYes);
+    Nox.allowThis(_aggregateNo);
+    Nox.allowThis(_aggregateTotal);
+    _aggregatesInitialized = true;
+  }
+
+  function _requirePendingCallback() private view {
+    _requireState(QuietSignalTypes.EpochState.COMMIT_PENDING);
+    if (_pending.owner == address(0) || !_pending.callbackReceived) {
+      revert IQuietSignalErrors.PendingCommitMissing();
+    }
+  }
+
+  function _clearPending() private {
+    address owner = _pending.owner;
+    bool callbackReceived = _pending.callbackReceived;
+    delete _pending;
+    _epoch.state = QuietSignalTypes.EpochState.OPEN;
+    emit SignalIntentCleared(epochId, owner, callbackReceived);
+  }
+
+  function _requireState(QuietSignalTypes.EpochState expected) private view {
+    if (_epoch.state != expected) {
+      revert IQuietSignalErrors.InvalidState(expected, _epoch.state);
+    }
   }
 }
