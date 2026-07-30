@@ -1108,7 +1108,7 @@ participant experience.
 
 ID: `WEB-09`
 
-Status: `in_progress`
+Status: `complete`
 
 Prerequisite gates: G6 passed. Existing manifest, browser wallet, confidential-input,
 public-reader, and owner-action boundaries are available. G7 remains blocked by R-25
@@ -1174,6 +1174,21 @@ contracts and manifest history. Never compensate with mock balances, a hidden fa
 signer, imported deployment key, persisted confidential values, or an unverified
 pool. If the active release is expired, keep transaction actions disabled and follow
 ADR-023 for a later explicitly budgeted append-only release.
+
+Completion evidence: Commit `8469db5` adds a manifest-bound, user-controlled QSFC
+test faucet flow, exact wrapper approval, confidential 1:1 wrapping, owner-only
+asset-state refresh, wallet network switching, chain-derived market actionability,
+signal preflight, and state-aware terminal controls. `T-WEB-09-01` through
+`T-WEB-09-05` cover market closure, asset readiness, strict amount parsing,
+faucet/wrapper binding, exact approval, and insufficient-collateral blocking. With
+Node `v24.18.0` and npm `11.16.0`, `npm run test:web`, `npm run build:web`, and
+`npm run check:offline` pass; the latter covers formatting, typecheck, Solidity
+compile, verifier/SDK/automation/indexer tests, and secret scanning. A production
+local build was inspected against the DEP-02 Sepolia manifest at desktop and 390px
+width, with the chain-derived elapsed-deadline path safely disabling signal
+submission. G7 remains unclaimed and blocked by R-25: an externally unlocked wallet
+and a fresh, operator-published open release are still required for real browser
+signal/recovery receipts.
 
 ## Primary route contract
 
