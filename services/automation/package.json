@@ -13,6 +13,7 @@
   },
   "scripts": {
     "test": "tsx --test test/*.test.ts",
-    "run:sepolia": "tsx scripts/run-sepolia.mts"
+    "run:sepolia": "tsx scripts/run-sepolia.mts",
+    "verify:sepolia": "tsx scripts/verify-aut01-sepolia.mts"
   }
 }

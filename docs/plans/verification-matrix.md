@@ -35,6 +35,7 @@ production-key configuration.
 | `npm run write:live02:manifests`                          | sepolia-read                 | Guarded below-k and timeout manifest generation from LIVE-02 receipts and historical facts  | G6              |
 | `npm run verify:live02:recovery`                          | sepolia-read                 | Historical manifest plus current recovery selector/state verification                       | G6              |
 | `npm run run:automation-fixture:sepolia`                  | sepolia-read / sepolia-write | One fresh, isolated AUT-01 aggregate-pending fixture using existing Sepolia infrastructure  | G6              |
+| `npm run verify:automation:sepolia`                       | sepolia-read                 | Fixed receipt/selector and aggregate-finalization verification for AUT-01                   | G6              |
 | `npm run test:unit`                                       | offline                      | Domain, SDK, reducer, component units                                                       | G5–G8           |
 | `npm run test:model`                                      | offline                      | Pure state/math/reference-model property and fuzz tests                                     | G1/G5/G8        |
 | `npm run test:contracts:sepolia -- <case>`                | sepolia-write                | Named contract state/economic case                                                          | G1–G6/G8        |
