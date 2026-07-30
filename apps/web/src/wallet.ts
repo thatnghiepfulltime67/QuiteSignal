@@ -1,11 +1,13 @@
 import { createPublicClient, createWalletClient, custom } from 'viem';
 import { sepolia } from 'viem/chains';
+import { createViemHandleClient } from '@iexec-nox/handle';
 import {
   createSepoliaConfidentialInputClient,
   createSepoliaProtocolTransactionClient,
   createViemProtocolPublicReader,
   prepareCommitSignal,
   publicAddress,
+  quietSignalPoolAbi,
   requestId,
 } from '@quitesignal/confidential-client';
 import type { ValidSignalDraft } from './signal.js';
@@ -29,6 +31,59 @@ export async function readPublicEpoch(
     participantCount: epoch.participantCount,
     publicYes: epoch.publicYes,
     publicNo: epoch.publicNo,
+  };
+}
+
+export async function decryptOwnerPosition(
+  provider: BrowserProvider,
+  pool: string,
+): Promise<{
+  committed: boolean;
+  claimed: boolean;
+  refunded: boolean;
+  stake: bigint;
+  probabilityBps: bigint;
+  scoreBps: bigint;
+}> {
+  const wallet = createWalletClient({ chain: sepolia, transport: custom(provider) });
+  const [account] = await wallet.getAddresses();
+  if (!account) throw new Error('A connected owner wallet is required.');
+  const reader = createPublicClient({ chain: sepolia, transport: custom(provider) });
+  const position = (await reader.readContract({
+    address: publicAddress(pool),
+    account,
+    abi: quietSignalPoolAbi,
+    functionName: 'ownerPosition',
+  } as never)) as {
+    committed: boolean;
+    claimed: boolean;
+    refunded: boolean;
+    stake: string;
+    probabilityBps: string;
+    scoreBps: string;
+  };
+  if (!position.committed)
+    return {
+      committed: false,
+      claimed: false,
+      refunded: false,
+      stake: 0n,
+      probabilityBps: 0n,
+      scoreBps: 0n,
+    };
+  const nox = await createViemHandleClient(wallet);
+  const [stake, probabilityBps, scoreBps] = await Promise.all([
+    nox.decrypt(position.stake as never),
+    nox.decrypt(position.probabilityBps as never),
+    nox.decrypt(position.scoreBps as never),
+  ]);
+  return {
+    committed: true,
+    claimed: position.claimed,
+    refunded: position.refunded,
+    stake: stake.value as bigint,
+    probabilityBps: probabilityBps.value as bigint,
+    scoreBps: scoreBps.value as bigint,
   };
 }
 
