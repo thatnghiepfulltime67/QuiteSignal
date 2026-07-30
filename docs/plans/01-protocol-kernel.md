@@ -279,6 +279,15 @@ pass G5 by itself.
 
 Intended commit: `feat: add immutable pool factory`.
 
+Runner follow-up commit: `test: add Sepolia factory runner`.
+
+The unchanged canonical feed cannot be bytecode-mutated for a negative case without
+introducing a forbidden mock. PK-03B therefore verifies the adapter's stored target
+hash against the live Sepolia runtime, verifies the factory repeats that binding,
+and rejects a live contract with incompatible adapter metadata. A later runtime
+change will fail both production boundaries without relying on simulated target
+mutation.
+
 Rollback/failure action: Revert only this factory/shell slice. An incompatible real
 ERC-7984 wrapper or direct adapter is a production feasibility blocker; do not
 substitute a mock or loosen configuration validation. A trust, custody, state, or
