@@ -34,6 +34,7 @@ interface Artifact {
   abi: Abi;
   bytecode: Hex;
   deployedBytecode: Hex;
+  immutableReferences: Record<string, Array<{ start: number; length: number }>>;
 }
 
 interface SpendEntry {
@@ -73,6 +74,7 @@ const artifactPath = resolve(
 const spendLedgerPath = resolve(repositoryRoot, 'evidence/sepolia/spend-ledger.json');
 const offlineEvidencePath = resolve(repositoryRoot, 'evidence/offline/G4/FND-06-RESOLUTION.json');
 const sepoliaEvidencePath = resolve(repositoryRoot, 'evidence/sepolia/G4/FND-06-RESOLUTION.json');
+let failureStage = 'configuration validation';
 
 function fail(message: string): never {
   throw new Error(message);
@@ -88,11 +90,28 @@ function loadArtifact(): Artifact {
   if (
     !Array.isArray(artifact.abi) ||
     typeof artifact.bytecode !== 'string' ||
-    typeof artifact.deployedBytecode !== 'string'
+    typeof artifact.deployedBytecode !== 'string' ||
+    typeof artifact.immutableReferences !== 'object' ||
+    artifact.immutableReferences === null
   ) {
     fail('The compiled G4 resolution spike artifact is unavailable or malformed.');
   }
   return artifact as Artifact;
+}
+
+function normalizedRuntimeTemplate(artifact: Artifact, runtime: Hex): Hex {
+  const bytes = runtime.slice(2).split('');
+  for (const references of Object.values(artifact.immutableReferences)) {
+    for (const reference of references) {
+      const start = reference.start * 2;
+      const end = start + reference.length * 2;
+      if (reference.length <= 0 || start < 0 || end > bytes.length) {
+        fail('The compiled G4 spike immutable-reference metadata is invalid.');
+      }
+      bytes.fill('0', start, end);
+    }
+  }
+  return `0x${bytes.join('')}` as Hex;
 }
 
 function loadLedger(): SpendLedger {
@@ -172,6 +191,7 @@ async function expectRevert(call: () => Promise<unknown>, scenario: string): Pro
 }
 
 async function main(): Promise<void> {
+  failureStage = 'configuration validation';
   loadEnvironment();
   const write = process.argv.includes('--write');
   const privateKey = process.env.SEPOLIA_PRIVATE_KEY as Hex | undefined;
@@ -192,6 +212,7 @@ async function main(): Promise<void> {
     fail('The configured RPC is not Ethereum Sepolia.');
   }
 
+  failureStage = 'Ethereum Sepolia target preflight';
   const [runtime, decimals, description, round, block, verificationBlock] = await Promise.all([
     publicClient.getCode({ address: ETH_USD_FEED }),
     publicClient.readContract({ address: ETH_USD_FEED, abi: feedAbi, functionName: 'decimals' }),
@@ -220,6 +241,7 @@ async function main(): Promise<void> {
     fail('The selected Sepolia feed has an invalid current round.');
   }
 
+  failureStage = 'compiled artifact validation';
   const artifact = loadArtifact();
   const ledger = loadLedger();
   const account = privateKey ? privateKeyToAccount(privateKey) : undefined;
@@ -261,6 +283,43 @@ async function main(): Promise<void> {
     },
   ];
 
+  await expectRevert(
+    () =>
+      publicClient.call({
+        account: account?.address,
+        data: encodeDeployData({
+          abi: artifact.abi,
+          bytecode: artifact.bytecode,
+          args: ['0x0000000000000000000000000000000000000000', true, 1n, block.timestamp, 3_600n],
+        }),
+      }),
+    'Zero target configuration',
+  );
+  await expectRevert(
+    () =>
+      publicClient.call({
+        account: account?.address,
+        data: encodeDeployData({
+          abi: artifact.abi,
+          bytecode: artifact.bytecode,
+          args: [ETH_USD_FEED, true, 1n, block.timestamp, 0n],
+        }),
+      }),
+    'Zero maximum feed age configuration',
+  );
+  const resolutionFunction = artifact.abi.find(
+    (item) => item.type === 'function' && item.name === 'resolution',
+  );
+  if (
+    !resolutionFunction ||
+    resolutionFunction.type !== 'function' ||
+    resolutionFunction.stateMutability !== 'view' ||
+    resolutionFunction.inputs.length !== 0
+  ) {
+    fail('The G4 resolution surface accepts a caller-provided result or is not read-only.');
+  }
+
+  failureStage = 'deployment dry-run planning';
   const plans = await Promise.all(
     configurations.map(async (configuration) => {
       const data = encodeDeployData({
@@ -303,18 +362,25 @@ async function main(): Promise<void> {
   if (!write) return;
 
   assertCleanSourceTree();
+  failureStage = 'confirmed-write setup';
   const walletClient = createWalletClient({
     account: account!,
     chain: sepolia,
     transport: http(rpcUrl, { retryCount: 0, timeout: 30_000 }),
   });
   const deployed: DeployedSpike[] = [];
+  let nextNonce = await publicClient.getTransactionCount({
+    address: account!.address,
+    blockTag: 'pending',
+  });
   for (const plan of plans) {
+    failureStage = `${plan.name} spike deployment`;
     const deploymentHash = await walletClient.sendTransaction({
       account: account!,
       data: plan.data,
       gas: plan.gas,
       maxFeePerGas,
+      nonce: nextNonce++,
     });
     const receipt = await publicClient.waitForTransactionReceipt({ hash: deploymentHash });
     appendSpend(ledger, {
@@ -333,7 +399,8 @@ async function main(): Promise<void> {
     const deployedRuntime = await publicClient.getCode({ address: receipt.contractAddress });
     if (
       !deployedRuntime ||
-      deployedRuntime.toLowerCase() !== artifact.deployedBytecode.toLowerCase()
+      normalizedRuntimeTemplate(artifact, deployedRuntime).toLowerCase() !==
+        normalizedRuntimeTemplate(artifact, artifact.deployedBytecode).toLowerCase()
     ) {
       fail(`The ${plan.name} G4 spike runtime does not match the compiled artifact.`);
     }
@@ -345,6 +412,7 @@ async function main(): Promise<void> {
     });
   }
 
+  failureStage = 'post-deployment resolution checks';
   const byName = Object.fromEntries(deployed.map((entry) => [entry.name, entry])) as Record<
     DeployedSpike['name'],
     DeployedSpike
@@ -361,6 +429,22 @@ async function main(): Promise<void> {
   if (yes[1] <= 0n || no[1] <= 0n || yes[2] === 0n || no[2] === 0n) {
     fail('The successful G4 resolution responses are incomplete.');
   }
+  const yesTarget = (await publicClient.readContract({
+    address: byName.yes.address,
+    abi: artifact.abi,
+    functionName: 'target',
+  } as never)) as Address;
+  const yesTargetRuntimeHash = (await publicClient.readContract({
+    address: byName.yes.address,
+    abi: artifact.abi,
+    functionName: 'targetRuntimeCodeHash',
+  } as never)) as Hex;
+  if (
+    yesTarget.toLowerCase() !== ETH_USD_FEED.toLowerCase() ||
+    yesTargetRuntimeHash.toLowerCase() !== keccak256(runtime).toLowerCase()
+  ) {
+    fail('The deployed G4 spike does not bind the selected target runtime.');
+  }
 
   await expectRevert(() => resolve(byName.stale), 'Stale feed round');
   await expectRevert(() => resolve(byName.future), 'Premature observation');
@@ -374,7 +458,9 @@ async function main(): Promise<void> {
     }
   }
 
-  const artifactRuntimeHash = keccak256(artifact.deployedBytecode);
+  const artifactRuntimeTemplateHash = keccak256(
+    normalizedRuntimeTemplate(artifact, artifact.deployedBytecode),
+  );
   const evidence = {
     schemaVersion: 1,
     workItem: 'FND-06B',
@@ -396,17 +482,25 @@ async function main(): Promise<void> {
       answeredInRound: answeredInRound.toString(),
       ageSeconds: (block.timestamp - updatedAt).toString(),
     },
-    spikeRuntimeBytecodeHash: artifactRuntimeHash,
-    deployments: deployed.map((spike) => ({
-      name: spike.name,
-      address: spike.address,
-      deploymentHash: spike.deploymentHash,
-      blockNumber: spike.blockNumber.toString(),
-    })),
+    spikeRuntimeTemplateHash: artifactRuntimeTemplateHash,
+    deployments: await Promise.all(
+      deployed.map(async (spike) => ({
+        name: spike.name,
+        address: spike.address,
+        deploymentHash: spike.deploymentHash,
+        blockNumber: spike.blockNumber.toString(),
+        runtimeBytecodeHash: keccak256(
+          (await publicClient.getCode({ address: spike.address })) as Hex,
+        ),
+      })),
+    ),
     checks: {
       targetRuntime: true,
       expectedMetadata: true,
       validRound: true,
+      invalidConfigurationRejected: true,
+      noCallerResultInput: true,
+      immutableTargetBinding: true,
       yesThreshold: true,
       noThreshold: true,
       staleRoundRejected: true,
@@ -430,6 +524,6 @@ async function main(): Promise<void> {
 }
 
 main().catch(() => {
-  console.error('G4 resolution spike failed at a sanitized validation stage.');
+  console.error(`G4 resolution spike failed during ${failureStage}.`);
   process.exitCode = 1;
 });

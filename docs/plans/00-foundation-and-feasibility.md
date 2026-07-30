@@ -1045,10 +1045,10 @@ and exposes no asset-receiving, confidential-handle, result-writing, owner, or
 upgrade entry point. It sends no collateral to the target. The evidence records only
 public target metadata, receipts, runtime hashes, and sanitized test conclusions.
 
-Negative cases: Zero target, invalid comparison, zero/negative answer, incomplete
-round, stale answer, settlement before the observation time, wrong target runtime,
-and a caller-provided result must fail without pool or target fund movement. A
-missing qualifying target or a target that needs a trusted result writer blocks G4.
+Negative cases: Zero target, zero/negative answer, incomplete round, stale answer,
+settlement before the observation time, wrong target runtime, and a caller-provided
+result must fail without pool or target fund movement. A missing qualifying target
+or a target that needs a trusted result writer blocks G4.
 
 Privacy/custody impact: The target response and threshold are public. No confidential
 input, handle, proof, owner position, asset amount, signature, key, RPC credential,
@@ -1078,6 +1078,15 @@ Rollback/failure action: Revert only the FND-06B source and documentation commit
 the target assessment is incorrect; preserve an accurate sanitized failure report.
 Do not create a mock feed, fork the target, add a result writer, accept a stale
 answer, or begin P1. A failing FND-06B returns P0 and G4 to `blocked`.
+
+Partial-run history: At block `11380820`, the first `yes` spike deployment at
+`0xa1aecba2ac034f44ba6165743bb2248f586fdb0b` succeeded with no collateral and an
+append-only gas-ledger entry. The initial runner then rejected its runtime because
+the direct byte-for-byte comparison did not account for Solidity immutable values
+embedded in deployed code. This is runner-validation failure, not a target or
+resolution result. The spike is not G4 evidence. The corrected runner compares the
+compiler-declared immutable-bytecode template and uses explicitly sequenced nonces;
+the next run must use fresh terminal evidence and retain this public partial record.
 
 ## FND-01 — Toolchain lock
 
