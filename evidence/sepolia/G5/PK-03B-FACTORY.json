@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "gate": "G5",
+  "workItem": "PK-03B",
+  "phase": "P1",
+  "timestampUtc": "2026-07-30T07:53:31.817Z",
+  "sourceCommit": "d0a125d2142b31446ba23d7aeee1e671de1b4bda",
+  "environment": {
+    "class": "sepolia-write-and-read",
+    "chainId": 11155111
+  },
+  "verificationBlock": "11381157",
+  "dependencies": {
+    "collateral": {
+      "address": "0x8b4fe02e95401e93ba99e63baee01eea0b4b3b17",
+      "runtimeCodeHash": "0xa727b8663257316881027894230d662d4687aca019d9c0762b7f92c708031e08"
+    },
+    "target": {
+      "address": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+      "runtimeCodeHash": "0x9190afba2a699a9627d64ed68c7cc60e4005a8830b33183c4413b4e1a93b9ccd"
+    }
+  },
+  "contracts": {
+    "adapter": {
+      "address": "0x98fe9f203eec9752ef4576a6ce10a8c5cccdf4aa",
+      "runtimeTemplateHash": "0x21a850b142b95081e7849f8848514428b8ee78e783444951513d1ec33e8cc71d"
+    },
+    "factory": {
+      "address": "0x9f2e004c221eeac79cf966ca730dba4fef32eae0",
+      "runtimeCodeHash": "0x3dbb2d4bec5f57a9133581cdbc26b1cc66953f7af2a1eae21366f9919796b080"
+    },
+    "pool": {
+      "address": "0xBc21e28952155EffbC5b5Ef4E36Df8C438d354E7",
+      "runtimeTemplateHash": "0x8f5e0a254ade13ad21eb7578ba56aab2c53876d14f8a94d3f6737e5bb1bc39bc"
+    }
+  },
+  "immutableConfiguration": {
+    "poolId": "0xe8181e32bd214e3cb9eacf143a9c1b5ee8f5fc3c9ab5458efca7e6db6c52931e",
+    "deploymentSalt": "0xa4c2e5140cf5c98052d14137adc7ba9ab63fa5358c48be07491944421ae15a17",
+    "deadline": "1786002756",
+    "kMin": 2,
+    "aggregateTimeout": "86400",
+    "resolutionGrace": "86400",
+    "observationNotBefore": "1787989956"
+  },
+  "transactions": [
+    {
+      "purpose": "fresh immutable adapter",
+      "transactionHash": "0x6d7bcf5280fad520e7b43f3f31ed29bcbd3170de8923f424d640ceec057096dc",
+      "blockNumber": "11381154"
+    },
+    {
+      "purpose": "permissionless factory",
+      "transactionHash": "0xdcadc893b80a6ee97960357a249062c7f5ea8e9ad668595814db0a7d2d6bfe3a",
+      "blockNumber": "11381155"
+    },
+    {
+      "purpose": "deterministic pool creation",
+      "transactionHash": "0xfb2bba771bb0f4b5f500e43f886f53763f809f52f9eefc97fcf90a96063d6390",
+      "blockNumber": "11381156"
+    }
+  ],
+  "checks": {
+    "permissionlessCreate2Deployment": true,
+    "deterministicPoolIdAndAddress": true,
+    "uniqueConfigurationAndSalt": true,
+    "validPinnedERC7984Collateral": true,
+    "invalidCollateralRejected": true,
+    "validImmutableAdapterMetadata": true,
+    "invalidAdapterRejected": true,
+    "liveTargetRuntimeMatchesStoredHash": true,
+    "invalidTimingAndThresholdsRejected": true,
+    "initialOpenEpochOnly": true,
+    "noAuthorityUpgradeCustodyOrLifecycleAbi": true,
+    "nativeValueRejected": true,
+    "zeroNativeBalances": true,
+    "noConfidentialTransferOrCallbackExecuted": true
+  },
+  "privacyImpact": "No confidential inputs, handles, proofs, ACL operations, or token transfers occurred.",
+  "fundsLocation": "No native or confidential asset entered the adapter, factory, or pool shell.",
+  "limitations": [
+    "This component proves immutable deployment only and does not pass G5.",
+    "Canonical target bytecode cannot be mutated for a negative test without a mock; both factory and adapter instead recheck the live runtime hash, and incompatible live metadata is rejected.",
+    "Confidential custody and lifecycle behavior remain unimplemented until PK-04 through PK-07."
+  ],
+  "reproduction": {
+    "command": "npm run test:factory:sepolia -- --verify=0x98fe9f203eec9752ef4576a6ce10a8c5cccdf4aa,0x9f2e004c221eeac79cf966ca730dba4fef32eae0,0xBc21e28952155EffbC5b5Ef4E36Df8C438d354E7",
+    "requiredChainId": 11155111
+  },
+  "status": "passed"
+}

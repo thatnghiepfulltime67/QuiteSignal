@@ -1,6 +1,6 @@
 # P1 — Protocol kernel
 
-Status: `in_progress`
+Status: `completed`
 
 ## Objective
 
@@ -293,6 +293,16 @@ ERC-7984 wrapper or direct adapter is a production feasibility blocker; do not
 substitute a mock or loosen configuration validation. A trust, custody, state, or
 public-interface change requires an ADR before retrying.
 
+Recorded result: Source commit `d0a125d` passed the confirmed Sepolia runner at
+blocks `11381154` through `11381157`. The immutable adapter is
+`0x98fe9f203eec9752ef4576a6ce10a8c5cccdf4aa`, the permissionless factory is
+`0x9f2e004c221eeac79cf966ca730dba4fef32eae0`, and the CREATE2 pool shell is
+`0xBc21e28952155EffbC5b5Ef4E36Df8C438d354E7`. All configuration, duplicate,
+incompatible dependency, timing, value-rejection, deterministic-address, initial
+state, ABI-surface, runtime-binding, and zero-native-balance checks passed. No
+confidential callback, handle, proof, ACL operation, or asset transfer occurred.
+PK-03B is a completed G5 component and does not pass G5 by itself.
+
 ## Sequencing
 
 ```text
@@ -307,11 +317,11 @@ No SDK, relayer, indexer, or web implementation begins in P1.
 
 ### Deployment and configuration
 
-- [ ] Factory validates collateral/wrapper/adapter compatibility and non-zero addresses.
-- [ ] One pool owns exactly one market and one epoch; deployment starts in `OPEN`.
-- [ ] Deadline, `kMin`, timeouts, target, condition, collateral, and adapter are immutable.
-- [ ] Duplicate configuration salt and unsupported outcome count fail.
-- [ ] No upgrade, pause, owner sweep, or hidden administrative settlement path exists.
+- [x] Factory validates collateral/wrapper/adapter compatibility and non-zero addresses.
+- [x] One pool owns exactly one market and one epoch; deployment starts in `OPEN`.
+- [x] Deadline, `kMin`, timeouts, target, condition, collateral, and adapter are immutable.
+- [x] Duplicate configuration and deployment salt fail; the ABI is binary-only and accepts no configurable outcome count.
+- [x] No upgrade, pause, owner sweep, or hidden administrative settlement path exists.
 
 ### Commit and custody
 

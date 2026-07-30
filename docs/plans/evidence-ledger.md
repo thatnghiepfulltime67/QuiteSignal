@@ -29,6 +29,15 @@ and wrote `PK-03A-ADAPTER` as the passed component artifact. The append-only
 zero-balance recovery conclusion. G5 remains `not_run` until the complete protocol
 lifecycle suite and verifier report pass.
 
+PK-03B is a completed G5 component, not G5 itself. Source commit `d0a125d`
+deployed a fresh immutable adapter, permissionless factory, and deterministic pool
+shell at Sepolia blocks `11381154` through `11381156`; read verification completed
+at block `11381157`. `evidence/{offline,sepolia}/G5/PK-03B-FACTORY.json` records the
+runtime bindings, deterministic pool id/address, immutable configuration, initial
+`OPEN` epoch, all named configuration rejections, zero native balances, and absence
+of any confidential callback or transfer. G5 remains `not_run` until the complete
+confidential lifecycle and verifier suite pass.
+
 ### G3 completion history
 
 The G3 row is `passed`. The historical FND-05C detail below is superseded by the latest
