@@ -1,6 +1,6 @@
 # P1 — Protocol kernel
 
-Status: `in_progress`
+Status: `complete`
 
 ## Objective
 
@@ -545,7 +545,7 @@ public disclosure, or collateral transfer is stop-ship.
 
 ID: `PK-07`
 
-Status: `awaiting_chain`
+Status: `complete`
 
 Outcome: Implement confidential score materialization, winner-only confidential
 payout claims, and refundable-owner returns without public owner amounts or an
@@ -575,15 +575,6 @@ Checks: `npm run test:interfaces`, `npm run compile`, the staged
 `npm run test:terminals:sepolia` runner, `npm run verify:terminals:sepolia`,
 `npm run check:offline`, and `git diff --check`.
 
-Active slice: `PK-07-INPUT-SERIAL-01` serializes the two Nox inputs that form one
-encrypted commitment. Output: lifecycle runner and this record. Checks:
-`npm run test:interfaces`, `npm run compile`, and `npm run check:offline`; the
-staged Sepolia register action is the named evidence. Privacy and recovery behavior
-are unchanged: both encrypted values retain the same pool-bound context, while
-serialization prevents mutable client state from cross-contaminating their proofs.
-Evidence remains at `evidence/{offline,sepolia}/G5/PK-07-TERMINALS.json`. Intended
-commit: `fix: serialize PK-07 commitment inputs`.
-
 PK-07 staging uses a 35-minute adapter observation lead: a 25-minute commit window
 and a 10-minute post-close observation interval. These harness-only immutable test
 configurations leave room for genuine Sepolia/Nox proof latency without imposing the
@@ -593,12 +584,15 @@ testnet-only confidential custody and is excluded from PK-07 evidence.
 Evidence path: `evidence/{offline,sepolia}/G5/PK-07-TERMINALS.json` plus append-only
 spend-ledger entries. Intended commit: `feat: add private settlement and score`.
 
-Chain-wait record: The source implementation, staged owner commits, static terminal
-policy checks, and independent terminal verifier are committed. Its two immutable
-Sepolia pools are awaiting their configured deadline and observation time before
-close, aggregate finalization, settlement, terminal transfers, and evidence can run.
-This is not a PK-07 or G5 pass claim. The next active package may only be independent
-of those pending state transitions and must not use their incomplete evidence.
+Completion evidence: The fresh short fixture passed its named Sepolia terminal
+verifier at block `11382884`. Claim pool
+`0xBb7624e1b84d3BEEbccA0BaA0b4DC6B9c149139d` reached `SETTLED`, materialized the
+owner score, and completed a one-time confidential winner payout. Refund pool
+`0xb30241600205771BBE9BdB9e621c4B7B33759908` reached `REFUNDABLE` and completed a
+one-time confidential owner refund. The verifier re-read current runtimes and
+immutable bindings, checked terminal conflicts and non-member rejection, verified
+owner-scoped confidential conservation in process without persisting values, and
+confirmed zero native custody. The superseded six-hour fixture remains excluded.
 
 ## PK-08 work-item record
 
@@ -649,7 +643,7 @@ failed-receipt mutations. PK-08 is a completed G5 component, not G5 itself.
 
 ID: `PK-09`
 
-Status: `awaiting_chain`
+Status: `complete`
 
 Outcome: Close the protocol correctness gate with reproducible model invariants,
 source-policy checks, and named Sepolia adversarial conclusions for every observable
@@ -657,7 +651,7 @@ I1–I10 boundary.
 
 Output files: domain property tests and deterministic seed report, protocol static
 policy tests, adversarial Sepolia runner/verifier where a write is required,
-`evidence/{offline,sepolia}/G5/PK-09-INVARIANTS.json`, the G5 combined verifier,
+`evidence/sepolia/G5/G5-PROTOCOL.json`, the G5 combined verifier,
 traceability/evidence/risk updates, and this record.
 
 Acceptance criteria: The final model run executes at least 10,000 vectors per
@@ -678,27 +672,21 @@ claim-pool custody, or a documented terminal transfer before any fresh fixture r
 Checks: `npm run test:model`, static policy tests, named Sepolia adversarial runners,
 `npm run verify:g5:evidence`, `npm run check:offline`, and `git diff --check`.
 
-Active slice: `PK-09-EVIDENCE-FIELD-01` narrows the combined verifier's sensitive
-field-name policy to exact data-bearing fields, while preserving rejection of raw
-handles and proofs. Public semantic check names such as terminal refund or score
-outcomes remain admissible. Output: G5 verifier, its mutation tests, and this record.
-Checks: `npm run test:verifier`, `npm run check:offline`, and
-`npm run verify:g5:evidence`. Privacy and recovery behavior are unchanged: the
-combined report remains public-only and read-only. Evidence path:
-`evidence/sepolia/G5/G5-PROTOCOL.json`. Intended commit:
-`fix: allow public G5 outcome check names`.
-
-Evidence path: `evidence/{offline,sepolia}/G5/PK-09-INVARIANTS.json`. Intended
-commits: `test: expand protocol invariant coverage`, `test: add Sepolia adversarial
+Evidence path: `evidence/sepolia/G5/G5-PROTOCOL.json`. Intended commits:
+`test: expand protocol invariant coverage`, `test: add Sepolia adversarial
 coverage`, and `test: close protocol correctness gate`.
 
 Rollback/failure action: Record the minimized seed or public transaction reference,
 leave G5 `not_run`, and repair the protocol without a plaintext shadow model, trusted
 service, weakened ACL, or new custody authority.
 
-Preparation sequencing: PK-09 may run deterministic offline/static preparation while
-PK-07 is `awaiting_chain`. No PK-09 completion or G5 claim may be recorded until the
-PK-07 terminal evidence is passed and all named Sepolia cases are complete.
+Completion evidence: `npm run test:model` passed all deterministic boundary/model
+families, including 10,000 domain vectors. `npm run test:interfaces` passed terminal
+and production-boundary policies; the named OPEN-state adversarial runner rejected
+eight invalid live actions on the PK-07 claim fixture. The independent combined
+verifier mutation suite passed, and `npm run verify:g5:evidence` produced the passed
+seven-component public-only report. Its sensitive-field policy rejects exact
+data-bearing fields such as raw handles/proofs while retaining public outcome labels.
 
 ## Sequencing
 
@@ -776,12 +764,12 @@ No SDK, relayer, indexer, or web implementation begins in P1.
 
 ## Exit checklist
 
-- [ ] PK-01 through PK-09 are independently committed.
-- [ ] `npm run check:offline` and all required named G5 Sepolia cases pass.
-- [ ] G5 is `passed` in the evidence ledger.
-- [ ] Protocol spec, events/API, risks, ADRs, manifest schema, and tests agree.
-- [ ] No production module imports feasibility spike code.
-- [ ] Worktree is clean and P2 prerequisites are documented.
+- [x] PK-01 through PK-09 are independently committed.
+- [x] `npm run check:offline` and all required named G5 Sepolia cases pass.
+- [x] G5 is `passed` in the evidence ledger.
+- [x] Protocol spec, events/API, risks, ADRs, manifest schema, and tests agree.
+- [x] No production module imports feasibility spike code.
+- [x] Worktree is clean and P2 prerequisites are documented.
 
 ## Stop conditions
 

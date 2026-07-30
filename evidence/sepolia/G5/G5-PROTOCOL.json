@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "gate": "G5",
+  "componentCount": 7,
+  "components": [
+    {
+      "id": "PK-03A",
+      "checkCount": 8
+    },
+    {
+      "id": "PK-03B",
+      "checkCount": 14
+    },
+    {
+      "id": "PK-04",
+      "checkCount": 14
+    },
+    {
+      "id": "PK-05",
+      "checkCount": 7
+    },
+    {
+      "id": "PK-06",
+      "checkCount": 6
+    },
+    {
+      "id": "PK-07",
+      "checkCount": 12
+    },
+    {
+      "id": "PK-08",
+      "checkCount": 4
+    }
+  ],
+  "status": "passed"
+}

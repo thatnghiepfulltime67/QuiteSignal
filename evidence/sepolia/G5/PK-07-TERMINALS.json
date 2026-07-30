@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "gate": "G5",
+  "workItem": "PK-07",
+  "phase": "P1",
+  "sourceCommit": "e3d2c1ab5febb39b45f4b71599d36a740f6b4276",
+  "environment": {
+    "chainId": 11155111,
+    "verificationBlock": "11382884"
+  },
+  "contracts": {
+    "fixture": "0x9a1a3b3e99954caa92e2a498523d93cbb38178b6",
+    "wrapper": "0x09fbe55a5e89b7734d99d4b40ba022eb59945da6",
+    "adapter": "0x3df8b016096b048a313fad0b0ce3b9904ffc30ee",
+    "factory": "0x39bceb07e2472beb4de02d19db757ea30d72d3c2",
+    "claimPool": "0xBb7624e1b84d3BEEbccA0BaA0b4DC6B9c149139d",
+    "refundPool": "0xb30241600205771BBE9BdB9e621c4B7B33759908"
+  },
+  "checks": {
+    "runtimeTemplatesMatch": true,
+    "immutableBindingsMatch": true,
+    "settledScoreMaterialized": true,
+    "ownerViewerScoreAclVerified": true,
+    "winnerPayoutTransferredConfidentially": true,
+    "refundableStakeReturnedConfidentially": true,
+    "duplicateTerminalActionsRejected": true,
+    "opposingTerminalActionsRejected": true,
+    "nonMemberTerminalActionsRejected": true,
+    "terminalTransferConservationVerified": true,
+    "receiptLedgerComplete": true,
+    "nativeBalancesZero": true
+  },
+  "privacyImpact": "Owner score, allocation, payout, refund, and balance values are decrypted only in process and never persisted; the report records public state facts only.",
+  "fundsLocation": "The claimed owner and refundable owner have received their respective confidential terminal transfers; any remaining claim-pool collateral stays confidentially claimable by its committed owner.",
+  "status": "passed"
+}
