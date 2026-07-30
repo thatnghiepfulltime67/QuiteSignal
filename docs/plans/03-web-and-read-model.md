@@ -16,17 +16,17 @@ depending on a mock, private database, or privileged backend.
 
 ## Work-item register
 
-| ID | Outcome | Primary artifacts | Required checks | Intended commit |
-|---|---|---|---|---|
-| WEB-01 | Application/provider shell | Routes, providers, error boundaries, manifest loader | wrong chain, no wallet, provider discovery/reconnect | `feat: add application and wallet shell` |
-| WEB-02 | Market/privacy onboarding | Market list/detail, privacy legend, trust/limitation copy | public/private copy audit, empty/loading/error | `feat: add market privacy onboarding` |
-| WEB-03 | Sealed signal flow | Probability/stake form, encrypt, approve, commit progress | decimal boundaries, reject/retry/replacement/reload | `feat: add encrypted signal journey` |
-| WEB-04 | Public lifecycle view | Epoch timeline, aggregate, adapter execution, resolution | event/reorg refresh, direct-RPC fallback | `feat: add public lifecycle timeline` |
-| WEB-05 | Owner position/terminal flow | Owner decrypt, score materialize, claim/refund/recovery | account mismatch, ACL failure, duplicate, pending states | `feat: add private position and settlement` |
-| WEB-06 | Verification experience | Manifest/code hash/invariant/evidence view | stale manifest, wrong chain, verifier failure | `feat: add public verification view` |
-| WEB-07 | Accessibility/resilience | Keyboard, screen reader, mobile, offline/RPC/gateway states | automated a11y, console/log scan, responsive matrix | `test: harden accessible recovery ux` |
-| WEB-08 | Real browser lifecycle | Live browser e2e and sanitized result report | primary success plus one refund/recovery path | `test: prove live web user journey` |
-| WEB-03-UI-01 | Poster-system visual refresh | Revised design system, responsive banded application presentation, visual assertions | token/source audit, responsive build and interaction checks | `feat: refresh web visual system` |
+| ID           | Outcome                      | Primary artifacts                                                                    | Required checks                                             | Intended commit                             |
+| ------------ | ---------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------- |
+| WEB-01       | Application/provider shell   | Routes, providers, error boundaries, manifest loader                                 | wrong chain, no wallet, provider discovery/reconnect        | `feat: add application and wallet shell`    |
+| WEB-02       | Market/privacy onboarding    | Market list/detail, privacy legend, trust/limitation copy                            | public/private copy audit, empty/loading/error              | `feat: add market privacy onboarding`       |
+| WEB-03       | Sealed signal flow           | Probability/stake form, encrypt, approve, commit progress                            | decimal boundaries, reject/retry/replacement/reload         | `feat: add encrypted signal journey`        |
+| WEB-04       | Public lifecycle view        | Epoch timeline, aggregate, adapter execution, resolution                             | event/reorg refresh, direct-RPC fallback                    | `feat: add public lifecycle timeline`       |
+| WEB-05       | Owner position/terminal flow | Owner decrypt, score materialize, claim/refund/recovery                              | account mismatch, ACL failure, duplicate, pending states    | `feat: add private position and settlement` |
+| WEB-06       | Verification experience      | Manifest/code hash/invariant/evidence view                                           | stale manifest, wrong chain, verifier failure               | `feat: add public verification view`        |
+| WEB-07       | Accessibility/resilience     | Keyboard, screen reader, mobile, offline/RPC/gateway states                          | automated a11y, console/log scan, responsive matrix         | `test: harden accessible recovery ux`       |
+| WEB-08       | Real browser lifecycle       | Live browser e2e and sanitized result report                                         | primary success plus one refund/recovery path               | `test: prove live web user journey`         |
+| WEB-03-UI-01 | Poster-system visual refresh | Revised design system, responsive banded application presentation, visual assertions | token/source audit, responsive build and interaction checks | `feat: refresh web visual system`           |
 
 ## WEB-01 work-item record
 
@@ -177,7 +177,7 @@ durable browser plaintext, or a service signer.
 
 ID: `WEB-03-CALLBACK-01`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Complete the browser-local, real Sepolia signal journey after a successful
 intent by encrypting fresh collateral input for the immutable collateral wrapper,
@@ -220,6 +220,16 @@ Intended commit: `feat: complete confidential collateral callback`.
 Rollback/failure action: Remove only the browser callback orchestration. Preserve the
 immutable pool's pending timeout/rejection mechanism and do not replace it with a
 service signer, stored plaintext, manually copied proof, or mock acceptance result.
+
+Completion evidence: The public manifest now validates the immutable collateral
+address; the browser rejects a mismatch with the runtime pool config before a write.
+The SDK ABI is compared with compiled pool and collateral artifacts. `T-WEB-03-03`
+asserts separate pool and wrapper encryption boundaries, while `T-WEB-03-04` asserts
+receipt waits, plaintext form clearing, and the no-plaintext finalization retry.
+`npm run test:web` passed 16 tests, `npm run test:sdk` passed 12 tests, root
+typecheck and the production web build passed, and `npm run check:offline` passed
+format/lint/compile/verifier/SDK/automation/indexer/secret checks. No Nox or browser
+write was run offline and this implementation evidence is not a G7 claim.
 
 ## WEB-03-UI-01 work-item record
 
@@ -469,14 +479,14 @@ Primary routes cannot import fixture, storybook, or runtime demo-mode modules.
 
 ## UX state matrix
 
-| Surface | Required states |
-|---|---|
-| Wallet/network | no provider, disconnected, connecting, wrong chain, connected, account changed, chain changed |
-| Encryption | idle, validating, gateway pending, ready, timeout, retryable error, fatal context mismatch |
-| Transaction | approval required, wallet pending, submitted, replaced, confirming, finalized, reverted, dropped |
-| Epoch | open, deadline passed, below-k refundable, aggregate pending, unwrap pending, executed, settled, refundable |
-| Owner data | wrong owner, decrypt pending, viewer denied, position ready, score pending/ready, claimed/refunded |
-| External services | RPC degraded, gateway degraded, relayer absent, indexer rebuilding, direct-read fallback |
+| Surface           | Required states                                                                                             |
+| ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| Wallet/network    | no provider, disconnected, connecting, wrong chain, connected, account changed, chain changed               |
+| Encryption        | idle, validating, gateway pending, ready, timeout, retryable error, fatal context mismatch                  |
+| Transaction       | approval required, wallet pending, submitted, replaced, confirming, finalized, reverted, dropped            |
+| Epoch             | open, deadline passed, below-k refundable, aggregate pending, unwrap pending, executed, settled, refundable |
+| Owner data        | wrong owner, decrypt pending, viewer denied, position ready, score pending/ready, claimed/refunded          |
+| External services | RPC degraded, gateway degraded, relayer absent, indexer rebuilding, direct-read fallback                    |
 
 Every asynchronous state must state: what happened, whether funds moved, what remains
 private, whether retry is safe, and the next user action.
@@ -503,16 +513,16 @@ private, whether retry is safe, and the next user action.
 
 ## Browser e2e register
 
-| Case ID | Journey |
-|---|---|
-| E2E-WEB-01 | Connect → correct network → enter probability/stake → encrypt → approve → commit |
-| E2E-WEB-02 | Reload/reconnect → recover submitted transaction/position state |
-| E2E-WEB-03 | Observe aggregate/execution/resolution from chain-derived events |
-| E2E-WEB-04 | Owner decrypt → materialize score → claim confidential payout |
-| E2E-WEB-05 | Below-k or recovered epoch → owner refund |
-| E2E-WEB-06 | Wrong owner cannot decrypt and sees precise non-overclaiming explanation |
+| Case ID    | Journey                                                                               |
+| ---------- | ------------------------------------------------------------------------------------- |
+| E2E-WEB-01 | Connect → correct network → enter probability/stake → encrypt → approve → commit      |
+| E2E-WEB-02 | Reload/reconnect → recover submitted transaction/position state                       |
+| E2E-WEB-03 | Observe aggregate/execution/resolution from chain-derived events                      |
+| E2E-WEB-04 | Owner decrypt → materialize score → claim confidential payout                         |
+| E2E-WEB-05 | Below-k or recovered epoch → owner refund                                             |
+| E2E-WEB-06 | Wrong owner cannot decrypt and sees precise non-overclaiming explanation              |
 | E2E-WEB-07 | Indexer/relayer unavailable → direct reads and permissionless action remain available |
-| E2E-WEB-08 | Verify route detects valid manifest and rejects stale/wrong-chain manifest |
+| E2E-WEB-08 | Verify route detects valid manifest and rejects stale/wrong-chain manifest            |
 
 ## Verification
 

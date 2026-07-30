@@ -94,7 +94,8 @@ a {
 }
 
 .wallet,
-.primary {
+.primary,
+.secondary {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
@@ -128,6 +129,21 @@ a {
   background: var(--petal);
   color: var(--cocoa);
   transform: translateY(-1px);
+}
+
+.secondary {
+  border-color: var(--cocoa);
+  color: var(--cocoa);
+}
+
+.secondary:hover {
+  background: var(--petal);
+  color: var(--cocoa);
+  transform: translateY(-1px);
+}
+
+.secondary[hidden] {
+  display: none;
 }
 
 .site-nav {
@@ -446,6 +462,11 @@ a {
   justify-self: start;
   background: var(--cocoa);
   color: var(--petal);
+}
+
+.signal-card form .secondary {
+  justify-self: start;
+  margin-top: -8px;
 }
 
 .signal-card form .primary:hover {

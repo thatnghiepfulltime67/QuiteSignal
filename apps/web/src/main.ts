@@ -4,7 +4,13 @@ import { presentMarket } from './market.js';
 import { validateSignalDraft } from './signal.js';
 import { presentVerification } from './verification.js';
 import { presentLifecycle } from './lifecycle.js';
-import { decryptOwnerPosition, readPublicEpoch, submitSignalIntent } from './wallet.js';
+import {
+  decryptOwnerPosition,
+  finalizePendingSignal,
+  readPublicEpoch,
+  SignalJourneyError,
+  submitSignalJourney,
+} from './wallet.js';
 
 interface Eip1193Provider {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
@@ -51,7 +57,7 @@ function render(message?: string): void {
       : isPositionRoute && market
         ? `<section class="band blush-band signal-card owner"><div class="band-inner"><p class="eyebrow private">{ owner only }</p><h1>Your private position</h1><div class="panel"><p role="status">${ownerMessage}</p><button class="primary" id="reveal-owner">Reveal with owner wallet</button><p class="muted">No claim or refund is submitted automatically.</p></div></div></section>`
         : isSignalRoute && market
-          ? `<section class="band plum-band signal-card"><div class="band-inner"><p class="eyebrow compute">{ encrypted locally }</p><h1>Prepare your signal</h1><p>Probability and collateral stay in this browser until Nox encrypts them.</p><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required /></label><label>Probability (basis points) <input name="probability" inputmode="numeric" autocomplete="off" placeholder="7500" required /></label><p class="sealed">COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.</p><button class="primary" type="submit">Validate before encryption</button><p id="signal-status" class="muted" role="status">No funds moved.</p></form></div></section>`
+          ? `<section class="band plum-band signal-card"><div class="band-inner"><p class="eyebrow compute">{ encrypted locally }</p><h1>Prepare your signal</h1><p>Probability and collateral stay in this browser until Nox encrypts them.</p><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required /></label><label>Probability (basis points) <input name="probability" inputmode="numeric" autocomplete="off" placeholder="7500" required /></label><p class="sealed">COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.</p><button class="primary" type="submit">Encrypt and submit signal</button><button class="secondary" id="retry-finalize" type="button" hidden>Retry pending finalization</button><p id="signal-status" class="muted" role="status">No funds moved.</p></form></div></section>`
           : isMarketRoute && market
             ? `<section class="band blush-band market"><div class="band-inner"><p class="eyebrow public">{ public market }</p><h1>${market.condition}</h1><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><section class="timeline"><p class="eyebrow public">{ public lifecycle }</p><p id="lifecycle-status" role="status">${lifecycleMessage}</p><button class="wallet" id="refresh-lifecycle">Refresh public state</button></section><a class="primary" href="/pool/${market.poolAddress}/signal">Prepare encrypted signal</a></div></section>`
             : `<section class="band cocoa-band hero"><div class="band-inner"><p class="eyebrow">{ confidential forecasts }</p><h1>Quiet signals.<br />Public proof.</h1><p>Signals are encrypted locally. Wallet activity, timing, and the eventual aggregate are public.</p><a class="primary" href="/markets">View market</a></div></section>`;
@@ -64,6 +70,33 @@ function render(message?: string): void {
     .querySelector<HTMLButtonElement>('#reveal-owner')
     ?.addEventListener('click', revealOwner);
   document
+    .querySelector<HTMLButtonElement>('#retry-finalize')
+    ?.addEventListener('click', async (event) => {
+      const status = document.querySelector<HTMLParagraphElement>('#signal-status');
+      try {
+        if (!window.ethereum || !manifest) throw new Error('Connect a Sepolia wallet first.');
+        if (status)
+          status.textContent =
+            'Checking the pending finalization. No new collateral transfer is requested.';
+        const transactionHash = await finalizePendingSignal(
+          window.ethereum,
+          manifest.poolAddress,
+          (progress) => {
+            if (status) status.textContent = progress;
+          },
+        );
+        event.currentTarget.hidden = true;
+        if (status)
+          status.textContent = `Pending signal finalized on Sepolia: ${transactionHash.slice(0, 10)}…. Public pool state is authoritative.`;
+      } catch (error) {
+        if (status)
+          status.textContent =
+            error instanceof Error
+              ? error.message
+              : 'Pending finalization is unavailable. Read public pool state before retrying.';
+      }
+    });
+  document
     .querySelector<HTMLFormElement>('#signal-form')
     ?.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -75,14 +108,27 @@ function render(message?: string): void {
           probability: String(data.get('probability') ?? ''),
         });
         if (!window.ethereum || !manifest) throw new Error('Connect a Sepolia wallet first.');
-        if (status) status.textContent = 'Encrypting locally and requesting one signal intent…';
-        const result = await submitSignalIntent(window.ethereum, manifest.poolAddress, values);
-        event.currentTarget.reset();
+        if (status) status.textContent = 'Valid inputs. No funds moved. Starting local encryption…';
+        const result = await submitSignalJourney(
+          window.ethereum,
+          manifest.poolAddress,
+          manifest.collateralAddress,
+          values,
+          (progress) => {
+            if (status) status.textContent = progress;
+          },
+        );
         if (status)
-          status.textContent = `Signal intent submitted: ${result.transactionHash.slice(0, 10)}…. Collateral callback and finalization are still required.`;
+          status.textContent = `Signal finalized on Sepolia: ${result.finalizeTransactionHash.slice(0, 10)}…. Public pool state is authoritative.`;
       } catch (error) {
+        const retry = document.querySelector<HTMLButtonElement>('#retry-finalize');
+        if (error instanceof SignalJourneyError && error.allowsFinalizationRetry && retry)
+          retry.hidden = false;
         if (status)
-          status.textContent = `${error instanceof Error ? error.message : 'Unable to prepare signal.'} Inspect wallet activity before retrying.`;
+          status.textContent =
+            error instanceof Error ? error.message : 'Unable to submit the signal journey.';
+      } finally {
+        event.currentTarget.reset();
       }
     });
 }
