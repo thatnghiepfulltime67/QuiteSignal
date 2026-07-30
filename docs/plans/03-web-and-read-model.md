@@ -173,6 +173,54 @@ Rollback/failure action: Remove only the web signal layer; retain the user-owned
 on-chain pending/recovery path. Never substitute manual calldata, mock encryption,
 durable browser plaintext, or a service signer.
 
+## WEB-03-CALLBACK-01 work-item record
+
+ID: `WEB-03-CALLBACK-01`
+
+Status: `in_progress`
+
+Outcome: Complete the browser-local, real Sepolia signal journey after a successful
+intent by encrypting fresh collateral input for the immutable collateral wrapper,
+submitting its callback, reading the public acceptance handle, and finalizing only
+with a Nox public-decryption proof.
+
+Output files: public-manifest parser and tests, frozen pool/collateral ABI surface
+and SDK compatibility tests, browser wallet/Nox adapter, sealed-signal progress UI,
+this work-item record, and the WEB-03 state/recovery copy.
+
+Acceptance criteria: The browser uses the canonical manifest and runtime public
+config to prove the wrapper binding, creates separate pool-bound and wrapper-bound
+encrypted inputs, and uses no manual confidential calldata. It waits for each public
+receipt before reporting the next stage, treats an unavailable callback proof as
+pending rather than success, and clears form plaintext once it leaves the active
+submit scope. It neither stores inputs nor renders raw handles/proofs.
+
+Privacy/custody impact: Stake and probability remain only in the live form/Nox
+operation. The browser requests the user's wallet for each on-chain action but has no
+key, service, storage, analytics, or alternate authority. The public acceptance proof
+is used directly as calldata and is never rendered or persisted.
+
+Funds location/recovery impact: Before callback, collateral remains in the owner
+wrapper balance. After callback, the immutable pool holds the pending confidential
+transfer until permissionless finalization, rejection, or timeout recovery. A failed
+or cancelled browser stage must instruct the owner to re-read public pending state;
+it must not resubmit blindly or move funds itself.
+
+Checks: canonical-wrapper parser tests, frozen ABI/artifact comparison, source
+privacy tests, form/progress state tests, `npm run test:web`, `npm run test:sdk`,
+production build, root typecheck, `npm run check:offline`, and later real Sepolia
+browser evidence under WEB-08 only.
+
+Evidence location: source/test output for this implementation slice. Sanitized real
+browser receipts and recovery evidence remain required at
+`evidence/sepolia/G7/WEB-08-*.json`; this work item cannot pass G7.
+
+Intended commit: `feat: complete confidential collateral callback`.
+
+Rollback/failure action: Remove only the browser callback orchestration. Preserve the
+immutable pool's pending timeout/rejection mechanism and do not replace it with a
+service signer, stored plaintext, manually copied proof, or mock acceptance result.
+
 ## WEB-03-UI-01 work-item record
 
 ID: `WEB-03-UI-01`
