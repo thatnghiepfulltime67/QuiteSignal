@@ -85,6 +85,42 @@ repository's `deployments/sepolia/quiet-signal.json` as its public asset rather 
 copying addresses into source. The shell displays the DESIGN.md semantic legend and
 explicit provider/network/reconnect states, but it cannot submit a transaction.
 
+## WEB-02 work-item record
+
+ID: `WEB-02`
+
+Status: `in_progress`
+
+Outcome: Turn the canonical public manifest into an honest market overview and
+privacy onboarding surface with no mock market facts or private-data implication.
+
+Output files: web manifest presenter/route source and focused tests, DESIGN.md-aligned
+styles, this record, and traceability updates if public copy changes.
+
+Acceptance criteria: `/markets` and the canonical pool route render the immutable
+condition, Sepolia chain, k-threshold status, and public/private/compute boundary
+from the validated manifest only. Loading, malformed manifest, and empty-pool states
+explain the next safe action. Copy explicitly says wallets and timing are public,
+does not imply anonymity or Sybil resistance, and links only to public verification
+or the later signal route.
+
+Privacy/custody impact: This slice renders public manifest facts only. It neither
+collects a signal nor displays owner data, and does not add storage, analytics,
+backend requests, transaction calls, or address constants.
+
+Funds location/recovery impact: No funds move. If the manifest is unavailable, the
+screen blocks the signal path and directs the user to verify the public deployment.
+
+Checks: focused presenter tests, `npm run test:web`, production web build,
+`npm run typecheck`, and `git diff --check`.
+
+Evidence location: source/test output only; this onboarding slice cannot claim G7.
+
+Intended commit: `feat: add market privacy onboarding`.
+
+Rollback/failure action: Revert only the presentation layer; retain the canonical
+manifest boundary and do not replace unavailable chain facts with a fixture.
+
 ## Primary route contract
 
 Required routes or equivalent framework views:
