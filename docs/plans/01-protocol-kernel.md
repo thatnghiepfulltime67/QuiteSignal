@@ -551,9 +551,11 @@ Outcome: Implement confidential score materialization, winner-only confidential
 payout claims, and refundable-owner returns without public owner amounts or an
 administrator settlement path.
 
-Output files: `QuietSignalPool.sol`, stable ABI/error tests where required, a staged
-Sepolia owner-terminal runner and verifier, `evidence/{offline,sepolia}/G5/PK-07-TERMINALS.json`,
-spend ledger, protocol/API/risk/traceability documents, and this record.
+Output files: `QuietSignalPool.sol`, stable ABI/error tests where required,
+`run-pk05-aggregate-sepolia.mts` in `PK-07` mode,
+`verify-pk07-terminals-sepolia.mts`, terminal package scripts,
+`evidence/{offline,sepolia}/G5/PK-07-TERMINALS.json`, spend ledger,
+protocol/API/risk/traceability documents, and this record.
 
 Acceptance criteria: Only a settled owner may materialize its encrypted score and
 claim once; only a refundable owner may refund once; the two terminal actions are
@@ -569,8 +571,9 @@ Funds location/recovery impact: Collateral stays in confidential pool custody un
 one owner-scoped confidential terminal transfer. A failed terminal action leaves
 custody unchanged and is retryable by that owner.
 
-Checks: `npm run test:interfaces`, `npm run compile`, named Sepolia terminal runner
-and verifier, `npm run check:offline`, and `git diff --check`.
+Checks: `npm run test:interfaces`, `npm run compile`, the staged
+`npm run test:terminals:sepolia` runner, `npm run verify:terminals:sepolia`,
+`npm run check:offline`, and `git diff --check`.
 
 PK-07 staging uses a six-hour adapter observation lead and a five-hour commit window.
 These are harness-only immutable test configurations that prevent genuine Sepolia

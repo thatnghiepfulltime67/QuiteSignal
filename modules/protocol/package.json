@@ -13,6 +13,7 @@
     "verify:aggregate:sepolia": "tsx scripts/core/verify-pk05-aggregate-sepolia.mts",
     "test:resolution:sepolia": "tsx scripts/core/run-pk05-aggregate-sepolia.mts --work-item=PK-06",
     "test:terminals:sepolia": "tsx scripts/core/run-pk05-aggregate-sepolia.mts --work-item=PK-07",
+    "verify:terminals:sepolia": "tsx scripts/core/verify-pk07-terminals-sepolia.mts",
     "verify:resolution:sepolia": "tsx scripts/core/verify-pk06-resolution-sepolia.mts",
     "test:factory:sepolia": "tsx scripts/core/run-pk03b-factory-sepolia.mts",
     "test:interfaces": "hardhat build --force && tsx --test test/unit/interface-compatibility.test.ts",
