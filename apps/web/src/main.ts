@@ -2,6 +2,7 @@ import './styles.css';
 import { parsePublicManifest, type PublicManifest } from './manifest.js';
 import { presentMarket } from './market.js';
 import { validateSignalDraft } from './signal.js';
+import { presentVerification } from './verification.js';
 import { presentLifecycle } from './lifecycle.js';
 import { decryptOwnerPosition, readPublicEpoch, submitSignalIntent } from './wallet.js';
 
@@ -34,14 +35,26 @@ function render(message?: string): void {
     location.pathname.startsWith('/markets') || location.pathname.startsWith('/pool/');
   const isSignalRoute = location.pathname.endsWith('/signal');
   const isPositionRoute = location.pathname === '/position';
+  const verifyAddress = location.pathname.startsWith('/verify/')
+    ? location.pathname.slice('/verify/'.length)
+    : undefined;
   const content =
-    isPositionRoute && market
-      ? `<section class="signal-card owner"><p class="eyebrow private">{ owner only }</p><h1>Your private position</h1><p role="status">${ownerMessage}</p><button class="primary" id="reveal-owner">Reveal with owner wallet</button><p class="muted">No claim or refund is submitted automatically.</p></section>`
-      : isSignalRoute && market
-        ? `<section class="signal-card"><p class="eyebrow compute">{ encrypted locally }</p><h1>Prepare your signal</h1><p>Probability and collateral stay in this browser until Nox encrypts them.</p><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required /></label><label>Probability (basis points) <input name="probability" inputmode="numeric" autocomplete="off" placeholder="7500" required /></label><p class="sealed">COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.</p><button class="primary" type="submit">Validate before encryption</button><p id="signal-status" class="muted" role="status">No funds moved.</p></form></section>`
-        : isMarketRoute && market
-          ? `<section class="market"><p class="eyebrow public">{ public market }</p><h1>${market.condition}</h1><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><section class="timeline"><p class="eyebrow public">{ public lifecycle }</p><p id="lifecycle-status" role="status">${lifecycleMessage}</p><button class="wallet" id="refresh-lifecycle">Refresh public state</button></section><a class="primary" href="/pool/${market.poolAddress}/signal">Prepare encrypted signal</a></section>`
-          : `<section class="hero"><p class="eyebrow">{ confidential forecasts }</p><h1>Quiet signals.<br />Public proof.</h1><p>Signals are encrypted locally. Wallet activity, timing, and the eventual aggregate are public.</p><a class="primary" href="/markets">View market</a></section>`;
+    verifyAddress && manifest
+      ? (() => {
+          try {
+            const view = presentVerification(manifest, verifyAddress);
+            return `<section class="signal-card"><p class="eyebrow public">{ public verification }</p><h1>Verify this pool</h1><div class="facts"><p><b>Chain</b>${view.chain}</p><p><b>Manifest</b>${view.manifest}</p><p><b>Evidence</b>${view.evidence}</p></div><p class="muted">The independent verifier command is the source of invariant conclusions.</p></section>`;
+          } catch (error) {
+            return `<section class="signal-card"><p class="eyebrow private">{ verification blocked }</p><h1>Pool mismatch</h1><p>${error instanceof Error ? error.message : 'The verification request is invalid.'}</p></section>`;
+          }
+        })()
+      : isPositionRoute && market
+        ? `<section class="signal-card owner"><p class="eyebrow private">{ owner only }</p><h1>Your private position</h1><p role="status">${ownerMessage}</p><button class="primary" id="reveal-owner">Reveal with owner wallet</button><p class="muted">No claim or refund is submitted automatically.</p></section>`
+        : isSignalRoute && market
+          ? `<section class="signal-card"><p class="eyebrow compute">{ encrypted locally }</p><h1>Prepare your signal</h1><p>Probability and collateral stay in this browser until Nox encrypts them.</p><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required /></label><label>Probability (basis points) <input name="probability" inputmode="numeric" autocomplete="off" placeholder="7500" required /></label><p class="sealed">COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.</p><button class="primary" type="submit">Validate before encryption</button><p id="signal-status" class="muted" role="status">No funds moved.</p></form></section>`
+          : isMarketRoute && market
+            ? `<section class="market"><p class="eyebrow public">{ public market }</p><h1>${market.condition}</h1><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><section class="timeline"><p class="eyebrow public">{ public lifecycle }</p><p id="lifecycle-status" role="status">${lifecycleMessage}</p><button class="wallet" id="refresh-lifecycle">Refresh public state</button></section><a class="primary" href="/pool/${market.poolAddress}/signal">Prepare encrypted signal</a></section>`
+            : `<section class="hero"><p class="eyebrow">{ confidential forecasts }</p><h1>Quiet signals.<br />Public proof.</h1><p>Signals are encrypted locally. Wallet activity, timing, and the eventual aggregate are public.</p><a class="primary" href="/markets">View market</a></section>`;
   root.innerHTML = `<main class="shell"><header><a class="wordmark" href="/markets">QuietSignal</a><button class="wallet" id="wallet">${walletState}</button></header><nav aria-label="Primary"><a href="/markets">Market</a><a href="${manifest ? `/pool/${manifest.poolAddress}` : '/markets'}">Public facts</a></nav><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section>${content}<section class="panel"><p class="eyebrow public">{ canonical Sepolia deployment }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : 'Loading verified manifest…')}</p></section></main>`;
   document.querySelector<HTMLButtonElement>('#wallet')?.addEventListener('click', connectWallet);
   document
