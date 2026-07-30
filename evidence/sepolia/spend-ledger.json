@@ -5774,6 +5774,18 @@
       "actualGasCostWei": "607828822910127",
       "sourceCommit": "29684328b78eadf761fafec3f2ada66c65c52115",
       "timestampUtc": "2026-07-30T10:03:52.384Z"
+    },
+    {
+      "workItemId": "PK-06",
+      "phase": "P1",
+      "sender": "0xDC1cc527423C882156a632C250528D1922d18Fc7",
+      "transactionHash": "0xbea111f0d667ba6e35e5b230b16beb397bf3771bb14740c3b28cb211f330666d",
+      "blockNumber": "11381792",
+      "gasUsed": "420795",
+      "effectiveGasPrice": "1149008346",
+      "actualGasCostWei": "483496966955070",
+      "sourceCommit": "2e3aa67759b23082099f98e1c0509d553d510182",
+      "timestampUtc": "2026-07-30T10:04:28.259Z"
     }
   ]
 }
