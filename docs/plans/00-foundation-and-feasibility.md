@@ -710,6 +710,13 @@ Its ignored secondary-actor recovery record remains locally only. This non-termi
 fixture is excluded from FND-05B evidence; a resume must close it after the deadline,
 prove its disclosure and early-timeout rejection, then complete terminal refunds.
 
+The bounded FND-05B advance command from `8bdd012` completed at blocks `11379975`
+through `11379978`: threshold close, exactly YES/NO aggregate public-decrypt access,
+and a reverted early cancellation. The spike is now `AGGREGATE_PENDING`; its timeout
+has elapsed and the local secondary recovery record is retained. The first recovery
+invocation sent no write because the clean-source guard detected these uncommitted
+receipts. Commit this checkpoint, then cancel permissionlessly and refund both owners.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

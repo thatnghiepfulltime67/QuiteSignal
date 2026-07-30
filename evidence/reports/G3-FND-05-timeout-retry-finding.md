@@ -223,3 +223,12 @@ The ignored secondary-actor recovery record remains solely for this fixture. Thi
 non-terminal and excluded from FND-05B evidence. A resume must close after the
 deadline, prove exactly YES/NO aggregate disclosure and early cancellation rejection,
 then retain the actor record until a terminal timeout cancellation and both refunds.
+
+The bounded advance command from `8bdd012` completed at blocks `11379975` through
+`11379978`: it closed the threshold epoch, granted public-decrypt access to exactly
+the YES and NO aggregates, and recorded a reverted early cancellation. The spike is
+now `AGGREGATE_PENDING`; its timeout has elapsed and the secondary recovery record
+remains locally retained. The next action is the existing permissionless cancellation
+and two owner refunds. The first recovery invocation was correctly stopped by the
+clean-source guard because these advance receipts were not yet committed; it sent no
+recovery write.
