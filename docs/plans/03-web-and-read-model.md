@@ -946,7 +946,7 @@ active-release promotion occurred.
 
 ID: `WEB-08-EVIDENCE-03`
 
-Status: `in_progress`
+Status: `complete`
 
 Prerequisite gates: G6 passed. This work prepares G7 evidence handling only and
 cannot claim a browser journey without a real external-wallet run.
@@ -991,6 +991,13 @@ Intended commit: `test: add browser evidence verifier`.
 Rollback/failure action: Revert only the verifier/parser/runbook surface. Do not
 replace rejected evidence with a mock wallet, local chain, simulated provider, or
 browser-held key.
+
+Completion evidence: `T-VERIFIER-WEB-08-01` accepts a public-only G7 record only
+when its primary and recovery actions bind to immutable manifests and the required
+receipt selectors. `T-VERIFIER-WEB-08-02` rejects an extra sensitive field, simulated
+provider declaration, duplicate receipt, and owner-only refund selector. The
+read-only verifier never writes to Sepolia or prints transaction input. This is
+evidence infrastructure, not a browser run or G7 claim.
 
 ## Primary route contract
 

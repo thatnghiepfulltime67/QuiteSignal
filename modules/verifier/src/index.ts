@@ -24,3 +24,10 @@ export {
   type ReleaseReadOnlyClient,
   type VerificationReport,
 } from './verify.js';
+export {
+  parseG7BrowserEvidence,
+  verifyG7BrowserEvidence,
+  type G7BrowserEvidence,
+  type G7EvidenceReport,
+  type G7TransactionObservation,
+} from './g7.js';
