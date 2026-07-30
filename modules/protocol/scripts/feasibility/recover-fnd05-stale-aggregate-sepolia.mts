@@ -371,7 +371,7 @@ async function main(): Promise<void> {
   assertCleanSourceTree();
   const send = async (
     wallet: typeof primaryWallet,
-    sender: Address,
+    account: typeof primary,
     functionName: 'cancelBeforeUnwrap' | 'refund',
     gas: bigint,
   ): Promise<{ hash: Hash; blockNumber: bigint }> => {
@@ -381,7 +381,7 @@ async function main(): Promise<void> {
     assertBudget(ledger, [gas * liveMaxFeePerGas]);
     const data = encodeFunctionData({ abi: SPIKE_ABI, functionName });
     const hash = await wallet.sendTransaction({
-      account: sender,
+      account,
       to: fixture.recoverySpike,
       data,
       gas,
@@ -391,7 +391,7 @@ async function main(): Promise<void> {
     appendSpend(ledger, {
       workItemId: 'FND-05C',
       phase: 'P0',
-      sender,
+      sender: account.address,
       transactionHash: hash,
       blockNumber: receipt.blockNumber.toString(),
       gasUsed: receipt.gasUsed.toString(),
@@ -402,19 +402,9 @@ async function main(): Promise<void> {
     return { hash, blockNumber: receipt.blockNumber };
   };
 
-  const cancellation = await send(
-    primaryWallet,
-    primary.address,
-    'cancelBeforeUnwrap',
-    CANCEL_GAS_LIMIT,
-  );
-  const primaryRefund = await send(primaryWallet, primary.address, 'refund', REFUND_GAS_LIMIT);
-  const secondaryRefund = await send(
-    secondaryWallet,
-    secondary.address,
-    'refund',
-    REFUND_GAS_LIMIT,
-  );
+  const cancellation = await send(primaryWallet, primary, 'cancelBeforeUnwrap', CANCEL_GAS_LIMIT);
+  const primaryRefund = await send(primaryWallet, primary, 'refund', REFUND_GAS_LIMIT);
+  const secondaryRefund = await send(secondaryWallet, secondary, 'refund', REFUND_GAS_LIMIT);
   const [terminalState, fundsLocation, terminalBlock] = await Promise.all([
     publicClient.readContract({
       address: fixture.recoverySpike,
