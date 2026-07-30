@@ -95,6 +95,7 @@ named CLI execution reads Ethereum Sepolia; neither test writes chain state.
 | `T-VERIFIER-DEP-01-*` | Historical deployment-block epoch selection and malformed deployment-block rejection                    | FR-01, FR-08, I8, I9            |
 | `T-VERIFIER-VER-01-*` | Canonical factory, collateral interface, adapter/feed, zero-custody, and lifecycle-snapshot mutations   | FR-01, FR-05, FR-08, I5, I8, I9 |
 | `T-AUT-01-POLICY-*`   | Deterministic one-action permissionless policy, timeout precedence, invalid input, and schema exclusion | FR-03–FR-05, FR-07, I3, I8, I10 |
+| `T-IDX-01-*`          | Deterministic public-event replay, checkpoint serialization, ordering rejection, and schema exclusion   | FR-08, P1, P3, P7, I3, I8, I10  |
 
 ## PK-09 combined-evidence coverage
 

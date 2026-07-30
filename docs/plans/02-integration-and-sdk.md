@@ -199,7 +199,7 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `IDX-01-PLAN-01`; AUT-01 awaits its separately verified public-result
+Active slice: `IDX-01-REPLAY-01`; AUT-01 awaits its separately verified public-result
 boundary and a fresh threshold lifecycle.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
@@ -683,7 +683,7 @@ protocol correctness or confidential data.
 
 ### IDX-01-PLAN-01
 
-Status: `in_progress`
+Status: `complete`
 
 Output files: this record, public event schema/reducer/replay test plan, checkpoint
 schema, rebuild/run commands, and later service implementation.
@@ -716,6 +716,87 @@ Intended commit: `feat: add chain derived read model`.
 Rollback/failure action: Disable/remove the service cache only. Do not add an API
 with decrypted fields, turn the indexer into a write authority, or fall back to a
 manually curated state record.
+
+Completion evidence: `f11c722` records the read-model public-data boundary and
+rebuild/reorg requirements. This planning slice makes no indexer or G6 claim.
+
+### IDX-01-REDUCER-01
+
+Status: `complete`
+
+Outcome: Add a deterministic pure reducer and versioned checkpoint format for the
+minimal public lifecycle projection.
+
+Output files: `services/indexer` workspace reducer/checkpoint source, deterministic
+tests, root command, this record, and traceability updates.
+
+Acceptance criteria: A strictly ordered event sequence projects only epoch state,
+deadline, threshold count, aggregate request, aggregate public totals, and public
+settlement facts. Duplicate/out-of-order input rejects. A checkpoint is serializable
+only with chain/block/hash/manifest/reducer-version facts, and reset/replay produces
+the same projection. Owner-specific terminal events are intentionally ignored.
+
+Privacy/custody impact: The reducer has no RPC/wallet/Nox dependency and its public
+types cannot include confidential or user-specific value fields.
+
+Funds location/recovery impact: No chain or asset operation. Invalid event input or
+checkpoint rejects locally; recovery is a full deterministic replay.
+
+Checks: reducer/checkpoint/replay/order/static schema tests, typecheck,
+`npm run check:offline`, and `git diff --check`.
+
+Evidence location: unit output only; no G6 advancement.
+
+Intended commit: `feat: add deterministic read model reducer`.
+
+Rollback/failure action: Revert the isolated pure workspace. Do not preserve a
+partial cache or compensate with manually inserted state.
+
+Completion evidence: The reducer adds three passing `T-IDX-01-*` tests for
+deterministic replay/checkpoint construction, invalid cursor/transition rejection,
+and the public-schema boundary. It is included in `npm run check:offline`, which
+passed with typecheck, compilation, SDK, verifier, automation, and secret scanning.
+This pure slice has no chain write or G6 claim.
+
+### IDX-01-REPLAY-01
+
+Status: `in_progress`
+
+Outcome: Rebuild the projection from the canonical pool's finalized public events
+and record a sanitized, independently reproducible Sepolia read evidence artifact.
+
+Output files: public event mapper/rebuild command and tests in `services/indexer`,
+root command/verification matrix entries, this record, and
+`evidence/sepolia/G6/IDX-01-READ-MODEL.json`.
+
+Acceptance criteria: The command accepts only the committed Sepolia manifest;
+checks its runtime/binding before reading; maps only the frozen lifecycle event
+surface; verifies cursors and block hashes; and writes a manifest-bound checkpoint.
+It must reject another chain, an unknown event, a mutated checkpoint, non-finalized
+head data, and a reorged checkpoint by replaying from the last safe block. The
+canonical below-threshold lifecycle is valid partial-lifecycle evidence; a later
+fresh threshold lifecycle must extend the same read path.
+
+Privacy/custody impact: RPC reads and the evidence artifact contain only contract
+addresses, event cursors, public lifecycle facts, and manifest/runtime hashes. The
+command has no signer, Nox client, owner viewer, confidential calldata capture, or
+asset operation.
+
+Funds location/recovery impact: This command is read-only and cannot affect funds.
+If a checkpoint no longer matches its recorded block hash, it is discarded and
+rebuilt deterministically from the manifest deployment block.
+
+Checks: mapper/replay/reorg/mutated-checkpoint tests, `npm run typecheck`,
+`npm run check:offline`, named Sepolia read rebuild, and `git diff --check`.
+
+Evidence location: `evidence/sepolia/G6/IDX-01-READ-MODEL.json`; it is a G6
+component only after the named read rebuild passes.
+
+Intended commit: `feat: add manifest-bound sepolia read model replay`.
+
+Rollback/failure action: Remove only generated local checkpoints/evidence and
+rebuild from public chain events. Never retain a stale cache as a source of truth
+or add a manual state override.
 
 ## Dependency graph
 
