@@ -22,6 +22,7 @@
     "compile": "npm run typecheck && npm run --workspace @quitesignal/protocol compile",
     "test:unit": "node --test --test-reporter=spec",
     "test:interfaces": "npm run --workspace @quitesignal/protocol test:interfaces",
+    "test:adapter:sepolia": "npm run --workspace @quitesignal/protocol test:adapter:sepolia --",
     "test:model": "npm run --workspace @quitesignal/protocol test:model && npm run --workspace @quitesignal/domain test:model",
     "test:nox:sepolia": "npm run --workspace @quitesignal/protocol test:nox:sepolia --",
     "test:g4:resolution:sepolia": "tsx modules/protocol/scripts/feasibility/run-g4-resolution-sepolia.mts",

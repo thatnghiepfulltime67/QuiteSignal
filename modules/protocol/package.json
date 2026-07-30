@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "compile": "hardhat build --force",
+    "test:adapter:sepolia": "tsx scripts/core/run-pk03a-adapter-sepolia.mts",
     "test:interfaces": "hardhat build --force && tsx --test test/unit/interface-compatibility.test.ts",
     "test:model": "tsx --test test/feasibility/reference-model.test.ts",
     "test:nox:sepolia": "tsx scripts/feasibility/run-nox-sepolia.mts",

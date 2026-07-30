@@ -36,7 +36,8 @@ An adapter instance is bound to one public price-feed condition and is
 permissionless. It cannot custody confidential handles or assets, has no
 asset-receiving function, and cannot write an outcome. `resolution` reads the
 unchanged target and reverts unless the immutable observation time, complete-round,
-positive-answer, and maximum-age checks succeed. The pool never trusts a
+positive-answer, and maximum-age checks succeed. It also rechecks the stored target
+runtime hash before every read. The pool never trusts a
 caller-supplied result.
 
 The stable ABI lives in `contracts/interfaces`. `IQuietSignalFactory` creates one

@@ -155,6 +155,61 @@ deployment. Any interface conflict with the P0 Nox/ACL feasibility findings, the
 reference model, or the zero-custody adapter boundary blocks PK-03 and requires an
 ADR if resolution changes trust, custody, privacy, state, or a public interface.
 
+## PK-03A work-item record
+
+ID: `PK-03A`
+
+Status: `in_progress`
+
+Outcome: Pull forward the read-only production implementation of the already frozen
+direct price-feed adapter so PK-03 factory validation can use an actual Sepolia
+adapter instead of a mock. This is a build-order adjustment only: it does not add
+settlement, custody, Nox, factory, or pool lifecycle behavior, and it does not alter
+the accepted ABI or ADR-017 trust boundary.
+
+Output files: `modules/protocol/contracts/adapters/ChainlinkPriceFeedResolutionAdapter.sol`,
+`modules/protocol/scripts/core/run-pk03a-adapter-sepolia.mts`,
+`modules/protocol/package.json`, root `package.json`,
+`evidence/{offline,sepolia}/G5/PK-03A-ADAPTER.json`,
+`docs/engineering/01-protocol-spec.md`, the verification matrix, this work-package
+record, the evidence ledger, and the spend ledger.
+
+Acceptance criteria: The adapter implements `IResolutionAdapter` exactly; captures
+one non-empty target and its runtime hash immutably; validates positive threshold,
+observation time, and maximum age; rechecks target runtime before every resolution;
+returns only `YES=1` or `NO=2` from an unchanged positive complete fresh Chainlink
+round; rejects early, stale, incomplete, future, invalid, or changed-target reads;
+has no payable/fallback/receive or asset/handle method; and retains zero balance.
+Sepolia evidence deploys fresh adapter instances against the accepted Chainlink
+ETH/USD target and proves both outcomes plus the negative cases without a mock.
+
+Negative cases: Zero/non-contract target, zero threshold, zero observation time,
+zero maximum age, early observation, stale round, malformed round, target runtime
+mismatch, value transfer, and a caller-supplied result must fail or be impossible.
+
+Privacy/custody impact: Inputs and outputs are public feed metadata only. The
+adapter neither imports nor stores Nox handles, proofs, plaintext signals, private
+positions, or confidential assets, and it cannot transfer any asset.
+
+Funds location/recovery impact: The adapter has no funds location. A failed read
+does not change pool state or custody; the later pool's immutable grace refund is
+the only recovery path. This slice cannot settle a pool.
+
+Checks: `npm run test:interfaces`, `npm run compile`,
+`npm run test:adapter:sepolia`, `npm run check:offline`,
+`npm run check:sepolia:read`, and `git diff --check`.
+
+Evidence path: `evidence/{offline,sepolia}/G5/PK-03A-ADAPTER.json` and committed
+spend-ledger entries. No partial adapter result passes G5; PK-03A is a named input
+to the later G5 combined report.
+
+Intended commit: `feat: add immutable price feed adapter`.
+
+Rollback/failure action: Revert this isolated adapter commit and leave PK-03A
+incomplete. A production-adapter failure cannot be replaced with a fixture, trusted
+resolver, copied feed, or caller-selected result; it blocks factory deployment until
+the documented resolution boundary is repaired or an ADR records a true blocker.
+
 ## Sequencing
 
 ```text

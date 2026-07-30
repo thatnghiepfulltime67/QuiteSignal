@@ -31,6 +31,7 @@ production-key configuration.
 | `npm run test:model` | offline | Pure state/math/reference-model property and fuzz tests | G1/G5/G8 |
 | `npm run test:contracts:sepolia -- <case>` | sepolia-write | Named contract state/economic case | G1–G6/G8 |
 | `npm run test:nox:sepolia -- <case>` | sepolia-write | Named ACL/compute/proof/asset case | G1–G3/G5/G8 |
+| `npm run test:adapter:sepolia -- [--write]` | sepolia-read / sepolia-write | Dry-run or confirmed immutable direct-adapter cases | PK-03A/G5 |
 | `npm run test:adversarial:sepolia -- <case>` | sepolia-write | Replay, unauthorized, timeout, stale feed, reentrancy case | G5/G8 |
 | `npm run test:e2e:sepolia` | sepolia-write | Full lifecycle across deployed modules | G5–G8 |
 | `npm run test:web` | offline | Component, accessibility, and deterministic UI-state tests | G7/G8 |
