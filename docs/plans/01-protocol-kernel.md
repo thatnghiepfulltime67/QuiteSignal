@@ -635,6 +635,51 @@ pool bindings/public epochs, and four receipts without a signer or chain write.
 sensitive-field, wrong-chain, missing/stale-runtime, wrong-binding/state, and
 failed-receipt mutations. PK-08 is a completed G5 component, not G5 itself.
 
+## PK-09 work-item record
+
+ID: `PK-09`
+
+Status: `in_progress`
+
+Outcome: Close the protocol correctness gate with reproducible model invariants,
+source-policy checks, and named Sepolia adversarial conclusions for every observable
+I1–I10 boundary.
+
+Output files: domain property tests and deterministic seed report, protocol static
+policy tests, adversarial Sepolia runner/verifier where a write is required,
+`evidence/{offline,sepolia}/G5/PK-09-INVARIANTS.json`, the G5 combined verifier,
+traceability/evidence/risk updates, and this record.
+
+Acceptance criteria: The final model run executes at least 10,000 vectors per
+invariant family with a reproducible seed. Every state/terminal flag is monotonic;
+allocations and aggregate/public payout bounds hold; source policy permits no
+owner-shaped public decrypt. Named Sepolia cases cover the remaining live invalid,
+replay, timeout, rounding, ACL, and custody boundaries. The G5 verifier must reject
+an observable mutation for every observable invariant.
+
+Privacy/custody impact: Offline property tests use only synthetic values. Sepolia
+cases use real Nox/ERC-7984 operations and persist neither plaintext nor opaque
+handles/proofs. No test adds a trusted actor or custody path.
+
+Funds location/recovery impact: A failed property or live adversarial case does not
+move funds. Every live fixture must end with confidential owner custody, confidential
+claim-pool custody, or a documented terminal transfer before any fresh fixture runs.
+
+Checks: `npm run test:model`, static policy tests, named Sepolia adversarial runners,
+G5 combined read verifier, `npm run check:offline`, and `git diff --check`.
+
+Evidence path: `evidence/{offline,sepolia}/G5/PK-09-INVARIANTS.json`. Intended
+commits: `test: expand protocol invariant coverage`, `test: add Sepolia adversarial
+coverage`, and `test: close protocol correctness gate`.
+
+Rollback/failure action: Record the minimized seed or public transaction reference,
+leave G5 `not_run`, and repair the protocol without a plaintext shadow model, trusted
+service, weakened ACL, or new custody authority.
+
+Preparation sequencing: PK-09 may run deterministic offline/static preparation while
+PK-07 is `awaiting_chain`. No PK-09 completion or G5 claim may be recorded until the
+PK-07 terminal evidence is passed and all named Sepolia cases are complete.
+
 ## Sequencing
 
 ```text
@@ -642,6 +687,9 @@ PK-01 → PK-02 → PK-03 → PK-04 → PK-05 → PK-06 → PK-07
                     └──────────────────────────────→ PK-08
 PK-01..PK-08 → PK-09 → G5
 ```
+
+The `awaiting_chain` PK-07 exception permits only PK-09 offline/static preparation;
+it does not alter the completion dependency shown above.
 
 No SDK, relayer, indexer, or web implementation begins in P1.
 
