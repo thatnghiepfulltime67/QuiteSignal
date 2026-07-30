@@ -30,13 +30,13 @@ const CASES = [
     id: 'below-k',
     pool: '0x53f14f513519e4247E6443fe042495Ebb1839A6F' as Address,
     output: 'LIVE-02-BELOW-K-MANIFEST.json',
-    participants: 1,
+    minimumPoolReceipts: 5,
   },
   {
     id: 'timeout',
     pool: '0x7C7E4428767520A99B2bfb4f196B5558c64efEC8' as Address,
     output: 'LIVE-02-TIMEOUT-MANIFEST.json',
-    participants: 2,
+    minimumPoolReceipts: 10,
   },
 ] as const;
 const OPENED_TOPIC = toEventSelector('EpochOpened(bytes32,address,uint64,uint32)').toLowerCase();
@@ -170,7 +170,7 @@ for (const scenario of CASES) {
       (log) => log.address.toLowerCase() === pool && log.topics[0]?.toLowerCase() === OPENED_TOPIC,
     ),
   );
-  if (!opening || related.length < scenario.participants * 3 + 3) {
+  if (!opening || related.length < scenario.minimumPoolReceipts) {
     fail(`${scenario.id} receipts do not contain the required public lifecycle.`);
   }
   const [configRaw, epochRaw, code] = await Promise.all([
