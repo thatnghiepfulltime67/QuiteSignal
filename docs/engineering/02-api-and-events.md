@@ -49,6 +49,10 @@ the immutable timeout. `finalizeAggregate` accepts only its request id plus sepa
 bound YES and NO proofs; it accepts no plaintext aggregate. `settle`
 has no result parameter and reads the immutable adapter condition itself.
 
+`aggregateDisclosureHandles()` is callable only while an aggregate request is
+pending and returns the two opaque handles already authorized for public decryption.
+It never returns an owner, position, total-collateral, payout, or refund handle.
+
 ## Read API
 
 The indexer exposes only chain-derived public views: condition metadata, epoch state,
