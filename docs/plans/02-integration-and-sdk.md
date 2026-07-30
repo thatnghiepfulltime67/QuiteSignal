@@ -1004,6 +1004,11 @@ Rollback/failure action: Do not overwrite a manifest. Record the public read err
 and recreate a new explicitly named lifecycle only if its chain facts cannot be
 verified; never fill a missing field manually.
 
+Partial evidence: Source commit `d4d78a0` generated the one-time manifest from 22
+LIVE-01 ledger receipts. The existing independent verifier passed at block
+`11383443`; both artifacts are recorded under `evidence/sepolia/G6/`. The exact
+manifest still requires IDX-01 replay before this slice completes.
+
 ## Dependency graph
 
 ```text

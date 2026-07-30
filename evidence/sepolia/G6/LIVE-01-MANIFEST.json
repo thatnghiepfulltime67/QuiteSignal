@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "chainId": 11155111,
+  "sourceCommit": "d4d78a09537167fce43ddc13cf74241ced8be17f",
+  "deployment": {
+    "workItemId": "LIVE-01",
+    "deployedAtBlock": "11383347"
+  },
+  "contracts": [
+    {
+      "id": "fixture",
+      "address": "0x0cb082c6ab865de63a60386f090a0d6012544723",
+      "runtimeCodeHash": "0x9ed7dd887c4fc51e7cd3b3c2d8248a5c6430706dfffd7156af5455a5441ab880"
+    },
+    {
+      "id": "wrapper",
+      "address": "0x6ab40c7656d161922aa4e95ab8a5b8d1f069c638",
+      "runtimeCodeHash": "0xa3c88c69a0cde985835e4534c11de47262a5d96354860841512b2f40941262ea"
+    },
+    {
+      "id": "adapter",
+      "address": "0xd9e07d95f2803df9bea44ee06e538132c3d1e30c",
+      "runtimeCodeHash": "0x985b8b6c3dcecc022bbf95bb2c1a06c1fa5c93f280eae94890733f456feabbf3"
+    },
+    {
+      "id": "factory",
+      "address": "0x0f126d665ca27b78373e9d59339a846386479165",
+      "runtimeCodeHash": "0xc4c4908d17c2b2ec77c194a0c6b96a56955ab8a285075a804af4ae44e72d154e"
+    },
+    {
+      "id": "pool",
+      "address": "0xc900494624d7A785503104e7f98bb5C54Df950DB",
+      "runtimeCodeHash": "0x787947591190c05335352535333cb6f01798b497a0c987fe269b01a81c7a187d"
+    }
+  ],
+  "pools": [
+    {
+      "contractId": "pool",
+      "address": "0xc900494624d7A785503104e7f98bb5C54Df950DB",
+      "confidentialCollateral": "0x6Ab40c7656D161922Aa4e95Ab8a5B8d1f069c638",
+      "resolutionAdapter": "0xD9e07d95F2803DF9BEa44ee06E538132C3D1e30C",
+      "epoch": {
+        "state": 0,
+        "winner": 0,
+        "participantCount": 0,
+        "publicYes": "0",
+        "publicNo": "0",
+        "settledRoundId": "0",
+        "settledAnswer": "0"
+      }
+    }
+  ],
+  "receipts": [
+    {
+      "transactionHash": "0x03fe36a46ce18ff9f8c17413a5e801420363ba926ca612e263c9300634f36abb"
+    },
+    {
+      "transactionHash": "0xba5dac996a61cc2af6d006ec52132dafd85b9615562f9e81ff9ac40d7acbf991"
+    },
+    {
+      "transactionHash": "0xe1d337c8977611c966023ac826016c0764f1f1f7f54dbb4b25d372d89e6fc6ad"
+    },
+    {
+      "transactionHash": "0xc660bf7c2ccc5d0527c46edb919c88b3d63a0ff6b44f4a28559ab560eb14d7be"
+    },
+    {
+      "transactionHash": "0xce0a0d1b220f8fb96983755499aa96cf0916a6c0e0f0fb71c6b8e8bc1f215f6e"
+    },
+    {
+      "transactionHash": "0xaa69c2acde1058fe8c5f8b108a2019ddc19bf5522311783ce8e85c390bc11840"
+    },
+    {
+      "transactionHash": "0x05a98809ef02eac65457726ef86334462e7e2f07e1b8c30745e4d7629d60e65b"
+    },
+    {
+      "transactionHash": "0xa26d3b9559488f1216f895ca3c02d3822e250433bb0fc271f97d9940562c83f6"
+    },
+    {
+      "transactionHash": "0xd9adbee8bde0ae082f4a724527c55aa72200550d7623d2382eb075064a882692"
+    },
+    {
+      "transactionHash": "0x8c90188e0580f99d1a5a41f7f116b15c1aded59be49175a17dfa559385ffdb73"
+    },
+    {
+      "transactionHash": "0xe6910924102c051b7ab0a9c1000f5f22335b6049061603740e078cfbf3696e2d"
+    },
+    {
+      "transactionHash": "0xc1af4e7b5790193438ab801966ee31fe1dbb69e8ac4f40cfbde5d275e6eab723"
+    },
+    {
+      "transactionHash": "0x202bc5a183535ff09f9ecebafa6d830b09fd8e88b14e8ad3fcf05f07b61ed5c3"
+    },
+    {
+      "transactionHash": "0x804e0dc5d09a4c738ff915a4f469ff18d9c8effe4ad177ea1f3415b8146a766c"
+    },
+    {
+      "transactionHash": "0x0254d9d05a61e5951484223c4333b3f2eee6a7a744a6dbc73b4f7a6b11949741"
+    },
+    {
+      "transactionHash": "0x257538523759b91ca2d14092326f6dc505aca61610d675d8c85cb8814d2d96dd"
+    },
+    {
+      "transactionHash": "0x22e944b9ac9f6190522e1bcca3327af7232b3605b72baf870d685e26b458ee25"
+    },
+    {
+      "transactionHash": "0x22ef5bcd69b60a17f769b7112ad8db0f14c250374567569e193c4af56cee1dc6"
+    },
+    {
+      "transactionHash": "0x2de3ca81a19e6d098ada98f6533d1cf70bb87027bb1e90abafc58b171eedca73"
+    },
+    {
+      "transactionHash": "0x919708025c6c94d58222af9aa711d91fb29912f681cf3a973bfb031012e9ae96"
+    },
+    {
+      "transactionHash": "0x0df0f5c8f433b3a6eb1f1e92c490078a784788e574b38732d182e925a772a7de"
+    },
+    {
+      "transactionHash": "0xafa689b522045ec2a233ea57d44090afed93afb2c2bb5236036e2d4649067d6c"
+    }
+  ]
+}

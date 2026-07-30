@@ -79,6 +79,14 @@ checkpoint binds the manifest fingerprint and block hash in
 asset operation, confidential schema, or owner event storage. G6 remains `not_run`
 until the fresh threshold lifecycle and remaining P2 components pass.
 
+LIVE-01 has a completed fresh success execution and public manifest-verifier slice,
+not a G6 pass. Its two-owner pool `0xc900494624d7A785503104e7f98bb5C54Df950DB`
+has 22 append-only P2 receipts. The generated manifest and independent verifier
+report, `evidence/sepolia/G6/LIVE-01-MANIFEST.json` and
+`evidence/sepolia/G6/LIVE-01-VERIFIER.json`, passed with the historical initial
+epoch at block `11383347` and verification at `11383443`. The required replay of
+this exact manifest and the separate recovery family remain pending.
+
 ### G5 partial history
 
 PK-03A is a completed G5 component, not G5 itself. The source commit `4ef78df`

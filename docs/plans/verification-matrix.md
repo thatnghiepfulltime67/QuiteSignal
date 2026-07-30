@@ -31,6 +31,7 @@ production-key configuration.
 | `npm run test:indexer`                                    | offline                      | Deterministic public-event reducer and checkpoint tests                                     | G6–G8           |
 | `npm run rebuild:indexer:sepolia`                         | sepolia-read                 | Manifest-bound finalized public-event replay and checkpoint evidence                        | G6–G8           |
 | `npm run run:live:sepolia -- --stage=<name> [--write]`    | sepolia-read / sepolia-write | Bounded fresh two-owner lifecycle stage with explicit P2 ledger attribution                 | G6              |
+| `npm run write:live01:manifest`                           | sepolia-read                 | Guarded public manifest generation from LIVE-01 ledger and historical chain facts           | G6              |
 | `npm run test:unit`                                       | offline                      | Domain, SDK, reducer, component units                                                       | G5–G8           |
 | `npm run test:model`                                      | offline                      | Pure state/math/reference-model property and fuzz tests                                     | G1/G5/G8        |
 | `npm run test:contracts:sepolia -- <case>`                | sepolia-write                | Named contract state/economic case                                                          | G1–G6/G8        |
