@@ -23,8 +23,26 @@ export interface G5EvidenceReport {
   status: 'passed';
 }
 
-const FORBIDDEN_FIELD =
-  /(plaintext|private|secret|seed|mnemonic|signature|stake|probability|position|payout|refund|score|handle|proof)/i;
+// Evidence check names may describe public outcomes such as a confidential refund
+// or score ACL. Only exact data-bearing field names are prohibited, so semantic
+// check labels cannot make an otherwise sanitized report unverifiable.
+const FORBIDDEN_FIELD = new Set([
+  'plaintext',
+  'privatekey',
+  'secret',
+  'seed',
+  'mnemonic',
+  'signature',
+  'stake',
+  'probability',
+  'position',
+  'payout',
+  'refund',
+  'score',
+  'handle',
+  'handleproof',
+  'proof',
+]);
 
 function fail(message: string): never {
   throw new Error(`G5 evidence verification failed: ${message}`);
@@ -43,7 +61,8 @@ function rejectForbiddenFields(value: unknown, path = 'evidence'): void {
   }
   if (!value || typeof value !== 'object') return;
   for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
-    if (FORBIDDEN_FIELD.test(key)) fail(`${path}.${key} is not permitted.`);
+    const normalizedKey = key.replace(/[^a-z]/gi, '').toLowerCase();
+    if (FORBIDDEN_FIELD.has(normalizedKey)) fail(`${path}.${key} is not permitted.`);
     rejectForbiddenFields(child, `${path}.${key}`);
   }
 }

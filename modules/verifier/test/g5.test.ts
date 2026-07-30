@@ -30,7 +30,12 @@ function components(): Components {
 }
 
 test('T-VERIFIER-PK09-01: complete component evidence produces a G5 report', () => {
-  const report = verifyG5Evidence(components());
+  const value = components();
+  value['PK-04'] = {
+    ...(value['PK-04'] as object),
+    checks: { mismatchRejectedAndRefunded: true, ownerViewerScoreAclVerified: true },
+  };
+  const report = verifyG5Evidence(value);
   assert.equal(report.status, 'passed');
   assert.equal(report.componentCount, 7);
   assert.deepEqual(
@@ -67,7 +72,7 @@ test('T-VERIFIER-PK09-02: component status, binding, chain, and check mutations 
       'forbidden field',
       {
         ...components(),
-        'PK-04': { ...(components()['PK-04'] as object), proof: 'forbidden' },
+        'PK-04': { ...(components()['PK-04'] as object), handleProof: 'forbidden' },
       },
     ],
   ];

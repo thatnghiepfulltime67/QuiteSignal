@@ -678,6 +678,16 @@ claim-pool custody, or a documented terminal transfer before any fresh fixture r
 Checks: `npm run test:model`, static policy tests, named Sepolia adversarial runners,
 `npm run verify:g5:evidence`, `npm run check:offline`, and `git diff --check`.
 
+Active slice: `PK-09-EVIDENCE-FIELD-01` narrows the combined verifier's sensitive
+field-name policy to exact data-bearing fields, while preserving rejection of raw
+handles and proofs. Public semantic check names such as terminal refund or score
+outcomes remain admissible. Output: G5 verifier, its mutation tests, and this record.
+Checks: `npm run test:verifier`, `npm run check:offline`, and
+`npm run verify:g5:evidence`. Privacy and recovery behavior are unchanged: the
+combined report remains public-only and read-only. Evidence path:
+`evidence/sepolia/G5/G5-PROTOCOL.json`. Intended commit:
+`fix: allow public G5 outcome check names`.
+
 Evidence path: `evidence/{offline,sepolia}/G5/PK-09-INVARIANTS.json`. Intended
 commits: `test: expand protocol invariant coverage`, `test: add Sepolia adversarial
 coverage`, and `test: close protocol correctness gate`.
