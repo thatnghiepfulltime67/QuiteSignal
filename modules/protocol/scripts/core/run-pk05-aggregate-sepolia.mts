@@ -407,7 +407,9 @@ async function main(): Promise<void> {
             ? 120n
             : caseName === 'grace'
               ? 121n
-              : 122n,
+              : caseName === 'claim'
+                ? 122n
+                : 123n,
       resolutionGrace: workItem === 'PK-05' ? 600n : 120n,
     };
     const salt = keccak256(toHex(`quiet-signal/${workItem}/${caseName}/v1`));
