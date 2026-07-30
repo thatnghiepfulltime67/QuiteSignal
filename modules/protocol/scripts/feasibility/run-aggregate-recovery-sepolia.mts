@@ -584,7 +584,7 @@ async function main(): Promise<void> {
       !runtimeMatchesArtifact(recoveryRuntime, spikeArtifact) ||
       !runtimeMatchesArtifact(contextPeerRuntime, spikeArtifact) ||
       (underlying as Address).toLowerCase() !== recoveryResumeContracts.fixture.toLowerCase() ||
-      (state !== 0 && state !== 2) ||
+      (state !== 0 && state !== 2 && state !== 3) ||
       participants !== K_MIN ||
       peerState !== 0 ||
       peerParticipants !== 0n
@@ -1244,6 +1244,7 @@ async function main(): Promise<void> {
     );
   }
   const resumedRecoveryState = await read(contracts.recoverySpike, spikeArtifact, 'state');
+  const resumeUnwrapOnly = recoveryResumeContracts && resumedRecoveryState === 3;
   if (resumedRecoveryState === 0) {
     const recoveryDeadline = (await read(
       contracts.recoverySpike,
@@ -1279,106 +1280,108 @@ async function main(): Promise<void> {
     ) {
       fail('The resumable aggregate-pending fixture does not retain the required request and ACL.');
     }
-  } else {
+  } else if (!resumeUnwrapOnly) {
     fail('The recovery fixture did not reach a resumable aggregate-pending state.');
   }
-  const [recoveryHandles, recoveryRequestId, crossPoolRequestId, deployerPositionHandles] =
-    (await Promise.all([
-      read(contracts.recoverySpike, spikeArtifact, 'aggregateHandles'),
-      read(contracts.recoverySpike, spikeArtifact, 'aggregateRequestId'),
-      read(contracts.recoverySpike, spikeArtifact, 'aggregateProofContext', [
-        BigInt(EXPECTED_CHAIN_ID),
-        contracts.timeoutSpike,
-        1n,
-      ]),
-      read(contracts.recoverySpike, spikeArtifact, 'positionHandles', [deployer.address]),
-    ])) as [readonly Hex[], Hex, Hex, readonly Hex[]];
-  const publicYes = await waitForPublicUint(deployerHandleClient, recoveryHandles[0]!);
-  const publicNo = await waitForPublicUint(deployerHandleClient, recoveryHandles[1]!);
-  if (publicYes.value !== EXPECTED_AGGREGATE_YES || publicNo.value !== EXPECTED_AGGREGATE_NO) {
-    fail('The revealed aggregate did not match the encrypted cohort allocation.');
-  }
-  await assertRejected(
-    () => deployerHandleClient.publicDecrypt(recoveryHandles[2]!),
-    'Aggregate total public decryption',
-  );
-  await assertRejected(
-    () => deployerHandleClient.publicDecrypt(deployerPositionHandles[0]!),
-    'Owner-shaped stake public decryption',
-  );
-  const wrongChainRequestId = (await read(
-    contracts.recoverySpike,
-    spikeArtifact,
-    'aggregateProofContext',
-    [BigInt(EXPECTED_CHAIN_ID + 1), contracts.recoverySpike, 1n],
-  )) as Hex;
-  const wrongEpochRequestId = (await read(
-    contracts.recoverySpike,
-    spikeArtifact,
-    'aggregateProofContext',
-    [BigInt(EXPECTED_CHAIN_ID), contracts.recoverySpike, 2n],
-  )) as Hex;
-  for (const [requestId, scenario] of [
-    [crossPoolRequestId, 'Cross-pool aggregate proof context'],
-    [wrongChainRequestId, 'Wrong-chain aggregate proof context'],
-    [wrongEpochRequestId, 'Wrong-epoch aggregate proof context'],
-  ] as const) {
+  if (!resumeUnwrapOnly) {
+    const [recoveryHandles, recoveryRequestId, crossPoolRequestId, deployerPositionHandles] =
+      (await Promise.all([
+        read(contracts.recoverySpike, spikeArtifact, 'aggregateHandles'),
+        read(contracts.recoverySpike, spikeArtifact, 'aggregateRequestId'),
+        read(contracts.recoverySpike, spikeArtifact, 'aggregateProofContext', [
+          BigInt(EXPECTED_CHAIN_ID),
+          contracts.timeoutSpike,
+          1n,
+        ]),
+        read(contracts.recoverySpike, spikeArtifact, 'positionHandles', [deployer.address]),
+      ])) as [readonly Hex[], Hex, Hex, readonly Hex[]];
+    const publicYes = await waitForPublicUint(deployerHandleClient, recoveryHandles[0]!);
+    const publicNo = await waitForPublicUint(deployerHandleClient, recoveryHandles[1]!);
+    if (publicYes.value !== EXPECTED_AGGREGATE_YES || publicNo.value !== EXPECTED_AGGREGATE_NO) {
+      fail('The revealed aggregate did not match the encrypted cohort allocation.');
+    }
+    await assertRejected(
+      () => deployerHandleClient.publicDecrypt(recoveryHandles[2]!),
+      'Aggregate total public decryption',
+    );
+    await assertRejected(
+      () => deployerHandleClient.publicDecrypt(deployerPositionHandles[0]!),
+      'Owner-shaped stake public decryption',
+    );
+    const wrongChainRequestId = (await read(
+      contracts.recoverySpike,
+      spikeArtifact,
+      'aggregateProofContext',
+      [BigInt(EXPECTED_CHAIN_ID + 1), contracts.recoverySpike, 1n],
+    )) as Hex;
+    const wrongEpochRequestId = (await read(
+      contracts.recoverySpike,
+      spikeArtifact,
+      'aggregateProofContext',
+      [BigInt(EXPECTED_CHAIN_ID), contracts.recoverySpike, 2n],
+    )) as Hex;
+    for (const [requestId, scenario] of [
+      [crossPoolRequestId, 'Cross-pool aggregate proof context'],
+      [wrongChainRequestId, 'Wrong-chain aggregate proof context'],
+      [wrongEpochRequestId, 'Wrong-epoch aggregate proof context'],
+    ] as const) {
+      await sendExpectedRevert(
+        deployer,
+        deployerWallet,
+        contracts.recoverySpike,
+        spikeData('finalizeAggregate', [
+          requestId,
+          publicYes.value,
+          publicNo.value,
+          publicYes.decryptionProof,
+          publicNo.decryptionProof,
+        ]),
+        scenario,
+      );
+    }
     await sendExpectedRevert(
       deployer,
       deployerWallet,
       contracts.recoverySpike,
       spikeData('finalizeAggregate', [
-        requestId,
+        recoveryRequestId,
+        publicYes.value + 1n,
+        publicNo.value,
+        publicYes.decryptionProof,
+        publicNo.decryptionProof,
+      ]),
+      'Substituted aggregate plaintext',
+      EXPECTED_PROOF_REVERT_GAS,
+    );
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.recoverySpike,
+      spikeData('finalizeAggregate', [
+        recoveryRequestId,
         publicYes.value,
         publicNo.value,
         publicYes.decryptionProof,
         publicNo.decryptionProof,
       ]),
-      scenario,
+      'finalize context-bound aggregate and request unwrap',
+      0n,
+      PROOF_FINALIZATION_GAS,
+    );
+    await sendExpectedRevert(
+      deployer,
+      deployerWallet,
+      contracts.recoverySpike,
+      spikeData('finalizeAggregate', [
+        recoveryRequestId,
+        publicYes.value,
+        publicNo.value,
+        publicYes.decryptionProof,
+        publicNo.decryptionProof,
+      ]),
+      'Replayed aggregate proof',
     );
   }
-  await sendExpectedRevert(
-    deployer,
-    deployerWallet,
-    contracts.recoverySpike,
-    spikeData('finalizeAggregate', [
-      recoveryRequestId,
-      publicYes.value + 1n,
-      publicNo.value,
-      publicYes.decryptionProof,
-      publicNo.decryptionProof,
-    ]),
-    'Substituted aggregate plaintext',
-    EXPECTED_PROOF_REVERT_GAS,
-  );
-  await send(
-    deployer,
-    deployerWallet,
-    contracts.recoverySpike,
-    spikeData('finalizeAggregate', [
-      recoveryRequestId,
-      publicYes.value,
-      publicNo.value,
-      publicYes.decryptionProof,
-      publicNo.decryptionProof,
-    ]),
-    'finalize context-bound aggregate and request unwrap',
-    0n,
-    PROOF_FINALIZATION_GAS,
-  );
-  await sendExpectedRevert(
-    deployer,
-    deployerWallet,
-    contracts.recoverySpike,
-    spikeData('finalizeAggregate', [
-      recoveryRequestId,
-      publicYes.value,
-      publicNo.value,
-      publicYes.decryptionProof,
-      publicNo.decryptionProof,
-    ]),
-    'Replayed aggregate proof',
-  );
   const [unwrapHandle, recoveryAvailableAt] = (await Promise.all([
     read(contracts.recoverySpike, spikeArtifact, 'unwrapRequestHandle'),
     read(contracts.recoverySpike, spikeArtifact, 'recoveryAvailableAt'),
@@ -1387,13 +1390,15 @@ async function main(): Promise<void> {
   if (unwrap.value !== EXPECTED_AGGREGATE_TOTAL) {
     fail('The unwrap request did not match the encrypted aggregate total.');
   }
-  await sendExpectedRevert(
-    secondary,
-    secondaryWallet,
-    contracts.recoverySpike,
-    spikeData('recoverUnwrap', [unwrap.decryptionProof]),
-    'Delayed unwrap recovery before the recovery window',
-  );
+  if (!resumeUnwrapOnly) {
+    await sendExpectedRevert(
+      secondary,
+      secondaryWallet,
+      contracts.recoverySpike,
+      spikeData('recoverUnwrap', [unwrap.decryptionProof]),
+      'Delayed unwrap recovery before the recovery window',
+    );
+  }
   await waitUntil(rpcUrl, recoveryAvailableAt);
   await send(
     secondary,
