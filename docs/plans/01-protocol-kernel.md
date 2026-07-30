@@ -415,6 +415,60 @@ and direct callback/operator/native-value rejections. The accepted pool retains
 only its documented confidential collateral. PK-04 is a completed G5 component,
 not G5 itself.
 
+## PK-05 work-item record
+
+ID: `PK-05`
+
+Status: `in_progress`
+
+Outcome: Implement and Sepolia-test the permissionless cohort close and aggregate
+disclosure boundary. A close after the immutable deadline must enter `REFUNDABLE`
+below `kMin` without granting aggregate public decryption; at or above `kMin`, it
+must request public decryption for the encrypted YES and NO aggregates only, bind a
+single request to the pool epoch and aggregate handles, and accept a matching Nox
+proof into public totals before entering `RESOLUTION_PENDING`.
+
+Output files: `modules/protocol/contracts/core/QuietSignalPool.sol`, common
+interfaces and ABI compatibility tests where a selector/error/event changes,
+`modules/protocol/scripts/core/run-pk05-aggregate-sepolia.mts`, package scripts,
+`evidence/{offline,sepolia}/G5/PK-05-AGGREGATE.json`, the spend ledger, protocol
+and API specifications, risk/traceability documents, and this record.
+
+Acceptance criteria: `closeEpoch` is permissionless and rejects early or pending
+commit states. Below-k has no aggregate disclosure or request. At/above-k exposes no
+owner value, stake, probability, position, total-collateral, payout, or refund
+handle; it exposes only aggregate YES/NO to Nox public decryption. Aggregate request
+IDs are one-time and context-bound. Valid proof output must exactly match the two
+encrypted aggregates; wrong request, context, replay, substituted value, incomplete
+proof, and duplicate request must fail with state preservation. The aggregate timeout
+starts only when the aggregate request becomes pending; its custody recovery belongs
+to PK-06.
+
+Privacy/custody impact: Aggregate YES/NO is the first intentionally public
+disclosure in the production pool and occurs only after the `kMin` threshold. Owner
+inputs, individual allocations, aggregate total, collateral, and all transfer
+amounts remain encrypted. Collateral stays in confidential pool custody in both
+below-k and aggregate-pending states.
+
+Funds location/recovery impact: Below-k transitions to `REFUNDABLE` without moving
+collateral. At/above-k retains confidential pool custody while a proof is pending;
+PK-06 alone may make the elapsed aggregate timeout refundable. No callback, adapter,
+or admin may move collateral in this slice.
+
+Checks: `npm run test:interfaces`, `npm run compile`, `npm run test:aggregate:sepolia`,
+`npm run check:offline`, `npm run check:sepolia:read`, and `git diff --check`.
+
+Evidence path: `evidence/{offline,sepolia}/G5/PK-05-AGGREGATE.json` plus append-only
+spend-ledger entries. This is a named G5 component only.
+
+Intended commits: `docs: define aggregate disclosure boundary`,
+`feat: add k gated aggregate lifecycle`, and `test: record Sepolia aggregate evidence`.
+
+Rollback/failure action: Revert this isolated lifecycle slice and leave PK-05
+incomplete. A below-k disclosure, public owner/total handle, unbound/replayable proof,
+or any collateral movement is stop-ship; do not replace it with a mock, plaintext
+aggregate, trusted indexer, or backend proof service.
+
 ## Sequencing
 
 ```text
