@@ -8,6 +8,7 @@ import {
   createWalletClient,
   encodeDeployData,
   http,
+  isAddress,
   keccak256,
   parseAbi,
   type Abi,
@@ -68,8 +69,8 @@ interface Plan {
 interface Deployment {
   name: Plan['name'];
   address: Address;
-  transactionHash: Hash;
-  blockNumber: bigint;
+  transactionHash: Hash | null;
+  blockNumber: bigint | null;
 }
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
@@ -184,6 +185,19 @@ function appendSpend(
   writeFileSync(spendLedgerPath, `${JSON.stringify(ledger, null, 2)}\n`);
 }
 
+function reusedDeployments(): Deployment[] | undefined {
+  const argument = process.argv.find((value) => value.startsWith('--reuse='));
+  if (!argument) return undefined;
+  const addresses = argument.slice('--reuse='.length).split(',');
+  if (addresses.length !== 2 || addresses.some((address) => !isAddress(address))) {
+    fail('The PK-03A resume option requires exactly two valid yes,no adapter addresses.');
+  }
+  return [
+    { name: 'yes', address: addresses[0] as Address, transactionHash: null, blockNumber: null },
+    { name: 'no', address: addresses[1] as Address, transactionHash: null, blockNumber: null },
+  ];
+}
+
 async function expectRevert(action: () => Promise<unknown>, scenario: string): Promise<void> {
   try {
     await action();
@@ -242,6 +256,7 @@ async function main(): Promise<void> {
   failureStage = 'artifact and negative-constructor validation';
   const artifact = loadArtifact();
   const ledger = loadLedger();
+  const reused = reusedDeployments();
   const constructorArguments = (
     target: Address,
     threshold: bigint,
@@ -294,7 +309,7 @@ async function main(): Promise<void> {
   const cap = singleTransactionCapWei(ledger);
   const maxFeePerGas =
     (await publicClient.estimateFeesPerGas()).maxFeePerGas ?? (await publicClient.getGasPrice());
-  const definitions: Omit<Plan, 'data' | 'gas' | 'maximumCostWei'>[] = [
+  const allDefinitions: Omit<Plan, 'data' | 'gas' | 'maximumCostWei'>[] = [
     {
       name: 'yes',
       threshold: 1n,
@@ -315,6 +330,68 @@ async function main(): Promise<void> {
       maximumFeedAge: VALID_FEED_AGE,
     },
   ];
+  const definitions = reused
+    ? allDefinitions.filter(
+        (definition) => definition.name === 'stale' || definition.name === 'premature',
+      )
+    : allDefinitions;
+  if (reused) {
+    failureStage = 'reused adapter validation';
+    for (const deployment of reused) {
+      const [runtime, target, targetHash, direction, threshold, observation, age, balance] =
+        await Promise.all([
+          publicClient.getCode({ address: deployment.address }),
+          publicClient.readContract({
+            address: deployment.address,
+            abi: artifact.abi,
+            functionName: 'target',
+          } as never),
+          publicClient.readContract({
+            address: deployment.address,
+            abi: artifact.abi,
+            functionName: 'targetRuntimeCodeHash',
+          } as never),
+          publicClient.readContract({
+            address: deployment.address,
+            abi: artifact.abi,
+            functionName: 'greaterOrEqual',
+          } as never),
+          publicClient.readContract({
+            address: deployment.address,
+            abi: artifact.abi,
+            functionName: 'threshold',
+          } as never),
+          publicClient.readContract({
+            address: deployment.address,
+            abi: artifact.abi,
+            functionName: 'observationNotBefore',
+          } as never),
+          publicClient.readContract({
+            address: deployment.address,
+            abi: artifact.abi,
+            functionName: 'maximumFeedAge',
+          } as never),
+          publicClient.getBalance({ address: deployment.address }),
+        ]);
+      const expectedThreshold = deployment.name === 'yes' ? 1n : MAX_INT256;
+      if (
+        !runtime ||
+        normalizedRuntimeTemplate(artifact, runtime).toLowerCase() !==
+          normalizedRuntimeTemplate(artifact, artifact.deployedBytecode).toLowerCase() ||
+        (target as Address).toLowerCase() !== ETH_USD_FEED.toLowerCase() ||
+        (targetHash as Hex).toLowerCase() !== keccak256(targetRuntime).toLowerCase() ||
+        direction !== true ||
+        threshold !== expectedThreshold ||
+        (observation as bigint) === 0n ||
+        age !== VALID_FEED_AGE ||
+        balance !== 0n
+      ) {
+        fail(
+          `The reused ${deployment.name} adapter does not match the required immutable zero-custody configuration.`,
+        );
+      }
+    }
+  }
   failureStage = 'deployment planning';
   const plans: Plan[] = await Promise.all(
     definitions.map(async (definition) => {
@@ -339,6 +416,7 @@ async function main(): Promise<void> {
       mode: write ? 'confirmed-write' : 'dry-run',
       workItem: 'PK-03A',
       target: ETH_USD_FEED,
+      resumed: reused !== undefined,
       estimatedMaximumTotalGasCostWei: plannedCost.toString(),
       remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpendWei(ledger)).toString(),
       actions: plans.map((plan) => ({
@@ -355,11 +433,7 @@ async function main(): Promise<void> {
     chain: sepolia,
     transport: http(rpcUrl),
   });
-  let nonce = await publicClient.getTransactionCount({
-    address: account!.address,
-    blockTag: 'pending',
-  });
-  const deployments: Deployment[] = [];
+  const deployments: Deployment[] = [...(reused ?? [])];
   for (const plan of plans) {
     failureStage = `${plan.name} deployment`;
     const transactionHash = await walletClient.sendTransaction({
@@ -367,7 +441,6 @@ async function main(): Promise<void> {
       data: plan.data,
       gas: plan.gas,
       maxFeePerGas,
-      nonce: nonce++,
     });
     const receipt = await publicClient.waitForTransactionReceipt({ hash: transactionHash });
     appendSpend(ledger, {
@@ -462,7 +535,7 @@ async function main(): Promise<void> {
     deployments: deployments.map((deployment) => ({
       ...deployment,
       transactionHash: deployment.transactionHash,
-      blockNumber: deployment.blockNumber.toString(),
+      blockNumber: deployment.blockNumber?.toString() ?? null,
     })),
     checks: {
       validYes: true,
