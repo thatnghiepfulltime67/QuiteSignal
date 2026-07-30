@@ -511,7 +511,7 @@ pool transitions without becoming a correctness, custody, or decryption authorit
 
 ### AUT-01-PLAN-01
 
-Status: `in_progress`
+Status: `complete`
 
 Output files: this work-item record, public action policy/types, deterministic
 dry-run/race tests, a Sepolia command/runbook, and a later poll/once implementation.
@@ -554,7 +554,7 @@ planning only; it creates no automation behavior or G6 evidence.
 
 ### AUT-01-POLICY-01
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Implement the deterministic, side-effect-free public transition selector
 that the later RPC runner must use for dry-run and every re-read before a write.
@@ -594,7 +594,7 @@ confidential-data schema. `npm run test:automation` is included in
 
 ### AUT-01-RUNNER-01
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Bind the public policy to guarded Sepolia reads and optional one-action
 writes without making the service a lifecycle authority.
@@ -630,7 +630,7 @@ public result into a guessed finalization, a trusted queue, or a user-signing pa
 
 ### AUT-01-WRITE-01
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Add bounded `once`/`poll` execution for the existing public action policy.
 
@@ -672,6 +672,49 @@ race guards. The Sepolia `once` command sent exactly one permissionless
 public receipt/state evidence is `evidence/sepolia/G6/AUT-01-CLOSE-ACTION.json`.
 AUT-01 remains incomplete: public aggregate-result retrieval/finalization and a
 fresh threshold lifecycle must pass before it can be a G6 component.
+
+### AUT-01-RESULT-01
+
+Status: `in_progress`
+
+Outcome: Add the narrow public-result boundary that lets the permissionless runner
+finalize an aggregate only after the pool has explicitly enabled public decryption.
+
+Output files: an in-memory public-result adapter, frozen aggregate ABI support,
+runner integration and unit tests, this record, verification-matrix command notes,
+and `evidence/sepolia/G6/AUT-01-RELAYER.json` after a named live action.
+
+Acceptance criteria: The adapter reads aggregate disclosure handles only while a
+pool is in `AGGREGATE_PENDING` with an on-chain request id, obtains two public Nox
+attestations, and returns them only to the immediate `finalizeAggregate` calldata
+encoder. It neither stores nor logs aggregate values, handles, attestations, owner
+data, or user credentials. If public retrieval is unavailable, the action policy
+remains non-finalizing and can select only the immutable timeout path. The runner
+re-reads both state and public result immediately before the single permissionless
+write, then records only the action label and public receipt facts.
+
+Privacy/custody impact: Aggregate disclosure is already contract-authorized public
+data. The runner receives the gateway attestation transiently and has no owner
+decrypt capability, token authority, keeper role, or persistence path. It must never
+serialize the public result response or disclose a result before the contract permits
+it.
+
+Funds location/recovery impact: Finalization cannot transfer collateral or select an
+outcome; the pool verifies attestations and remains the sole state authority. A
+gateway failure causes no write and leaves immutable timeout recovery available.
+
+Checks: public-result unit/mutation tests, static no-persistence scan, typecheck,
+`npm run check:offline`, a named Sepolia aggregate-finalization receipt/state report,
+and `git diff --check`.
+
+Evidence location: `evidence/sepolia/G6/AUT-01-RELAYER.json`; no AUT-01/G6 pass is
+allowed until the result boundary runs against a fresh aggregate-pending pool.
+
+Intended commit: `feat: finalize public aggregate results permissionlessly`.
+
+Rollback/failure action: Disable only the public-result adapter and retain timeout
+recovery. Do not cache an attestation, add a trusted result service, expose a user
+signer, or replace a failed proof with a caller-supplied result.
 
 ## IDX-01 work-item record
 
