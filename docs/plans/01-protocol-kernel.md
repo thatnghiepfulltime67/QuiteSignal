@@ -419,7 +419,7 @@ not G5 itself.
 
 ID: `PK-05`
 
-Status: `in_progress`
+Status: `completed`
 
 Outcome: Implement and Sepolia-test the permissionless cohort close and aggregate
 disclosure boundary. A close after the immutable deadline must enter `REFUNDABLE`
@@ -468,6 +468,12 @@ Rollback/failure action: Revert this isolated lifecycle slice and leave PK-05
 incomplete. A below-k disclosure, public owner/total handle, unbound/replayable proof,
 or any collateral movement is stop-ship; do not replace it with a mock, plaintext
 aggregate, trusted indexer, or backend proof service.
+
+Completion evidence: `evidence/{offline,sepolia}/G5/PK-05-AGGREGATE.json` passed
+independent Sepolia reads at block `11381707`. It verifies below-k `REFUNDABLE`
+without aggregate disclosure, the two-member threshold aggregate proof result,
+request context, receipt ledger, and zero native balances. PK-05 is a completed G5
+component, not G5 itself.
 
 ## Sequencing
 

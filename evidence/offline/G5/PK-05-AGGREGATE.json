@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "gate": "G5",
+  "workItem": "PK-05",
+  "phase": "P1",
+  "sourceCommit": "4b44402d20f73e7e75f81505b07aaf50a670a036",
+  "environment": {
+    "chainId": 11155111,
+    "verificationBlock": "11381707"
+  },
+  "contracts": {
+    "fixture": "0x70221c360c71b902c38d0d621d663dd495900cde",
+    "wrapper": "0x0049a83e3ced7d99ca22bb3fbd546665c43a0217",
+    "adapter": "0x67add5088910cd38ebfd4cc2b376d6c96f0d075b",
+    "factory": "0x1e13b9314ccd471bd85bff2393a3489f2ab7a116",
+    "belowKPool": "0x494993d6d8eAC81cF278027B3093644f24b727ad",
+    "thresholdPool": "0xa39F144cBfCc641D16dF166457F29E68d3480B45"
+  },
+  "checks": {
+    "belowKNoDisclosure": true,
+    "belowKRefundable": true,
+    "thresholdAggregateFinalized": true,
+    "requestContextPresent": true,
+    "publicYesNoOnly": true,
+    "receiptLedgerComplete": true,
+    "nativeBalancesZero": true
+  },
+  "privacyImpact": "Only proof-verified aggregate YES and NO are recorded; no handle, proof, owner value, or aggregate total is persisted.",
+  "fundsLocation": "Both pools retain confidential collateral; PK-06 owns all timeout recovery.",
+  "status": "passed"
+}

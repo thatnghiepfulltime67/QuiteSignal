@@ -62,6 +62,13 @@ owner viewer ACL, terminal confidential conservation, recovery terminal states, 
 zero native balances without storing confidential values, handles, or proofs. G5
 remains `not_run` until PK-05 through PK-09 and the protocol verifier pass.
 
+PK-05 is a completed G5 component. `evidence/{offline,sepolia}/G5/PK-05-AGGREGATE.json`
+records two fresh Sepolia pools and independent verification at block `11381707`:
+below-k reached `REFUNDABLE` with no aggregate request or totals, while the
+two-member threshold pool proof-finalized only aggregate YES/NO into
+`RESOLUTION_PENDING`. The verifier checks 24 successful ledger receipts, pool
+bindings, disclosure rejection below k, request context, and zero native balances.
+
 ### G3 completion history
 
 The G3 row is `passed`. The historical FND-05C detail below is superseded by the latest
