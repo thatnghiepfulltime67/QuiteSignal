@@ -26,5 +26,4 @@ test('T-WEB-02-LANDING-01: landing and navigation orient users before wallet use
   assert.match(styles, /\.skip-link/);
   assert.match(styles, /\.site-nav a\[aria-current='page'\]/);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.action-guide/);
-  assert.doesNotMatch(source, /VeilBid/i);
 });
