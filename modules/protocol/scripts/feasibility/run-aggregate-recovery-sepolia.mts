@@ -1293,10 +1293,8 @@ async function main(): Promise<void> {
       ]),
       read(contracts.recoverySpike, spikeArtifact, 'positionHandles', [deployer.address]),
     ])) as [readonly Hex[], Hex, Hex, readonly Hex[]];
-  const [publicYes, publicNo] = await Promise.all([
-    waitForPublicUint(deployerHandleClient, recoveryHandles[0]!),
-    waitForPublicUint(deployerHandleClient, recoveryHandles[1]!),
-  ]);
+  const publicYes = await waitForPublicUint(deployerHandleClient, recoveryHandles[0]!);
+  const publicNo = await waitForPublicUint(deployerHandleClient, recoveryHandles[1]!);
   if (publicYes.value !== EXPECTED_AGGREGATE_YES || publicNo.value !== EXPECTED_AGGREGATE_NO) {
     fail('The revealed aggregate did not match the encrypted cohort allocation.');
   }
