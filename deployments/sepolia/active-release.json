@@ -1,5 +1,5 @@
 {
   "schemaVersion": 1,
-  "releaseId": "DEP-01",
-  "manifestPath": "/quiet-signal.json"
+  "releaseId": "DEP-02",
+  "manifestPath": "/releases/DEP-02.json"
 }
