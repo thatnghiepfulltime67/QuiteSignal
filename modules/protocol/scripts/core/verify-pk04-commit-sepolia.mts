@@ -202,14 +202,15 @@ async function main(): Promise<void> {
   ]);
   if ((underlying as Address).toLowerCase() !== FIXTURE.toLowerCase())
     fail('The wrapper does not bind the recorded fixture.');
-  const acceptedPublicEpoch = acceptedEpoch as readonly [number, number, bigint, number];
-  const terminalEpochs = [mismatchEpoch, uncalledEpoch, timeoutEpoch] as Array<
-    readonly [number, number, bigint, number]
-  >;
+  const acceptedPublicEpoch = acceptedEpoch as { state: number; participantCount: number };
+  const terminalEpochs = [mismatchEpoch, uncalledEpoch, timeoutEpoch] as Array<{
+    state: number;
+    participantCount: number;
+  }>;
   if (
-    acceptedPublicEpoch[0] !== 0 ||
-    acceptedPublicEpoch[3] !== 1 ||
-    terminalEpochs.some((epoch) => epoch[0] !== 0 || epoch[3] !== 0)
+    acceptedPublicEpoch.state !== 0 ||
+    acceptedPublicEpoch.participantCount !== 1 ||
+    terminalEpochs.some((epoch) => epoch.state !== 0 || epoch.participantCount !== 0)
   )
     fail('The recorded pools do not have their expected terminal public epochs.');
   if (!(acceptedPosition as readonly [boolean])[0]) fail('The accepted owner position is absent.');
