@@ -18,6 +18,16 @@ seed phrases, environment dumps, or unsanitized terminal history.
 | G7   | `not_run` | —                                | —                                                                                                                                                                                                                                                                                                                                                 | —                                                                           | —                                | —                                                                                                                                                                                                                                                                                                                               | —                                                                                                                                                                                                                                                                           | —                                                                                                                                   |
 | G8   | `not_run` | —                                | —                                                                                                                                                                                                                                                                                                                                                 | —                                                                           | —                                | —                                                                                                                                                                                                                                                                                                                               | —                                                                                                                                                                                                                                                                           | —                                                                                                                                   |
 
+### G6 partial history
+
+SDK-02 is a completed G6 component, not G6 itself. Source commit `a50feb6` added a
+Sepolia-only Nox confidential-input smoke and the named execution emitted
+`evidence/{offline,sepolia}/G6/SDK-02-CLIENT.json` for pool
+`0xbb7624e1b84d3beebcca0baa0b4dc6b9c149139d`. It confirms real Nox input creation,
+pool/request context binding, and serialization rejection without persisting a
+confidential value, raw encrypted material, credential, or signature. G6 remains
+`not_run` until all P2 live lifecycle components pass.
+
 ### G5 partial history
 
 PK-03A is a completed G5 component, not G5 itself. The source commit `4ef78df`

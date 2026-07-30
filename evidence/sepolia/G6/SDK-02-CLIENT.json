@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "gate": "G6",
+  "workItem": "SDK-02",
+  "phase": "P2",
+  "sourceCommit": "a50feb6821a0f8142ef1c9786f9ab32e72855a32",
+  "environment": {
+    "chainId": 11155111,
+    "verificationBlock": "11382930"
+  },
+  "pool": "0xbb7624e1b84d3beebcca0baa0b4dc6b9c149139d",
+  "request": "0xc7e341ef17db34e1e259677fd7fcbfee78ed01c1f33345eb88c5dd0f5427059f",
+  "checks": {
+    "sepoliaWalletChain": true,
+    "poolRuntimePresent": true,
+    "noxInputEncryptedForNamedPool": true,
+    "sealedMaterialSerializationRejected": true,
+    "exactContextRequiredForContractEncoding": true
+  },
+  "privacyImpact": "The confidential value and Nox encrypted material were used only in process and were not persisted or printed.",
+  "status": "passed"
+}

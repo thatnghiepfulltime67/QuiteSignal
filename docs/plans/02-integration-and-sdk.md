@@ -1,6 +1,6 @@
 # P2 — Integration, SDK, automation, and live protocol
 
-Status: `in_progress`
+Status: `complete`
 
 Pre-G5 preparation exception: While P1 is explicitly `awaiting_chain`, one
 dependency-independent pure TypeScript SDK slice may be `in_progress`. It cannot
@@ -89,8 +89,6 @@ uint256 input to its chain, pool, and caller-generated request nonce, serializes
 same-client encryption safely, and prevents raw encrypted material from entering
 ordinary serialization paths.
 
-Active slice: `SDK-02-SMOKE-01`.
-
 Output files: `modules/confidential-client/src/confidential.ts`, public exports,
 the Sepolia smoke runner/package script, unit tests, this record, and the
 traceability matrix where behavior changes.
@@ -122,6 +120,15 @@ Intended commit: `feat: add nox confidential input client`.
 Rollback/failure action: Revert only the SDK boundary and leave SDK-02 incomplete.
 Do not replace context binding or serialization rejection with permissive strings,
 browser storage, telemetry, a trusted service, or a plaintext shadow record.
+
+Completion evidence: `a50feb6` added the named smoke runner. It passed against the
+short-fixture claim pool on Ethereum Sepolia and wrote
+`evidence/{offline,sepolia}/G6/SDK-02-CLIENT.json`. The runner checked the connected
+Sepolia chain and named pool runtime, performed a real Nox uint256 input encryption
+bound to the pool/request context, required explicit matching context for contract
+encoding, and confirmed JSON serialization rejection. It persisted no value, raw
+handle, proof, credential, or signature. SDK-02 is complete; the artifact is only a
+G6 component and does not claim the gate.
 
 ## Dependency graph
 
