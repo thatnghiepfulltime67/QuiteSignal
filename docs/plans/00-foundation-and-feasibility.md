@@ -538,6 +538,15 @@ The revised runner bounds all RPC observation calls and treats a transport failu
 a test failure. Its early-timeout negative case sends a fixed-gas, expected-revert
 Sepolia transaction and records the receipt cost in the spend ledger.
 
+The sixth attempt from `ecefae9` deployed fixture
+`0x33f1dbbbb5d8d2ca5ad5bfde9ebed26bc47b3402`, unchanged wrapper
+`0xe9d3c7d76ed48272f363517349dba7acc43a6b06`, and below-k spike
+`0x4378f7fbb7f2f2c3a06b2398901efa09a52b6e71` at blocks `11379587` through
+`11379611`. It verified below-k terminal state and no aggregate disclosure, then
+returned its committed stake. It was stopped before threshold work so every remaining
+negative simulation can be replaced with a chain-native expected-revert receipt.
+The fixture is excluded from G3 evidence and its uncommitted actor key was deleted.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

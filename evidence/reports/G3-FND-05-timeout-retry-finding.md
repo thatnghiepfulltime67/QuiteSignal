@@ -113,3 +113,13 @@ failure rather than a negative assertion. Its next early-timeout check will send
 fixed-gas Sepolia transaction that must have a `reverted` receipt before the timeout;
 the failed transaction cost is recorded in the spend ledger. This gives a stronger
 chain-native result without treating RPC availability as protocol evidence.
+
+The sixth fresh attempt from source commit `ecefae9` deployed fixture
+`0x33f1dbbbb5d8d2ca5ad5bfde9ebed26bc47b3402`, unchanged wrapper
+`0xe9d3c7d76ed48272f363517349dba7acc43a6b06`, and below-k spike
+`0x4378f7fbb7f2f2c3a06b2398901efa09a52b6e71` at blocks `11379587` through
+`11379611`. It completed the below-k deadline, verified no aggregate access by
+read-only state, and returned the sole committed stake. The runner was then stopped
+before a threshold commitment because the remaining negative checks still used RPC
+simulation. This attempt is excluded from G3 evidence. Its independent actor never
+committed; its ignored local key was deleted without being printed or recorded.
