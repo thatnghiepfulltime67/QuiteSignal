@@ -4,6 +4,7 @@ import { presentMarket } from './market.js';
 import { validateSignalDraft } from './signal.js';
 import { presentVerification } from './verification.js';
 import { presentLifecycle } from './lifecycle.js';
+import { parseActiveRelease } from './release.js';
 import {
   decryptOwnerPosition,
   finalizePendingSignal,
@@ -25,14 +26,18 @@ declare global {
 }
 
 let manifest: PublicManifest | undefined;
+let releaseId = 'unselected';
 let walletState = 'No wallet detected';
 let lifecycleMessage = 'Connect a Sepolia wallet to refresh public pool state.';
 let ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
 let ownerActions = '';
 
 async function loadManifest(): Promise<void> {
-  const response = await fetch('/quiet-signal.json');
+  const pointerResponse = await fetch('/active-release.json');
+  const release = parseActiveRelease(await pointerResponse.json());
+  const response = await fetch(release.manifestPath);
   manifest = parsePublicManifest(await response.json());
+  releaseId = release.releaseId;
 }
 
 function render(message?: string): void {
@@ -63,7 +68,7 @@ function render(message?: string): void {
           : isMarketRoute && market
             ? `<section class="band blush-band market"><div class="band-inner"><p class="eyebrow public">{ public market }</p><h1>${market.condition}</h1><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><section class="timeline"><p class="eyebrow public">{ public lifecycle }</p><p id="lifecycle-status" role="status">${lifecycleMessage}</p><button class="wallet" id="refresh-lifecycle">Refresh public state</button></section><a class="primary" href="/pool/${market.poolAddress}/signal">Prepare encrypted signal</a></div></section>`
             : `<section class="band cocoa-band hero"><div class="band-inner"><p class="eyebrow">{ confidential forecasts }</p><h1>Quiet signals.<br />Public proof.</h1><p>Signals are encrypted locally. Wallet activity, timing, and the eventual aggregate are public.</p><a class="primary" href="/markets">View market</a></div></section>`;
-  root.innerHTML = `<main class="app-shell"><header class="site-header"><a class="wordmark" href="/markets">QuietSignal</a><button class="wallet" id="wallet">${walletState}</button></header><nav class="site-nav" aria-label="Primary"><a href="/markets">Market</a><a href="${manifest ? `/pool/${manifest.poolAddress}` : '/markets'}">Public facts</a></nav><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section>${content}<section class="deployment-band"><div><p class="eyebrow">{ canonical Sepolia deployment }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : 'Loading verified manifest…')}</p></div></section></main>`;
+  root.innerHTML = `<main class="app-shell"><header class="site-header"><a class="wordmark" href="/markets">QuietSignal</a><button class="wallet" id="wallet">${walletState}</button></header><nav class="site-nav" aria-label="Primary"><a href="/markets">Market</a><a href="${manifest ? `/pool/${manifest.poolAddress}` : '/markets'}">Public facts</a></nav><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section>${content}<section class="deployment-band"><div><p class="eyebrow">{ active Sepolia release ${releaseId} }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : 'Loading verified manifest…')}</p></div></section></main>`;
   document.querySelector<HTMLButtonElement>('#wallet')?.addEventListener('click', connectWallet);
   document
     .querySelector<HTMLButtonElement>('#refresh-lifecycle')
