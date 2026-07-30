@@ -239,7 +239,7 @@ diff --check` pass. No wallet, storage, backend, or chain behaviour changed.
 
 ID: `WEB-02-NAV-03`
 
-Status: `in_progress`
+Status: `complete`
 
 Prerequisite gates: G6 passed. This presentation-only P3 slice cannot claim G7.
 
@@ -270,6 +270,14 @@ Intended commit: `feat: add persistent workspace navigation`.
 
 Rollback/failure action: Revert only the navigation presentation. Do not substitute
 hidden routes, wallet gating, or a retained client session.
+
+Completion evidence: Workspace is now a direct `/markets` link. On every Workspace
+route, the secondary navigation stays visible below the primary bar and highlights
+Market, Guide, Verify, or Position with the current page; entering Workspace starts
+on Market. `T-WEB-02-LANDING-01` and `T-WEB-07-TARGETS-01` cover the route/target
+contracts. All 27 web tests, production Vite build, root typecheck, targeted
+Prettier validation, and `git diff --check` pass. No wallet, storage, backend, or
+chain behaviour changed.
 
 ## WEB-03-UX-02 work-item record
 

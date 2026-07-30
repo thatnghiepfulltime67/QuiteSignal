@@ -22,23 +22,14 @@ test('T-WEB-02-LANDING-01: landing and navigation orient users before wallet use
   assert.match(source, /href="#main-content"/);
   assert.match(source, /aria-current="page"/);
   assert.match(source, /navigationLink\('\/', 'Overview'/);
-  assert.match(
-    source,
-    /workspaceNavigationContent\(canonicalPoolPath, canonicalVerifyPath, isWorkspaceRoute\)/,
-  );
-  assert.match(source, /id="workspace-toggle"/);
-  assert.match(source, /aria-controls="workspace-menu"/);
-  for (const phrase of [
-    'Explore the live condition',
-    'Understand the flow',
-    'Check the release',
-    'Manage a private position',
-  ]) {
+  assert.match(source, /navigationLink\('\/markets', 'Workspace', isWorkspaceRoute\)/);
+  assert.match(source, /workspaceSubnavigation\(canonicalPoolPath, canonicalVerifyPath/);
+  assert.match(source, /aria-label="Workspace functions"/);
+  for (const phrase of ['Market', 'Guide', 'Verify', 'Position']) {
     assert.match(source, new RegExp(phrase));
   }
   assert.match(styles, /\.skip-link/);
   assert.match(styles, /\.site-nav a\[aria-current='page'\]/);
-  assert.match(styles, /\.workspace-menu/);
-  assert.match(styles, /\.workspace-route-list/);
+  assert.match(styles, /\.workspace-subnav/);
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.action-guide/);
 });
