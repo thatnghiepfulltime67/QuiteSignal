@@ -147,7 +147,7 @@ async function main(): Promise<void> {
     ),
     wrapper: loadArtifact(
       artifactPath(
-        'feasibility/FeasibilityConfidentialWrapper.sol/FeasibilityConfidentialWrapper.json',
+        'core/QuietSignalConfidentialCollateral.sol/QuietSignalConfidentialCollateral.json',
       ),
       'wrapper',
     ),

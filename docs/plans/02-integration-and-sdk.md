@@ -199,7 +199,7 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `DEP-01-PLAN-01`.
+Active slice: `DEP-01-COLLATERAL-01`.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
 consumer bindings, deployment tests, this record, evidence ledger entries, and
@@ -286,6 +286,52 @@ Intended commit: `build: add canonical deployment plan`.
 Rollback/failure action: Revert only the planner slice. Do not manually copy its
 predicted addresses into any consumer, deploy from its stdout, or replace the
 factory CREATE2 derivation with an opaque address.
+
+Completion evidence: source commit `bb84f8c` added the deterministic address/config
+builder, planner command, and three `T-DEP-01-PLAN-*` tests. `npm run check:offline`
+and the read-only `npm run deploy:sepolia:plan` passed. The latter verified the
+selected feed's runtime/round facts, artifact hashes, live nonce, gas estimates, and
+the remaining gas budget without submitting a transaction. This completes the
+planner slice only; DEP-01 and G6 remain incomplete.
+
+### DEP-01-COLLATERAL-01 work-item record
+
+Status: `in_progress`
+
+Outcome: Replace the P0 harness-branded collateral deployment input with a product
+named ERC-7984 wrapper that preserves the exact audited Nox/OpenZeppelin wrapper
+behavior and has no extra authority.
+
+Output files: `modules/protocol/contracts/core/QuietSignalConfidentialCollateral.sol`,
+the deployment planner artifact binding, decision log, this record, and compiled
+interface checks.
+
+Acceptance criteria: The new constructor only sets product metadata and delegates to
+the unchanged `ERC20ToERC7984Wrapper` base. It adds no owner, upgrade, mint,
+withdraw, resolver, or backend authority; its ABI exposes the ERC-7984 surface the
+factory already validates. The planner selects this artifact exclusively for the
+canonical deployment, while P0/P1 evidence continues to retain its historical
+harness artifacts.
+
+Privacy/custody impact: The collateral token still keeps balances confidential and
+the pool receives collateral only through the standard ERC-7984 callback. No
+plaintext, privileged viewer, or new transfer path is introduced.
+
+Funds location/recovery impact: This slice submits no transaction. A canonical pool
+will remain empty after deployment; later wrapping and transfer recovery semantics
+are unchanged from the verified ERC-7984 path.
+
+Checks: contract compile, ABI/interface checks, canonical plan unit/read checks,
+`npm run check:offline`, and `git diff --check`.
+
+Evidence location: compiled artifact and planner output only. The later deployment
+manifest will contain the exact product-wrapper runtime hash and source reference.
+
+Intended commit: `feat: add canonical confidential collateral wrapper`.
+
+Rollback/failure action: Revert only the product wrapper/planner binding. Never
+rename or rewrite historical feasibility evidence, and never substitute a custom
+confidential balance implementation for the audited standard wrapper.
 
 ## Dependency graph
 

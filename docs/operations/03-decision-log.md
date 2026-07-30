@@ -272,3 +272,21 @@ After a request exists, the pool may expose those two opaque aggregate handles v
 read-only disclosure view. This does not create an additional disclosure: the exact
 same handles have already been permitted for public decryption, and no owner,
 position, total-collateral, payout, or refund handle is returned.
+
+## ADR-020 — Product-named canonical collateral wrapper
+
+**Status:** Accepted
+
+P0 and P1 Sepolia evidence uses a wrapper explicitly named for feasibility work.
+The canonical product deployment instead uses `QuietSignalConfidentialCollateral`,
+a minimal product-named subclass of the same pinned
+`ERC20ToERC7984Wrapper` implementation. The constructor only supplies token
+metadata and the underlying ERC-20 address.
+
+This decision changes deployment identity and user-facing token metadata, not the
+confidential-asset implementation, custody model, transfer callback, Nox ACL model,
+or public ERC-7984 interface. The wrapper has no owner, upgrade, mint, sweep,
+resolver, or backend role. Historical P0/P1 fixtures are retained as evidence and
+are not silently relabeled as product deployment evidence. DEP-01 must record the
+new artifact/runtime hashes and independently verify interface support before the
+canonical manifest is published.
