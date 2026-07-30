@@ -383,9 +383,13 @@ async function main(): Promise<void> {
   loadEnvironment();
 
   const dryRun = process.argv.includes('--dry-run');
-  const requestedCase = process.argv.find((argument) => argument === 'FND-05');
+  const requestedCase = process.argv.find(
+    (argument) => argument === 'FND-05' || argument === 'FND-05-TIMEOUT',
+  );
+  const timeoutOnly = requestedCase === 'FND-05-TIMEOUT';
+  const ledgerWorkItemId = timeoutOnly ? 'FND-05B' : 'FND-05';
   const verifiedContracts = contractSet();
-  if (!requestedCase) fail('The FND-05 case identifier is required.');
+  if (!requestedCase) fail('An FND-05 aggregate feasibility case identifier is required.');
   if (dryRun && verifiedContracts) {
     fail('Read-only verification cannot be combined with the deployment dry-run.');
   }
@@ -495,7 +499,8 @@ async function main(): Promise<void> {
     failureStage = 'Sepolia fee dry-run estimate';
     const fees = await publicClient.estimateFeesPerGas();
     const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
-    const totalDeploymentCost = (fixtureGas + wrapperGas + spikeGas * 3n) * maxFeePerGas;
+    const spikeCount = timeoutOnly ? 1n : 3n;
+    const totalDeploymentCost = (fixtureGas + wrapperGas + spikeGas * spikeCount) * maxFeePerGas;
     assertBudget(ledger, totalDeploymentCost);
     for (const gas of [fixtureGas, wrapperGas, spikeGas]) {
       assertSingleTransactionBudget(gas * maxFeePerGas, singleTransactionCapWei);
@@ -503,10 +508,11 @@ async function main(): Promise<void> {
     console.log(
       JSON.stringify({
         mode: 'confirmed-write',
-        workItem: 'FND-05',
-        firstAction:
-          'deploy fresh fixture, unchanged wrapper, and three aggregate lifecycle spikes',
-        deployments: 5,
+        workItem: requestedCase,
+        firstAction: timeoutOnly
+          ? 'deploy fresh fixture, unchanged wrapper, and one threshold timeout spike'
+          : 'deploy fresh fixture, unchanged wrapper, and three aggregate lifecycle spikes',
+        deployments: timeoutOnly ? 3 : 5,
         deploymentNonce: nonce.toString(),
         estimatedMaximumDeploymentGasCostWei: totalDeploymentCost.toString(),
         secondaryActorFundingWei: SECONDARY_ACTOR_FUNDING.toString(),
@@ -539,7 +545,7 @@ async function main(): Promise<void> {
       });
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       appendSpend(ledger, {
-        workItemId: 'FND-05',
+        workItemId: ledgerWorkItemId,
         phase: 'P0',
         sender: deployer.address,
         transactionHash: hash,
@@ -556,24 +562,28 @@ async function main(): Promise<void> {
 
     const fixture = await deploy(fixtureArtifact, [], fixtureGas, 'fixture collateral');
     const wrapper = await deploy(wrapperArtifact, [fixture], wrapperGas, 'confidential wrapper');
-    const belowKSpike = await deploy(
-      spikeArtifact,
-      spikeConstructorArgs(wrapper, fixture),
-      spikeGas,
-      'below-k aggregate spike',
-    );
     const timeoutSpike = await deploy(
       spikeArtifact,
       spikeConstructorArgs(wrapper, fixture),
       spikeGas,
       'pre-unwrap timeout spike',
     );
-    const recoverySpike = await deploy(
-      spikeArtifact,
-      spikeConstructorArgs(wrapper, fixture),
-      spikeGas,
-      'unwrap recovery spike',
-    );
+    const belowKSpike = timeoutOnly
+      ? timeoutSpike
+      : await deploy(
+          spikeArtifact,
+          spikeConstructorArgs(wrapper, fixture),
+          spikeGas,
+          'below-k aggregate spike',
+        );
+    const recoverySpike = timeoutOnly
+      ? timeoutSpike
+      : await deploy(
+          spikeArtifact,
+          spikeConstructorArgs(wrapper, fixture),
+          spikeGas,
+          'unwrap recovery spike',
+        );
     contracts = { fixture, wrapper, belowKSpike, timeoutSpike, recoverySpike };
   }
 
@@ -661,7 +671,7 @@ async function main(): Promise<void> {
     });
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     appendSpend(ledger, {
-      workItemId: 'FND-05',
+      workItemId: ledgerWorkItemId,
       phase: 'P0',
       sender: account.address,
       transactionHash: hash,
@@ -697,7 +707,7 @@ async function main(): Promise<void> {
     });
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     appendSpend(ledger, {
-      workItemId: 'FND-05',
+      workItemId: ledgerWorkItemId,
       phase: 'P0',
       sender: account.address,
       transactionHash: hash,
@@ -877,54 +887,56 @@ async function main(): Promise<void> {
     }
   };
 
-  failureStage = 'below-k aggregate disclosure path';
-  await commit(
-    contracts.belowKSpike,
-    deployer,
-    deployerWallet,
-    deployerHandleClient,
-    MEMBER_ONE_STAKE,
-    MEMBER_ONE_PROBABILITY_BPS,
-    'below-k first member',
-  );
-  const belowDeadline = (await read(contracts.belowKSpike, spikeArtifact, 'deadline')) as bigint;
-  await sendExpectedRevert(
-    deployer,
-    deployerWallet,
-    contracts.belowKSpike,
-    spikeData('closeEpoch'),
-    'Below-k close before the deadline',
-  );
-  await waitUntil(rpcUrl, belowDeadline);
-  await send(
-    deployer,
-    deployerWallet,
-    contracts.belowKSpike,
-    spikeData('closeEpoch'),
-    'close below-k epoch into refund',
-  );
-  const [belowState, belowAccess, belowHandles] = await Promise.all([
-    read(contracts.belowKSpike, spikeArtifact, 'state'),
-    read(contracts.belowKSpike, spikeArtifact, 'aggregateAccess'),
-    read(contracts.belowKSpike, spikeArtifact, 'aggregateHandles'),
-  ]);
-  if (belowState !== 4 || !(belowAccess as readonly boolean[]).every((allowed) => !allowed)) {
-    fail('The below-k epoch disclosed an aggregate or did not enter the refund state.');
-  }
-  for (const handle of belowHandles as readonly Hex[]) {
-    await assertRejected(
-      () => deployerHandleClient.publicDecrypt(handle),
-      'Below-k aggregate public decryption',
+  if (!timeoutOnly) {
+    failureStage = 'below-k aggregate disclosure path';
+    await commit(
+      contracts.belowKSpike,
+      deployer,
+      deployerWallet,
+      deployerHandleClient,
+      MEMBER_ONE_STAKE,
+      MEMBER_ONE_PROBABILITY_BPS,
+      'below-k first member',
+    );
+    const belowDeadline = (await read(contracts.belowKSpike, spikeArtifact, 'deadline')) as bigint;
+    await sendExpectedRevert(
+      deployer,
+      deployerWallet,
+      contracts.belowKSpike,
+      spikeData('closeEpoch'),
+      'Below-k close before the deadline',
+    );
+    await waitUntil(rpcUrl, belowDeadline);
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.belowKSpike,
+      spikeData('closeEpoch'),
+      'close below-k epoch into refund',
+    );
+    const [belowState, belowAccess, belowHandles] = await Promise.all([
+      read(contracts.belowKSpike, spikeArtifact, 'state'),
+      read(contracts.belowKSpike, spikeArtifact, 'aggregateAccess'),
+      read(contracts.belowKSpike, spikeArtifact, 'aggregateHandles'),
+    ]);
+    if (belowState !== 4 || !(belowAccess as readonly boolean[]).every((allowed) => !allowed)) {
+      fail('The below-k epoch disclosed an aggregate or did not enter the refund state.');
+    }
+    for (const handle of belowHandles as readonly Hex[]) {
+      await assertRejected(
+        () => deployerHandleClient.publicDecrypt(handle),
+        'Below-k aggregate public decryption',
+      );
+    }
+    await refundAndAssertBalance(
+      contracts.belowKSpike,
+      deployer,
+      deployerWallet,
+      deployerHandleClient,
+      initialDeployerBalance,
+      'refund below-k confidential stake',
     );
   }
-  await refundAndAssertBalance(
-    contracts.belowKSpike,
-    deployer,
-    deployerWallet,
-    deployerHandleClient,
-    initialDeployerBalance,
-    'refund below-k confidential stake',
-  );
 
   failureStage = 'pre-unwrap timeout path';
   await commit(
@@ -1006,6 +1018,19 @@ async function main(): Promise<void> {
     initialSecondaryBalance,
     'refund timeout independent member',
   );
+  if (timeoutOnly) {
+    clearSecondaryPrivateKey();
+    console.log(
+      JSON.stringify({
+        contracts: contracts,
+        lifecycleAssertionsVerified: 9,
+        negativeAssertionsVerified: 5,
+        status: 'passed',
+        workItem: 'FND-05-TIMEOUT',
+      }),
+    );
+    return;
+  }
 
   failureStage = 'aggregate proof and unwrap recovery path';
   await commit(

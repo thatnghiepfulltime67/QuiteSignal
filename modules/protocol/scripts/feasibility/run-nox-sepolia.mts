@@ -4,6 +4,7 @@ const workItem = process.argv.find(
     argument === 'FND-03' ||
     argument === 'FND-04' ||
     argument === 'FND-05' ||
+    argument === 'FND-05-TIMEOUT' ||
     argument === 'FND-05-BELOW-K' ||
     argument === 'FND-05-BELOW-K-RESUME',
 );
@@ -16,6 +17,8 @@ if (workItem === 'FND-02') {
   await import('./run-asset-lifecycle-sepolia.mjs');
 } else if (workItem === 'FND-05') {
   await import('./run-aggregate-recovery-sepolia.mjs');
+} else if (workItem === 'FND-05-TIMEOUT') {
+  await import('./run-fnd05-timeout-sepolia.mjs');
 } else if (workItem === 'FND-05-BELOW-K') {
   await import('./run-fnd05-below-k-sepolia.mjs');
 } else if (workItem === 'FND-05-BELOW-K-RESUME') {
