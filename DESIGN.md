@@ -1,356 +1,195 @@
 # QuietSignal Design System
 
-> A dark verification canvas for confidential forecasts. Warm cream typography
-> carries the narrative; semantic colors explain what is private, public, pending,
-> or proven. Motion is expressive around the system, never ambiguous inside it.
+> Neon signage on cocoa leather.
 
-## Design principles
+## Design intent
 
-1. **Privacy is visible.** Every page distinguishes owner-only data, public chain
-   data, and attested-compute activity without requiring protocol knowledge.
-2. **Evidence feels calm.** Explorer facts, transaction states, and verifier output
-   use the same hierarchy as product marketing; proof is part of the interface.
-3. **Color is a taxonomy.** Colors identify data/control states, not decoration or
-   arbitrary brand flavor.
-4. **Typography is the hero.** Large cream type creates confidence and clarity; cards
-   remain quiet so the state of a signal is never confused with a CTA.
-5. **Motion explains transitions.** Encryption, batching, settlement, and recovery
-   may animate; values never slide or morph in a way that implies a false state.
+QuietSignal is a dark, poster-like confidential forecasting product. Its warm cocoa
+canvas, electric orchid typography, and full-bleed colour bands make the privacy
+boundary legible without turning the application into a dashboard. Typography is the
+primary image. Surfaces are printed, flat, and sharply structured: no gradients,
+glass, elevation, stock imagery, or decorative status colour.
 
-## Theme
+The visual system may be expressive, but protocol meaning remains precise. A colour
+or motion effect must never imply that a transaction, encryption operation, proof,
+or recovery action has completed before the corresponding public state confirms it.
 
-Dark. The page is a near-black stage with a single warm cream surface. Nested panels
-lift one step to off-black. Thin lines and outlined controls keep the canvas open.
-There are no filled primary CTA buttons.
+## Principles
 
-## Color tokens
+1. **Poster rhythm, not card grids.** Major narrative areas are edge-to-edge colour
+   fields. Cards are reserved for contained forms, facts, and owner views.
+2. **Type is the hero.** Large, tight, centred display type establishes hierarchy;
+   compact monospaced labels provide context and state.
+3. **Privacy is visible in words.** Labels describe `PRIVATE`, `COMPUTE`, `PUBLIC`,
+   or `PENDING`; colour is supporting information, never the only signal.
+4. **Flat contrast creates hierarchy.** Use colour-field changes and hairlines,
+   never shadows, gradients, blurred backgrounds, or raised controls.
+5. **Motion adds atmosphere, not meaning.** Decorative movement is subtle and is
+   fully disabled for reduced-motion users. State text is always immediately clear.
 
-| Name | Value | Token | Meaning |
-|---|---|---|---|
-| Just Black | `#0e100f` | `--color-canvas` | Page canvas and deep sections |
-| Surface Cream | `#fffce1` | `--color-cream` | Primary text, headings, borders, icons |
-| Surface 50 | `#7c7c6f` | `--color-muted` | Secondary text and disabled labels |
-| Surface 25 | `#42433d` | `--color-line` | Hairlines, dividers, inactive outlines |
-| Off Black | `#191919` | `--color-panel` | Cards, code blocks, footer, read models |
-| Signal Green | `#0ae448` | `--color-signal` | Valid action, accepted input, healthy flow |
-| Light Signal | `#abff84` | `--color-signal-soft` | Signal gradient endpoint and subtle success wash |
-| Pending Orange | `#ff8709` | `--color-pending` | Awaiting wallet, gateway, keeper, or confirmation |
-| Private Pink | `#fec5fb` | `--color-private` | Owner-only data, sealed position, private score |
-| Compute Lilac | `#9d95ff` | `--color-compute` | Encrypted computation, Nox activity, proof pending |
-| Public Blue | `#00bae2` | `--color-public` | Public chain facts, aggregate, explorer, verifier |
-| Warning Lipstick | `#f100cb` | `--color-warning` | Risk, mismatch, recovery attention; never normal status |
-| Core Wash | `#dfffd1` | `--color-core-wash` | Low-opacity signal-tinted surface only |
+## Tokens
 
-### Semantic color rules
+### Colour
 
-- `--color-private` marks data that only the connected owner may decrypt.
-- `--color-public` marks data any observer can verify on-chain.
-- `--color-compute` marks encrypted computation or proof work, not success.
-- `--color-pending` marks waiting, never failure.
-- `--color-signal` marks a completed action or valid state.
-- `--color-warning` appears with an explanatory label and never alone.
-- Never use a semantic color for a different meaning on another route.
-- Text must remain readable without color; pair every color with a label, icon, or pattern.
-
-## Typography
-
-### Family
-
-Use `Mori` when licensed and available. The fallback is a humanist sans stack:
-`Söhne`, `DM Sans`, `ui-sans-serif`, `sans-serif`. Do not introduce a second display
-family. The single family keeps market facts, privacy labels, and narrative copy in
-one visual voice.
-
-```css
-:root {
-  --font-sans: 'Mori', 'Söhne', 'DM Sans', ui-sans-serif, sans-serif;
-  --weight-regular: 400;
-  --weight-semibold: 600;
-}
-```
-
-### Type scale
-
-| Role | Desktop | Mobile | Line height | Tracking |
-|---|---:|---:|---:|---:|
-| caption | 14px | 14px | 1.4 | -0.01em |
-| body-sm | 16px | 16px | 1.25 | -0.01em |
-| body | 19px | 17px | 1.2 | -0.01em |
-| body-lg | 23px | 20px | 1.35 | -0.01em |
-| subheading | 34px | 28px | 1.15 | -0.015em |
-| heading-sm | 44px | 34px | 1.1 | -0.018em |
-| heading | 66px | 48px | 1.0 | -0.02em |
-| heading-lg | 101px | 64px | 0.95 | -0.025em |
-| display | 144px | 72px | 0.88 | -0.03em |
-
-The application shell uses `heading-sm` to `heading`; the landing surface may use
-`heading-lg` or `display`. Do not use display type inside a transaction card.
-
-## Spacing, shape, and layout
-
-- Base unit: 4px.
-- Content max width: 1280px for narrative surfaces, 1440px for dense explorer surfaces.
-- Page gutters: 24px mobile, 40px tablet, 64px desktop.
-- Section gap: 80px; compact app section gap: 48px.
-- Card padding: 24px; dense data row padding: 16px.
-- Element gap: 16px; micro gap: 8px.
-- Card radius: 8px.
-- Small tag radius: 8px.
-- Button/pill radius: 100px; use `9999px` only for status dots and circular controls.
-- Dividers: 1px `--color-line`; no decorative box shadows.
-
-```css
-:root {
-  --space-unit: 4px;
-  --space-8: 8px;
-  --space-12: 12px;
-  --space-16: 16px;
-  --space-20: 20px;
-  --space-24: 24px;
-  --space-32: 32px;
-  --space-48: 48px;
-  --space-64: 64px;
-  --space-80: 80px;
-  --radius-card: 8px;
-  --radius-pill: 100px;
-  --content-max: 1280px;
-  --explorer-max: 1440px;
-}
-```
-
-## Surfaces and elevation
-
-| Level | Surface | Use |
-|---:|---|---|
-| 0 | `--color-canvas` | Page and uninterrupted narrative sections |
-| 1 | `--color-panel` | Signal cards, verifier panels, footer, code |
-| 2 | `--color-cream` at low opacity | Deliberate callout or owner-only focus surface |
-
-Depth comes from surface steps, hairlines, and internal gradients. Do not use
-drop shadows on cards or illustrations.
-
-## Core components
-
-### Outlined cream pill
-
-The default action control is transparent, cream text, 1px cream border, 100px
-radius, 15px vertical and 24px horizontal padding, 18px semibold text. Hover shifts
-border opacity and translates up by 1px; it does not fill with color.
-
-### Gradient-stroked action pill
-
-Use only for the single primary action on a page: `linear-gradient(114deg,
---color-signal, --color-signal-soft)` as a 1.5px border, transparent fill, cream
-label. Never create multiple competing gradient CTAs.
-
-### Ghost navigation link
-
-16px regular cream/muted text, no background or border, 10px vertical hit area.
-Hover changes to cream and underlines; focus uses a 2px signal outline.
-
-### Privacy boundary legend
-
-An always-available compact legend with four labeled swatches:
-
-```text
-PRIVATE  pink     owner-only position, stake, score
-COMPUTE  lilac    encrypted operation or proof in progress
-PUBLIC   blue     chain facts, aggregate, verifier output
-PENDING  orange   waiting for wallet, gateway, keeper, or oracle
-```
-
-The legend is text-first and collapses to a disclosure panel on mobile.
-
-### Curly annotation
-
-Section eyebrows use literal braces, for example `{ private signal }` or
-`{ public evidence }`, at 16–19px regular cream. The annotation is a signature, not
-a replacement for a semantic heading.
-
-### Sealed signal card
-
-Role: input surface for probability and stake.
-
-- Panel surface, 8px radius, 24px padding.
-- Inputs use cream labels and muted helper text; values are masked after encryption.
-- A lilac/pink sealed strip shows `Encrypted locally` and the pool-bound context.
-- The commit action is one outlined pill; approval is a separate explicit state.
-- Never show raw handles, proofs, or confidential values in the UI.
-
-### Epoch timeline
-
-Role: public lifecycle explanation.
-
-- Vertical hairline with labeled states: `Open`, `Aggregate`, `Verify`, `Settle`.
-- `Verify` means the pool reads and validates its immutable public price-feed
-  condition. It never indicates an external market execution or asset transfer.
-- Completed states use signal green, active compute uses lilac, waiting uses orange,
-  public facts use blue, and recovery uses lipstick with an explanation.
-- Each row includes timestamp/transaction link only when public.
-- No animation may imply that a pending state has completed.
-
-### Aggregate panel
-
-Role: public market output after the k-gate.
-
-- Blue category label `{ public aggregate }`.
-- Large cream totals with unit labels; aggregate numbers never use private pink.
-- Include cohort count and a plain-language note that membership/timing remain public.
-- Pair every total with a verifier link or transaction reference.
-
-### Owner position card
-
-Role: owner-only view and terminal actions.
-
-- Pink left rail and a small `OWNER ONLY` label.
-- Masked values by default; reveal requires an explicit owner decrypt action.
-- Score and payout are separate rows so a user does not confuse quality with money.
-- Claim/refund buttons state whether funds move and whether the operation is retry-safe.
-
-### Verification panel
-
-Role: make trust inspectable.
-
-- Blue heading, off-black panel, monospaced compact data rows.
-- Show chain id, pool address, manifest status, code-hash status, invariant status,
-  and public transaction links.
-- Failed checks use lipstick plus an explanation and next action.
-- Never render raw confidential calldata, handles, proofs, or environment values.
-
-### Status chip
-
-8px radius, 14px regular label, 8px/12px padding. Always includes text and a 4–8px
-dot/icon. Status chips are not buttons unless explicitly marked as such.
-
-## Motion system
-
-Motion creates a sense of a living confidential computation without changing meaning.
-
-| Motion | Duration | Easing | Use |
+| Name | Value | Token | Role |
 |---|---:|---|---|
-| Entry fade/translate | 240ms | `cubic-bezier(.2,.8,.2,1)` | Sections and cards |
-| State handoff | 360ms | `cubic-bezier(.22,1,.36,1)` | Timeline status changes |
-| Gradient drift | 8–14s | linear | Decorative blobs only |
-| Button lift | 120ms | ease-out | Hover/focus feedback |
-| Proof pulse | 1.6s loop | ease-in-out | Lilac compute indicator while pending |
+| Cocoa Husk | `#322312` | `--color-cocoa-husk` | Base canvas; cocoa ink on light surfaces |
+| Neon Orchid | `#ff77c9` | `--color-neon-orchid` | Display type, links, icon strokes, active detail |
+| Petal Wash | `#ffdfef` | `--color-petal-wash` | Bright light bands and dark-surface action labels |
+| Plum Velvet | `#470b64` | `--color-plum-velvet` | Deep alternate band |
+| Bubblegum Blush | `#ffc2e1` | `--color-bubblegum-blush` | Light bands and contained cards |
+| Lavender Haze | `#e2c9f8` | `--color-lavender-haze` | Decorative geometry and compute accent |
+| Magenta Spark | `#de8aff` | `--color-magenta-spark` | Rare, high-emphasis detail only |
+| Oxblood Rust | `#481d2a` | `--color-oxblood-rust` | Low-frequency supporting detail, never status |
+| Lilac Whisper | `#eee2ff` | `--color-lilac-whisper` | Dark-surface borders and controls |
+| Walnut Vein | `#5b4f41` | `--color-walnut-vein` | Hairlines and subdued structure |
 
-- Respect `prefers-reduced-motion: reduce`: disable drift, pulse, parallax, and layout animation.
-- Never animate private values from one number to another; use masked-to-revealed transition.
-- Never use motion to conceal a transaction delay or imply finality before confirmation.
-- Motion is decorative around data; state text remains immediately available to assistive technology.
+The palette is intentionally closed. Do not introduce white, neutral gray, blue,
+green, orange, a gradient, or an unlabelled semantic status colour. Private,
+compute, public, pending, success, warning, and recovery states must use explicit
+text and icon/pattern distinctions; the shared palette is decorative and structural,
+not a replacement for accessibility semantics.
 
-## Imagery and illustration
+### Typography
 
-Use soft organic 3D forms—sealed envelopes, fluid loops, translucent blocks, and
-abstract signal waves—built from internal gradients. Shapes may overlap type on
-narrative surfaces but remain contained in transaction and verification views.
+Use the following licensed font names when available; otherwise use the specified
+system-safe substitutes. Never fetch a font from a third-party runtime service.
 
-- Private illustrations bias pink/lilac.
-- Public illustrations bias blue/green.
-- Pending illustrations bias orange.
-- No photography is required for the product surface.
-- No drop shadows; use gradient lighting and panel surface steps.
-- Icons are monochrome cream, approximately 1.5px stroke, and never carry color meaning alone.
+| Voice | Family token | Substitute | Use |
+|---|---|---|---|
+| Display and body | `--font-gt-planar` | `Inter Tight`, `Arial`, sans-serif | Headline and readable body copy |
+| Monospaced labels | `--font-abcrepromono` | `JetBrains Mono`, ui-monospace | Uppercase eyebrows, tags, controls |
+| UI microcopy | `--font-suisseintl` | `Inter`, ui-sans-serif | Compact navigation and icon labels |
 
-## Responsive composition
+| Role | Size | Leading | Tracking |
+|---|---:|---:|---:|
+| Caption | 11px | 0.79 | normal |
+| Body | 18px | 1.4 | normal |
+| Subheading | 22px | 1.2 | normal |
+| Heading small | 42px | 1.0 | `-0.84px` |
+| Heading | 48px | 0.95 | `-0.96px` |
+| Heading large | 59px | 0.95 | `-1.18px` |
+| Display | 95px | 0.90 | `-3.8px` |
 
-### Desktop (≥ 1100px)
+Headlines use display type at weight 700 (or 300 only for a deliberate 95px display
+moment), tight tracking, and centred composition. Body copy stays between 16px and
+22px. Eyebrows are 11px uppercase mono labels set 20–40px above a heading.
 
-- Top navigation with wordmark left, compact public/private legend center/right, wallet control far right.
-- Narrative hero may bleed display type to the viewport edge.
-- Signal and position views use a two-column composition: explanation/illustration plus action card.
-- Verification uses a dense two-column evidence grid.
+### Layout and shape
 
-### Tablet (700–1099px)
+- Base unit: 4px. Use `4`, `8`, `12`, `20`, `36`, `40`, and `116`px steps.
+- Maximum content width: 1200px. Major bands use 80–120px vertical padding.
+- The main page is a vertical sequence of full-bleed bands: cocoa → petal/plum →
+  bubblegum → cocoa. The background change is the layout system.
+- Cards use a 10px radius; badges, inputs, and buttons use a 4px radius.
+- Cards have a 1px Walnut Vein border, 20px padding, and no shadow.
+- Inputs and all interactive targets remain at least 44px high.
 
-- Reduce display scale to heading-lg/heading.
-- Keep two columns only when both maintain ≥ 320px; otherwise stack.
-- Legend remains inline but may wrap.
+## Components
 
-### Mobile (< 700px)
+### Header and navigation
 
-- One column, 24px gutters, 48px section gaps.
-- Navigation collapses to a borderless icon button with a labeled drawer.
-- Cards retain 24px padding; data rows use 16px.
-- Timeline becomes full-width; verifier rows wrap labels before values.
-- Never hide privacy boundary or recovery explanation behind horizontal scroll.
+The persistent header sits on cocoa with a 1px Walnut Vein bottom border. The
+QuietSignal wordmark is an orchid outlined diamond followed by the wordmark in
+display type. Navigation uses uppercase 12px mono labels in Petal Wash; hover shifts
+only to Neon Orchid. The wallet control is a ghost button.
 
-## Accessibility contract
+### Ghost and filled controls
 
-- Cream/muted text must meet WCAG AA contrast on canvas/panel; semantic accents are
-  not used as the only text color for essential information.
-- Every color-coded status includes text, icon, or pattern.
-- Focus ring: 2px signal green with 2px offset against all dark surfaces.
-- Minimum interactive hit area: 44×44px.
-- All forms expose labels, units, bounds, and errors programmatically.
-- Live status updates announce without stealing focus.
-- Test keyboard-only, screen reader, reduced motion, 200% zoom, and 360px viewport.
+Ghost controls: transparent background, 1px Lilac Whisper border, Lilac Whisper
+uppercase mono label, 4px radius, and `12px 20px` padding. A trailing `↗` may clarify
+an outward navigation action. Filled controls are Petal Wash with Cocoa text using
+the same geometry. Do not make a filled control imply a completed transaction; wallet
+and chain state are always stated beside it.
 
-## Do
+### Hero and section bands
 
-- Keep the dark canvas uninterrupted and let cream typography establish hierarchy.
-- Use semantic colors consistently for private, compute, public, pending, and valid.
-- Pair every public claim with a verifier link, transaction, or explicit limitation.
-- Keep primary actions outlined and weightless; let the state—not the button—carry emphasis.
-- Use masked owner data and explicit reveal actions.
+The hero is centred Cocoa Husk with 120–160px vertical breathing room, a neon orchid
+eyebrow, and a 59–95px Orchid headline. Separate major regions with a single Orchid
+hairline when the canvas does not already change. Light bands shift heading ink to
+Cocoa Husk. Do not use a card grid as the primary page composition.
 
-## Do not
+### Cards, tags, forms, and fact rows
 
-- Do not use filled solid-color CTAs or more than one gradient-stroked primary action per view.
-- Do not use pure white `#ffffff` or pure black `#000000` as default surfaces.
-- Do not use accent colors for arbitrary decoration that could be read as state.
-- Do not show raw confidential values, handles, proofs, keys, or seed phrases.
-- Do not use box shadows, noisy dashboards, or dense tables without explanatory hierarchy.
-- Do not claim anonymity, untraceable membership, or hidden timing.
-- Do not let animation alter, interpolate, or obscure financial/confidential values.
+Use cards only inside a light band or for a self-contained transaction interaction.
+They use Petal Wash or Bubblegum Blush, Cocoa text, a Walnut Vein hairline, 10px
+radius, and 20px padding. Tags are uppercase mono, textual, and flat. Form labels
+remain programmatic; private form input is never copied into a URL, log, storage,
+analytics request, or public evidence.
+
+### Privacy and transaction states
+
+Every privacy boundary uses a textual label and explanatory sentence:
+
+- `PRIVATE`: an explicit connected owner may reveal a value for this session.
+- `COMPUTE`: encryption or proof work is in progress; it is not final.
+- `PUBLIC`: an observer may inspect the stated on-chain fact.
+- `PENDING`: wallet, chain, gateway, or permissionless recovery work remains.
+
+Owner values are masked by default and cleared on account or chain change. Raw
+handles, proofs, calldata, signatures, environment data, private keys, and seed
+phrases are never rendered.
+
+## Motion and decoration
+
+Use flat, geometric decorative shapes—outlined diamonds, hatch lines, and bounded
+lavender/pink orbits—rather than photography, screenshots, 3D renders, or gradients.
+Decorations must remain outside form controls and data rows.
+
+| Motion | Duration | Use |
+|---|---:|---|
+| Band/content entrance | 240ms | Opacity and 8px vertical settle when a route appears |
+| Control feedback | 120ms | 1px lift and colour change on hover/focus |
+| Decorative orbit | 10–14s | Slow linear movement of non-interactive geometry only |
+| Compute pulse | 1.6s | Bounded indicator while text says work is pending |
+
+Never animate a financial or confidential number between values. Never animate a
+pending protocol state as if it were final. With `prefers-reduced-motion: reduce`,
+disable all nonessential animations and transitions.
+
+## Responsive and accessibility contract
+
+- Desktop: 1200px centred interior; dense public facts may use multiple columns.
+- Tablet: stack when columns would be narrower than 320px.
+- Mobile: one column, 20–24px gutters, 48px section rhythm, no horizontal scroll.
+- Keyboard focus is a 2px Lilac Whisper outline with an offset. Every action has a
+  visible label, semantic role, and a 44×44px target.
+- Live status changes are announced without moving focus. Colour is never the only
+  carrier of protocol, privacy, or error meaning.
+- Test every primary route at 360px, 768px, 1280px, and 1440px, with keyboard,
+  screen reader, 200% zoom, and reduced-motion settings.
 
 ## Canonical CSS starter
 
 ```css
 :root {
   color-scheme: dark;
-  --color-canvas: #0e100f;
-  --color-cream: #fffce1;
-  --color-muted: #7c7c6f;
-  --color-line: #42433d;
-  --color-panel: #191919;
-  --color-signal: #0ae448;
-  --color-signal-soft: #abff84;
-  --color-pending: #ff8709;
-  --color-private: #fec5fb;
-  --color-compute: #9d95ff;
-  --color-public: #00bae2;
-  --color-warning: #f100cb;
-  --font-sans: 'Mori', 'Söhne', 'DM Sans', ui-sans-serif, sans-serif;
-  --content-max: 1280px;
-  --radius-card: 8px;
-  --radius-pill: 100px;
-}
-
-html { background: var(--color-canvas); }
-body {
-  margin: 0;
-  background: var(--color-canvas);
-  color: var(--color-cream);
-  font-family: var(--font-sans);
-  font-weight: 400;
-  font-size: 19px;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-}
-
-button, a, input, select { font: inherit; }
-:focus-visible { outline: 2px solid var(--color-signal); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  --color-cocoa-husk: #322312;
+  --color-neon-orchid: #ff77c9;
+  --color-petal-wash: #ffdfef;
+  --color-plum-velvet: #470b64;
+  --color-bubblegum-blush: #ffc2e1;
+  --color-lavender-haze: #e2c9f8;
+  --color-magenta-spark: #de8aff;
+  --color-oxblood-rust: #481d2a;
+  --color-lilac-whisper: #eee2ff;
+  --color-walnut-vein: #5b4f41;
+  --font-gt-planar: 'GT-Planar', 'Inter Tight', Arial, sans-serif;
+  --font-abcrepromono: 'ABCReproMono', 'JetBrains Mono', ui-monospace, monospace;
+  --font-suisseintl: 'SuisseIntl', Inter, ui-sans-serif, sans-serif;
+  --page-max-width: 1200px;
+  --radius-cards: 10px;
+  --radius-controls: 4px;
 }
 ```
 
-## Design acceptance checklist
+## Acceptance checklist
 
-- [ ] Every new component declares its semantic color role.
-- [ ] Every stateful component has loading, error, retry, and recovery copy.
-- [ ] No primary route leaks private values into URL, logs, analytics, or server requests.
-- [ ] New motion has reduced-motion behavior and does not imply false finality.
-- [ ] Accessibility contract passes at desktop, mobile, zoom, keyboard, and screen-reader checks.
-- [ ] Screenshots and public evidence obey the project secret/privacy rules.
+- [ ] Each screen uses Cocoa, Plum, Petal, and Bubblegum bands intentionally.
+- [ ] Neon Orchid appears on every screen as type, link, or geometric detail.
+- [ ] No shadows, gradients, glass effects, stock imagery, or oversized rounding.
+- [ ] Every stateful component includes loading, error, retry, and recovery copy.
+- [ ] No primary route leaks confidential data into logs, storage, URLs, services,
+  screenshots, or evidence.
+- [ ] Motion respects reduced-motion preferences and never claims false finality.
+- [ ] Desktop and mobile preserve readable type, keyboard focus, and privacy context.

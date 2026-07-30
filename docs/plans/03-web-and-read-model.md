@@ -26,6 +26,7 @@ depending on a mock, private database, or privileged backend.
 | WEB-06 | Verification experience | Manifest/code hash/invariant/evidence view | stale manifest, wrong chain, verifier failure | `feat: add public verification view` |
 | WEB-07 | Accessibility/resilience | Keyboard, screen reader, mobile, offline/RPC/gateway states | automated a11y, console/log scan, responsive matrix | `test: harden accessible recovery ux` |
 | WEB-08 | Real browser lifecycle | Live browser e2e and sanitized result report | primary success plus one refund/recovery path | `test: prove live web user journey` |
+| WEB-03-UI-01 | Poster-system visual refresh | Revised design system, responsive banded application presentation, visual assertions | token/source audit, responsive build and interaction checks | `feat: refresh web visual system` |
 
 ## WEB-01 work-item record
 
@@ -171,6 +172,46 @@ Intended commit: `feat: add encrypted signal journey`.
 Rollback/failure action: Remove only the web signal layer; retain the user-owned
 on-chain pending/recovery path. Never substitute manual calldata, mock encryption,
 durable browser plaintext, or a service signer.
+
+## WEB-03-UI-01 work-item record
+
+ID: `WEB-03-UI-01`
+
+Status: `in_progress`
+
+Outcome: Replace the earlier visual baseline with the authoritative cocoa/orchid
+poster system and apply it consistently to every existing public and private route,
+without changing the protocol or wallet trust boundary.
+
+Output files: `DESIGN.md`, `apps/web/src/styles.css`, route markup in
+`apps/web/src/main.ts`, focused visual-source assertions, this work-item record, and
+the relevant accessibility/responsive evidence notes.
+
+Acceptance criteria: Every primary route uses purposeful full-bleed colour bands,
+flat controls, tight readable typography, geometric decoration, visible focus, and
+reduced-motion behaviour. It contains no shadow, gradient, stock image, remote font,
+or visual treatment that misstates protocol finality. Existing private/public copy,
+wallet authority, accessibility semantics, and recovery wording remain intact.
+
+Privacy/custody impact: Presentation-only. It does not add a service, storage,
+analytics, fonts fetched at runtime, wallet request, protocol call, or confidential
+data path.
+
+Funds location/recovery impact: No funds move and no recovery state changes. Failed
+rendering remains safely retryable through the existing public route and wallet flow.
+
+Checks: visual token/source assertions, production web build, `npm run test:web`,
+typecheck, responsive manual inspection at the documented breakpoints, and
+`git diff --check`.
+
+Evidence location: source/test output only; this presentation slice cannot claim
+G7 browser-lifecycle evidence.
+
+Intended commit: `feat: refresh web visual system`.
+
+Rollback/failure action: Revert only the presentation implementation while retaining
+the updated design specification. Do not add a visual dependency, remote asset, mock
+route, or alternate protocol state to compensate for a rendering failure.
 
 ## WEB-04 work-item record
 
