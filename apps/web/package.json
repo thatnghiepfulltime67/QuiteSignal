@@ -11,5 +11,8 @@
   },
   "devDependencies": {
     "vite": "8.2.0"
+  },
+  "dependencies": {
+    "@quitesignal/confidential-client": "file:../../modules/confidential-client"
   }
 }
