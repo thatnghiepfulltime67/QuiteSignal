@@ -69,8 +69,15 @@ interface IQuietSignalPool is IERC7984Receiver {
 
   function requestAggregateDecrypt() external returns (bytes32 requestId);
 
-  /// @notice Accepts a context-bound aggregate proof and never a caller-supplied total.
-  function finalizeAggregate(bytes32 requestId, bytes calldata aggregateProof) external;
+  /// @notice Returns only the two aggregate handles enabled for public decryption.
+  function aggregateDisclosureHandles() external view returns (bytes32 yesHandle, bytes32 noHandle);
+
+  /// @notice Accepts context-bound YES/NO proofs and never caller-supplied totals.
+  function finalizeAggregate(
+    bytes32 requestId,
+    bytes calldata yesProof,
+    bytes calldata noProof
+  ) external;
 
   /// @notice Reads the immutable adapter; no result parameter is accepted.
   function settle() external;

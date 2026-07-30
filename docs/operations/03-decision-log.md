@@ -267,3 +267,8 @@ validates each proof against its own immutable aggregate handle, stores the two
 resulting public totals, and consumes the request atomically. The request id remains
 the replay/context boundary. This narrow public-ABI correction reduces ambiguity and
 preserves the intended public disclosure: aggregate YES and NO only.
+
+After a request exists, the pool may expose those two opaque aggregate handles via a
+read-only disclosure view. This does not create an additional disclosure: the exact
+same handles have already been permitted for public decryption, and no owner,
+position, total-collateral, payout, or refund handle is returned.

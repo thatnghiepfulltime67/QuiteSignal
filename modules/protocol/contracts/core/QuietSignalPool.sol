@@ -14,7 +14,7 @@ import {IQuietSignalErrors} from '../interfaces/IQuietSignalErrors.sol';
 import {QuietSignalTypes} from '../interfaces/QuietSignalTypes.sol';
 
 /// @notice Immutable one-epoch pool with bounded intent-bound confidential custody.
-/// @dev PK-04 implements only the commit boundary; later lifecycle transitions remain absent.
+/// @dev PK-05 adds only the k-gated aggregate disclosure boundary.
 contract QuietSignalPool is IERC7984Receiver {
   using Nox for ebool;
   using Nox for euint256;
@@ -57,6 +57,14 @@ contract QuietSignalPool is IERC7984Receiver {
   event SignalIntentRegistered(bytes32 indexed epochId, address indexed owner, uint64 availableAt);
   event SignalIntentCleared(bytes32 indexed epochId, address indexed owner, bool callbackReceived);
   event SignalCommitted(bytes32 indexed epochId, address indexed owner, bytes32 commitmentId);
+  event EpochClosed(bytes32 indexed epochId, uint32 participantCount);
+  event AggregateDecryptRequested(bytes32 indexed epochId, bytes32 indexed requestId);
+  event AggregateFinalized(
+    bytes32 indexed epochId,
+    bytes32 indexed requestId,
+    uint256 publicYes,
+    uint256 publicNo
+  );
 
   constructor(bytes32 poolId_, QuietSignalTypes.PoolConfig memory config_) {
     if (
@@ -280,6 +288,69 @@ contract QuietSignalPool is IERC7984Receiver {
     _clearPending();
   }
 
+  /// @notice Closes the commit window and applies the immutable cohort threshold.
+  function closeEpoch() external {
+    _requireState(QuietSignalTypes.EpochState.OPEN);
+    if (block.timestamp < deadline) {
+      revert IQuietSignalErrors.CommitWindowClosed(deadline, uint64(block.timestamp));
+    }
+    if (_epoch.participantCount < kMin) {
+      _epoch.state = QuietSignalTypes.EpochState.REFUNDABLE;
+      emit EpochClosed(epochId, _epoch.participantCount);
+      return;
+    }
+    _epoch.aggregatePendingAt = uint64(block.timestamp);
+    _epoch.state = QuietSignalTypes.EpochState.AGGREGATE_PENDING;
+    emit EpochClosed(epochId, _epoch.participantCount);
+  }
+
+  /// @notice Enables public decryption for the two k-gated aggregate handles only.
+  function requestAggregateDecrypt() external returns (bytes32 requestId) {
+    _requireState(QuietSignalTypes.EpochState.AGGREGATE_PENDING);
+    if (_epoch.aggregateRequestId != bytes32(0)) {
+      revert IQuietSignalErrors.DuplicateAggregateRequest(_epoch.aggregateRequestId);
+    }
+    requestId = _aggregateRequestId();
+    _epoch.aggregateRequestId = requestId;
+    Nox.allowPublicDecryption(_aggregateYes);
+    Nox.allowPublicDecryption(_aggregateNo);
+    emit AggregateDecryptRequested(epochId, requestId);
+  }
+
+  /// @notice Returns only handles already enabled for aggregate public decryption.
+  function aggregateDisclosureHandles()
+    external
+    view
+    returns (bytes32 yesHandle, bytes32 noHandle)
+  {
+    _requireState(QuietSignalTypes.EpochState.AGGREGATE_PENDING);
+    if (_epoch.aggregateRequestId == bytes32(0)) {
+      revert IQuietSignalErrors.AggregateRequestMissing();
+    }
+    return (euint256.unwrap(_aggregateYes), euint256.unwrap(_aggregateNo));
+  }
+
+  /// @notice Stores only proof-verified YES/NO aggregate totals for resolution.
+  function finalizeAggregate(
+    bytes32 suppliedRequestId,
+    bytes calldata yesProof,
+    bytes calldata noProof
+  ) external {
+    _requireState(QuietSignalTypes.EpochState.AGGREGATE_PENDING);
+    bytes32 requestId = _epoch.aggregateRequestId;
+    if (requestId == bytes32(0)) revert IQuietSignalErrors.AggregateRequestMissing();
+    if (suppliedRequestId != requestId) {
+      revert IQuietSignalErrors.ProofContextMismatch(suppliedRequestId);
+    }
+    uint256 publicYes = Nox.publicDecrypt(_aggregateYes, yesProof);
+    uint256 publicNo = Nox.publicDecrypt(_aggregateNo, noProof);
+    _epoch.publicYes = publicYes;
+    _epoch.publicNo = publicNo;
+    _epoch.resolutionPendingAt = uint64(block.timestamp);
+    _epoch.state = QuietSignalTypes.EpochState.RESOLUTION_PENDING;
+    emit AggregateFinalized(epochId, requestId, publicYes, publicNo);
+  }
+
   function _deriveAllocation(
     euint256 stake,
     euint256 probabilityBps,
@@ -304,6 +375,19 @@ contract QuietSignalPool is IERC7984Receiver {
     Nox.allowThis(_aggregateNo);
     Nox.allowThis(_aggregateTotal);
     _aggregatesInitialized = true;
+  }
+
+  function _aggregateRequestId() private view returns (bytes32) {
+    return
+      keccak256(
+        abi.encode(
+          block.chainid,
+          address(this),
+          epochId,
+          euint256.unwrap(_aggregateYes),
+          euint256.unwrap(_aggregateNo)
+        )
+      );
   }
 
   function _requirePendingCallback() private view {

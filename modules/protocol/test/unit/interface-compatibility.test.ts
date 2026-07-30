@@ -91,7 +91,8 @@ test('T-ABI-PK02-01: pool selectors preserve encrypted commit and caller-indepen
     ['expirePendingCommit', 'expirePendingCommit()'],
     ['closeEpoch', 'closeEpoch()'],
     ['requestAggregateDecrypt', 'requestAggregateDecrypt()'],
-    ['finalizeAggregate', 'finalizeAggregate(bytes32,bytes)'],
+    ['aggregateDisclosureHandles', 'aggregateDisclosureHandles()'],
+    ['finalizeAggregate', 'finalizeAggregate(bytes32,bytes,bytes)'],
     ['settle', 'settle()'],
     ['cancelBeforeResolution', 'cancelBeforeResolution()'],
     ['cancelAfterResolutionGrace', 'cancelAfterResolutionGrace()'],
@@ -116,7 +117,7 @@ test('T-ABI-PK02-01: pool selectors preserve encrypted commit and caller-indepen
     ['externalEuint256', 'bytes', 'externalEuint256', 'bytes'],
   );
   assert.equal(commit.stateMutability, 'nonpayable');
-  assert.equal(requireFunction(pool, 'finalizeAggregate').inputs.length, 2);
+  assert.equal(requireFunction(pool, 'finalizeAggregate').inputs.length, 3);
   assert.equal(requireFunction(pool, 'settle').inputs.length, 0);
   assert.equal(requireFunction(pool, 'settle').stateMutability, 'nonpayable');
 });
