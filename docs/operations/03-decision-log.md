@@ -432,3 +432,25 @@ user-created pool to the canonical release or G7 evidence. Invalid or stale link
 fail closed, while a verified pool uses the unchanged asset, confidential signal,
 owner, settlement, and permissionless recovery paths. R-27 covers link tampering,
 stale state, and participant confusion.
+
+## ADR-027 — Browser-owned permissionless lifecycle actions
+
+**Status:** Accepted before WEB-12 implementation
+
+The protocol deliberately has no keeper or lifecycle owner. The browser may therefore
+surface a permissionless action only after direct public reads prove it is eligible at
+the latest Sepolia timestamp. It revalidates immediately before its connected-wallet
+submission and waits for the receipt; it cannot advance an epoch automatically or
+call a user-owned claim/refund on someone else's behalf.
+
+Aggregate finalization is the sole action that needs Nox proof material. After the
+pool has publicly enabled its two aggregate handles, the browser can request their
+public-decryption attestations from Nox and submit only those transient proofs with
+the recorded request id. It does not read, render, log, persist, or URL-encode the
+decrypted values or proof bytes. The public final aggregate appears only through the
+contract's existing event/state after a confirmed receipt.
+
+This adds a browser interface to existing permissionless public transitions; it does
+not alter contract state rules, custody, Nox ACL, public interfaces, or trust
+boundaries. R-28 tracks stale action selection, aggregate-proof mishandling, and a
+misleading transaction outcome.

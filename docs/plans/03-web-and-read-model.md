@@ -35,6 +35,7 @@ depending on a mock, private database, or privileged backend.
 | WEB-09               | Complete participant cockpit   | Live readiness, test-asset faucet/wrap, guarded signal journey, owner/recovery cockpit           | web tests, production build, offline gate, clean diff                 | `feat: complete the participant web journey`        |
 | WEB-10               | Permissionless self-test pool  | Browser-created adapter/pool, session route, public binding checks, full participant handoff     | deployment mutation tests, web tests, production build, offline gate | `feat: add a permissionless self-test market`       |
 | WEB-11               | Shared self-test entry         | Factory-verified public join route for a second participant                                       | mutation tests, web tests, production build, offline gate            | `feat: add verified self-test participant links`    |
+| WEB-12               | Permissionless lifecycle cockpit | Wallet-gated public lifecycle and recovery actions, including aggregate proof finalization      | state/action tests, web tests, production build, offline gate        | `feat: add permissionless lifecycle actions`        |
 
 ## WEB-01 work-item record
 
@@ -1329,6 +1330,73 @@ tests, production build, direct Sepolia rejection checks for canonical and
 unknown-code addresses, `npm run check:offline`, `npm run check:sepolia:read`, and
 sanitized desktop/mobile browser inspections pass. No user transaction was sent and
 this is not G7 evidence.
+
+## WEB-12 work-item record
+
+ID: `WEB-12`
+
+Status: `complete`
+
+Prerequisite gates: WEB-09 through WEB-11 are complete. G7 remains blocked for the
+canonical release under R-25 and is not claimed by this item.
+
+Outcome: Expose every contract-defined permissionless lifecycle action in the
+browser, so any connected Sepolia wallet can advance a valid public epoch or invoke
+its timeout recovery without a keeper, backend, private input, or opaque manual ABI
+call.
+
+Output files: `apps/web/src/` lifecycle action client/presentation modules, focused
+`apps/web/test/` coverage, this work-item record, the decision log, and the risk
+register.
+
+Acceptance criteria: Direct public reads derive actions only from the immutable
+pool state, current block timestamp, pending timeout, configured timeouts/grace, and
+adapter observation boundary. The UI exposes only valid explicit-wallet actions:
+expire a timed-out pending commit, close a passed deadline, request aggregate public
+decryption, finalize an available aggregate with two Nox attestations, settle after
+the observation boundary, and both contract-defined cancellation paths when eligible.
+Each action is revalidated immediately before submit, awaits a successful receipt,
+reports that no private value was read or stored, and refreshes public state. The
+aggregate finalizer may request only the two public-decryption handles returned by
+the pool after a request; it must never display, log, persist, or place a decrypted
+value/proof in a URL. Invalid state, stale timing, missing request, unavailable proof,
+revert, replacement, RPC loss, and wallet rejection fail closed without a claim of
+finality.
+
+Privacy/custody impact: Lifecycle state, timestamps, action kind, and final aggregate
+facts are public. The browser does not receive owner signal, collateral, handle, key,
+or score plaintext; aggregate proof bytes are transient transaction data only. Every
+write remains explicit from the user's EIP-1193 wallet, and no application account,
+relayer, or keeper receives authority or custody.
+
+Funds location/recovery impact: Lifecycle writes move no user-selected collateral
+outside the immutable pool/wrapper rules. Timed-out pending callbacks return through
+the contract; below-k and stalled aggregate/feed paths enter the existing refundable
+state, where each owner uses the existing owner-only refund action. Failed browser
+actions leave chain state authoritative and direct the user to refresh before retry.
+
+Commands/checks: focused state/action and source-boundary tests, `npm run test:web`,
+production web build, root typecheck, `npm run check:offline`, sanitized browser
+inspection, `npm run check:sepolia:read`, and `git diff --check`. No user transaction
+is sent by development automation and local/simulated output is not evidence.
+
+Evidence path: source/test output and sanitized browser inspection only. Real user
+receipts remain required for G7.
+
+Intended commit: `feat: add permissionless lifecycle actions`.
+
+Rollback/failure action: Remove only the browser action controls and retain public
+read/owner routes. Do not add a keeper, backend signer, relayer, stored proof,
+automatic transaction, or alternate recovery state.
+
+Completion evidence: The web now derives eligible permissionless actions from direct
+Sepolia reads and revalidates them before a wallet request. It supports timed-out
+pending-commit expiry, close, aggregate request/finalization, both refundable
+timeouts, and immutable-adapter settlement; aggregate proof material is transient.
+It also corrects the public `COMMIT_PENDING` label and recovery guidance. `T-WEB-12-01`
+and `T-WEB-12-02`, all 39 web tests, a direct Sepolia lifecycle snapshot, production
+build, `npm run check:offline`, `npm run check:sepolia:read`, and sanitized browser
+inspection pass. No user transaction was sent and this is not G7 evidence.
 
 ## Primary route contract
 
