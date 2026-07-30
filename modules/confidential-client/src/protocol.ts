@@ -81,6 +81,28 @@ export const quietSignalPoolAbi = [
       },
     ],
   },
+  {
+    type: 'function',
+    name: 'ownerPosition',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [
+      {
+        name: '',
+        type: 'tuple',
+        components: [
+          { name: 'committed', type: 'bool' },
+          { name: 'claimed', type: 'bool' },
+          { name: 'refunded', type: 'bool' },
+          { name: 'stake', type: 'bytes32' },
+          { name: 'probabilityBps', type: 'bytes32' },
+          { name: 'yesAllocation', type: 'bytes32' },
+          { name: 'noAllocation', type: 'bytes32' },
+          { name: 'scoreBps', type: 'bytes32' },
+        ],
+      },
+    ],
+  },
 ] as const;
 
 export interface PublicEpoch {
