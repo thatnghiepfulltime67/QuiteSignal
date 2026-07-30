@@ -16,8 +16,21 @@ import {
 } from '../src/index.js';
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
-const manifestPath = resolve(repositoryRoot, 'deployments/sepolia/quiet-signal.json');
-const evidencePath = resolve(repositoryRoot, 'evidence/sepolia/G6/IDX-01-READ-MODEL.json');
+
+function argument(name: string): string | undefined {
+  return process.argv.find((value) => value.startsWith(`--${name}=`))?.slice(name.length + 3);
+}
+
+function repositoryPath(value: string, name: string): string {
+  const path = resolve(repositoryRoot, value);
+  if (!path.startsWith(`${repositoryRoot}/`)) fail(`${name} must remain inside the repository.`);
+  return path;
+}
+
+const manifestArgument = argument('manifest') ?? 'deployments/sepolia/quiet-signal.json';
+const outputArgument = argument('out') ?? 'evidence/sepolia/G6/IDX-01-READ-MODEL.json';
+const manifestPath = repositoryPath(manifestArgument, 'manifest');
+const evidencePath = repositoryPath(outputArgument, 'out');
 
 function fail(message: string): never {
   throw new Error(`Sepolia read-model rebuild failed: ${message}`);
@@ -92,7 +105,7 @@ const evidence = {
   status: 'passed',
   sourceCommit,
   manifest: {
-    path: 'deployments/sepolia/quiet-signal.json',
+    path: manifestArgument,
     fingerprint: manifestHash,
     pool: manifest.pools[0]!.address,
     epochVerificationBlock: manifest.epochVerificationBlock?.toString() ?? null,
@@ -114,5 +127,5 @@ writeFileSync(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`, {
   flag: 'wx',
 });
 process.stdout.write(
-  `${JSON.stringify({ status: 'passed', evidence: 'evidence/sepolia/G6/IDX-01-READ-MODEL.json', eventCount: replay.events.length })}\n`,
+  `${JSON.stringify({ status: 'passed', evidence: outputArgument, eventCount: replay.events.length })}\n`,
 );
