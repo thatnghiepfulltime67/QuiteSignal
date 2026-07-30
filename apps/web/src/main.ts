@@ -19,6 +19,17 @@ interface Eip1193Provider {
   on(event: 'accountsChanged' | 'chainChanged', listener: () => void): void;
 }
 
+interface WalletCandidate {
+  id: string;
+  name: string;
+  provider: Eip1193Provider;
+}
+
+interface Eip6963ProviderDetail {
+  info: { name?: string; uuid?: string };
+  provider: Eip1193Provider;
+}
+
 declare global {
   interface Window {
     ethereum?: Eip1193Provider;
@@ -29,6 +40,10 @@ let manifest: PublicManifest | undefined;
 let releaseId = 'unselected';
 let manifestPhase: 'loading' | 'ready' | 'unavailable' = 'loading';
 let walletState = 'No wallet detected';
+let walletMenuOpen = false;
+let selectedWallet: Eip1193Provider | undefined;
+const walletCandidates: WalletCandidate[] = [];
+const boundWalletProviders = new WeakSet<Eip1193Provider>();
 let lifecycleMessage = 'Connect a Sepolia wallet to refresh public pool state.';
 let ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
 let ownerActions = '';
@@ -49,6 +64,82 @@ function releaseStatusContent(): string {
   return manifestPhase === 'loading'
     ? `<section class="band cocoa-band release-status"><div class="band-inner"><p class="eyebrow compute">{ verifying active release }</p><h1>Checking the live deployment.</h1><p role="status">Loading the canonical Sepolia release and public manifest. No wallet action is available during this check.</p><div class="status-rule" aria-hidden="true"><span></span><span></span><span></span></div></div></section>`
     : `<section class="band petal-band release-status unavailable"><div class="band-inner"><p class="eyebrow private">{ release unavailable }</p><h1>Do not connect or submit yet.</h1><p role="alert">The active Sepolia release could not be validated from its canonical public manifest. Reload when the deployment record is available, then verify it before a wallet action.</p><a class="text-action dark-action" href="/how-it-works">Read how the product works <span aria-hidden="true">↗</span></a></div></section>`;
+}
+
+function resetWalletContext(message: string): void {
+  walletState = 'Reconnect wallet';
+  ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
+  ownerActions = '';
+  render(message);
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>'"]/g, (character) => {
+    const entities: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;',
+    };
+    return entities[character] ?? character;
+  });
+}
+
+function bindWalletEvents(provider: Eip1193Provider): void {
+  if (boundWalletProviders.has(provider)) return;
+  boundWalletProviders.add(provider);
+  provider.on('accountsChanged', () =>
+    resetWalletContext('Account changed. Reconnect to review the current public market.'),
+  );
+  provider.on('chainChanged', () =>
+    resetWalletContext('Network changed. Reconnect after selecting Ethereum Sepolia.'),
+  );
+}
+
+function registerWalletCandidate(detail: Eip6963ProviderDetail): void {
+  if (!detail.provider || typeof detail.provider.request !== 'function') return;
+  if (walletCandidates.some(({ provider }) => provider === detail.provider)) return;
+  const id = detail.info.uuid ?? `provider-${walletCandidates.length + 1}`;
+  walletCandidates.push({
+    id,
+    name: detail.info.name?.trim() || 'Browser wallet',
+    provider: detail.provider,
+  });
+}
+
+function availableWallets(): WalletCandidate[] {
+  const candidates = [...walletCandidates];
+  if (
+    window.ethereum &&
+    typeof window.ethereum.request === 'function' &&
+    !candidates.some(({ provider }) => provider === window.ethereum)
+  ) {
+    candidates.push({ id: 'injected-provider', name: 'Browser wallet', provider: window.ethereum });
+  }
+  return candidates;
+}
+
+function activeWallet(): Eip1193Provider | undefined {
+  return selectedWallet ?? window.ethereum;
+}
+
+function requestWalletDiscovery(): void {
+  window.dispatchEvent(new Event('eip6963:requestProvider'));
+}
+
+function walletMenuContent(): string {
+  if (!walletMenuOpen || !manifest) return '';
+  const candidates = availableWallets();
+  const menu = candidates.length
+    ? `<div class="wallet-choice-list">${candidates
+        .map(
+          (candidate, index) =>
+            `<button class="wallet-choice" type="button" data-wallet-index="${index}"><span>${escapeHtml(candidate.name)}</span><span aria-hidden="true">↗</span></button>`,
+        )
+        .join('')}</div>`
+    : `<p class="wallet-empty">No compatible browser wallet was detected. Install or unlock one, then retry discovery. No funds can move from this page.</p>`;
+  return `<section class="wallet-menu" aria-label="Wallet connection"><p class="eyebrow">{ choose a browser wallet }</p><p>Connecting lets this page request your public account and Sepolia network. It does not submit a transaction.</p>${menu}<div class="wallet-menu-actions"><button class="text-button" id="refresh-wallets" type="button">Refresh wallets</button>${selectedWallet ? '<button class="text-button" id="disconnect-wallet" type="button">Disconnect app</button>' : ''}</div></section>`;
 }
 
 function landingContent(market?: ReturnType<typeof presentMarket>): string {
@@ -105,8 +196,30 @@ function render(message?: string): void {
     navigationLink(canonicalVerifyPath, 'Verify', Boolean(verifyAddress)),
     navigationLink('/position', 'Position', isPositionRoute),
   ].join('');
-  root.innerHTML = `<a class="skip-link" href="#main-content">Skip to content</a><main class="app-shell"><header class="site-header"><a class="wordmark" href="/" aria-label="QuietSignal overview">QuietSignal</a><div class="header-actions"><span class="network-status" aria-label="Network: Ethereum Sepolia">Sepolia</span><button class="wallet" id="wallet"${manifest ? '' : ' disabled'}>${manifest ? walletState : 'Release check'}</button></div></header><nav class="site-nav" aria-label="Primary">${navigation}</nav><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section><div id="main-content" tabindex="-1">${content}</div><section class="deployment-band"><div><p class="eyebrow">{ active Sepolia release ${releaseId} }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : manifestPhase === 'loading' ? 'Checking the canonical manifest…' : 'Canonical manifest unavailable. Do not continue with a wallet action.')}</p>${manifest ? `<a class="deployment-link" href="${canonicalPoolPath}">Read public lifecycle <span aria-hidden="true">↗</span></a>` : ''}</div></section></main>`;
-  document.querySelector<HTMLButtonElement>('#wallet')?.addEventListener('click', connectWallet);
+  root.innerHTML = `<a class="skip-link" href="#main-content">Skip to content</a><main class="app-shell"><header class="site-header"><a class="wordmark" href="/" aria-label="QuietSignal overview">QuietSignal</a><div class="header-actions"><span class="network-status" aria-label="Network: Ethereum Sepolia">Sepolia</span><button class="wallet" id="wallet" aria-expanded="${walletMenuOpen}"${manifest ? '' : ' disabled'}>${manifest ? walletState : 'Release check'}</button>${walletMenuContent()}</div></header><nav class="site-nav" aria-label="Primary">${navigation}</nav><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section><div id="main-content" tabindex="-1">${content}</div><section class="deployment-band"><div><p class="eyebrow">{ active Sepolia release ${releaseId} }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : manifestPhase === 'loading' ? 'Checking the canonical manifest…' : 'Canonical manifest unavailable. Do not continue with a wallet action.')}</p>${manifest ? `<a class="deployment-link" href="${canonicalPoolPath}">Read public lifecycle <span aria-hidden="true">↗</span></a>` : ''}</div></section></main>`;
+  document.querySelector<HTMLButtonElement>('#wallet')?.addEventListener('click', () => {
+    walletMenuOpen = !walletMenuOpen;
+    if (walletMenuOpen) requestWalletDiscovery();
+    render();
+  });
+  document.querySelector<HTMLButtonElement>('#refresh-wallets')?.addEventListener('click', () => {
+    requestWalletDiscovery();
+    render('Wallet discovery refreshed. Connecting remains a separate wallet request.');
+  });
+  document.querySelector<HTMLButtonElement>('#disconnect-wallet')?.addEventListener('click', () => {
+    selectedWallet = undefined;
+    walletMenuOpen = false;
+    resetWalletContext(
+      'The app no longer uses this wallet. Wallet permissions remain controlled by the extension.',
+    );
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-wallet-index]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.walletIndex);
+      const candidate = availableWallets()[index];
+      if (candidate) void connectWallet(candidate.provider);
+    });
+  });
   document
     .querySelector<HTMLButtonElement>('#refresh-lifecycle')
     ?.addEventListener('click', refreshLifecycle);
@@ -115,7 +228,8 @@ function render(message?: string): void {
     ?.addEventListener('click', revealOwner);
   document.querySelectorAll<HTMLButtonElement>('[data-owner-action]').forEach((button) => {
     button.addEventListener('click', async () => {
-      if (!window.ethereum || !manifest) {
+      const provider = activeWallet();
+      if (!provider || !manifest) {
         ownerMessage = 'Connect the owner wallet on Sepolia, then retry. No funds moved.';
         render();
         return;
@@ -126,7 +240,7 @@ function render(message?: string): void {
       render();
       try {
         const transactionHash = await submitOwnerTerminalAction(
-          window.ethereum,
+          provider,
           manifest.poolAddress,
           action,
         );
@@ -145,12 +259,13 @@ function render(message?: string): void {
     ?.addEventListener('click', async (event) => {
       const status = document.querySelector<HTMLParagraphElement>('#signal-status');
       try {
-        if (!window.ethereum || !manifest) throw new Error('Connect a Sepolia wallet first.');
+        const provider = activeWallet();
+        if (!provider || !manifest) throw new Error('Connect a Sepolia wallet first.');
         if (status)
           status.textContent =
             'Checking the pending finalization. No new collateral transfer is requested.';
         const transactionHash = await finalizePendingSignal(
-          window.ethereum,
+          provider,
           manifest.poolAddress,
           (progress) => {
             if (status) status.textContent = progress;
@@ -178,10 +293,11 @@ function render(message?: string): void {
           stake: String(data.get('stake') ?? ''),
           probability: String(data.get('probability') ?? ''),
         });
-        if (!window.ethereum || !manifest) throw new Error('Connect a Sepolia wallet first.');
+        const provider = activeWallet();
+        if (!provider || !manifest) throw new Error('Connect a Sepolia wallet first.');
         if (status) status.textContent = 'Valid inputs. No funds moved. Starting local encryption…';
         const result = await submitSignalJourney(
-          window.ethereum,
+          provider,
           manifest.poolAddress,
           manifest.collateralAddress,
           values,
@@ -205,7 +321,8 @@ function render(message?: string): void {
 }
 
 async function revealOwner(): Promise<void> {
-  if (!window.ethereum || !manifest) {
+  const provider = activeWallet();
+  if (!provider || !manifest) {
     ownerMessage = 'Connect the owner wallet on Sepolia, then retry. No funds moved.';
     render();
     return;
@@ -213,7 +330,7 @@ async function revealOwner(): Promise<void> {
   ownerMessage = 'Requesting owner-only decrypt authorization…';
   render();
   try {
-    const position = await decryptOwnerPosition(window.ethereum, manifest.poolAddress);
+    const position = await decryptOwnerPosition(provider, manifest.poolAddress);
     ownerMessage = position.committed
       ? `Position revealed for this session. Score: ${position.scoreBps.toString()} bps. ${position.claimed ? 'Claimed.' : position.refunded ? 'Refunded.' : 'No terminal action submitted.'}`
       : 'This wallet has no committed position for the canonical pool.';
@@ -247,22 +364,29 @@ async function refreshLifecycle(): Promise<void> {
   render();
 }
 
-async function connectWallet(): Promise<void> {
-  if (!window.ethereum) {
+async function connectWallet(provider?: Eip1193Provider): Promise<void> {
+  const wallet = provider ?? activeWallet();
+  if (!wallet) {
     walletState = 'No wallet detected';
-    render('Install an EIP-1193 wallet to connect. No funds can move from this screen.');
+    walletMenuOpen = true;
+    render(
+      'Install or unlock an EIP-1193 wallet, then refresh discovery. No funds can move from this screen.',
+    );
     return;
   }
+  selectedWallet = wallet;
+  bindWalletEvents(wallet);
+  walletMenuOpen = false;
   walletState = 'Connecting…';
   render();
   try {
-    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+    const chainId = await wallet.request({ method: 'eth_chainId' });
     if (chainId !== '0xaa36a7') {
       walletState = 'Switch to Sepolia';
       render('This product only works on Ethereum Sepolia.');
       return;
     }
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    const accounts = await wallet.request({ method: 'eth_requestAccounts' });
     walletState =
       Array.isArray(accounts) && typeof accounts[0] === 'string'
         ? `${accounts[0].slice(0, 6)}…${accounts[0].slice(-4)}`
@@ -274,18 +398,13 @@ async function connectWallet(): Promise<void> {
   }
 }
 
-window.ethereum?.on('accountsChanged', () => {
-  walletState = 'Account changed';
-  ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
-  ownerActions = '';
-  render('Reconnect to review the current public market.');
+window.addEventListener('eip6963:announceProvider', (event) => {
+  const detail = (event as CustomEvent<Eip6963ProviderDetail>).detail;
+  if (!detail) return;
+  registerWalletCandidate(detail);
+  if (walletMenuOpen) render();
 });
-window.ethereum?.on('chainChanged', () => {
-  walletState = 'Network changed';
-  ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
-  ownerActions = '';
-  render('Reconnect after selecting Ethereum Sepolia.');
-});
+
 render('Checking the canonical Sepolia release. No wallet action is available yet.');
 loadManifest()
   .then(() => {

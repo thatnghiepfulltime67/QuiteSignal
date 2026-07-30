@@ -266,6 +266,54 @@ state blocks route actions with a clear reload/verify instruction. `T-WEB-01-UX-
 all 24 web tests, root typecheck, production Vite build, targeted Prettier checks,
 and `git diff --check` pass. No stored fallback or wallet/chain action was added.
 
+## WEB-01-WALLET-UX-04 work-item record
+
+ID: `WEB-01-WALLET-UX-04`
+
+Status: `complete`
+
+Outcome: Make the browser-wallet boundary explicit by discovering compatible
+providers, allowing the participant to choose one, and presenting connected,
+wrong-network, unavailable, and application-disconnected states without storing a
+provider identity or invoking a transaction.
+
+Output files: wallet-provider discovery and header menu in `apps/web/src/main.ts`,
+flat responsive menu styling in `apps/web/src/styles.css`, focused source assertions,
+and this record.
+
+Acceptance criteria: Browser provider discovery is opt-in and in-memory only; the
+wallet menu identifies its request as a connection rather than a transaction; each
+provider is bound once for account/network change reset; selected provider failures
+state a safe retry; and the app offers no key import, signer, relay, or private-data
+path. A no-provider state explains the next safe action.
+
+Privacy/custody impact: Provider metadata and the selected provider object exist in
+memory for the active page only. The UI does not persist account/provider data,
+receive a private key, or delegate signing/custody.
+
+Funds location/recovery impact: Connecting or disconnecting changes no contract
+state. All actual asset movement remains behind later explicit wallet approvals and
+the documented pool recovery paths.
+
+Checks: focused source assertions, `npm run test:web`, production web build, root
+typecheck, and `git diff --check`.
+
+Evidence location: source/test output only; provider discovery is not a G7 wallet
+journey.
+
+Intended commit: `feat: clarify browser wallet selection`.
+
+Rollback/failure action: Revert only the discovery/menu presentation. Never restore
+a single implicit wallet connection by adding a private signer or stored account.
+
+Completion evidence: The header now opens an in-memory provider picker, requests
+browser discovery only when the user opens or refreshes it, escapes provider labels,
+and binds account/network reset once for each selected provider. It clearly labels
+connection as a non-transaction request and can clear the app’s active provider
+without claiming to revoke wallet permissions. `T-WEB-01-WALLET-UX-04`, all 25 web
+tests, root typecheck, production Vite build, targeted Prettier checks, and `git diff
+--check` pass. No credential, storage, relay, or signer path was added.
+
 ## WEB-03 work-item record
 
 ID: `WEB-03`

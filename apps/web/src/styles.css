@@ -77,6 +77,7 @@ a {
   display: flex;
   align-items: center;
   gap: 12px;
+  position: relative;
 }
 
 .network-status {
@@ -169,6 +170,89 @@ a {
   background: transparent;
   color: var(--lilac);
   transform: none;
+}
+
+.wallet-menu {
+  position: absolute;
+  z-index: 4;
+  right: 0;
+  top: calc(100% + 12px);
+  width: min(360px, calc(100vw - 40px));
+  border: 1px solid var(--lilac);
+  border-radius: var(--card-radius);
+  background: var(--plum);
+  color: var(--petal);
+  padding: 20px;
+}
+
+.wallet-menu .eyebrow {
+  color: var(--spark);
+  margin: 0 0 12px;
+}
+
+.wallet-menu > p:not(.eyebrow),
+.wallet-empty {
+  font-size: 16px;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.wallet-choice-list {
+  border-top: 1px solid var(--walnut);
+  margin-top: 20px;
+}
+
+.wallet-choice {
+  width: 100%;
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--walnut);
+  color: var(--petal);
+  cursor: pointer;
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  justify-content: space-between;
+  letter-spacing: 0.03em;
+  padding: 16px 0;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.wallet-choice:hover {
+  color: var(--orchid);
+}
+
+.wallet-empty {
+  border-top: 1px solid var(--walnut);
+  margin-top: 20px;
+  padding-top: 20px;
+}
+
+.wallet-menu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.text-button {
+  background: transparent;
+  border: 0;
+  color: var(--lilac);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-transform: uppercase;
+}
+
+.text-button:hover {
+  color: var(--orchid);
 }
 
 .secondary {
