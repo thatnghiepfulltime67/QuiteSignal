@@ -1020,7 +1020,7 @@ Status: `in_progress`
 
 ### LIVE-02-PLAN-01
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Plan a fresh, receipt-backed Sepolia recovery lifecycle that proves the
 mandatory below-threshold and timeout/recovery paths without reusing LIVE-01.
@@ -1056,6 +1056,83 @@ Intended commit: `docs: plan live recovery lifecycle evidence`.
 Rollback/failure action: Stop at any failed case, retain the receipt and pool state,
 and use only its existing permissionless recovery transition. Never convert a
 success-case pool into recovery evidence or substitute an off-chain transfer.
+
+Completion evidence: LIVE-02 will reuse only the public, already-deployed
+fixture/wrapper/factory contracts. A new adapter supplies a future observation
+window, and two new pools use LIVE-02 salts. The below-k pool needs one accepted
+commit; the timeout pool needs two accepted commits, close, aggregate request, and
+the existing `cancelBeforeResolution` transition. This is a design decision, not
+evidence.
+
+### LIVE-02-RUNNER-01
+
+Status: `complete`
+
+Outcome: Add a bounded P2 runner mode that permits only the fresh LIVE-02
+`below-k` and `timeout` cases, records P2 ledger attribution, and preserves all
+existing runner modes.
+
+Output files: lifecycle policy source/tests, runner/root command wiring, this
+record, and verification matrix updates.
+
+Acceptance criteria: LIVE-02 has only the two named case salts; it uses a future
+adapter observation window, normal short aggregate timeout rules, and phase P2.
+No existing PK or LIVE-01 salt/configuration may change. A dry run reports budget
+without writing.
+
+Privacy/custody impact: The mode does not alter the encryption, callback, or proof
+boundary and adds no storage or service authority.
+
+Funds location/recovery impact: It creates no assets in dry run. Confirmed cases
+remain on the existing on-chain below-k/timeout recovery paths.
+
+Checks: policy tests, typecheck, dry-run preflight, `npm run check:offline`, and
+`git diff --check`.
+
+Evidence location: source/test output only; no G6 claim before execution/read
+verification.
+
+Intended commit: `feat: prepare live recovery lifecycle runner`.
+
+Rollback/failure action: Revert only the new mode. Do not modify a prior live pool
+or remove historical ledger entries.
+
+Completion evidence: `T-LIVE-02-01` passed alongside all existing protocol policy
+tests, and the named dry run reported the P2 mode and remaining committed budget
+without a chain write.
+
+### LIVE-02-EXEC-01
+
+Status: `in_progress`
+
+Outcome: Execute fresh below-k and aggregate-timeout recovery cases on Sepolia, each
+with independent receipts and on-chain terminal state.
+
+Output files: LIVE-02 P2 ledger entries, two temporary public manifests, verifier
+and read-model evidence, this record, and recovery evidence records.
+
+Acceptance criteria: The below-k pool closes with one accepted participant and no
+aggregate request; the timeout pool reaches aggregate pending with two participants,
+then reaches `REFUNDABLE` only through `cancelBeforeResolution` after its immutable
+timeout. Each pool has a public manifest/replay and every owner terminal/recovery
+action remains scoped to its own local wallet.
+
+Privacy/custody impact: All confidential inputs/callbacks follow the existing Nox
+boundary; no recovery proof, owner value, or raw input is persisted.
+
+Funds location/recovery impact: Before close, collateral is in the pool; terminal
+recovery returns through its existing confidential transfer route. Failed stages are
+preserved and never bypassed with a manual transfer.
+
+Checks: named receipt/state assertions, manifest verifier, indexer rebuild,
+`npm run check:offline`, and `git diff --check`.
+
+Evidence location: `evidence/sepolia/G6/LIVE-02-*.json`.
+
+Intended commit: `test: execute live recovery lifecycle`.
+
+Rollback/failure action: Stop at the failed stage and retain its public facts. Use
+only the pool's corresponding permissionless recovery function.
 
 ## Dependency graph
 

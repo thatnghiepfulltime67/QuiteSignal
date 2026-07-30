@@ -208,7 +208,7 @@ async function main(): Promise<void> {
   const write = process.argv.includes('--write');
   const requestedWorkItem = argument('work-item') ?? 'PK-05';
   if (!isLifecycleWorkItem(requestedWorkItem))
-    fail('The work item must be PK-05, PK-06, PK-07, SDK-03, or LIVE-01.');
+    fail('The work item must be PK-05, PK-06, PK-07, SDK-03, LIVE-01, or LIVE-02.');
   const workItem = requestedWorkItem;
   if (!stage) fail(`${workItem} requires --stage.`);
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
@@ -360,7 +360,12 @@ async function main(): Promise<void> {
     // PK-07 needs enough room for staged Nox calls without turning a Sepolia
     // evidence fixture into a multi-hour wait: 25 minutes to commit and 10 minutes
     // from close to immutable adapter observation.
-    const observationDelay = workItem === 'PK-07' ? 2_100n : workItem === 'PK-06' ? 1_500n : 900n;
+    const observationDelay =
+      workItem === 'PK-07'
+        ? 2_100n
+        : workItem === 'PK-06' || workItem === 'LIVE-02'
+          ? 1_500n
+          : 900n;
     console.log(
       JSON.stringify({
         adapter: await deploy(
