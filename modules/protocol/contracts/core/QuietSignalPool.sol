@@ -74,6 +74,9 @@ contract QuietSignalPool is IERC7984Receiver {
     uint80 roundId,
     int256 answer
   );
+  event ScoreMaterialized(bytes32 indexed epochId, address indexed owner);
+  event PayoutClaimed(bytes32 indexed epochId, address indexed owner, bytes32 claimId);
+  event Refunded(bytes32 indexed epochId, address indexed owner, bytes32 refundId);
 
   constructor(bytes32 poolId_, QuietSignalTypes.PoolConfig memory config_) {
     if (
@@ -411,6 +414,65 @@ contract QuietSignalPool is IERC7984Receiver {
     _epoch.state = QuietSignalTypes.EpochState.REFUNDABLE;
   }
 
+  /// @notice Derives the caller's owner-viewable Brier score after immutable settlement.
+  function materializeScore() external {
+    _requireState(QuietSignalTypes.EpochState.SETTLED);
+    QuietSignalTypes.OwnerPosition storage position = _positionForTerminalAction(msg.sender);
+    euint256 outcomeBps = Nox.toEuint256(
+      _epoch.winner == QuietSignalTypes.Outcome.YES ? BPS_SCALE : 0
+    );
+    ebool outcomeAtOrBelowForecast = Nox.le(outcomeBps, position.probabilityBps);
+    euint256 positiveDifference = Nox.sub(position.probabilityBps, outcomeBps);
+    euint256 negativeDifference = Nox.sub(outcomeBps, position.probabilityBps);
+    euint256 absoluteError = Nox.select(
+      outcomeAtOrBelowForecast,
+      positiveDifference,
+      negativeDifference
+    );
+    euint256 score = Nox.sub(
+      Nox.toEuint256(BPS_SCALE),
+      Nox.div(Nox.mul(absoluteError, absoluteError), Nox.toEuint256(BPS_SCALE))
+    );
+    position.scoreBps = score;
+    Nox.allowThis(score);
+    Nox.addViewer(score, msg.sender);
+    emit ScoreMaterialized(epochId, msg.sender);
+  }
+
+  /// @notice Pays the caller's encrypted pro-rata winning allocation once.
+  function claim() external {
+    _requireState(QuietSignalTypes.EpochState.SETTLED);
+    QuietSignalTypes.OwnerPosition storage position = _positionForTerminalAction(msg.sender);
+    if (position.claimed) revert IQuietSignalErrors.AlreadyClaimed(msg.sender);
+    if (position.refunded) revert IQuietSignalErrors.TerminalActionConflict(msg.sender);
+    uint256 winningAggregate =
+      _epoch.winner == QuietSignalTypes.Outcome.YES ? _epoch.publicYes : _epoch.publicNo;
+    euint256 winningAllocation =
+      _epoch.winner == QuietSignalTypes.Outcome.YES
+        ? position.yesAllocation
+        : position.noAllocation;
+    euint256 payout = Nox.div(
+      Nox.mul(winningAllocation, Nox.toEuint256(_epoch.publicYes + _epoch.publicNo)),
+      Nox.toEuint256(winningAggregate)
+    );
+    position.claimed = true;
+    Nox.allowTransient(payout, address(confidentialCollateral));
+    confidentialCollateral.confidentialTransfer(msg.sender, payout);
+    emit PayoutClaimed(epochId, msg.sender, keccak256(abi.encode(epochId, msg.sender)));
+  }
+
+  /// @notice Returns the caller's original encrypted stake once when the epoch is refundable.
+  function refund() external {
+    _requireState(QuietSignalTypes.EpochState.REFUNDABLE);
+    QuietSignalTypes.OwnerPosition storage position = _positionForTerminalAction(msg.sender);
+    if (position.refunded) revert IQuietSignalErrors.AlreadyRefunded(msg.sender);
+    if (position.claimed) revert IQuietSignalErrors.TerminalActionConflict(msg.sender);
+    position.refunded = true;
+    Nox.allowTransient(position.stake, address(confidentialCollateral));
+    confidentialCollateral.confidentialTransfer(msg.sender, position.stake);
+    emit Refunded(epochId, msg.sender, keccak256(abi.encode(epochId, msg.sender)));
+  }
+
   function _deriveAllocation(
     euint256 stake,
     euint256 probabilityBps,
@@ -424,6 +486,13 @@ contract QuietSignalPool is IERC7984Receiver {
       Nox.div(Nox.mul(remainder, probabilityBps), scale)
     );
     noAllocation = Nox.sub(stake, yesAllocation);
+  }
+
+  function _positionForTerminalAction(
+    address owner
+  ) private view returns (QuietSignalTypes.OwnerPosition storage position) {
+    position = _positions[owner];
+    if (!position.committed) revert IQuietSignalErrors.NotCommitted(owner);
   }
 
   function _initializeAggregates() private {

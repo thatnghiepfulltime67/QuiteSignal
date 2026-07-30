@@ -21,6 +21,7 @@ interface IQuietSignalErrors {
   error InvalidResolutionAdapter(address adapter);
   error InvalidState(QuietSignalTypes.EpochState expected, QuietSignalTypes.EpochState actual);
   error NativeValueNotAccepted();
+  error NotCommitted(address owner);
   error PendingCommitExists(address owner);
   error PendingCommitMissing();
   error PendingCommitTimeoutNotReached(uint64 eligibleAt, uint64 currentTime);
