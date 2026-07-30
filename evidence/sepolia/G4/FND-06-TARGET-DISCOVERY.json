@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "gate": "G4",
+  "workItem": "FND-06A",
+  "phase": "P0",
+  "timestampUtc": "2026-07-30T06:23:41Z",
+  "environment": {
+    "class": "sepolia-read-only",
+    "chainId": 11155111,
+    "verificationBlock": 11380718
+  },
+  "command": "npm run assess:g4:sepolia",
+  "observedPublicOracleCandidate": {
+    "address": "0xfd9e2642a170add10f53ee14a93fcf2f31924944",
+    "runtimeBytecodeHash": "0xb09ecb16112fd9cb2eccf24f64bcb491645cf45f2b817aabfd1f47a8aea71425",
+    "finder": "0xf4C48eDAd256326086AEfbd1A53e1896815F8f13",
+    "defaultCurrency": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "defaultIdentifier": "0x4153534552545f54525554480000000000000000000000000000000000000000",
+    "defaultLivenessSeconds": "7200",
+    "minimumBond": "400000000"
+  },
+  "assessment": {
+    "targetIsACompleteConditionalMarket": false,
+    "deterministicDisputedResolutionOnSepolia": false,
+    "aggregateExecutionWithPriceSlippage": false,
+    "adapterCustodyWasTested": false,
+    "status": "blocked"
+  },
+  "privacyAndCustody": {
+    "isReadOnly": true,
+    "transactionSent": false,
+    "confidentialMaterialRecorded": false,
+    "fundsMoved": false,
+    "recoveryRequired": false
+  },
+  "reproduction": [
+    "Run npm run assess:g4:sepolia with a configured Ethereum Sepolia RPC.",
+    "Inspect the returned public code hash and view values only; the command has no signer and never sends a transaction.",
+    "Read evidence/reports/G4-adapter-feasibility.md for the source-backed candidate decision."
+  ]
+}

@@ -1,6 +1,6 @@
 # P0 — Foundation and feasibility
 
-Status: `in_progress`
+Status: `blocked`
 
 ## Objective
 
@@ -421,11 +421,11 @@ Delivery slices under ADR-013 are sequential and independently terminal. They do
 not relax any acceptance criterion; G3 passes only when all three have verified
 evidence and the combined read verifier passes.
 
-| Slice     | Status        | Evidence scope                                 | Terminal requirement                                                                   |
-| --------- | ------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `FND-05A` | `complete`    | `T-FND-05-BELOW-K-01`                          | One owner refund once; no aggregate disclosure; no secondary actor required.           |
-| `FND-05B` | `complete`    | `T-FND-05-AGGREGATE-01`, `T-FND-05-TIMEOUT-01` | Permissionless timeout cancellation and both owner refunds once.                       |
-| `FND-05C` | `complete`    | `T-FND-05-PROOF-01`, `T-FND-05-RECOVERY-01`    | Rewrapped confidential custody and both owner refunds once after delayed finalization. |
+| Slice     | Status     | Evidence scope                                 | Terminal requirement                                                                   |
+| --------- | ---------- | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `FND-05A` | `complete` | `T-FND-05-BELOW-K-01`                          | One owner refund once; no aggregate disclosure; no secondary actor required.           |
+| `FND-05B` | `complete` | `T-FND-05-AGGREGATE-01`, `T-FND-05-TIMEOUT-01` | Permissionless timeout cancellation and both owner refunds once.                       |
+| `FND-05C` | `complete` | `T-FND-05-PROOF-01`, `T-FND-05-RECOVERY-01`    | Rewrapped confidential custody and both owner refunds once after delayed finalization. |
 
 ### FND-05A work-item record
 
@@ -960,6 +960,56 @@ results sequentially, while the C runner requested YES and NO concurrently. The 
 isolated correction serializes the two gateway requests and repeats the same
 on-chain proof verification; it changes no contract, trust, custody, or privacy
 behavior and is not a gate conclusion until the valid receipt succeeds.
+
+## FND-06A work-item record
+
+ID: `FND-06A`
+
+Status: `blocked`
+
+Outcome: Evaluate the smallest set of unchanged public conditional-market targets
+that could satisfy G4 on Ethereum Sepolia. This discovery slice selects a target
+only if it has documented source and license provenance, a live Sepolia address,
+an auditable aggregate-execution bound, deterministic resolution and redemption,
+and no adapter custody between calls. A target that misses any mandatory dimension
+is rejected rather than emulated or replaced with a test double.
+
+Prerequisites: G0 through G3 are passed. No product contract or adapter is created
+by this discovery slice. It may inspect public official documentation, source
+metadata, verified public contracts, and Ethereum Sepolia state only.
+
+Output files: `ops/scripts/assess-g4-candidates.mts`, the root package command,
+`evidence/offline/G4/FND-06-TARGET-DISCOVERY.json`,
+`evidence/sepolia/G4/FND-06-TARGET-DISCOVERY.json`,
+`evidence/reports/G4-adapter-feasibility.md`, the evidence ledger, source and
+assumption register, risk register, and this work-package record.
+
+Checks: `npm run assess:g4:sepolia`, `npm run compile`, `npm run check:offline`,
+`npm run check:sepolia:read`, `npm run scan:secrets`, and `git diff --check`.
+
+Privacy impact and funds: the read-only assessment sends no transaction and has no
+confidential input, handle, proof, calldata, signature, asset, or local recovery
+record. It records public target metadata and code hashes only. No funds move and
+no recovery is necessary.
+
+Rollback/failure action: Remove only the assessment source and evidence if it is
+incorrect. A missing qualifying target is a G4 feasibility blocker: retain its
+public observations, mark P0 blocked, and do not create a mock market, a trusted
+resolver, or a production adapter. A later candidate is a new work item with a new
+decision record.
+
+Intended commit: `docs: record G4 target feasibility blocker`.
+
+Discovery result: No evaluated candidate satisfies every mandatory G4 dimension on
+Ethereum Sepolia. The official conditional-token deployment set has no documented
+Sepolia target. The official v3 exchange deployment index does not list Sepolia and
+does not supply binary resolution/redemption. The live Sepolia optimistic-oracle
+candidate is public and readable, but its official network guidance is testnet-only
+without a DVM; it is an oracle, not a complete conditional market, and cannot prove
+disputed deterministic resolution or aggregate execution with price slippage.
+The findings are recorded in the FND-06A evidence artifacts and G4 report. FND-06A,
+G4, and P0 are blocked. No adapter or product contract may begin unless a new
+source-proven candidate changes this feasibility result through a new work item.
 
 ## FND-01 — Toolchain lock
 

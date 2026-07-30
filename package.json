@@ -25,6 +25,7 @@
     "test:nox:sepolia": "npm run --workspace @quitesignal/protocol test:nox:sepolia --",
     "recover:nox:sepolia": "npm run --workspace @quitesignal/protocol recover:nox:sepolia --",
     "budget:status": "tsx ops/scripts/budget-status.mts",
+    "assess:g4:sepolia": "tsx ops/scripts/assess-g4-candidates.mts",
     "verify:evidence": "tsx ops/scripts/verify-evidence.mts",
     "scan:secrets": "tsx ops/scripts/check-secrets.mts",
     "scan:dependencies": "npm audit --audit-level=critical && tsx ops/scripts/dependency-report.mts",

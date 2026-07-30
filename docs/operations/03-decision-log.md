@@ -163,3 +163,21 @@ removes an invalid permission mutation without granting any new persistent acces
 changing custody, or exposing a confidential value. Pre-fix fixtures are recovered
 through their existing timeout and refund path and are excluded from post-fix gate
 evidence.
+
+## ADR-016 — Retain the G4 target stop condition
+
+**Status:** Accepted
+
+G4 target discovery found no unchanged public conditional-market protocol that
+satisfies every required dimension on Ethereum Sepolia. The documented
+conditional-token target lacks a Sepolia deployment. The documented exchange target
+lacks both a Sepolia deployment and binary resolution/redemption. The public
+Sepolia optimistic-oracle target is not a complete market and its testnet
+configuration does not prove deterministic disputed resolution.
+
+The project will not deploy a copied target, simulate a protocol, add a trusted
+resolver, or claim that an undisputed oracle assertion is equivalent to complete
+market settlement. This preserves the existing trust, custody, privacy, state, and
+public-interface commitments. P0 is blocked until a new source-proven target is
+available on Ethereum Sepolia or the user explicitly authorizes a changed chain
+constraint and a new decision record.

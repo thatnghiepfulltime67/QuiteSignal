@@ -29,6 +29,26 @@ Last reviewed: 2026-07-30
 | Confidential collateral can cross the adapter boundary | Exact unwrap/proof conservation test | Select a supported asset boundary        |
 | Target protocol is deployable and callable             | Minimal adapter test                 | Select another open protocol             |
 
+## FND-06 target discovery
+
+The official [Gnosis Conditional Tokens repository](https://github.com/gnosis/conditional-tokens-contracts)
+documents LGPL-3.0 source and deployments on Ethereum mainnet, xDai, and Rinkeby;
+it does not document an Ethereum Sepolia deployment. The official [Uniswap v3
+deployment index](https://developers.uniswap.org/docs/protocols/v3/deployments)
+does not list Ethereum Sepolia and describes exchange contracts rather than binary
+conditional resolution/redemption. Both candidates therefore fail at least one
+mandatory G4 dimension.
+
+The official [UMA Optimistic Oracle documentation](https://docs.uma.xyz/developers/optimistic-oracle/getting-started)
+supports a public Sepolia testnet flow, and its [prediction-market
+documentation](https://docs.uma.xyz/developers/optimistic-oracle-v3/prediction-market)
+is a separate example. The live Sepolia oracle address and runtime are recorded in
+the FND-06A artifact. Official network guidance describes Sepolia as testnet-only
+without a DVM. This is insufficient to prove deterministic disputed resolution,
+aggregate market execution with price slippage, or redemption against an unchanged
+public market target. The target-protocol assumption is therefore false under the
+current Ethereum Sepolia-only constraint; P0 remains blocked.
+
 ## FND-01 verified toolchain baseline
 
 Verified on 2026-07-30 from the official npm release metadata and the committed
