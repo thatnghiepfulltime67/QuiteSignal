@@ -199,7 +199,7 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `DEP-01-COLLATERAL-01`.
+Active slice: `DEP-01-WRITE-01`.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
 consumer bindings, deployment tests, this record, evidence ledger entries, and
@@ -332,6 +332,56 @@ Intended commit: `feat: add canonical confidential collateral wrapper`.
 Rollback/failure action: Revert only the product wrapper/planner binding. Never
 rename or rewrite historical feasibility evidence, and never substitute a custom
 confidential balance implementation for the audited standard wrapper.
+
+Completion evidence: source commit `39ce293` added
+`QuietSignalConfidentialCollateral`, rebinding the canonical planner to its compiled
+artifact. Contract compilation, public interface checks, planner unit tests, and the
+read-only Sepolia plan passed. ADR-020 records why this changes only deployment
+identity/metadata rather than confidential custody or ACL behavior. This completes
+the collateral identity slice only; no canonical contract was deployed.
+
+### DEP-01-WRITE-01 work-item record
+
+Status: `in_progress`
+
+Outcome: Add the separately guarded canonical Sepolia sender and manifest producer.
+
+Output files: `modules/protocol/scripts/deploy/write-sepolia.mts`, workspace command,
+deployment-plan constants, this record, and the later generated public manifest and
+spend-ledger entries.
+
+Acceptance criteria: The sender refuses an unclean tree, a non-Sepolia RPC, absent
+explicit confirmation, an existing canonical manifest, prior code at a predicted
+address, a stale deadline, an over-budget cost, a mismatched deterministic CREATE
+address, failed receipt, bad factory CREATE2 binding, or non-empty initial epoch.
+It pins the pending nonce before the first transaction, rechecks live gas/budget
+before every write, and emits the canonical manifest with observed runtime hashes
+only after all five writes and readbacks pass.
+
+Privacy/custody impact: The only signer is the locally configured deployment wallet;
+the script has no user signal, decrypted balance, owner position, Nox handle, proof,
+or token-transfer command. It deploys an empty pool and cannot assign a privileged
+contract role because the contracts expose none.
+
+Funds location/recovery impact: Native gas is the sole asset spent. Until a manifest
+is written the deployment is unpublished; any stage failure stops immediately and
+leaves public receipts/spend entries for inspection. It never overwrites the
+canonical manifest or retries a consumed nonce automatically.
+
+Checks: typecheck, planner tests/read plan, source/static sender review, full offline
+check, `git diff --check`, then one explicitly confirmed Sepolia execution followed
+by independent manifest verification.
+
+Evidence location: `deployments/sepolia/quiet-signal.json`,
+`evidence/sepolia/spend-ledger.json`, and later
+`evidence/{offline,sepolia}/G6/DEP-01-DEPLOYMENT.json`.
+
+Intended commit: `build: add guarded canonical deployment writer`.
+
+Rollback/failure action: Revert the unexecuted sender source. After any submitted
+transaction, retain the append-only ledger and public receipts, do not overwrite a
+manifest, and create a new explicit deployment plan only after reviewing the failed
+stage.
 
 ## Dependency graph
 

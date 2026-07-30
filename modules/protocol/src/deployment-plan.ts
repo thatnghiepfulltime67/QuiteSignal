@@ -14,7 +14,11 @@ export const SEPOLIA_CHAIN_ID = 11_155_111;
 export const CHAINLINK_ETH_USD_SEPOLIA = '0x694AA1769357215DE4FAC081bf1f309aDC325306' as const;
 export const CANONICAL_OBSERVATION_LEAD_SECONDS = 2_100n;
 export const CANONICAL_COMMIT_WINDOW_SECONDS = 1_500n;
-export const CANONICAL_POOL_CREATE_GAS_LIMIT = 3_000_000n;
+// A pool is created only after its factory exists, so the read-only plan cannot
+// estimate it at the predicted canonical factory address. This conservative bound
+// is checked against the committed budget before any write and against the live
+// estimate immediately before the factory call.
+export const CANONICAL_POOL_CREATE_GAS_LIMIT = 5_000_000n;
 
 export interface DeploymentArtifact {
   abi: Abi;
