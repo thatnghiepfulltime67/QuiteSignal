@@ -685,9 +685,10 @@ async function main(): Promise<void> {
   );
 }
 
-main().catch(() => {
+main().catch((error: unknown) => {
+  const errorCategory = error instanceof Error ? error.name : typeof error;
   console.error(
-    `FND-05A failed during ${failureStage}: inspect the sanitized receipt and Sepolia spend ledger.`,
+    `FND-05A failed during ${failureStage} (${errorCategory}): inspect the sanitized receipt and Sepolia spend ledger.`,
   );
   process.exitCode = 1;
 });
