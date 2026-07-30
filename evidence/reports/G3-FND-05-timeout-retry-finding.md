@@ -200,3 +200,12 @@ count as FND-05A evidence. Its deterministic collateral has a known location and
 recoverable without a secondary actor: a resume command must close below k after the
 already reached deadline and refund the same owner exactly once before any fresh
 fixture is started.
+
+The bounded FND-05A resume from `496f9ea` completed at blocks `11379884` through
+`11379888`: it closed below k, confirmed no aggregate public-decrypt access, refunded
+the one owner, rejected the duplicate refund, and verified the owner's confidential
+balance against the deterministic fixture baseline without recording the value.
+Runtime/template verification passed. The terminal evidence is
+`evidence/offline/G3/FND-05-BELOW-K.json` and
+`evidence/sepolia/G3/FND-05-BELOW-K.json`. This completes FND-05A only; FND-05B and
+FND-05C remain required for G3.

@@ -422,8 +422,8 @@ evidence and the combined read verifier passes.
 
 | Slice     | Status        | Evidence scope                                 | Terminal requirement                                                                   |
 | --------- | ------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `FND-05A` | `in_progress` | `T-FND-05-BELOW-K-01`                          | One owner refund once; no aggregate disclosure; no secondary actor required.           |
-| `FND-05B` | `not_started` | `T-FND-05-AGGREGATE-01`, `T-FND-05-TIMEOUT-01` | Permissionless timeout cancellation and both owner refunds once.                       |
+| `FND-05A` | `complete`    | `T-FND-05-BELOW-K-01`                          | One owner refund once; no aggregate disclosure; no secondary actor required.           |
+| `FND-05B` | `in_progress` | `T-FND-05-AGGREGATE-01`, `T-FND-05-TIMEOUT-01` | Permissionless timeout cancellation and both owner refunds once.                       |
 | `FND-05C` | `not_started` | `T-FND-05-PROOF-01`, `T-FND-05-RECOVERY-01`    | Rewrapped confidential custody and both owner refunds once after delayed finalization. |
 
 ### FND-05A work-item record
@@ -455,6 +455,39 @@ Evidence path: `evidence/offline/G3/FND-05-BELOW-K.json` and
 `evidence/sepolia/G3/FND-05-BELOW-K.json`.
 
 Intended commit: `test: isolate below-k Sepolia evidence`.
+
+### FND-05B work-item record
+
+Outcome: Prove the threshold branch on a fresh Ethereum Sepolia fixture with two
+independently signing confidential members, public decryption permission on exactly
+the YES and NO aggregates, a real early-timeout rejection, then permissionless
+timeout cancellation and one terminal refund per owner. It is independent of
+aggregate-proof finalization and unwrap recovery.
+
+Prerequisites: FND-05A evidence is terminal; G1 and G2 remain passed. The second
+member receives only bounded testnet gas, retains its key solely in an ignored local
+recovery record, and the record is deleted only after both terminal refunds verify.
+
+Output files: `modules/protocol/scripts/feasibility/run-fnd05-timeout-sepolia.mts`,
+the required dispatcher/test support,
+`evidence/offline/G3/FND-05-TIMEOUT.json`,
+`evidence/sepolia/G3/FND-05-TIMEOUT.json`, the G3 report and spend ledger.
+
+Checks: `npm run compile`, `npm run test:nox:sepolia -- FND-05-TIMEOUT --dry-run`,
+the confirmed Sepolia command, `npm run budget:status`, `npm run check:offline`,
+`npm run check:sepolia:read`, `npm run scan:secrets`, and `git diff --check`.
+
+Privacy impact and funds: both artificial inputs are encrypted before submission.
+Only the threshold YES/NO aggregate handles may receive public-decrypt permission;
+individual inputs and aggregate total remain non-public. Before cancellation,
+accepted fixture collateral is in confidential pool custody; after cancellation each
+recorded owner refunds once. A failure records the exact fixture state and preserves
+the local recovery record; it never introduces a mock or trusted recovery service.
+
+Evidence path: `evidence/offline/G3/FND-05-TIMEOUT.json` and
+`evidence/sepolia/G3/FND-05-TIMEOUT.json`.
+
+Intended commit: `test: isolate threshold timeout evidence`.
 
 Privacy impact: artificial test values are encrypted before submission and no
 owner-shaped handle is marked publicly decryptable. Public permission is granted
@@ -655,6 +688,15 @@ access, and the committed fixture collateral in `PoolConfidentialCustody`. The
 fixture is non-terminal and excluded from FND-05A evidence. Its funds location is
 known: a dedicated resume command must close below k after the reached deadline and
 refund the same owner exactly once before any fresh fixture may be started.
+
+The bounded FND-05A resume from `496f9ea` completed its terminal actions at blocks
+`11379884` through `11379888`: it closed below k, confirmed that no aggregate handle
+had public-decrypt access, refunded the sole owner, rejected a duplicate refund, and
+verified the owner's confidential balance against its deterministic fixture baseline
+without recording the value. Runtime/template verification then passed. Sanitized
+artifacts are `evidence/offline/G3/FND-05-BELOW-K.json` and
+`evidence/sepolia/G3/FND-05-BELOW-K.json`. FND-05A is complete; FND-05B is the only
+active slice. G3 remains running until FND-05B and FND-05C complete.
 
 ## FND-01 — Toolchain lock
 

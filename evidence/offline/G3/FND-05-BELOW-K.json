@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "gate": "G3",
+  "workItem": "FND-05A",
+  "phase": "P0",
+  "timestampUtc": "2026-07-30T03:34:41Z",
+  "sourceCommits": {
+    "belowKRunner": "2a05bbefe066fa8b2be7354dc9889365d539a63b",
+    "fixtureResume": "496f9ea4ae12a015af817af9c327d282a92de8a1"
+  },
+  "environment": {
+    "class": "offline-static-and-sepolia-write-preflight",
+    "node": "24.18.0",
+    "npm": "11.16.0",
+    "hardhat": "3.11.1",
+    "solidity": "0.8.35",
+    "noxProtocolContracts": "0.2.4",
+    "noxConfidentialContracts": "0.2.2",
+    "noxHandle": "0.1.0-beta.13"
+  },
+  "checks": [
+    {
+      "command": "npm run compile",
+      "result": "passed",
+      "summary": "Strict TypeScript checking and a forced Solidity build passed before the live below-k slice and before its bounded resume command."
+    },
+    {
+      "command": "npm run test:nox:sepolia -- FND-05-BELOW-K --dry-run",
+      "result": "passed",
+      "summary": "The initial independent slice verified Ethereum Sepolia, signer availability, pinned artifacts, and capped fresh-fixture deployment estimates without a write."
+    },
+    {
+      "command": "npm run test:nox:sepolia -- FND-05-BELOW-K-RESUME --resume-contracts=<fixture>,<wrapper>,<spike> --dry-run",
+      "result": "passed",
+      "summary": "The continuation verified the documented non-terminal fixture's runtime templates, bindings, state, funds location, threshold, deadline, and no-public-aggregate access without a write."
+    },
+    {
+      "command": "npm run test:nox:sepolia -- FND-05-BELOW-K --verify-contracts=<fixture>,<wrapper>,<spike>",
+      "result": "passed",
+      "summary": "The terminal fixture has matching runtime templates, the expected wrapper binding, refundable state, and no public aggregate-decrypt access."
+    },
+    {
+      "command": "npm run budget:status",
+      "result": "passed",
+      "summary": "All recorded FND-05A writes remain within the committed cumulative and per-transaction Sepolia gas limits."
+    },
+    {
+      "command": "npm run scan:secrets",
+      "result": "passed",
+      "summary": "Tracked files and history contain no detected secret material."
+    }
+  ],
+  "requirementsCovered": ["T-FND-05-BELOW-K-01", "P3", "I3"],
+  "knownLimitations": [
+    "This slice proves only the below-k branch. Threshold aggregate disclosure, aggregate proof binding, timeout refund, unwrap finalization, and rewrap recovery remain required for G3.",
+    "The generic feasibility helper reports potential pool custody for a refundable epoch; the terminal owner balance observation and duplicate-refund rejection establish that this sole committed fixture stake was returned exactly once."
+  ],
+  "reproduction": [
+    "Use Node 24.18.0 and npm 11.16.0 with the committed lockfile and local secret configuration.",
+    "Run npm run check:sepolia:read.",
+    "Run npm run test:nox:sepolia -- FND-05-BELOW-K --verify-contracts=0x25084db2acfd1c400e59d65d02310430996bb3e1,0x05ec79b891619657e30aad419b8a080c8dca6a15,0xdb9b227c90614ca0a17554bd8fc4ba2e634bf2e7.",
+    "Run npm run budget:status."
+  ]
+}

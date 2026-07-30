@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "gate": "G3",
+  "workItem": "FND-05A",
+  "phase": "P0",
+  "timestampUtc": "2026-07-30T03:34:41Z",
+  "sourceCommits": {
+    "belowKRunner": "2a05bbefe066fa8b2be7354dc9889365d539a63b",
+    "fixtureResume": "496f9ea4ae12a015af817af9c327d282a92de8a1"
+  },
+  "environment": {
+    "class": "sepolia-write-and-read",
+    "chainId": 11155111,
+    "deploymentBlockRange": "11379845-11379847",
+    "lifecycleBlockRange": "11379849-11379888",
+    "verificationBlock": 11379888,
+    "noxComputeAddress": "0x24Ef36Ec5b626D7DCD09a98F3083c2758F0F77bF",
+    "noxProtocolContracts": "0.2.4",
+    "noxConfidentialContracts": "0.2.2",
+    "noxHandle": "0.1.0-beta.13"
+  },
+  "contracts": {
+    "fixture": {
+      "address": "0x25084db2acfd1c400e59d65d02310430996bb3e1",
+      "runtimeBytecodeHash": "0x9ed7dd887c4fc51e7cd3b3c2d8248a5c6430706dfffd7156af5455a5441ab880",
+      "abiHash": "0x89a3e5366d9cb596052a15810ef88b20dd283b01f17c28c0b222b7b6ee945fed",
+      "runtimeMatchesCompiledArtifact": true
+    },
+    "wrapper": {
+      "address": "0x05ec79b891619657e30aad419b8a080c8dca6a15",
+      "runtimeBytecodeHash": "0x817dcebe91bcd8086a9a24cd3f7615f7151aba9f8e4c82002c9bdfd8430c875e",
+      "abiHash": "0x4f75eb14386d437548b100815181d244a1410b41d446faf890cfa74dded7dc96",
+      "runtimeMatchesCompiledArtifactTemplate": true,
+      "underlyingMatchesFixture": true
+    },
+    "belowKSpike": {
+      "address": "0xdb9b227c90614ca0a17554bd8fc4ba2e634bf2e7",
+      "runtimeBytecodeHash": "0xc712ab421f8315ed4a87daf8af614592400aa4f8d97907202aa290ded25c9adf",
+      "abiHash": "0xf1998689f7ab87ad36e37a937396587177d5d929b58f3536c3ecc94c517fd99a",
+      "runtimeMatchesCompiledArtifactTemplate": true,
+      "wrapperAndUnderlyingBindingsMatch": true
+    }
+  },
+  "transactions": [
+    {
+      "purpose": "fixture deployment",
+      "hash": "0x0b71cf8a322efcdc68e00f030e9b96f0ae548b95d8210f32fdb6fd2e826e0c9e",
+      "blockNumber": 11379845
+    },
+    {
+      "purpose": "unchanged confidential wrapper deployment",
+      "hash": "0x2d85e2f9ede93c13b31801df1940e855bea9db6928206d13058187263e2940ef",
+      "blockNumber": 11379846
+    },
+    {
+      "purpose": "below-k aggregate spike deployment",
+      "hash": "0x8b7071833f4c54c2235e0a5e954d3de0f1d9c3b3bce75e0e792c69f822f2bb1e",
+      "blockNumber": 11379847
+    },
+    {
+      "purpose": "mint deterministic fixture collateral",
+      "hash": "0x4d795a13d1ed770be4156bbcf1ec4c126702489bbbc45cf15c8dd7edb6af92f9",
+      "blockNumber": 11379849
+    },
+    {
+      "purpose": "approve fixture collateral wrapper",
+      "hash": "0x4b2930290ec2f96da466bc4fb1ceda7bc8ab2899a6f997dc8ed2db73eb187220",
+      "blockNumber": 11379850
+    },
+    {
+      "purpose": "wrap deterministic fixture collateral",
+      "hash": "0x8907e520a027fff944c87f74d6bf143c3cc77010d987be7082b5b8d87c02083b",
+      "blockNumber": 11379851
+    },
+    {
+      "purpose": "register encrypted below-k commitment",
+      "hash": "0x79ecf9ec98c8b5df88184fb46272bc03167fd96b71416406f268f07548e6127d",
+      "blockNumber": 11379853
+    },
+    {
+      "purpose": "accepted confidential callback",
+      "hash": "0xd34c6a0b6e497c8b487f2d9b719f907cd74c2d691ad6e68355b12727de8795e5",
+      "blockNumber": 11379854
+    },
+    {
+      "purpose": "finalize accepted commitment",
+      "hash": "0x5fe414049afe4e6e10589c80b38879584e5f418fa7599067a4aa8a83193d6d07",
+      "blockNumber": 11379856
+    },
+    {
+      "purpose": "reject close before deadline",
+      "hash": "0x25a2b671174a9f9b91c99356312d73f5ff4066726a075f86dc05d33f1ad16835",
+      "blockNumber": 11379857,
+      "expectedStatus": "reverted"
+    },
+    {
+      "purpose": "close below-k epoch after deadline",
+      "hash": "0x4651579ebbf0dd370024f54822d25829a21034dfe6c07cd89c96d1e0b2d50248",
+      "blockNumber": 11379884
+    },
+    {
+      "purpose": "one-time confidential owner refund",
+      "hash": "0x89263bf674cfc7eda2b99aedb9459d654eb4327def18dee10b1e347a54756bb9",
+      "blockNumber": 11379886
+    },
+    {
+      "purpose": "reject duplicate refund",
+      "hash": "0xd05fc875e337929043d7f4ee40054117d4f3555130570a826f7df6f6641f278c",
+      "blockNumber": 11379888,
+      "expectedStatus": "reverted"
+    }
+  ],
+  "observed": {
+    "participantCount": 1,
+    "terminalState": "Refundable",
+    "aggregatePublicDecryptAccess": {
+      "yes": false,
+      "no": false,
+      "total": false
+    },
+    "publicAggregateDecryptDenied": true,
+    "ownerConfidentialBalanceRestoredToFixtureBaseline": true,
+    "duplicateRefundRejected": true,
+    "earlyCloseRejected": true
+  },
+  "privacyAndCustody": {
+    "plaintextCommitted": false,
+    "rawHandlesCommitted": false,
+    "proofsOrCalldataCommitted": false,
+    "walletSignaturesCommitted": false,
+    "fixtureHasExternalValue": false,
+    "publicDecryptionScope": "No aggregate handle was publicly decryptable below the threshold. The acceptance boolean was the isolated wrapper callback requirement; it is not an owner-shaped signal or aggregate result.",
+    "terminalRecovery": "The sole committed deterministic fixture stake was returned to its owner once. The public generic funds-location helper remains state-level rather than position-level; the owner baseline observation and duplicate-refund rejection establish terminal recovery for this one-member slice."
+  },
+  "knownLimitations": [
+    "This independent terminal slice does not satisfy threshold aggregate disclosure, proof-context binding, timeout cancellation, unwrap, or rewrap-recovery requirements."
+  ],
+  "reproduction": [
+    "Run npm run test:nox:sepolia -- FND-05-BELOW-K --verify-contracts=0x25084db2acfd1c400e59d65d02310430996bb3e1,0x05ec79b891619657e30aad419b8a080c8dca6a15,0xdb9b227c90614ca0a17554bd8fc4ba2e634bf2e7.",
+    "Run npm run budget:status."
+  ]
+}
