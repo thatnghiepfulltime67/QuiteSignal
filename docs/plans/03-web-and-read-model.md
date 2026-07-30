@@ -889,7 +889,7 @@ pointer is promoted and the named browser cases complete.
 
 ID: `WEB-08-DEPLOYMENT-02`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Prepare the next append-only Sepolia release command path without creating
 a deployment, so the eventual browser-wallet run can use a fresh explicit release
@@ -925,6 +925,13 @@ Intended commit: `build: prepare explicit release revision commands`.
 Rollback/failure action: Revert only the command metadata, static test, and runbook.
 Do not send a replacement deployment, overwrite an immutable manifest, or move the
 active-release pointer.
+
+Completion evidence: The root command forwards caller arguments into the protocol
+workspace; the protocol scripts no longer encode a prior release ID. `T-DEP-02-01`
+locks both command boundaries and rejects a release identifier in every protocol
+deployment command. The runbook specifies the exact read-only plan and guarded sender
+sequence for a future explicit revision. No Sepolia transaction, manifest change, or
+active-release promotion occurred.
 
 ## Primary route contract
 

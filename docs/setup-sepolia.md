@@ -103,6 +103,39 @@ The manifest records the deployment epoch at its deployment block. Future users 
 advance the live pool state without invalidating that immutable deployment baseline;
 live lifecycle evidence uses its own state-specific reports.
 
+## Append-only release revision runbook
+
+Use this procedure only when the active pool cannot support the required real-browser
+journey. Pick the next unused `DEP-<integer>` identifier and pass it explicitly to
+the standard commands; no command retains a default or a hard-coded prior revision.
+
+1. From a clean committed tree, create a read-only plan for the chosen identifier:
+
+   ```sh
+   npm run deploy:sepolia:plan -- --release=DEP-03
+   ```
+
+   Review its feed, deterministic addresses, deadline, and remaining budget. This
+   command cannot write a transaction or alter a manifest.
+
+2. When an externally approved browser wallet is ready to exercise the pool before
+   its deadline, run the guarded sender with the same identifier:
+
+   ```sh
+   npm run deploy:sepolia:write -- --release=DEP-03
+   ```
+
+   The sender still requires the local confirmation setting, a clean tree, Sepolia,
+   sufficient budget, unused predicted addresses, and a create-only release manifest.
+
+3. Independently verify the resulting immutable release manifest, then promote it
+   only with the documented verifier command. Do not replace a prior release manifest
+   or change the active-release pointer before verification succeeds.
+
+If planning, deployment, verification, or browser-wallet readiness fails, retain the
+current active release and the public record of any completed write. Never deploy a
+fresh epoch merely to keep it open while no real browser journey is ready.
+
 ## Browser acceptance wallet runbook
 
 G7 uses a real, disposable Ethereum Sepolia wallet extension connected directly to
@@ -117,7 +150,7 @@ or automation script may read, import, expose, or relay that key.
    the visible application control. Every wallet approval remains an explicit action
    in the extension.
 3. Start the production build, not a static mock: run `npm run --workspace
-   @quitesignal/web build`, serve `apps/web/dist`, then open the active `/markets`,
+@quitesignal/web build`, serve `apps/web/dist`, then open the active `/markets`,
    `/pool/:address/signal`, `/position`, and `/verify/:address` routes in a normal
    browser profile with the extension enabled.
 4. Before each write, re-read `deployments/sepolia/active-release.json`, verify the
