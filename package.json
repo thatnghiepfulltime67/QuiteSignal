@@ -40,6 +40,7 @@
     "write:live02:manifests": "npm run --workspace @quitesignal/verifier write:live02:manifests",
     "verify:live02:recovery": "npm run --workspace @quitesignal/verifier verify:live02:recovery",
     "verify:g5:evidence": "npm run --workspace @quitesignal/verifier verify:g5 --",
+    "verify:g6:evidence": "npm run --workspace @quitesignal/verifier verify:g6 --",
     "test:adapter:sepolia": "npm run --workspace @quitesignal/protocol test:adapter:sepolia --",
     "test:commit:sepolia": "npm run --workspace @quitesignal/protocol test:commit:sepolia --",
     "test:aggregate:sepolia": "npm run --workspace @quitesignal/protocol test:aggregate:sepolia --",

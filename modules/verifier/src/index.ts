@@ -11,6 +11,12 @@ export {
   type G5EvidenceReport,
 } from './g5.js';
 export {
+  G6_COMPONENTS,
+  verifyG6Evidence,
+  type G6ComponentId,
+  type G6EvidenceReport,
+} from './g6.js';
+export {
   IERC7984_INTERFACE_ID,
   verifyManifest,
   verifyReleaseManifest,

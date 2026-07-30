@@ -10,6 +10,7 @@
   "scripts": {
     "test": "tsx --test test/*.test.ts",
     "verify:g5": "tsx src/g5-cli.ts",
+    "verify:g6": "tsx scripts/verify-g6-evidence.mts",
     "verify:sepolia": "tsx src/cli.ts",
     "write:live01:manifest": "tsx scripts/write-live01-manifest.mts",
     "write:live02:manifests": "tsx scripts/write-live02-manifests.mts",
