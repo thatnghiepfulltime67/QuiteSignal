@@ -177,7 +177,7 @@ durable browser plaintext, or a service signer.
 
 ID: `WEB-03-UI-01`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Replace the earlier visual baseline with the authoritative cocoa/orchid
 poster system and apply it consistently to every existing public and private route,
@@ -212,6 +212,14 @@ Intended commit: `feat: refresh web visual system`.
 Rollback/failure action: Revert only the presentation implementation while retaining
 the updated design specification. Do not add a visual dependency, remote asset, mock
 route, or alternate protocol state to compensate for a rendering failure.
+
+Completion evidence: `T-WEB-03-UI-01` confirms every route has the closed
+cocoa/orchid palette and required colour bands and rejects shadows, gradients, and
+remote asset URLs. `T-WEB-03-UI-02` confirms account and chain events re-mask the
+owner-only message. `npm run test:web` passed 14 tests, the production Vite build and
+root typecheck passed, and local non-evidence inspection at 1440px and 390px found
+the hero, market facts, privacy boundary, controls, and single-column responsive
+layout legible. This does not constitute browser lifecycle evidence or a G7 claim.
 
 ## WEB-04 work-item record
 
