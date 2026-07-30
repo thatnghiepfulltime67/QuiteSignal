@@ -23,7 +23,7 @@ test('T-WEB-02-LANDING-01: landing and navigation orient users before wallet use
   assert.match(source, /aria-current="page"/);
   assert.match(source, /navigationLink\('\/', 'Overview'/);
   assert.match(source, /navigationLink\('\/markets', 'Workspace', isWorkspaceRoute\)/);
-  assert.match(source, /workspaceSubnavigation\(canonicalPoolPath, canonicalVerifyPath/);
+  assert.match(source, /workspaceSubnavigation\(workspacePoolPath, canonicalVerifyPath/);
   assert.match(source, /aria-label="Workspace functions"/);
   for (const phrase of ['Market', 'Guide', 'Verify', 'Position']) {
     assert.match(source, new RegExp(phrase));

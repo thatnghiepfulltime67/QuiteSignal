@@ -13,11 +13,17 @@ test('T-WEB-01-01: canonical Sepolia manifest is accepted', () => {
           threshold: '200000000000',
           comparison: 'greater-or-equal',
           observationNotBefore: '1',
+          feed: '0x0000000000000000000000000000000000000004',
         },
       },
       contracts: [
         { id: 'fixture', address: '0x0000000000000000000000000000000000000003' },
         { id: 'wrapper', address: '0x0000000000000000000000000000000000000002' },
+        {
+          id: 'factory',
+          address: '0x0000000000000000000000000000000000000004',
+          runtimeCodeHash: `0x${'11'.repeat(32)}`,
+        },
       ],
       pools: [
         {

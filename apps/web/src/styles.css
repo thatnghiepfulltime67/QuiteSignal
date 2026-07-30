@@ -1262,6 +1262,55 @@ a {
   max-width: 880px;
 }
 
+.self-test-panel {
+  background: var(--cocoa);
+  color: var(--petal);
+  margin-top: 40px;
+  max-width: 880px;
+}
+
+.self-test-panel .eyebrow {
+  margin: 0;
+}
+
+.self-test-panel h2 {
+  color: var(--petal);
+  font-size: 36px;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 20px 0 12px;
+}
+
+.self-test-panel > p:not(.eyebrow):not(.asset-status) {
+  font-size: 18px;
+  margin: 0;
+}
+
+.self-test-panel .primary {
+  background: var(--petal);
+  color: var(--cocoa);
+  margin-top: 20px;
+}
+
+.self-test-list {
+  border-top: 1px solid var(--walnut);
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+}
+
+.self-test-list li {
+  border-bottom: 1px solid var(--walnut);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 12px 0;
+}
+
+.self-test-facts {
+  background: var(--cocoa);
+  color: var(--petal);
+}
+
 .asset-panel label {
   display: grid;
   gap: 8px;
