@@ -516,6 +516,32 @@ Rollback/failure action: Do not mark G7/P3 complete. Preserve public receipts an
 stop at the documented on-chain recovery state; never replace browser evidence with
 a simulated provider or local chain.
 
+## WEB-08-READ-01 work-item record
+
+ID: `WEB-08-READ-01`
+
+Status: `complete`
+
+Outcome: Exercise the active DEP-02 production build in a real browser without a
+wallet provider, proving that manifest selection, public lifecycle reads,
+verification, masked owner state, and the signal-entry boundary do not depend on a
+mock chain or application data service.
+
+Output files: sanitized browser-read report and this record.
+
+Checks: Chrome opened the production Vite preview at `/markets`, refreshed the
+direct Ethereum Sepolia lifecycle read, and visited the active verification, owner,
+and signal routes. The browser emitted no console API or exception event. No trace
+or screenshot was persisted, and the run recorded no confidential input, handle,
+proof, signature, key, or RPC configuration.
+
+Evidence location: `evidence/sepolia/G7/WEB-08-READ-DEP-02.json`.
+
+Completion evidence: The report records a successful DEP-02 manifest load, OPEN
+epoch read at block `11384129`, masked no-wallet owner state, non-writing signal
+entry, and zero unexpected browser console/exception events. It is explicitly
+read-only evidence, not a substitute for the real-wallet, recovery, or G7 journey.
+
 ## WEB-08-DEPLOYMENT-01 work-item record
 
 ID: `WEB-08-DEPLOYMENT-01`

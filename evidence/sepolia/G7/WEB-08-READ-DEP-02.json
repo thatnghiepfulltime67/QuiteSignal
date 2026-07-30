@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "workItemId": "WEB-08-READ-01",
+  "mode": "real-browser-read-only",
+  "chainId": 11155111,
+  "verificationBlock": "11384129",
+  "activeRelease": "DEP-02",
+  "pool": "0x8a584063df690Cb161886A056C94e3B9a7f32f54",
+  "deploymentBlock": "11384065",
+  "environment": {
+    "application": "production Vite preview",
+    "browser": "Google Chrome headless",
+    "walletProvider": "absent by design",
+    "chainTransport": "direct public Ethereum Sepolia read"
+  },
+  "routes": [
+    {
+      "path": "/markets",
+      "result": "Loaded DEP-02 manifest and refreshed direct public epoch as OPEN with zero participants."
+    },
+    {
+      "path": "/verify/0x8a584063df690Cb161886A056C94e3B9a7f32f54",
+      "result": "Rendered canonical Sepolia verification facts and named the independent verifier as authoritative."
+    },
+    {
+      "path": "/position",
+      "result": "Rendered the masked owner state without a connected wallet and did not request or reveal owner data."
+    },
+    {
+      "path": "/pool/0x8a584063df690Cb161886A056C94e3B9a7f32f54/signal",
+      "result": "Rendered the real signal form with no wallet and stated that no funds moved."
+    }
+  ],
+  "browserChecks": {
+    "unexpectedConsoleOrExceptionEvents": 0,
+    "persistedTraceOrScreenshot": false,
+    "capturedConfidentialInput": false,
+    "capturedHandleProofSignatureKeyOrRpcConfiguration": false
+  },
+  "conclusion": "Passed read-only production-browser coverage. This is not G7 wallet, encryption, transaction, owner-decrypt, terminal-action, or recovery evidence."
+}
