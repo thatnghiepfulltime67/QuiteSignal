@@ -215,12 +215,23 @@ function assertSingleTransactionBudget(estimate: bigint, cap: bigint): void {
     fail('The proposed Sepolia write exceeds the single-transaction gas allowance.');
 }
 
-function contractSet(): ContractSet | undefined {
+function contractSet(expectedAddressCount: 4 | 5): ContractSet | undefined {
   const argument = process.argv.find((value) => value.startsWith('--verify-contracts='));
   if (!argument) return undefined;
   const values = argument.slice('--verify-contracts='.length).split(',');
-  if (values.length !== 5 || values.some((value) => !isAddress(value))) {
-    fail('Five comma-separated FND-05 contract addresses are required for verification.');
+  if (values.length !== expectedAddressCount || values.some((value) => !isAddress(value))) {
+    fail(
+      `${expectedAddressCount} comma-separated FND-05 contract addresses are required for verification.`,
+    );
+  }
+  if (expectedAddressCount === 4) {
+    return {
+      fixture: values[0] as Address,
+      wrapper: values[1] as Address,
+      belowKSpike: values[2] as Address,
+      timeoutSpike: values[3] as Address,
+      recoverySpike: values[2] as Address,
+    };
   }
   return {
     fixture: values[0] as Address,
@@ -384,11 +395,13 @@ async function main(): Promise<void> {
 
   const dryRun = process.argv.includes('--dry-run');
   const requestedCase = process.argv.find(
-    (argument) => argument === 'FND-05' || argument === 'FND-05-TIMEOUT',
+    (argument) =>
+      argument === 'FND-05' || argument === 'FND-05-TIMEOUT' || argument === 'FND-05-RECOVERY',
   );
   const timeoutOnly = requestedCase === 'FND-05-TIMEOUT';
-  const ledgerWorkItemId = timeoutOnly ? 'FND-05B' : 'FND-05';
-  const verifiedContracts = contractSet();
+  const recoveryOnly = requestedCase === 'FND-05-RECOVERY';
+  const ledgerWorkItemId = timeoutOnly ? 'FND-05B' : recoveryOnly ? 'FND-05C' : 'FND-05';
+  const verifiedContracts = contractSet(recoveryOnly ? 4 : 5);
   if (!requestedCase) fail('An FND-05 aggregate feasibility case identifier is required.');
   if (dryRun && verifiedContracts) {
     fail('Read-only verification cannot be combined with the deployment dry-run.');
@@ -499,7 +512,7 @@ async function main(): Promise<void> {
     failureStage = 'Sepolia fee dry-run estimate';
     const fees = await publicClient.estimateFeesPerGas();
     const maxFeePerGas = fees.maxFeePerGas ?? (await publicClient.getGasPrice());
-    const spikeCount = timeoutOnly ? 1n : 3n;
+    const spikeCount = timeoutOnly ? 1n : recoveryOnly ? 2n : 3n;
     const totalDeploymentCost = (fixtureGas + wrapperGas + spikeGas * spikeCount) * maxFeePerGas;
     assertBudget(ledger, totalDeploymentCost);
     for (const gas of [fixtureGas, wrapperGas, spikeGas]) {
@@ -511,8 +524,10 @@ async function main(): Promise<void> {
         workItem: requestedCase,
         firstAction: timeoutOnly
           ? 'deploy fresh fixture, unchanged wrapper, and one threshold timeout spike'
-          : 'deploy fresh fixture, unchanged wrapper, and three aggregate lifecycle spikes',
-        deployments: timeoutOnly ? 3 : 5,
+          : recoveryOnly
+            ? 'deploy fresh fixture, unchanged wrapper, one recovery spike, and one no-custody proof-context peer'
+            : 'deploy fresh fixture, unchanged wrapper, and three aggregate lifecycle spikes',
+        deployments: timeoutOnly ? 3 : recoveryOnly ? 4 : 5,
         deploymentNonce: nonce.toString(),
         estimatedMaximumDeploymentGasCostWei: totalDeploymentCost.toString(),
         secondaryActorFundingWei: SECONDARY_ACTOR_FUNDING.toString(),
@@ -562,28 +577,52 @@ async function main(): Promise<void> {
 
     const fixture = await deploy(fixtureArtifact, [], fixtureGas, 'fixture collateral');
     const wrapper = await deploy(wrapperArtifact, [fixture], wrapperGas, 'confidential wrapper');
-    const timeoutSpike = await deploy(
-      spikeArtifact,
-      spikeConstructorArgs(wrapper, fixture),
-      spikeGas,
-      'pre-unwrap timeout spike',
-    );
-    const belowKSpike = timeoutOnly
-      ? timeoutSpike
-      : await deploy(
-          spikeArtifact,
-          spikeConstructorArgs(wrapper, fixture),
-          spikeGas,
-          'below-k aggregate spike',
-        );
-    const recoverySpike = timeoutOnly
-      ? timeoutSpike
-      : await deploy(
-          spikeArtifact,
-          spikeConstructorArgs(wrapper, fixture),
-          spikeGas,
-          'unwrap recovery spike',
-        );
+    let belowKSpike: Address;
+    let timeoutSpike: Address;
+    let recoverySpike: Address;
+    if (timeoutOnly) {
+      timeoutSpike = await deploy(
+        spikeArtifact,
+        spikeConstructorArgs(wrapper, fixture),
+        spikeGas,
+        'pre-unwrap timeout spike',
+      );
+      belowKSpike = timeoutSpike;
+      recoverySpike = timeoutSpike;
+    } else if (recoveryOnly) {
+      recoverySpike = await deploy(
+        spikeArtifact,
+        spikeConstructorArgs(wrapper, fixture),
+        spikeGas,
+        'unwrap recovery spike',
+      );
+      timeoutSpike = await deploy(
+        spikeArtifact,
+        spikeConstructorArgs(wrapper, fixture),
+        spikeGas,
+        'no-custody proof-context peer',
+      );
+      belowKSpike = recoverySpike;
+    } else {
+      timeoutSpike = await deploy(
+        spikeArtifact,
+        spikeConstructorArgs(wrapper, fixture),
+        spikeGas,
+        'pre-unwrap timeout spike',
+      );
+      belowKSpike = await deploy(
+        spikeArtifact,
+        spikeConstructorArgs(wrapper, fixture),
+        spikeGas,
+        'below-k aggregate spike',
+      );
+      recoverySpike = await deploy(
+        spikeArtifact,
+        spikeConstructorArgs(wrapper, fixture),
+        spikeGas,
+        'unwrap recovery spike',
+      );
+    }
     contracts = { fixture, wrapper, belowKSpike, timeoutSpike, recoverySpike };
   }
 
@@ -611,6 +650,7 @@ async function main(): Promise<void> {
       recoveryReleased,
       recoveryYes,
       recoveryNo,
+      contextPeerParticipants,
     ] = await Promise.all([
       read(contracts.wrapper, wrapperArtifact, 'underlying'),
       read(contracts.belowKSpike, spikeArtifact, 'state'),
@@ -619,11 +659,12 @@ async function main(): Promise<void> {
       read(contracts.recoverySpike, spikeArtifact, 'observedReleasedAmount'),
       read(contracts.recoverySpike, spikeArtifact, 'publicYes'),
       read(contracts.recoverySpike, spikeArtifact, 'publicNo'),
+      read(contracts.timeoutSpike, spikeArtifact, 'participantCount'),
     ]);
     if (
       (underlying as Address).toLowerCase() !== contracts.fixture.toLowerCase() ||
       belowState !== 4 ||
-      timeoutState !== 4 ||
+      (recoveryOnly ? timeoutState !== 0 || contextPeerParticipants !== 0n : timeoutState !== 4) ||
       recoveryState !== 4 ||
       recoveryReleased !== EXPECTED_AGGREGATE_TOTAL ||
       recoveryYes !== EXPECTED_AGGREGATE_YES ||
@@ -631,7 +672,13 @@ async function main(): Promise<void> {
     ) {
       fail('The recorded FND-05 terminal state did not match the required recovery result.');
     }
-    console.log(JSON.stringify({ workItem: 'FND-05', contractsVerified: 5, status: 'passed' }));
+    console.log(
+      JSON.stringify({
+        workItem: requestedCase,
+        contractsVerified: recoveryOnly ? 4 : 5,
+        status: 'passed',
+      }),
+    );
     return;
   }
 
@@ -887,7 +934,7 @@ async function main(): Promise<void> {
     }
   };
 
-  if (!timeoutOnly) {
+  if (!timeoutOnly && !recoveryOnly) {
     failureStage = 'below-k aggregate disclosure path';
     await commit(
       contracts.belowKSpike,
@@ -938,98 +985,104 @@ async function main(): Promise<void> {
     );
   }
 
-  failureStage = 'pre-unwrap timeout path';
-  await commit(
-    contracts.timeoutSpike,
-    deployer,
-    deployerWallet,
-    deployerHandleClient,
-    MEMBER_ONE_STAKE,
-    MEMBER_ONE_PROBABILITY_BPS,
-    'timeout first member',
-  );
-  await commit(
-    contracts.timeoutSpike,
-    secondary,
-    secondaryWallet,
-    secondaryHandleClient,
-    MEMBER_TWO_STAKE,
-    MEMBER_TWO_PROBABILITY_BPS,
-    'timeout independent member',
-  );
-  const timeoutDeadline = (await read(contracts.timeoutSpike, spikeArtifact, 'deadline')) as bigint;
-  await waitUntil(rpcUrl, timeoutDeadline);
-  await send(
-    deployer,
-    deployerWallet,
-    contracts.timeoutSpike,
-    spikeData('closeEpoch'),
-    'close threshold epoch for aggregate timeout',
-  );
-  await send(
-    deployer,
-    deployerWallet,
-    contracts.timeoutSpike,
-    spikeData('requestAggregateDecrypt'),
-    'request timeout epoch aggregate disclosure',
-  );
-  const timeoutAccess = (await read(
-    contracts.timeoutSpike,
-    spikeArtifact,
-    'aggregateAccess',
-  )) as readonly boolean[];
-  if (timeoutAccess.length !== 3 || !timeoutAccess[0] || !timeoutAccess[1] || timeoutAccess[2]) {
-    fail('The threshold epoch did not expose exactly the YES and NO aggregate handles.');
-  }
-  await sendExpectedRevert(
-    deployer,
-    deployerWallet,
-    contracts.timeoutSpike,
-    spikeData('cancelBeforeUnwrap'),
-    'pre-unwrap timeout before the recovery window',
-  );
-  const timeoutAvailableAt =
-    ((await read(contracts.timeoutSpike, spikeArtifact, 'aggregatePendingSince')) as bigint) +
-    AGGREGATE_TIMEOUT_SECONDS;
-  await waitUntil(rpcUrl, timeoutAvailableAt);
-  await send(
-    secondary,
-    secondaryWallet,
-    contracts.timeoutSpike,
-    spikeData('cancelBeforeUnwrap'),
-    'permissionless pre-unwrap timeout cancellation',
-  );
-  if ((await read(contracts.timeoutSpike, spikeArtifact, 'state')) !== 4) {
-    fail('The pre-unwrap timeout did not enter the refund state.');
-  }
-  await refundAndAssertBalance(
-    contracts.timeoutSpike,
-    deployer,
-    deployerWallet,
-    deployerHandleClient,
-    initialDeployerBalance,
-    'refund timeout first member',
-  );
-  await refundAndAssertBalance(
-    contracts.timeoutSpike,
-    secondary,
-    secondaryWallet,
-    secondaryHandleClient,
-    initialSecondaryBalance,
-    'refund timeout independent member',
-  );
-  if (timeoutOnly) {
-    clearSecondaryPrivateKey();
-    console.log(
-      JSON.stringify({
-        contracts: contracts,
-        lifecycleAssertionsVerified: 9,
-        negativeAssertionsVerified: 5,
-        status: 'passed',
-        workItem: 'FND-05-TIMEOUT',
-      }),
+  if (!recoveryOnly) {
+    failureStage = 'pre-unwrap timeout path';
+    await commit(
+      contracts.timeoutSpike,
+      deployer,
+      deployerWallet,
+      deployerHandleClient,
+      MEMBER_ONE_STAKE,
+      MEMBER_ONE_PROBABILITY_BPS,
+      'timeout first member',
     );
-    return;
+    await commit(
+      contracts.timeoutSpike,
+      secondary,
+      secondaryWallet,
+      secondaryHandleClient,
+      MEMBER_TWO_STAKE,
+      MEMBER_TWO_PROBABILITY_BPS,
+      'timeout independent member',
+    );
+    const timeoutDeadline = (await read(
+      contracts.timeoutSpike,
+      spikeArtifact,
+      'deadline',
+    )) as bigint;
+    await waitUntil(rpcUrl, timeoutDeadline);
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.timeoutSpike,
+      spikeData('closeEpoch'),
+      'close threshold epoch for aggregate timeout',
+    );
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.timeoutSpike,
+      spikeData('requestAggregateDecrypt'),
+      'request timeout epoch aggregate disclosure',
+    );
+    const timeoutAccess = (await read(
+      contracts.timeoutSpike,
+      spikeArtifact,
+      'aggregateAccess',
+    )) as readonly boolean[];
+    if (timeoutAccess.length !== 3 || !timeoutAccess[0] || !timeoutAccess[1] || timeoutAccess[2]) {
+      fail('The threshold epoch did not expose exactly the YES and NO aggregate handles.');
+    }
+    await sendExpectedRevert(
+      deployer,
+      deployerWallet,
+      contracts.timeoutSpike,
+      spikeData('cancelBeforeUnwrap'),
+      'pre-unwrap timeout before the recovery window',
+    );
+    const timeoutAvailableAt =
+      ((await read(contracts.timeoutSpike, spikeArtifact, 'aggregatePendingSince')) as bigint) +
+      AGGREGATE_TIMEOUT_SECONDS;
+    await waitUntil(rpcUrl, timeoutAvailableAt);
+    await send(
+      secondary,
+      secondaryWallet,
+      contracts.timeoutSpike,
+      spikeData('cancelBeforeUnwrap'),
+      'permissionless pre-unwrap timeout cancellation',
+    );
+    if ((await read(contracts.timeoutSpike, spikeArtifact, 'state')) !== 4) {
+      fail('The pre-unwrap timeout did not enter the refund state.');
+    }
+    await refundAndAssertBalance(
+      contracts.timeoutSpike,
+      deployer,
+      deployerWallet,
+      deployerHandleClient,
+      initialDeployerBalance,
+      'refund timeout first member',
+    );
+    await refundAndAssertBalance(
+      contracts.timeoutSpike,
+      secondary,
+      secondaryWallet,
+      secondaryHandleClient,
+      initialSecondaryBalance,
+      'refund timeout independent member',
+    );
+    if (timeoutOnly) {
+      clearSecondaryPrivateKey();
+      console.log(
+        JSON.stringify({
+          contracts: contracts,
+          lifecycleAssertionsVerified: 9,
+          negativeAssertionsVerified: 5,
+          status: 'passed',
+          workItem: 'FND-05-TIMEOUT',
+        }),
+      );
+      return;
+    }
   }
 
   failureStage = 'aggregate proof and unwrap recovery path';
@@ -1071,11 +1124,15 @@ async function main(): Promise<void> {
     spikeData('requestAggregateDecrypt'),
     'request recovery epoch aggregate disclosure',
   );
-  const [recoveryHandles, recoveryRequestId, timeoutRequestId, deployerPositionHandles] =
+  const [recoveryHandles, recoveryRequestId, crossPoolRequestId, deployerPositionHandles] =
     (await Promise.all([
       read(contracts.recoverySpike, spikeArtifact, 'aggregateHandles'),
       read(contracts.recoverySpike, spikeArtifact, 'aggregateRequestId'),
-      read(contracts.timeoutSpike, spikeArtifact, 'aggregateRequestId'),
+      read(contracts.recoverySpike, spikeArtifact, 'aggregateProofContext', [
+        BigInt(EXPECTED_CHAIN_ID),
+        contracts.timeoutSpike,
+        1n,
+      ]),
       read(contracts.recoverySpike, spikeArtifact, 'positionHandles', [deployer.address]),
     ])) as [readonly Hex[], Hex, Hex, readonly Hex[]];
   const [publicYes, publicNo] = await Promise.all([
@@ -1106,7 +1163,7 @@ async function main(): Promise<void> {
     [BigInt(EXPECTED_CHAIN_ID), contracts.recoverySpike, 2n],
   )) as Hex;
   for (const [requestId, scenario] of [
-    [timeoutRequestId, 'Cross-pool aggregate proof context'],
+    [crossPoolRequestId, 'Cross-pool aggregate proof context'],
     [wrongChainRequestId, 'Wrong-chain aggregate proof context'],
     [wrongEpochRequestId, 'Wrong-epoch aggregate proof context'],
   ] as const) {
@@ -1218,7 +1275,7 @@ async function main(): Promise<void> {
 
   console.log(
     JSON.stringify({
-      workItem: 'FND-05',
+      workItem: requestedCase,
       contracts: contracts,
       lifecycleAssertionsVerified: 16,
       negativeAssertionsVerified: 13,
