@@ -127,6 +127,18 @@ replace the required named Sepolia SDK smoke before G6.
 | `T-SDK-02-03` | Invalid chain/context/value/Nox response rejects without reflecting plaintext in an error             | P1, P3, NFR-04     |
 | `T-SDK-02-04` | Confidential client contains no console, browser storage, or JSON serialization path                  | P1, P3, P7         |
 
+## SDK-03 transaction/read boundary coverage
+
+`T-SDK-03-*` is offline ABI and operation-identity coverage. A later named Sepolia
+sender/read smoke is required before SDK-03 can contribute to G6.
+
+| Test family   | Coverage                                                                                              | Requirements       |
+| ------------- | ----------------------------------------------------------------------------------------------------- | ------------------ |
+| `T-SDK-03-01` | Frozen `commitSignal` ABI declaration matches the compiled pool artifact                              | NFR-02, I7, I8     |
+| `T-SDK-03-02` | Prepared encrypted commit is non-serializable and duplicate logical send returns one transaction      | P1, P3, I7         |
+| `T-SDK-03-03` | Different calldata cannot reuse a request ID; non-Sepolia transaction client rejects                  | P1, P3, I7, I8     |
+| `T-SDK-03-04` | Transaction/read boundary contains no console, browser storage, or JSON data path                     | P1, P3, P7         |
+
 ## Evidence naming
 
 Evidence files use:

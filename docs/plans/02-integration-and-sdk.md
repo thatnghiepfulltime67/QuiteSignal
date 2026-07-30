@@ -1,6 +1,6 @@
 # P2 — Integration, SDK, automation, and live protocol
 
-Status: `complete`
+Status: `in_progress`
 
 Pre-G5 preparation exception: While P1 is explicitly `awaiting_chain`, one
 dependency-independent pure TypeScript SDK slice may be `in_progress`. It cannot
@@ -82,7 +82,7 @@ preparation; it makes no live-protocol or G6 claim.
 
 ID: `SDK-02`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Provide a Sepolia-only Nox encryption boundary that binds each encrypted
 uint256 input to its chain, pool, and caller-generated request nonce, serializes
@@ -129,6 +129,51 @@ bound to the pool/request context, required explicit matching context for contra
 encoding, and confirmed JSON serialization rejection. It persisted no value, raw
 handle, proof, credential, or signature. SDK-02 is complete; the artifact is only a
 G6 component and does not claim the gate.
+
+## SDK-03 work-item record
+
+ID: `SDK-03`
+
+Status: `in_progress`
+
+Outcome: Add a typed Sepolia public-read and transaction boundary that consumes
+sealed SDK-02 inputs without exposing encrypted material, encodes the frozen pool
+ABI, and maps retries to one logical request.
+
+Active slice: `SDK-03-CLIENT-01`.
+
+Output files: transaction/read client source, frozen ABI declaration, exports,
+unit and ABI-compatibility tests, this record, and traceability updates.
+
+Acceptance criteria: Public reads return only public pool epoch/config facts. A
+prepared encrypted commit remains non-serializable and requires matching pool/chain/
+request context. The sender accepts at most one identical logical operation and
+rejects a request ID reused for different pool or calldata. The ABI declaration is
+checked against the compiled protocol artifact; no client error reflects encrypted
+material.
+
+Privacy/custody impact: The client may submit a user-signed transaction through the
+connected wallet, but it has no relayer key, custody, decryption, telemetry, storage,
+or privileged contract path. Raw encrypted material remains in memory only until
+wallet submission.
+
+Funds location/recovery impact: Prepared data creates no chain state. A submitted
+logical operation retains its request-to-transaction mapping in process so a caller
+retry cannot silently issue a second commit. A reload requires an on-chain public
+state read before retry, which is implemented by later LIVE evidence.
+
+Checks: unit/ABI compatibility tests, `npm run typecheck`, `npm run check:offline`,
+and `git diff --check`. A later live Sepolia sender/read case must prove this client
+before any G6 claim.
+
+Evidence path: unit output for this slice; later live evidence under
+`evidence/{offline,sepolia}/G6/SDK-03-TRANSACTION-CLIENT.json`.
+
+Intended commit: `feat: add protocol transaction client`.
+
+Rollback/failure action: Revert only SDK-03 and retain SDK-02's sealed boundary. Do
+not fall back to manual calldata, durable encrypted-material storage, automatic
+replacement transactions, or a service-held signer.
 
 ## Dependency graph
 

@@ -21,3 +21,15 @@ export {
   type ContractEncryptedInput,
   type EncryptionContext,
 } from './confidential.js';
+export {
+  PreparedCommit,
+  ProtocolTransactionClient,
+  createSepoliaProtocolTransactionClient,
+  createViemProtocolPublicReader,
+  prepareCommitSignal,
+  quietSignalPoolAbi,
+  type ProtocolPublicReader,
+  type ProtocolTransactionSender,
+  type PublicEpoch,
+  type PublicPoolConfig,
+} from './protocol.js';
