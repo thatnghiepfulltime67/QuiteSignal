@@ -366,6 +366,7 @@ async function main(): Promise<void> {
 
   const deployer = privateKeyToAccount(privateKey as Hex);
   const publicClient = createPublicClient({
+    cacheTime: 0,
     chain: sepolia,
     transport: http(rpcUrl, { retryCount: 0, timeout: RPC_TIMEOUT_MS }),
   });

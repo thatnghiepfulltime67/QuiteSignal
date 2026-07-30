@@ -563,6 +563,8 @@ client cache time to zero before a fresh run.
 The seventh-attempt recovery passed at blocks `11379685` through `11379687`,
 cancelled permissionlessly, refunded both recorded owners, verified terminal
 confidential balances locally, and deleted the ignored actor record.
+The public feasibility client now disables response caching, so every lifecycle wait
+observes a fresh Ethereum Sepolia block timestamp.
 
 ## FND-01 — Toolchain lock
 

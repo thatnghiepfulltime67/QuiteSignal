@@ -144,3 +144,7 @@ The seventh-attempt recovery completed at blocks `11379685` through `11379687`.
 It cancelled permissionlessly, refunded both owners once, verified the terminal
 confidential balances locally, and deleted the ignored actor record. The fixture has
 no remaining contract custody and remains excluded from G3 evidence.
+
+The public feasibility client now disables response caching. Every lifecycle wait
+must therefore observe a fresh Ethereum Sepolia block timestamp; an unavailable RPC
+response remains a failing observation rather than a pass condition.
