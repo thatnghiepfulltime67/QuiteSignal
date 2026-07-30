@@ -14,6 +14,7 @@ const FACTORY = '0x9ff278c3209606dd0e29fd258a973238898c9a4c' as const;
 const TIMEOUT = '0xfa34982fdee60487102a71807f83a4bab4fe6b9b' as const;
 const GRACE = '0x184ab3b794845f5d8407c68bccf3da8a93dfc3b4' as const;
 const SUCCESS = '0x50757b272201c9f7b0964bc48c1ef28af58fb337' as const;
+const GUARD = '0xc0681ce274eb3dde21f80c8ed5c39db922a7c215' as const;
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
 const PROTOCOL = resolve(ROOT, 'modules/protocol');
 const LEDGER = resolve(ROOT, 'evidence/sepolia/spend-ledger.json');
@@ -51,12 +52,13 @@ async function main(): Promise<void> {
   const pool = loadArtifact(
     resolve(PROTOCOL, 'artifacts/contracts/core/QuietSignalPool.sol/QuietSignalPool.json'),
   );
-  const [timeout, grace, success, codes, balances] = await Promise.all([
+  const [timeout, grace, success, guard, codes, balances] = await Promise.all([
     client.readContract({ address: TIMEOUT, abi: pool.abi, functionName: 'epoch' } as never),
     client.readContract({ address: GRACE, abi: pool.abi, functionName: 'epoch' } as never),
     client.readContract({ address: SUCCESS, abi: pool.abi, functionName: 'epoch' } as never),
+    client.readContract({ address: GUARD, abi: pool.abi, functionName: 'epoch' } as never),
     Promise.all(
-      [FIXTURE, WRAPPER, ADAPTER, FACTORY, TIMEOUT, GRACE, SUCCESS].map((address) =>
+      [FIXTURE, WRAPPER, ADAPTER, FACTORY, TIMEOUT, GRACE, SUCCESS, GUARD].map((address) =>
         client.getCode({ address }),
       ),
     ),
@@ -77,6 +79,8 @@ async function main(): Promise<void> {
     fail('Aggregate-timeout recovery was not preserved.');
   if (graced.state !== 5 || graced.participantCount !== 2)
     fail('Resolution-grace recovery was not preserved.');
+  if ((guard as { state: number; participantCount: number }).state !== 2)
+    fail('Aggregate-timeout guard evidence was not preserved.');
   if (
     settled.state !== 4 ||
     settled.participantCount !== 2 ||
@@ -116,8 +120,10 @@ async function main(): Promise<void> {
       timeoutPool: TIMEOUT,
       gracePool: GRACE,
       successPool: SUCCESS,
+      guardPool: GUARD,
     },
     checks: {
+      aggregateTimeoutEarlyRejected: true,
       aggregateTimeoutRefundable: true,
       resolutionGraceRefundable: true,
       immutableAdapterSettlement: true,

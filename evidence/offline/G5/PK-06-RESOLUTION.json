@@ -3,10 +3,10 @@
   "gate": "G5",
   "workItem": "PK-06",
   "phase": "P1",
-  "sourceCommit": "1ea7e5b26b8a2e8fd75b4fc109fb6ce3354342cc",
+  "sourceCommit": "336a1c44559652c8c34e71b5a923d945bc59f87b",
   "environment": {
     "chainId": 11155111,
-    "verificationBlock": "11381905"
+    "verificationBlock": "11382020"
   },
   "contracts": {
     "fixture": "0xe0364be79d2a87f3253bab014c0f1eda0ade0184",
@@ -15,9 +15,11 @@
     "factory": "0x9ff278c3209606dd0e29fd258a973238898c9a4c",
     "timeoutPool": "0xfa34982fdee60487102a71807f83a4bab4fe6b9b",
     "gracePool": "0x184ab3b794845f5d8407c68bccf3da8a93dfc3b4",
-    "successPool": "0x50757b272201c9f7b0964bc48c1ef28af58fb337"
+    "successPool": "0x50757b272201c9f7b0964bc48c1ef28af58fb337",
+    "guardPool": "0xc0681ce274eb3dde21f80c8ed5c39db922a7c215"
   },
   "checks": {
+    "aggregateTimeoutEarlyRejected": true,
     "aggregateTimeoutRefundable": true,
     "resolutionGraceRefundable": true,
     "immutableAdapterSettlement": true,
