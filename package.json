@@ -26,7 +26,7 @@
     "test:sdk": "npm run --workspace @quitesignal/confidential-client test",
     "test:automation": "npm run --workspace @quitesignal/automation test",
     "test:indexer": "npm run --workspace @quitesignal/indexer test",
-    "rebuild:indexer:sepolia": "npm run --workspace @quitesignal/indexer rebuild:sepolia",
+    "rebuild:indexer:sepolia": "tsx services/indexer/scripts/rebuild-sepolia.mts",
     "run:live:sepolia": "npm run --workspace @quitesignal/protocol run:live:sepolia --",
     "run:automation:sepolia": "npm run --workspace @quitesignal/automation run:sepolia --",
     "test:sdk:nox:sepolia": "npm run --workspace @quitesignal/confidential-client test:nox:sepolia --",
