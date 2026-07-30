@@ -574,6 +574,9 @@ The eighth attempt from `5d719a7` deployed fixture
 Viem lifecycle polling did not advance after the on-chain timeout. No cancellation
 or refund was sent. The fixture is recoverable and excluded; replace lifecycle waits
 with bounded direct RPC latest-block reads before another fresh verification.
+The eighth-attempt recovery passed at blocks `11379758` through `11379760`,
+cancelled permissionlessly, refunded both owners, verified terminal balances locally,
+and deleted the ignored actor record.
 
 ## FND-01 — Toolchain lock
 

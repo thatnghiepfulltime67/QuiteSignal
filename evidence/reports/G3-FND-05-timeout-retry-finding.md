@@ -158,3 +158,8 @@ and early timeout expected-revert receipts. The Viem lifecycle polling loop agai
 not advance after the state-entry timeout elapsed, despite disabled cache. No timeout
 cancellation or refund was sent. This is an orchestration defect; the fixture is
 recoverable with its ignored actor record and excluded from G3 evidence.
+
+The eighth-attempt recovery completed at blocks `11379758` through `11379760`.
+It cancelled permissionlessly, refunded both owners, verified terminal confidential
+balances locally, and deleted the ignored actor record. The fixture has no remaining
+contract custody and remains excluded from G3 evidence.
