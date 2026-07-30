@@ -361,6 +361,52 @@ then refreshed DEP-02 directly from Sepolia at block `11384280`, rendered `Commi
 deadline reached`, and emitted no console/exception event; its sanitized report is
 `evidence/sepolia/G7/WEB-04-DEADLINE-DEP-02.json`.
 
+## WEB-07-TARGETS-01 work-item record
+
+ID: `WEB-07-TARGETS-01`
+
+Status: `complete`
+
+Outcome: Enforce usable interaction target sizes across route navigation and utility
+actions, then verify the production browser at the required viewport and
+reduced-motion settings without persisting visual media.
+
+Output files: target-size styles in `apps/web/src/styles.css`, source assertions,
+sanitized browser audit, and this record.
+
+Acceptance criteria: Navigation links, text actions, release links, FAQ summaries,
+and utility controls have a 44px minimum interaction height; keyboard focus reaches
+the skip link; reduced motion disables decorative animation; and the primary public
+routes have no horizontal overflow at 360px, 768px, 1280px, and 1440px. The audit
+uses the production build, active public manifest, and direct Sepolia reads only.
+
+Privacy/custody impact: No new data access or persistence. Browser checks carry no
+wallet provider, confidential input, proof, key, or transaction request.
+
+Funds location/recovery impact: No funds move. This slice affects only route
+interaction presentation and preserves all recovery copy/actions.
+
+Checks: focused source assertions, production browser audit, `npm run test:web`,
+production web build, root typecheck, and `git diff --check`.
+
+Evidence location: `evidence/sepolia/G7/WEB-07-*.json`; read-only evidence does not
+satisfy G7 wallet requirements.
+
+Intended commit: `test: audit accessible production navigation`.
+
+Rollback/failure action: Revert only interaction styling/audit artifacts. Never add
+a browser automation wallet, mock deployment, or stored viewport state.
+
+Completion evidence: All named navigation and utility targets now carry the 44px
+minimum size contract. The production browser read-only audit against active DEP-02
+at block `11384300` found no horizontal overflow or undersized visible action at
+360px, 768px, 1280px, or 1440px; its keyboard focus reached the skip link; the
+deadline-safe lifecycle rendered; reduced-motion decoration duration was `0.001ms`;
+and no console/exception event appeared. The sanitized no-screenshot report is
+`evidence/sepolia/G7/WEB-07-RESPONSIVE-DEP-02.json`. `T-WEB-07-TARGETS-01`, all 27
+web tests, root typecheck, production Vite build, targeted Prettier checks, and `git
+diff --check` pass. This remains read-only evidence, not G7 wallet evidence.
+
 ## WEB-03 work-item record
 
 ID: `WEB-03`

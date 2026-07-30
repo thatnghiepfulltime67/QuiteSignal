@@ -105,6 +105,7 @@ a {
 
 .wordmark {
   display: inline-flex;
+  min-height: 44px;
   align-items: center;
   gap: 12px;
   color: var(--orchid);
@@ -238,6 +239,7 @@ a {
 }
 
 .text-button {
+  min-height: 44px;
   background: transparent;
   border: 0;
   color: var(--lilac);
@@ -277,6 +279,9 @@ a {
 }
 
 .site-nav a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   color: var(--petal);
   font-family: var(--font-mono);
   font-size: 12px;
@@ -300,6 +305,9 @@ a {
 }
 
 .skip-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   position: fixed;
   z-index: 10;
   left: 20px;
@@ -435,6 +443,9 @@ a {
 }
 
 .text-action {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   color: var(--petal);
   font-family: var(--font-mono);
   font-size: 12px;
@@ -734,6 +745,9 @@ a {
 }
 
 .faq-list summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
   cursor: pointer;
   font-size: 22px;
   line-height: 1.2;
@@ -1217,7 +1231,9 @@ a {
 
 .deployment-link {
   color: var(--orchid);
-  display: inline-block;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.03em;

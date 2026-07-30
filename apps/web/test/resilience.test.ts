@@ -18,3 +18,20 @@ test('T-WEB-07-02: stylesheet preserves keyboard focus and reduced-motion suppor
   assert.match(source, /:focus-visible/);
   assert.match(source, /prefers-reduced-motion/);
 });
+
+test('T-WEB-07-TARGETS-01: primary navigation and utility actions meet the target-size contract', () => {
+  const source = readFileSync(resolve(root, 'src/styles.css'), 'utf8');
+
+  for (const selector of [
+    '.site-nav a',
+    '.wordmark',
+    '.skip-link',
+    '.text-action',
+    '.text-button',
+    '.faq-list summary',
+    '.deployment-link',
+  ]) {
+    const escaped = selector.replace(/[. ]/g, (character) => (character === '.' ? '\\.' : '\\s+'));
+    assert.match(source, new RegExp(`${escaped}\\s*\\{[\\s\\S]*?min-height: 44px;`));
+  }
+});

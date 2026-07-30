@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "workItemId": "WEB-07-TARGETS-01",
+  "mode": "real-browser-read-only",
+  "chainId": 11155111,
+  "verificationBlock": "11384300",
+  "activeRelease": "DEP-02",
+  "pool": "0x8a584063df690Cb161886A056C94e3B9a7f32f54",
+  "environment": {
+    "application": "production Vite preview",
+    "browser": "Google Chrome headless",
+    "walletProvider": "absent by design",
+    "chainTransport": "direct public Ethereum Sepolia read"
+  },
+  "viewports": [
+    { "width": 360, "horizontalOverflow": false, "undersizedVisibleActions": 0 },
+    { "width": 768, "horizontalOverflow": false, "undersizedVisibleActions": 0 },
+    { "width": 1280, "horizontalOverflow": false, "undersizedVisibleActions": 0 },
+    { "width": 1440, "horizontalOverflow": false, "undersizedVisibleActions": 0 }
+  ],
+  "accessibility": {
+    "skipLinkReceivesFocus": true,
+    "reducedMotionDecorativeDuration": "0.001ms"
+  },
+  "lifecycle": {
+    "renderedElapsedDeadlineState": true
+  },
+  "browserChecks": {
+    "unexpectedConsoleOrExceptionEvents": 0,
+    "persistedTraceOrScreenshot": false,
+    "capturedConfidentialInput": false,
+    "capturedHandleProofSignatureKeyOrRpcConfiguration": false
+  },
+  "conclusion": "Passed production browser responsive and reduced-motion read-only audit. This is not a G7 wallet journey."
+}
