@@ -28,6 +28,7 @@
     "test:adapter:sepolia": "npm run --workspace @quitesignal/protocol test:adapter:sepolia --",
     "test:commit:sepolia": "npm run --workspace @quitesignal/protocol test:commit:sepolia --",
     "test:aggregate:sepolia": "npm run --workspace @quitesignal/protocol test:aggregate:sepolia --",
+    "test:adversarial:sepolia": "npm run --workspace @quitesignal/protocol test:adversarial:sepolia --",
     "test:resolution:sepolia": "npm run --workspace @quitesignal/protocol test:resolution:sepolia --",
     "test:terminals:sepolia": "npm run --workspace @quitesignal/protocol test:terminals:sepolia --",
     "verify:terminals:sepolia": "npm run --workspace @quitesignal/protocol verify:terminals:sepolia",

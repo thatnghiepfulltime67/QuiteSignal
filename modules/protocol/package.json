@@ -10,6 +10,7 @@
     "test:commit:sepolia": "tsx scripts/core/run-pk04-stage-sepolia.mts",
     "verify:commit:sepolia": "tsx scripts/core/verify-pk04-commit-sepolia.mts",
     "test:aggregate:sepolia": "tsx scripts/core/run-pk05-aggregate-sepolia.mts",
+    "test:adversarial:sepolia": "tsx scripts/core/run-pk05-aggregate-sepolia.mts --work-item=PK-07 --stage=assert-open-invalid",
     "verify:aggregate:sepolia": "tsx scripts/core/verify-pk05-aggregate-sepolia.mts",
     "test:resolution:sepolia": "tsx scripts/core/run-pk05-aggregate-sepolia.mts --work-item=PK-06",
     "test:terminals:sepolia": "tsx scripts/core/run-pk05-aggregate-sepolia.mts --work-item=PK-07",

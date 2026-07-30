@@ -259,8 +259,9 @@ async function main(): Promise<void> {
       remainingAllowanceWei: (BigInt(ledger.maxTotalSpendWei) - totalSpend(ledger)).toString(),
     }),
   );
-  if (!write) return;
-  assertClean();
+  const readOnlyAssertion = stage === 'assert-open-invalid';
+  if (!write && !readOnlyAssertion) return;
+  if (write) assertClean();
   const primaryHandles = await createViemHandleClient(primaryWallet);
   const secondaryHandles = await createViemHandleClient(secondaryWallet);
   const record = (
@@ -506,6 +507,41 @@ async function main(): Promise<void> {
     return;
   }
   const pool = requiredAddress('pool');
+  if (stage === 'assert-open-invalid') {
+    if (workItem !== 'PK-07') fail('The OPEN-state assertion is defined only for PK-07.');
+    const epoch = (await publicClient.readContract({
+      address: pool,
+      abi: artifacts.pool.abi,
+      functionName: 'epoch',
+    } as never)) as { state: number; deadline: bigint };
+    const block = await publicClient.getBlock();
+    if (epoch.state !== 0 || block.timestamp >= epoch.deadline)
+      fail('The OPEN-state assertion requires a pool before its immutable deadline.');
+    await Promise.all(
+      [
+        'closeEpoch',
+        'requestAggregateDecrypt',
+        'settle',
+        'materializeScore',
+        'claim',
+        'refund',
+        'cancelBeforeResolution',
+        'cancelAfterResolutionGrace',
+      ].map((name) =>
+        expectRevert(
+          () =>
+            publicClient.call({
+              account: primary.address,
+              to: pool,
+              data: calldata(artifacts.pool, name),
+            }),
+          `OPEN-state ${name}`,
+        ),
+      ),
+    );
+    console.log(JSON.stringify({ workItem, stage, pool, rejectedActions: 8 }));
+    return;
+  }
   if (stage === 'register') {
     const actor = argument('actor') === 'secondary' ? secondary : primary;
     const handles = actor.address === secondary.address ? secondaryHandles : primaryHandles;
