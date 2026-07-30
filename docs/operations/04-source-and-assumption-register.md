@@ -101,6 +101,17 @@ printing RPC configuration values.
 The baseline contains no critical npm advisory. Its current high-severity Hardhat
 transitive advisory is tracked as R-16 and must be re-evaluated before G8.
 
+## Browser public-read transport
+
+The browser's wallet-free lifecycle view uses the public Ethereum Sepolia JSON-RPC
+endpoint `https://ethereum-sepolia-rpc.publicnode.com`, already used by the
+repository's read-only doctor fallback. It is not a source of protocol truth, a
+custody provider, a signer, an indexer, or a confidential-data service: the browser
+queries only the manifest-bound pool's public `config` and `epoch` views. ADR-022 and
+R-24 record the availability and IP/public-query metadata limitation. The browser
+must show a retryable degraded state on transport failure and must not replace a
+failed read with a fixture or static lifecycle claim.
+
 ## FND-02 verified arithmetic feasibility
 
 The isolated arithmetic spike passed direct Ethereum Sepolia verification for the

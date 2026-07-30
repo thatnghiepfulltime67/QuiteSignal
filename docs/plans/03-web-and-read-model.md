@@ -291,6 +291,11 @@ verification, settlement, pending, and recovery states.
 Output files: public RPC reader adapter, lifecycle presenter/timeline UI and tests,
 this record, and status-copy updates.
 
+Decision: ADR-022 permits one documented direct Ethereum Sepolia read transport for
+manifest-bound public pool views when a browser wallet is absent. It is an
+availability convenience, not protocol truth or a confidential-data service; its
+metadata and outage risk are tracked as R-24.
+
 Acceptance criteria: The view reads the canonical pool's public config/epoch over
 Sepolia and maps every contract state to a labeled timeline. It never infers private
 positions or a pending state as success. Aggregate totals are rendered only after

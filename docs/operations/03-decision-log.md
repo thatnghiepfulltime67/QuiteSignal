@@ -313,3 +313,23 @@ license/advisory scan, source boundary tests, and real Sepolia browser evidence 
 required before release. It changes presentation/build architecture only; it adds no
 custody, protocol authority, privacy claim, contract state transition, or public
 contract interface.
+
+## ADR-022 — Direct read-only Sepolia transport for public lifecycle facts
+
+**Status:** Accepted
+
+The web application may read the canonical pool's public config and epoch through a
+single documented Ethereum Sepolia JSON-RPC endpoint when no wallet is connected.
+This removes the wallet-provider dependency from public lifecycle visibility without
+introducing an indexer, backend, signer, cache, or alternative source of protocol
+truth. The response is treated as an availability convenience only: the browser reads
+the immutable pool directly, validates the canonical manifest first, and labels a
+transport failure as degraded rather than substituting static state.
+
+The endpoint observes the browser IP address and public pool request. It receives no
+wallet address, signature, plaintext, raw confidential handle, proof, or transaction
+payload from this read path. Wallet-connected and confidential operations retain
+their existing explicit EIP-1193/Nox paths. This does not change custody, Nox ACL,
+contract state, or public contract interface; it introduces an external availability
+and metadata-linkability risk tracked as R-24. Users can still use an independent
+public explorer or their own wallet provider if the direct endpoint is unavailable.
