@@ -1206,7 +1206,49 @@ below-k has no aggregate request and one terminal receipt, while timeout has a s
 request and eligible cancellation followed by two terminal receipts. Both current
 epochs are `REFUNDABLE` with zero public totals. LIVE-02 is complete as a G6
 component; this does not by itself pass G6.
-work item can be marked complete.
+
+## G6-VERIFY-01 work-item record
+
+ID: `G6-VERIFY-01`
+
+Status: `in_progress`
+
+Outcome: Fail closed unless the complete, sanitized Sepolia evidence set proves the
+P2 success, recovery, SDK, deployment, public-verifier, relayer, and rebuildable
+read-model claims together.
+
+Output files: `modules/verifier/src/g6.ts`,
+`modules/verifier/scripts/verify-g6-evidence.mts`,
+`modules/verifier/test/g6.test.ts`, root verification scripts, the generated
+`evidence/sepolia/G6/G6-PROTOCOL.json`, this record, the verification matrix, and
+the evidence ledger.
+
+Acceptance criteria: The verifier requires every named P2 component artifact,
+validates its exact Sepolia/work-item binding and all-true checks, rejects
+confidential-shaped fields, and requires source commits where present to remain
+reachable from current history. It also requires the completed two-owner settled
+lifecycle, both refundable recovery paths, and the independent permissionless
+aggregate-finalization result. The generated report contains only public references
+and summaries; it is not a substitute for any component's Sepolia verification.
+
+Privacy/custody impact: This is a read-only evidence boundary. It reads committed
+sanitized JSON and Git ancestry only; it never opens Nox material, asks a wallet to
+sign, stores owner data, or changes fund custody.
+
+Funds location/recovery impact: No transaction or state change occurs. A failed
+aggregation leaves all existing public artifacts intact and P2 incomplete; recovery
+continues to be the permissionless terminal paths already proven by LIVE-02.
+
+Checks: focused verifier mutation tests, `npm run test:verifier`,
+`npm run verify:g6:evidence`, `npm run check:offline`, and `git diff --check`.
+
+Evidence location: `evidence/sepolia/G6/G6-PROTOCOL.json`.
+
+Intended commit: `test: aggregate G6 Sepolia evidence`.
+
+Rollback/failure action: Do not mark G6 or P2 complete and do not start P3. Correct
+only the missing or malformed component evidence with the responsible work item;
+never replace a required Sepolia fact with an offline fixture.
 
 ## Dependency graph
 
