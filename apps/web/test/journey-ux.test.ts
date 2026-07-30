@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+
+const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
+
+test('T-WEB-03-UX-02: high-intent routes explain safe sequence and wallet boundaries', () => {
+  const source = readFileSync(resolve(root, 'src/main.ts'), 'utf8');
+  const styles = readFileSync(resolve(root, 'src/styles.css'), 'utf8');
+
+  for (const phrase of [
+    'Check the active release',
+    'Validate locally',
+    'Encrypt in browser',
+    'Confirm in wallet',
+    'Nothing is revealed or moved by opening the page.',
+    'The independent verifier command is the source of invariant conclusions.',
+  ]) {
+    assert.match(source, new RegExp(phrase.replace(/[.?]/g, '\\$&')));
+  }
+  for (const selector of [
+    '.market-path',
+    '.journey-steps',
+    '.owner-guidance',
+    '.route-callout',
+    '.route-actions',
+  ]) {
+    assert.match(styles, new RegExp(selector.replace('.', '\\.')));
+  }
+  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.journey-steps/);
+});

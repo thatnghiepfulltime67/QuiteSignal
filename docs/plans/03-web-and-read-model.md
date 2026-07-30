@@ -179,6 +179,50 @@ skip link. `T-WEB-02-LANDING-01`, all 22 web tests, root typecheck, production V
 build, targeted Prettier checks, and `git diff --check` pass. The content is
 independently written and presentation-only; it does not create G7 evidence.
 
+## WEB-03-UX-02 work-item record
+
+ID: `WEB-03-UX-02`
+
+Status: `complete`
+
+Outcome: Make the high-intent market, signal, owner, and verification routes easier
+to scan and safer to act on by exposing task sequence, wallet boundary, recovery
+guidance, and next-action choices in the UI.
+
+Output files: task-route markup in `apps/web/src/main.ts`, route-specific responsive
+styles in `apps/web/src/styles.css`, focused UI source assertions, and this record.
+
+Acceptance criteria: The market explains the safe reading-to-signalling path; the
+signal form shows local validation, browser encryption, and wallet approval as
+separate steps; the owner view explains its masked default; and verification gives a
+clear independent-check boundary. Each addition remains honest about transaction
+finality and recovery, preserves semantic labels and live regions, and makes no
+private read, request, or storage change.
+
+Privacy/custody impact: Presentation only. It neither reveals a value nor changes
+the wallet, Nox, chain, recovery, or evidence paths.
+
+Funds location/recovery impact: No funds move. Copy reinforces that the public pool
+lifecycle and contract selectors, not the page, determine the next recovery action.
+
+Checks: focused UI source assertions, `npm run test:web`, production web build, root
+typecheck, and `git diff --check`.
+
+Evidence location: source/test output only; this work is not G7 evidence.
+
+Intended commit: `feat: clarify high-intent product journeys`.
+
+Rollback/failure action: Revert only the contextual UI. Do not change transaction
+or recovery behavior to compensate for a presentation issue.
+
+Completion evidence: The market now presents an explicit read → verify → signal
+path; signal entry separates local validation, browser encryption, and wallet
+approval; the owner route explains its masked default and explicit terminal actions;
+and verification directs users to the independent check boundary. `T-WEB-03-UX-02`,
+all 23 web tests, root typecheck, production Vite build, targeted Prettier checks,
+and `git diff --check` pass. The slice has no wallet or chain write and does not
+claim G7 evidence.
+
 ## WEB-03 work-item record
 
 ID: `WEB-03`
