@@ -20,13 +20,14 @@ seed phrases, environment dumps, or unsanitized terminal history.
 
 ### G5 partial history
 
-PK-03A has not passed G5. The source commit `4ef78df` recorded two successful
-zero-custody Chainlink adapter deployments before its runner ended without a final
-result. Their receipts and zero-balance read-back are in the append-only
-`PK-03A-ADAPTER-PARTIAL` artifacts and the spend ledger. This record is explicitly
-incomplete; the follow-up must reuse the completed `yes`/`no` deployments, prove the
-remaining negative cases, and emit a separate passed artifact before PK-03A or G5
-can be marked complete.
+PK-03A is a completed G5 component, not G5 itself. The source commit `4ef78df`
+deployed four zero-custody Chainlink adapters before its runner failed to create the
+missing G5 evidence directories. A follow-up source commit redundantly deployed a
+second stale/premature pair, completed the full read-only post-deployment checks,
+and wrote `PK-03A-ADAPTER` as the passed component artifact. The append-only
+`PK-03A-ADAPTER-PARTIAL` artifacts and spend ledger retain all six receipts and the
+zero-balance recovery conclusion. G5 remains `not_run` until the complete protocol
+lifecycle suite and verifier report pass.
 
 ### G3 completion history
 

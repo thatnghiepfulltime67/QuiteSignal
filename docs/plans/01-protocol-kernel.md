@@ -159,7 +159,7 @@ ADR if resolution changes trust, custody, privacy, state, or a public interface.
 
 ID: `PK-03A`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Pull forward the read-only production implementation of the already frozen
 direct price-feed adapter so PK-03 factory validation can use an actual Sepolia
@@ -203,6 +203,12 @@ Evidence path: `evidence/{offline,sepolia}/G5/PK-03A-ADAPTER.json` and committed
 spend-ledger entries. No partial adapter result passes G5; PK-03A is a named input
 to the later G5 combined report.
 
+Recorded checks: `npm run test:interfaces`, `npm run compile`,
+`npm run check:offline`, `npm run assess:g4:resolution:sepolia`, and the confirmed
+`npm run test:adapter:sepolia -- --write` composite run passed. The follow-up
+read-only verification records both positive outcomes, stale and premature reverts,
+constructor reverts, target/runtime binding, value rejection, and zero balances.
+
 Intended commit: `feat: add immutable price feed adapter`.
 
 Rollback/failure action: Revert this isolated adapter commit and leave PK-03A
@@ -210,12 +216,15 @@ incomplete. A production-adapter failure cannot be replaced with a fixture, trus
 resolver, copied feed, or caller-selected result; it blocks factory deployment until
 the documented resolution boundary is repaired or an ADR records a true blocker.
 
-Partial-run record: Source commit `4ef78df` deployed the immutable `yes` and `no`
-adapters at Sepolia blocks `11381029` and `11381031`, then stopped before the final
-evidence result. Both are zero-custody and have zero ETH balance; no funds recovery
-is required. The append-only partial artifacts and spend entries are explicitly
-non-passing. The follow-up runner must reuse them and deploy only the remaining
-negative adapters rather than repeat completed writes.
+Partial-run record: Source commit `4ef78df` deployed all four immutable adapters at
+Sepolia blocks `11381029` through `11381034`, then stopped before writing its final
+artifact because the G5 evidence directories did not exist. The resume runner
+redundantly deployed a second zero-custody `stale`/`premature` pair at blocks
+`11381061` and `11381062`, then completed the full post-deployment checks. All six
+adapters have zero ETH balance and no asset recovery is required. The append-only
+partial artifacts remain historical only; the passed PK-03A artifact uses the first
+`yes`/`no` pair and follow-up negative pair. The runner now refuses verify-only
+artifact writes from a dirty worktree.
 
 ## Sequencing
 

@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "gate": "G5",
+  "workItem": "PK-03A",
+  "sourceCommit": "c7725d4c9d5644ab4e2f8728e033cdd9c635d3f0",
+  "chainId": 11155111,
+  "verificationBlock": "11381077",
+  "target": {
+    "address": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+    "runtimeCodeHash": "0x9190afba2a699a9627d64ed68c7cc60e4005a8830b33183c4413b4e1a93b9ccd"
+  },
+  "roundAtPlan": {
+    "roundId": "18446744073709586465",
+    "answer": "190007932423",
+    "updatedAt": "1785393420"
+  },
+  "adapterRuntimeTemplateHash": "0x21a850b142b95081e7849f8848514428b8ee78e783444951513d1ec33e8cc71d",
+  "deployments": [
+    {
+      "name": "yes",
+      "address": "0x4033cb15200e90b93f1b233741a2f5124256e163",
+      "transactionHash": "0x8027c2c25dd5c18006a340aa56c880d65d6a3cea85cf7a712e2f5401d359d78b",
+      "blockNumber": "11381029"
+    },
+    {
+      "name": "no",
+      "address": "0xc95af9da8435b4468959dc84767df4caa16bbb79",
+      "transactionHash": "0x9fcc45578ef6f6b1e688edffe0ba428504567be02c5f759ac474fe61877b01dd",
+      "blockNumber": "11381031"
+    },
+    {
+      "name": "stale",
+      "address": "0xa2343e81c5bd13cab33bade1f781553398f20688",
+      "transactionHash": null,
+      "blockNumber": null
+    },
+    {
+      "name": "premature",
+      "address": "0x3881c4b5d05a5a9272baade75ef4878a471d273a",
+      "transactionHash": null,
+      "blockNumber": null
+    }
+  ],
+  "checks": {
+    "validYes": true,
+    "validNo": true,
+    "invalidConstructorRejected": true,
+    "staleRoundRejected": true,
+    "prematureObservationRejected": true,
+    "immutableTargetBinding": true,
+    "valueTransferRejected": true,
+    "zeroCustodyBalances": true
+  },
+  "status": "passed"
+}
