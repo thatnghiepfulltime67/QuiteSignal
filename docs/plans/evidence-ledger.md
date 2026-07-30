@@ -62,13 +62,16 @@ native balance. Its mutation suite rejects factory, collateral, and stale-feed
 substitutions without modelling confidential input. G6 remains `not_run` until all
 P2 lifecycle components pass.
 
-AUT-01 has a completed permissionless close-action slice, not a completed G6
-component. Source commit `efe7412` ran `once` against the canonical pool and sent
-one public `closeEpoch` receipt at block `11383239`. The independent health reader
-at block `11383240` observed `REFUNDABLE` and no further action; the sanitized
-receipt/state artifact is `evidence/sepolia/G6/AUT-01-CLOSE-ACTION.json`. The
-append-only ledger records its gas. Aggregate-result retrieval/finalization and a
-threshold lifecycle remain required, so G6 remains `not_run`.
+AUT-01 is a completed G6 component. Source commit `ebdbe73` added the transient
+public-result boundary: values and gateway attestations never enter logs or storage,
+while the verified calldata encoder may consume them in memory. The fresh AUT-01
+pool used the existing wrapper/factory and a new immutable observation adapter. Its
+runner submitted exactly one close, aggregate request, and aggregate finalization at
+blocks `11383756`, `11383761`, and `11383764`. The read-only
+`evidence/sepolia/G6/AUT-01-RELAYER.json` binds each receipt to its frozen selector,
+checks success, and observes the two-participant 25/15 public aggregate in
+`RESOLUTION_PENDING`. G6 remains `not_run` until gate aggregation verifies every
+P2 component together.
 
 IDX-01 is a completed G6 component, not G6 itself. Source commit `1531353` added a
 public-event-only mapper and a manifest/runtime-bound read rebuild. The named Sepolia

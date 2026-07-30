@@ -199,9 +199,8 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `AUT-01-RESULT-01`; the fresh threshold lifecycle and LIVE-02
-recovery evidence are complete, so automation can now bind its public-result
-boundary to the existing immutable aggregate lifecycle.
+Active slice: `G6-VERIFY-01`; all named P2 component evidence is complete and the
+gate aggregation must now verify its exact scope before P3 can begin.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
 consumer bindings, deployment tests, this record, evidence ledger entries, and
@@ -504,7 +503,7 @@ a G6 component; G6 remains `not_run` until automation, indexer, and live cases p
 
 ID: `AUT-01`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Add an optional, permissionless lifecycle runner that accelerates public
 pool transitions without becoming a correctness, custody, or decryption authority.
@@ -675,7 +674,7 @@ fresh threshold lifecycle must pass before it can be a G6 component.
 
 ### AUT-01-RESULT-01
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Add the narrow public-result boundary that lets the permissionless runner
 finalize an aggregate only after the pool has explicitly enabled public decryption.
@@ -716,6 +715,16 @@ Intended commit: `feat: finalize public aggregate results permissionlessly`.
 Rollback/failure action: Disable only the public-result adapter and retain timeout
 recovery. Do not cache an attestation, add a trusted result service, expose a user
 signer, or replace a failed proof with a caller-supplied result.
+
+Completion evidence: Source commit `ebdbe73` added the transient public-result
+boundary and passed the full offline gate. The fresh AUT-01 pool used the existing
+wrapper and factory plus a new immutable observation adapter. At blocks `11383756`,
+`11383761`, and `11383764`, the permissionless runner sent exactly one close,
+aggregate request, and aggregate finalization respectively. The read-only report
+`evidence/sepolia/G6/AUT-01-RELAYER.json` verifies all frozen selectors and success
+receipts, then confirms two participants, public aggregates 25/15, and
+`RESOLUTION_PENDING`. AUT-01 is complete as a G6 component; it does not alone pass
+G6.
 
 ## IDX-01 work-item record
 
