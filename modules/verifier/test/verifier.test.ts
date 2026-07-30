@@ -45,11 +45,21 @@ function manifest(): ProtocolManifest {
 }
 
 function client(
-  options: { badRuntime?: boolean; wrongConfig?: boolean; failedReceipt?: boolean } = {},
+  options: {
+    badRuntime?: boolean;
+    missingRuntime?: boolean;
+    wrongChain?: boolean;
+    wrongConfig?: boolean;
+    wrongEpoch?: boolean;
+    failedReceipt?: boolean;
+  } = {},
 ): ReadOnlyClient {
   return {
-    getChainId: async () => 11_155_111,
-    getCode: async () => (options.badRuntime ? ('0x6001' as Hex) : RUNTIME),
+    getChainId: async () => (options.wrongChain ? 1 : 11_155_111),
+    getCode: async () => {
+      if (options.missingRuntime) return undefined;
+      return options.badRuntime ? ('0x6001' as Hex) : RUNTIME;
+    },
     getTransactionReceipt: async () => ({ status: options.failedReceipt ? 'reverted' : 'success' }),
     readContract: async (parameters: unknown) => {
       const name = (parameters as { functionName: string }).functionName;
@@ -60,7 +70,7 @@ function client(
         };
       }
       return {
-        state: 4,
+        state: options.wrongEpoch ? 5 : 4,
         winner: 1,
         participantCount: 2,
         publicYes: 25n,
@@ -98,7 +108,12 @@ test('T-VERIFIER-PK08-02: independent reads accept matching runtime, immutable b
   assert.equal(report.receiptCount, 1);
 });
 
-test('T-VERIFIER-PK08-03: runtime, immutable binding, and receipt mutations are rejected', async () => {
+test('T-VERIFIER-PK08-03: chain, runtime, binding, epoch, and receipt mutations are rejected', async () => {
+  await assert.rejects(verifyManifest(client({ wrongChain: true }), manifest()), /chain id/);
+  await assert.rejects(
+    verifyManifest(client({ missingRuntime: true }), manifest()),
+    /Missing runtime/,
+  );
   await assert.rejects(
     verifyManifest(client({ badRuntime: true }), manifest()),
     /Runtime code hash mismatch/,
@@ -106,6 +121,10 @@ test('T-VERIFIER-PK08-03: runtime, immutable binding, and receipt mutations are 
   await assert.rejects(
     verifyManifest(client({ wrongConfig: true }), manifest()),
     /Immutable pool binding mismatch/,
+  );
+  await assert.rejects(
+    verifyManifest(client({ wrongEpoch: true }), manifest()),
+    /Public epoch mismatch/,
   );
   await assert.rejects(
     verifyManifest(client({ failedReceipt: true }), manifest()),

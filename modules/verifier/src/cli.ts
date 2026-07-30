@@ -8,7 +8,7 @@ import { sepolia } from 'viem/chains';
 import { parseManifest } from './manifest.js';
 import { verifyManifest, type ReadOnlyClient } from './verify.js';
 
-const ROOT = resolve(fileURLToPath(new URL('../../../../', import.meta.url)));
+const ROOT = resolve(fileURLToPath(new URL('../../../', import.meta.url)));
 
 function fail(message: string): never {
   throw new Error(message);

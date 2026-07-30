@@ -43,6 +43,9 @@ checks, or commit cannot be reviewed as one concern.
 ## Status rules
 
 - Only one phase and one work item may be `in_progress`.
+- `awaiting_chain` is permitted only for a fully staged Sepolia-only action waiting
+  on immutable time or finality; it is not a pass claim and may coexist only with one
+  dependency-independent active work item.
 - `blocked` names the failing gate, reproduction, and required decision/change.
 - `complete` requires a commit hash, passing checks, and validated evidence reference.
 - A checkbox is never evidence by itself.
@@ -50,19 +53,19 @@ checks, or commit cannot be reviewed as one concern.
 
 ## ID namespaces
 
-| Prefix | Scope |
-|---|---|
-| `FND-*` | Toolchain and feasibility |
-| `PK-*` | Protocol kernel |
-| `INT-*` | Public protocol integration |
-| `SDK-*` | Confidential/public client SDK |
-| `VER-*` | Independent verification |
-| `AUT-*` | Permissionless automation |
-| `IDX-*` | Public read model |
-| `DEP-*` | Deployment and manifests |
-| `LIVE-*` | Live Sepolia cases |
-| `WEB-*` | Product application |
-| `REL-*` | Hardening and release |
+| Prefix   | Scope                          |
+| -------- | ------------------------------ |
+| `FND-*`  | Toolchain and feasibility      |
+| `PK-*`   | Protocol kernel                |
+| `INT-*`  | Public protocol integration    |
+| `SDK-*`  | Confidential/public client SDK |
+| `VER-*`  | Independent verification       |
+| `AUT-*`  | Permissionless automation      |
+| `IDX-*`  | Public read model              |
+| `DEP-*`  | Deployment and manifests       |
+| `LIVE-*` | Live Sepolia cases             |
+| `WEB-*`  | Product application            |
+| `REL-*`  | Hardening and release          |
 
 ## Commit rules
 

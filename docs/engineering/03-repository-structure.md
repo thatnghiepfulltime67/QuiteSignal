@@ -56,6 +56,11 @@ services/*  apps/web
 - `modules/protocol` imports audited Solidity dependencies, not application code.
 - `modules/confidential-client` depends on public ABIs/config and domain types, not UI.
 - `modules/verifier` cannot import protocol accounting implementation helpers.
+- `modules/verifier` accepts only the public manifest schema: chain id, contract
+  addresses/runtime hashes, immutable pool bindings, public epoch facts, and receipt
+  hashes. Its CLI is RPC-read-only and has no signer, confidential-value field, or
+  write path. The PK-08 fixture lives under `deployments/sepolia/`; canonical release
+  deployments remain a later G6/G8 deliverable.
 - Services consume public chain state and cannot depend on owner-decryption APIs.
 - Web may consume clients/read models but cannot delegate confidential plaintext to services.
 - `ops/scripts` orchestrates published package interfaces and cannot become runtime authority.

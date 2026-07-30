@@ -594,7 +594,7 @@ of those pending state transitions and must not use their incomplete evidence.
 
 ID: `PK-08`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Build a standalone, read-only protocol manifest schema and verifier CLI
 which binds deployed runtime templates, immutable pool configuration, public epoch
@@ -623,6 +623,17 @@ Sepolia verifier execution, and `git diff --check`.
 Evidence path: `evidence/{offline,sepolia}/G5/PK-08-VERIFIER.json`. Intended commits:
 `docs: define independent verifier manifest`, `feat: add public protocol verifier`,
 and `test: record verifier mutation evidence`.
+
+Rollback/failure action: Revert only the verifier slice and leave PK-08 incomplete.
+A manifest mismatch is evidence of an invalid public binding, never permission to
+substitute a fixture, bypass a check, or alter Sepolia state.
+
+Completion evidence: the public-only manifest fixture and CLI passed at Sepolia
+block `11382600`; the emitted report rechecked seven runtime hashes, three immutable
+pool bindings/public epochs, and four receipts without a signer or chain write.
+`T-VERIFIER-PK08-01` through `T-VERIFIER-PK08-03` passed the required malformed,
+sensitive-field, wrong-chain, missing/stale-runtime, wrong-binding/state, and
+failed-receipt mutations. PK-08 is a completed G5 component, not G5 itself.
 
 ## Sequencing
 

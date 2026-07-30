@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "chainId": 11155111,
+  "contracts": [
+    {
+      "id": "fixture",
+      "address": "0xe0364be79d2a87f3253bab014c0f1eda0ade0184",
+      "runtimeCodeHash": "0x9ed7dd887c4fc51e7cd3b3c2d8248a5c6430706dfffd7156af5455a5441ab880"
+    },
+    {
+      "id": "wrapper",
+      "address": "0xacaa8f756f48d537901cbf5aed3931651a1d67a6",
+      "runtimeCodeHash": "0x49fbe00fc3b3febaacb1e917d67dcb707264e70a5daf0b6d2de8d52b32acfacc"
+    },
+    {
+      "id": "adapter",
+      "address": "0xaa8116ba3ecb5060ed206086390e8249f842be89",
+      "runtimeCodeHash": "0x01fb98d22b02f959ec0411dc153d2ea878c2e656798c9368721d1574a9209b60"
+    },
+    {
+      "id": "factory",
+      "address": "0x9ff278c3209606dd0e29fd258a973238898c9a4c",
+      "runtimeCodeHash": "0xdab1707cd9ff89fd85efa0a5de2683301743d2be4b70732f4c9fa54bce4846f7"
+    },
+    {
+      "id": "timeout-pool",
+      "address": "0xfa34982fdee60487102a71807f83a4bab4fe6b9b",
+      "runtimeCodeHash": "0x16d142d2316c71f61143989788653ed54871243b59920e017c48c923e8df8891"
+    },
+    {
+      "id": "grace-pool",
+      "address": "0x184ab3b794845f5d8407c68bccf3da8a93dfc3b4",
+      "runtimeCodeHash": "0xd5f77b24eb6f4070a74a1ae2fbda29fef3bdd1ec3d1bdd0c354785f0cf610b91"
+    },
+    {
+      "id": "success-pool",
+      "address": "0x50757b272201c9f7b0964bc48c1ef28af58fb337",
+      "runtimeCodeHash": "0xdb3de84ddfedbecc16dfbe4d65532f27746bb8f5de23b0a5c2ea53466de4072d"
+    }
+  ],
+  "pools": [
+    {
+      "contractId": "timeout-pool",
+      "address": "0xfa34982fdee60487102a71807f83a4bab4fe6b9b",
+      "confidentialCollateral": "0xacaa8f756f48d537901cbf5aed3931651a1d67a6",
+      "resolutionAdapter": "0xaa8116ba3ecb5060ed206086390e8249f842be89",
+      "epoch": {
+        "state": 5,
+        "winner": 0,
+        "participantCount": 2,
+        "publicYes": "0",
+        "publicNo": "0",
+        "settledRoundId": "0",
+        "settledAnswer": "0"
+      }
+    },
+    {
+      "contractId": "grace-pool",
+      "address": "0x184ab3b794845f5d8407c68bccf3da8a93dfc3b4",
+      "confidentialCollateral": "0xacaa8f756f48d537901cbf5aed3931651a1d67a6",
+      "resolutionAdapter": "0xaa8116ba3ecb5060ed206086390e8249f842be89",
+      "epoch": {
+        "state": 5,
+        "winner": 0,
+        "participantCount": 2,
+        "publicYes": "25",
+        "publicNo": "15",
+        "settledRoundId": "0",
+        "settledAnswer": "0"
+      }
+    },
+    {
+      "contractId": "success-pool",
+      "address": "0x50757b272201c9f7b0964bc48c1ef28af58fb337",
+      "confidentialCollateral": "0xacaa8f756f48d537901cbf5aed3931651a1d67a6",
+      "resolutionAdapter": "0xaa8116ba3ecb5060ed206086390e8249f842be89",
+      "epoch": {
+        "state": 4,
+        "winner": 1,
+        "participantCount": 2,
+        "publicYes": "25",
+        "publicNo": "15",
+        "settledRoundId": "18446744073709586469",
+        "settledAnswer": "191670360000"
+      }
+    }
+  ],
+  "receipts": [
+    { "transactionHash": "0x7a27ad825bd11eab118032616f794cc700ab7d1f862303b59c27d676a1689e7f" },
+    { "transactionHash": "0x1c46c3a47c0babe20576683e3152a629049550c2224dcb395daaab42218abee0" },
+    { "transactionHash": "0x7593b21164e5b7bf69920e803f4c4f8e95b69392adfeb851cf715a9a87378b90" },
+    { "transactionHash": "0x9db7228648939aa5953d5b2db166b67d562210bf35230ad2559cbee716e7b848" }
+  ]
+}
