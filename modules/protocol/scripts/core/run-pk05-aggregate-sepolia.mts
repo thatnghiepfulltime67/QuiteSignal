@@ -174,6 +174,24 @@ async function decrypt(
   }
   fail('The aggregate proof was unavailable.');
 }
+async function decryptBoolean(
+  handles: Awaited<ReturnType<typeof createViemHandleClient>>,
+  handle: Hex,
+): Promise<{ value: boolean; proof: Hex }> {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt += 1) {
+    try {
+      const result = await handles.publicDecrypt(handle);
+      if (typeof result.value !== 'boolean') {
+        fail('The callback acceptance did not decode as a boolean.');
+      }
+      return { value: result.value, proof: result.decryptionProof as Hex };
+    } catch {
+      if (attempt === MAX_RETRIES - 1) fail('The callback acceptance proof was unavailable.');
+      await delay(5_000);
+    }
+  }
+  fail('The callback acceptance proof was unavailable.');
+}
 
 async function main(): Promise<void> {
   loadEnvironment();
@@ -509,8 +527,8 @@ async function main(): Promise<void> {
       abi: artifacts.pool.abi,
       functionName: 'pendingAcceptanceHandle',
     } as never)) as Hex;
-    const proof = await decrypt(primaryHandles, handle);
-    if (proof.value !== 1n) fail('The matching callback was not accepted.');
+    const proof = await decryptBoolean(primaryHandles, handle);
+    if (!proof.value) fail('The matching callback was not accepted.');
     await expectRevert(
       () =>
         publicClient.call({
