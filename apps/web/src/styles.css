@@ -45,6 +45,18 @@ header {
   padding: 10px 18px;
   font: inherit;
 }
+nav {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+nav a {
+  color: var(--muted);
+  text-underline-offset: 4px;
+}
+nav a:hover {
+  color: var(--cream);
+}
 .legend {
   display: flex;
   gap: 16px;
@@ -84,6 +96,51 @@ header {
   line-height: 1.35;
   max-width: 620px;
 }
+.market {
+  padding: 80px 0 48px;
+  max-width: 900px;
+}
+.market h1 {
+  font-size: clamp(44px, 7vw, 76px);
+  margin: 12px 0 32px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.facts p {
+  margin: 0;
+  padding: 16px;
+  border-right: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.facts p:last-child {
+  border: 0;
+}
+.facts b {
+  display: block;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+.boundary {
+  margin-top: 24px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+}
+.private {
+  color: #fec5fb;
+}
+.muted {
+  color: var(--muted);
+}
 .primary {
   display: inline-block;
   margin-top: 16px;
@@ -111,6 +168,16 @@ header {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
+  }
+  .facts {
+    grid-template-columns: 1fr;
+  }
+  .facts p {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .market {
+    padding-top: 48px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

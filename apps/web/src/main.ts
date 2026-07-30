@@ -1,5 +1,6 @@
 import './styles.css';
 import { parsePublicManifest, type PublicManifest } from './manifest.js';
+import { presentMarket } from './market.js';
 
 interface Eip1193Provider {
   request(args: { method: string }): Promise<unknown>;
@@ -23,7 +24,14 @@ async function loadManifest(): Promise<void> {
 function render(message?: string): void {
   const root = document.querySelector<HTMLDivElement>('#app');
   if (!root) return;
-  root.innerHTML = `<main class="shell"><header><a class="wordmark" href="/markets">QuietSignal</a><button class="wallet" id="wallet">${walletState}</button></header><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section><section class="hero"><p class="eyebrow">{ confidential forecasts }</p><h1>Quiet signals.<br />Public proof.</h1><p>Signals are encrypted locally. Wallet activity, timing, and the eventual aggregate are public.</p><a class="primary" href="/markets">View market</a></section><section class="panel"><p class="eyebrow public">{ canonical Sepolia deployment }</p><p>${message ?? (manifest ? `Pool ${manifest.poolAddress} · deployed at block ${manifest.deployedAtBlock}` : 'Loading verified manifest…')}</p></section></main>`;
+  const market = manifest ? presentMarket(manifest) : undefined;
+  const isMarketRoute =
+    location.pathname.startsWith('/markets') || location.pathname.startsWith('/pool/');
+  const content =
+    isMarketRoute && market
+      ? `<section class="market"><p class="eyebrow public">{ public market }</p><h1>${market.condition}</h1><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><a class="primary" href="/pool/${market.poolAddress}/signal">Prepare encrypted signal</a></section>`
+      : `<section class="hero"><p class="eyebrow">{ confidential forecasts }</p><h1>Quiet signals.<br />Public proof.</h1><p>Signals are encrypted locally. Wallet activity, timing, and the eventual aggregate are public.</p><a class="primary" href="/markets">View market</a></section>`;
+  root.innerHTML = `<main class="shell"><header><a class="wordmark" href="/markets">QuietSignal</a><button class="wallet" id="wallet">${walletState}</button></header><nav aria-label="Primary"><a href="/markets">Market</a><a href="${manifest ? `/pool/${manifest.poolAddress}` : '/markets'}">Public facts</a></nav><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section>${content}<section class="panel"><p class="eyebrow public">{ canonical Sepolia deployment }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : 'Loading verified manifest…')}</p></section></main>`;
   document.querySelector<HTMLButtonElement>('#wallet')?.addEventListener('click', connectWallet);
 }
 

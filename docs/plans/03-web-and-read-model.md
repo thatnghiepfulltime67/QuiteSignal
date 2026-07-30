@@ -89,7 +89,7 @@ explicit provider/network/reconnect states, but it cannot submit a transaction.
 
 ID: `WEB-02`
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Turn the canonical public manifest into an honest market overview and
 privacy onboarding surface with no mock market facts or private-data implication.
@@ -120,6 +120,12 @@ Intended commit: `feat: add market privacy onboarding`.
 
 Rollback/failure action: Revert only the presentation layer; retain the canonical
 manifest boundary and do not replace unavailable chain facts with a fixture.
+
+Completion evidence: This slice adds a manifest-bound market presenter and the
+`/markets` plus canonical-pool presentation routes. `T-WEB-02-01` binds the view to
+the passed Sepolia manifest shape; `T-WEB-02-02` rejects anonymity/Sybil-resistance
+claims in presenter copy. The production build and typecheck pass. The signal link
+is descriptive only until WEB-03 supplies the real encrypted transaction flow.
 
 ## Primary route contract
 
