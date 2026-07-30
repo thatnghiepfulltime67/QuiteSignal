@@ -45,7 +45,8 @@ probabilityProof)` only; all four values are opaque Nox/proof data, never plaint
 amounts. The owner then invokes the unchanged ERC-7984
 `confidentialTransferAndCall`; `finalizeCommit` or `rejectPendingCommit` accepts
 only the wrapper acceptance proof, and `expirePendingCommit` is permissionless after
-the immutable timeout. `finalizeAggregate` accepts only its request id and bound proof. `settle`
+the immutable timeout. `finalizeAggregate` accepts only its request id plus separate
+bound YES and NO proofs; it accepts no plaintext aggregate. `settle`
 has no result parameter and reads the immutable adapter condition itself.
 
 ## Read API

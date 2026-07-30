@@ -249,3 +249,21 @@ refund on mismatch, no persistent wrapper ACL, aggregate-only public decryption,
 and permissionless recovery. One pending transfer is allowed per pool at a time; this
 MVP serialization bounds callback balance-delta ambiguity without a trusted queue or
 plaintext accounting.
+
+## ADR-019 — Two proof-only aggregate finalization inputs
+
+**Status:** Accepted before PK-05 implementation
+
+The initial stable interface described `finalizeAggregate(requestId, aggregateProof)`.
+That shape cannot prove both encrypted YES and NO aggregates with Nox: public
+decryption validates a proof against exactly one encrypted handle. Treating one proof
+as evidence for two handles would accept an unverified value; instead publicly
+decrypting the confidential total would expand disclosure beyond the protocol's
+privacy claim.
+
+`finalizeAggregate` therefore accepts the request id plus separate `yesProof` and
+`noProof`, and still accepts no caller-supplied plaintext aggregate. The pool
+validates each proof against its own immutable aggregate handle, stores the two
+resulting public totals, and consumes the request atomically. The request id remains
+the replay/context boundary. This narrow public-ABI correction reduces ambiguity and
+preserves the intended public disclosure: aggregate YES and NO only.

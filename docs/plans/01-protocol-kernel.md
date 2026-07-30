@@ -425,8 +425,8 @@ Outcome: Implement and Sepolia-test the permissionless cohort close and aggregat
 disclosure boundary. A close after the immutable deadline must enter `REFUNDABLE`
 below `kMin` without granting aggregate public decryption; at or above `kMin`, it
 must request public decryption for the encrypted YES and NO aggregates only, bind a
-single request to the pool epoch and aggregate handles, and accept a matching Nox
-proof into public totals before entering `RESOLUTION_PENDING`.
+single request to the pool epoch and aggregate handles, and accept matching Nox YES
+and NO proofs into public totals before entering `RESOLUTION_PENDING`.
 
 Output files: `modules/protocol/contracts/core/QuietSignalPool.sol`, common
 interfaces and ABI compatibility tests where a selector/error/event changes,

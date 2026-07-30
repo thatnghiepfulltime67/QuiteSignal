@@ -100,7 +100,7 @@ No transition moves backward. Individual claim/refund flags are monotonic.
 | `expirePendingCommit`    | Pending intent, `commitTimeout` elapsed                                  | Clear no-callback intent or confidentially return only conditionally-held stake |
 | `closeEpoch`              | Deadline reached                                                        | Below k: `REFUNDABLE`; otherwise `AGGREGATE_PENDING`                  |
 | `requestAggregateDecrypt` | `AGGREGATE_PENDING`, request not created                                | Public-decrypt YES/NO aggregate handles only                          |
-| `finalizeAggregate`       | Matching request context and valid proof                                | Store public totals, enter `RESOLUTION_PENDING`                         |
+| `finalizeAggregate`       | Matching request context and valid YES/NO proofs                        | Store proof-verified public totals, enter `RESOLUTION_PENDING`          |
 | `cancelBeforeResolution`  | `AGGREGATE_PENDING`, aggregate timeout elapsed from entry to that state | Enter `REFUNDABLE`; revealable aggregate remains public               |
 | `settle`                  | `RESOLUTION_PENDING`, adapter gives valid fresh resolution and selected aggregate is non-zero | Store result context and winner; enter `SETTLED` |
 | `cancelAfterResolutionGrace` | `RESOLUTION_PENDING`, grace elapsed                                  | Enter `REFUNDABLE`; collateral never left pool custody                 |
