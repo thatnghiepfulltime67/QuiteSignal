@@ -890,51 +890,53 @@ async function main(): Promise<void> {
     }
   }
 
-  await send(
-    deployer,
-    deployerWallet,
-    contracts.fixture,
-    fixtureData('mint', [deployer.address, FIXTURE_MINT]),
-    'mint fixture collateral',
-  );
-  await send(
-    deployer,
-    deployerWallet,
-    contracts.fixture,
-    fixtureData('approve', [contracts.wrapper, FIXTURE_MINT]),
-    'approve fixture collateral wrapper',
-  );
-  await send(
-    deployer,
-    deployerWallet,
-    contracts.wrapper,
-    wrapperData('wrap', [deployer.address, FIXTURE_MINT]),
-    'wrap fixture collateral for cohort members',
-  );
-  await send(
-    deployer,
-    deployerWallet,
-    secondary.address,
-    '0x',
-    'fund independent cohort member gas',
-    SECONDARY_ACTOR_FUNDING,
-  );
-  const secondaryDistribution = (await deployerHandleClient.encryptInput(
-    MEMBER_TWO_STAKE * 3n,
-    'uint256',
-    contracts.wrapper,
-  )) as EncryptedValue;
-  await send(
-    deployer,
-    deployerWallet,
-    contracts.wrapper,
-    wrapperData('confidentialTransfer', [
+  if (!recoveryResumeContracts) {
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.fixture,
+      fixtureData('mint', [deployer.address, FIXTURE_MINT]),
+      'mint fixture collateral',
+    );
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.fixture,
+      fixtureData('approve', [contracts.wrapper, FIXTURE_MINT]),
+      'approve fixture collateral wrapper',
+    );
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.wrapper,
+      wrapperData('wrap', [deployer.address, FIXTURE_MINT]),
+      'wrap fixture collateral for cohort members',
+    );
+    await send(
+      deployer,
+      deployerWallet,
       secondary.address,
-      secondaryDistribution.handle,
-      secondaryDistribution.handleProof,
-    ]),
-    'distribute confidential collateral to independent cohort member',
-  );
+      '0x',
+      'fund independent cohort member gas',
+      SECONDARY_ACTOR_FUNDING,
+    );
+    const secondaryDistribution = (await deployerHandleClient.encryptInput(
+      MEMBER_TWO_STAKE * 3n,
+      'uint256',
+      contracts.wrapper,
+    )) as EncryptedValue;
+    await send(
+      deployer,
+      deployerWallet,
+      contracts.wrapper,
+      wrapperData('confidentialTransfer', [
+        secondary.address,
+        secondaryDistribution.handle,
+        secondaryDistribution.handleProof,
+      ]),
+      'distribute confidential collateral to independent cohort member',
+    );
+  }
 
   const ownerBalance = async (
     account: Address,
@@ -944,11 +946,18 @@ async function main(): Promise<void> {
       handleClient,
       (await read(contracts.wrapper, wrapperArtifact, 'confidentialBalanceOf', [account])) as Hex,
     );
-  const initialDeployerBalance = await ownerBalance(deployer.address, deployerHandleClient);
-  const initialSecondaryBalance = await ownerBalance(secondary.address, secondaryHandleClient);
+  const observedDeployerBalance = await ownerBalance(deployer.address, deployerHandleClient);
+  const observedSecondaryBalance = await ownerBalance(secondary.address, secondaryHandleClient);
+  const initialDeployerBalance = recoveryResumeContracts
+    ? observedDeployerBalance + MEMBER_ONE_STAKE
+    : observedDeployerBalance;
+  const initialSecondaryBalance = recoveryResumeContracts
+    ? observedSecondaryBalance + MEMBER_TWO_STAKE
+    : observedSecondaryBalance;
   if (
-    initialDeployerBalance !== MEMBER_ONE_STAKE * 3n ||
-    initialSecondaryBalance !== MEMBER_TWO_STAKE * 3n
+    !recoveryResumeContracts &&
+    (initialDeployerBalance !== MEMBER_ONE_STAKE * 3n ||
+      initialSecondaryBalance !== MEMBER_TWO_STAKE * 3n)
   ) {
     fail('The initial confidential cohort collateral distribution did not match the fixture plan.');
   }
