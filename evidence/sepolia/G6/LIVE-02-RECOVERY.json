@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "workItemId": "LIVE-02",
+  "environment": "sepolia-read",
+  "status": "passed",
+  "sourceCommit": "d2d147c31d79df35e7306a5201e64d2b728dc441",
+  "verificationBlock": "11383657",
+  "cases": [
+    {
+      "id": "below-k",
+      "pool": "0x53f14f513519e4247E6443fe042495Ebb1839A6F",
+      "publicEpoch": {
+        "state": 5,
+        "winner": 0,
+        "participantCount": 1,
+        "aggregateRequestId": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "aggregatePendingAt": "0",
+        "publicYes": "0",
+        "publicNo": "0"
+      },
+      "selectorReceipts": {
+        "close": [
+          "0x76a6cb00561cf3cf98402b80d7086398540adb07c91a3e3488a49376549365fe"
+        ],
+        "request": [],
+        "cancel": [],
+        "refunds": [
+          "0x77a793757fb6c9483fe338f125e67d82daf8cd7c9449441a66a6396c604f5dcb"
+        ]
+      },
+      "historicalVerification": {
+        "schemaVersion": 1,
+        "chainId": 11155111,
+        "verificationBlock": "11383655",
+        "epochVerificationBlock": "11383474",
+        "contractCount": 5,
+        "poolCount": 1,
+        "receiptCount": 5,
+        "checks": {
+          "runtimeCodeHashes": true,
+          "immutablePoolBindings": true,
+          "publicEpochFacts": true,
+          "receiptStatuses": true
+        },
+        "status": "passed"
+      }
+    },
+    {
+      "id": "timeout",
+      "pool": "0x7C7E4428767520A99B2bfb4f196B5558c64efEC8",
+      "publicEpoch": {
+        "state": 5,
+        "winner": 0,
+        "participantCount": 2,
+        "aggregateRequestId": "0x1c3e3faea415dabaea16a8b015c552af47afddef639d2062356a8938c37fd818",
+        "aggregatePendingAt": "1785428280",
+        "publicYes": "0",
+        "publicNo": "0"
+      },
+      "selectorReceipts": {
+        "close": [
+          "0x88ea0848a228bc9efcd7cfa349bc3e210051881663d58207101905eb868c0b88"
+        ],
+        "request": [
+          "0x2f1df39055722be4fe66958433a1d4c9553191d0064455ba5fbc706741283854"
+        ],
+        "cancel": [
+          "0x5283ea79a48c3b6a03539a042b11d598e01eec4549723e6cb324040be47cb7f8"
+        ],
+        "refunds": [
+          "0x2831af8756975979eb87b9bf7e54b715d67b84add98fb1665b517a1b69c51969",
+          "0x9fa2f565c0076f27c0730b178d254f91dd3f9f9622fe5303f2ad7e53f186c594"
+        ]
+      },
+      "historicalVerification": {
+        "schemaVersion": 1,
+        "chainId": 11155111,
+        "verificationBlock": "11383657",
+        "epochVerificationBlock": "11383478",
+        "contractCount": 5,
+        "poolCount": 1,
+        "receiptCount": 10,
+        "checks": {
+          "runtimeCodeHashes": true,
+          "immutablePoolBindings": true,
+          "publicEpochFacts": true,
+          "receiptStatuses": true
+        },
+        "status": "passed"
+      }
+    }
+  ],
+  "checks": {
+    "historicalManifests": true,
+    "currentRefundableState": true,
+    "belowKNoAggregateRequest": true,
+    "timeoutCancellationAfterEligibility": true,
+    "ownerScopedTerminalSelectors": true
+  }
+}

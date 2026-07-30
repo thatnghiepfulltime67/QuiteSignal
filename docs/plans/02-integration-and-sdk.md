@@ -199,8 +199,9 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `LIVE-02-PLAN-01`; AUT-01 awaits its separately verified public-result
-boundary and a fresh threshold lifecycle.
+Active slice: `AUT-01-RESULT-01`; the fresh threshold lifecycle and LIVE-02
+recovery evidence are complete, so automation can now bind its public-result
+boundary to the existing immutable aggregate lifecycle.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
 consumer bindings, deployment tests, this record, evidence ledger entries, and
@@ -1016,7 +1017,7 @@ without the independent recovery family and remaining P2 components.
 
 ID: `LIVE-02`
 
-Status: `in_progress`
+Status: `complete`
 
 ### LIVE-02-PLAN-01
 
@@ -1103,7 +1104,7 @@ without a chain write.
 
 ### LIVE-02-EXEC-01
 
-Status: `in_progress`
+Status: `complete`
 
 Outcome: Execute fresh below-k and aggregate-timeout recovery cases on Sepolia, each
 with independent receipts and on-chain terminal state.
@@ -1143,11 +1144,15 @@ Intended commit: `test: execute live recovery lifecycle`.
 Rollback/failure action: Stop at the failed stage and retain its public facts. Use
 only the pool's corresponding permissionless recovery function.
 
-Partial evidence: Source commit `067df90` generated separate immutable historical
+Completion evidence: Source commit `067df90` generated separate immutable historical
 manifests for the below-k and timeout pools. Independent public verification passed
 for five and ten scenario receipts respectively, and finalized public-event replays
-produced `refundable` projections. The remaining selector/state report will bind the
-timeout cancellation and both terminal events to the current pool facts before this
+produced `refundable` projections. Source commit `d2d147c` added the direct
+selector/state verifier; its read-only Sepolia report at block `11383657` confirms
+below-k has no aggregate request and one terminal receipt, while timeout has a single
+request and eligible cancellation followed by two terminal receipts. Both current
+epochs are `REFUNDABLE` with zero public totals. LIVE-02 is complete as a G6
+component; this does not by itself pass G6.
 work item can be marked complete.
 
 ## Dependency graph

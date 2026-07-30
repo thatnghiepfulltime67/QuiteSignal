@@ -99,9 +99,11 @@ and finalized indexer replays are recorded as
 `evidence/sepolia/G6/LIVE-02-{BELOW-K,TIMEOUT}-{MANIFEST,VERIFIER,READ-MODEL}.json`.
 The below-k projection has one participant and no aggregate request; the timeout
 projection retains its aggregate request, has two participants, zero public totals,
-and is `refundable` after two state-gated terminal events. G6 remains `not_run`
-until the final recovery selector/state report and the remaining P2 acceptance work
-are complete.
+and is `refundable` after two state-gated terminal events. The direct read-only
+selector/state report `evidence/sepolia/G6/LIVE-02-RECOVERY.json` passed at block
+`11383657`: it proves that below-k had no aggregate request, while timeout used one
+aggregate request, one cancellation after eligibility, and two terminal receipts.
+G6 remains `not_run` until the remaining P2 acceptance work is complete.
 
 ### G5 partial history
 
