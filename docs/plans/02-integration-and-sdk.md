@@ -1114,8 +1114,9 @@ and read-model evidence, this record, and recovery evidence records.
 Acceptance criteria: The below-k pool closes with one accepted participant and no
 aggregate request; the timeout pool reaches aggregate pending with two participants,
 then reaches `REFUNDABLE` only through `cancelBeforeResolution` after its immutable
-timeout. Each pool has a public manifest/replay and every owner terminal/recovery
-action remains scoped to its own local wallet.
+timeout. Each pool has a public manifest/replay. The below-k owner and both timeout
+owners each invoke the contract's `refund` path from their own local wallet; no
+terminal/recovery action may be relayed or performed by a different owner.
 
 Privacy/custody impact: All confidential inputs/callbacks follow the existing Nox
 boundary; no recovery proof, owner value, or raw input is persisted.

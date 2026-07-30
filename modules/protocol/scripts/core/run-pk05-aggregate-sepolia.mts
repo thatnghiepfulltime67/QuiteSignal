@@ -763,9 +763,11 @@ async function main(): Promise<void> {
     return;
   }
   if (stage === 'refund') {
+    const actor = argument('actor') === 'secondary' ? secondary : primary;
+    const wallet = actor.address === secondary.address ? secondaryWallet : primaryWallet;
     await send(
-      primary,
-      primaryWallet,
+      actor,
+      wallet,
       pool,
       calldata(artifacts.pool, 'refund'),
       'refund confidential stake',
