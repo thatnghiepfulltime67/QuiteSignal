@@ -9,6 +9,7 @@
     "test:adapter:sepolia": "tsx scripts/core/run-pk03a-adapter-sepolia.mts",
     "test:commit:sepolia": "tsx scripts/core/run-pk04-stage-sepolia.mts",
     "verify:commit:sepolia": "tsx scripts/core/verify-pk04-commit-sepolia.mts",
+    "test:aggregate:sepolia": "tsx scripts/core/run-pk05-aggregate-sepolia.mts",
     "test:factory:sepolia": "tsx scripts/core/run-pk03b-factory-sepolia.mts",
     "test:interfaces": "hardhat build --force && tsx --test test/unit/interface-compatibility.test.ts",
     "test:model": "tsx --test test/feasibility/reference-model.test.ts",
