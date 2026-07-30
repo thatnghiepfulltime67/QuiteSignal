@@ -128,6 +128,11 @@ contract QuietSignalPool is IERC7984Receiver {
     return (_pending.owner, _pending.availableAt, _pending.callbackReceived);
   }
 
+  function pendingAcceptanceHandle() external view returns (bytes32) {
+    _requirePendingCallback();
+    return ebool.unwrap(_pending.accepted);
+  }
+
   /// @notice Registers an owner-bound encrypted signal before its token callback.
   function commitSignal(
     externalEuint256 encryptedStake,

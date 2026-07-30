@@ -48,6 +48,9 @@ interface IQuietSignalPool is IERC7984Receiver {
     view
     returns (address owner, uint64 availableAt, bool callbackReceived);
 
+  /// @notice Returns the only pending handle permitted for public decryption.
+  function pendingAcceptanceHandle() external view returns (bytes32);
+
   /// @notice Accepts encrypted Nox input handles and their owner-bound proofs only.
   function commitSignal(
     externalEuint256 encryptedStake,

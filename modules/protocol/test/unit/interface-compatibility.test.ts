@@ -84,6 +84,7 @@ test('T-ABI-PK02-01: pool selectors preserve encrypted commit and caller-indepen
     ['epoch', 'epoch()'],
     ['ownerPosition', 'ownerPosition()'],
     ['pendingCommit', 'pendingCommit()'],
+    ['pendingAcceptanceHandle', 'pendingAcceptanceHandle()'],
     ['commitSignal', 'commitSignal(bytes32,bytes,bytes32,bytes)'],
     ['finalizeCommit', 'finalizeCommit(bytes)'],
     ['rejectPendingCommit', 'rejectPendingCommit(bytes)'],
