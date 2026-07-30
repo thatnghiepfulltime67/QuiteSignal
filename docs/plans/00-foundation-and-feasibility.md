@@ -724,6 +724,13 @@ has elapsed and the local secondary recovery record is retained. The first recov
 invocation sent no write because the clean-source guard detected these uncommitted
 receipts. Commit this checkpoint, then cancel permissionlessly and refund both owners.
 
+The terminal FND-05B recovery completed at blocks `11380016` through `11380018`:
+permissionless cancellation and one refund per recorded owner. Local balance checks
+passed and the ignored actor record was deleted. The immutable spend ledger retains
+the historical `FND-05` label for these recovery receipts; fixture, source commit,
+senders, and this checkpoint identify their FND-05B scope. Record FND-05B evidence
+next; G3 remains incomplete until FND-05C.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

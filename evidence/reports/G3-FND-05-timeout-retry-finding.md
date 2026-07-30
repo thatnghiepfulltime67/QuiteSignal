@@ -232,3 +232,11 @@ remains locally retained. The next action is the existing permissionless cancell
 and two owner refunds. The first recovery invocation was correctly stopped by the
 clean-source guard because these advance receipts were not yet committed; it sent no
 recovery write.
+
+The terminal recovery completed at blocks `11380016` through `11380018`: a
+permissionless secondary caller cancelled the expired aggregate-pending epoch, then
+the deployer and secondary owner each refunded once. The runner verified both owner
+balances locally and deleted the ignored secondary-actor record. The append-only
+ledger labels these three recovery receipts `FND-05` because the historical recovery
+command predates the FND-05B split; their fixture, source commit, senders, and report
+context bind them unambiguously to FND-05B. This is evidence, not a hidden relabel.
