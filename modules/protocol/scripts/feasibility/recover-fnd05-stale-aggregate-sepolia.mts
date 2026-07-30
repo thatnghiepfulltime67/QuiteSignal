@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import {
   createPublicClient,
   createWalletClient,
+  encodeFunctionData,
   http,
   isAddress,
   keccak256,
@@ -378,11 +379,11 @@ async function main(): Promise<void> {
     const liveFees = await publicClient.estimateFeesPerGas();
     const liveMaxFeePerGas = liveFees.maxFeePerGas ?? (await publicClient.getGasPrice());
     assertBudget(ledger, [gas * liveMaxFeePerGas]);
-    const hash = await wallet.writeContract({
+    const data = encodeFunctionData({ abi: SPIKE_ABI, functionName });
+    const hash = await wallet.sendTransaction({
       account: sender,
-      address: fixture.recoverySpike,
-      abi: SPIKE_ABI,
-      functionName,
+      to: fixture.recoverySpike,
+      data,
       gas,
       maxFeePerGas: liveMaxFeePerGas,
     });
