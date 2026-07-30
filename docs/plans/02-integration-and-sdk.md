@@ -199,7 +199,8 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `DEP-01-VERIFY-01`.
+Active slice: none; `DEP-01` is complete and the next P2 item must be selected
+before implementation.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
 consumer bindings, deployment tests, this record, evidence ledger entries, and
@@ -427,6 +428,21 @@ Intended commit: `test: verify canonical deployment manifest`.
 Rollback/failure action: Revert only the verifier compatibility change before
 publishing evidence. Never alter the deployment receipts, runtime hashes, or
 immutable canonical configuration to force a passing report.
+
+Completion evidence: source commit `6e6ae47` adds historical deployment-block epoch
+verification with two `T-VERIFIER-DEP-01-*` mutation cases. The canonical manifest
+at `deployments/sepolia/quiet-signal.json` records five successful DEP-01 receipts
+from blocks `11383118`–`11383123`: fixture
+`0x691737deF57e67805D534374Fa814FeFa37e15F0`, product wrapper
+`0x4573692a780edb31A18455f7Bff160af8159128d`, adapter
+`0x646d694B3eec38F10Cda8Ff55f08f76D2f596E84`, factory
+`0x1c421A76C1E28A21Fa6ae969B0273d3C4BD1f858`, and canonical pool
+`0xe73B691b490baaDa2FfC8da9Ee9c799B35770149`. The independent verifier passed at
+block `11383137`, re-reading all five runtimes, immutable pool bindings, five
+successful receipts, and the empty initial epoch specifically at block `11383123`.
+The sanitized report is `evidence/sepolia/G6/DEP-01-DEPLOYMENT.json`. DEP-01 is
+complete as a G6 component; G6 remains `not_run` until every required P2 live item
+passes.
 
 ## Dependency graph
 

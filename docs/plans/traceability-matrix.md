@@ -87,11 +87,12 @@ requirements.
 `T-VERIFIER-PK08-*` is pure schema and read-client mutation coverage. The separately
 named CLI execution reads Ethereum Sepolia; neither test writes chain state.
 
-| Test family          | Coverage                                                                                           | Invariants/requirements |
-| -------------------- | -------------------------------------------------------------------------------------------------- | ----------------------- |
-| `T-VERIFIER-PK08-01` | Schema version/chain, duplicate binding, and prohibited confidential-field rejection               | FR-08, P1, P3, P7       |
-| `T-VERIFIER-PK08-02` | Matching runtime hashes, immutable bindings, public epoch facts, and successful receipt acceptance | FR-08, I5, I8, I9       |
-| `T-VERIFIER-PK08-03` | Wrong chain, missing/stale runtime, wrong pool binding/state, and failed receipt rejection         | FR-08, I5, I8, I9       |
+| Test family           | Coverage                                                                                           | Invariants/requirements |
+| --------------------- | -------------------------------------------------------------------------------------------------- | ----------------------- |
+| `T-VERIFIER-PK08-01`  | Schema version/chain, duplicate binding, and prohibited confidential-field rejection               | FR-08, P1, P3, P7       |
+| `T-VERIFIER-PK08-02`  | Matching runtime hashes, immutable bindings, public epoch facts, and successful receipt acceptance | FR-08, I5, I8, I9       |
+| `T-VERIFIER-PK08-03`  | Wrong chain, missing/stale runtime, wrong pool binding/state, and failed receipt rejection         | FR-08, I5, I8, I9       |
+| `T-VERIFIER-DEP-01-*` | Historical deployment-block epoch selection and malformed deployment-block rejection               | FR-01, FR-08, I8, I9    |
 
 ## PK-09 combined-evidence coverage
 
@@ -120,24 +121,24 @@ Nox, encryption, or contract operation and does not advance G5/G6.
 `T-SDK-02-*` is offline behavioral and static boundary coverage only. It does not
 replace the required named Sepolia SDK smoke before G6.
 
-| Test family   | Coverage                                                                                             | Requirements       |
-| ------------- | ---------------------------------------------------------------------------------------------------- | ------------------ |
-| `T-SDK-02-01` | Canonical Sepolia/pool/request context, explicit contract encoding, and JSON rejection               | P1, P3, P7, NFR-04 |
-| `T-SDK-02-02` | Same-client Nox encryptions serialize rather than sharing mutable input-builder state                 | I7, I8, NFR-02     |
-| `T-SDK-02-03` | Invalid chain/context/value/Nox response rejects without reflecting plaintext in an error             | P1, P3, NFR-04     |
-| `T-SDK-02-04` | Confidential client contains no console, browser storage, or JSON serialization path                  | P1, P3, P7         |
+| Test family   | Coverage                                                                                  | Requirements       |
+| ------------- | ----------------------------------------------------------------------------------------- | ------------------ |
+| `T-SDK-02-01` | Canonical Sepolia/pool/request context, explicit contract encoding, and JSON rejection    | P1, P3, P7, NFR-04 |
+| `T-SDK-02-02` | Same-client Nox encryptions serialize rather than sharing mutable input-builder state     | I7, I8, NFR-02     |
+| `T-SDK-02-03` | Invalid chain/context/value/Nox response rejects without reflecting plaintext in an error | P1, P3, NFR-04     |
+| `T-SDK-02-04` | Confidential client contains no console, browser storage, or JSON serialization path      | P1, P3, P7         |
 
 ## SDK-03 transaction/read boundary coverage
 
 `T-SDK-03-*` is offline ABI and operation-identity coverage. The named Sepolia
 sender/read smoke is recorded separately as a G6 component, not as a G6 pass claim.
 
-| Test family   | Coverage                                                                                              | Requirements       |
-| ------------- | ----------------------------------------------------------------------------------------------------- | ------------------ |
-| `T-SDK-03-01` | Frozen `commitSignal` ABI declaration matches the compiled pool artifact                              | NFR-02, I7, I8     |
-| `T-SDK-03-02` | Prepared encrypted commit is non-serializable and duplicate logical send returns one transaction      | P1, P3, I7         |
-| `T-SDK-03-03` | Different calldata cannot reuse a request ID; non-Sepolia transaction client rejects                  | P1, P3, I7, I8     |
-| `T-SDK-03-04` | Transaction/read boundary contains no console, browser storage, or JSON data path                     | P1, P3, P7         |
+| Test family   | Coverage                                                                                         | Requirements   |
+| ------------- | ------------------------------------------------------------------------------------------------ | -------------- |
+| `T-SDK-03-01` | Frozen `commitSignal` ABI declaration matches the compiled pool artifact                         | NFR-02, I7, I8 |
+| `T-SDK-03-02` | Prepared encrypted commit is non-serializable and duplicate logical send returns one transaction | P1, P3, I7     |
+| `T-SDK-03-03` | Different calldata cannot reuse a request ID; non-Sepolia transaction client rejects             | P1, P3, I7, I8 |
+| `T-SDK-03-04` | Transaction/read boundary contains no console, browser storage, or JSON data path                | P1, P3, P7     |
 
 ## Evidence naming
 

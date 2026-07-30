@@ -39,9 +39,9 @@ production-key configuration.
 | `npm run test:web`                                        | offline                      | Component, accessibility, and deterministic UI-state tests                                  | G7/G8           |
 | `npm run test:sepolia:read`                               | sepolia-read                 | Manifest, bytecode, events, public verifier                                                 | G6–G8           |
 | `npm run deploy:sepolia:plan`                             | sepolia-read                 | Deterministic write plan, addresses, estimated cost                                         | G6              |
-| `npm run deploy:sepolia`                                  | sepolia-write                | Confirmed deployment only                                                                   | G6              |
+| `npm run deploy:sepolia:write`                            | sepolia-write                | Guarded canonical deployment; produces manifest only after post-deploy readbacks            | G6              |
 | `npm run test:sepolia:write -- <case>`                    | sepolia-write                | One named live gate case                                                                    | G1–G6           |
-| `npm run verify:deployment`                               | sepolia-read                 | Sources, runtime hashes, ABI/address sync                                                   | G6/G8           |
+| `npm run verify:protocol:sepolia -- --manifest=<path>`    | sepolia-read                 | Runtime hashes, immutable bindings, historical/current public epoch, and receipts           | G6/G8           |
 | `npm run verify:evidence -- G3`                           | sepolia-read                 | G3 evidence shape, receipts, commit reachability, runtime/binding context, terminal custody | G3              |
 | `npm run assess:g4:sepolia`                               | sepolia-read                 | Public target runtime and configuration discovery; may record a feasibility blocker         | G4              |
 | `npm run assess:g4:resolution:sepolia`                    | sepolia-read                 | Chainlink ETH/USD target metadata, runtime, and current round assessment                    | G4              |

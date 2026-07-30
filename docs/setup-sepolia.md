@@ -75,6 +75,31 @@ Before the first write, tooling must verify:
 - the spend ledger is valid and matches the active source commit;
 - no uncommitted contract/config change exists.
 
+## Canonical deployment runbook
+
+The DEP-01 planner and sender are intentionally separate. The planner makes only
+Sepolia reads and gas estimations; the sender is the only command that can submit a
+canonical deployment transaction.
+
+1. Run `npm run check:sepolia:read` and `npm run deploy:sepolia:plan` from a clean
+   committed tree. Review the selected feed, immutable market configuration,
+   deterministic addresses, and remaining budget.
+2. Run `npm run deploy:sepolia:write` only with the explicit confirmation value in
+   local `.env`. It refuses an existing canonical manifest, a non-Sepolia RPC,
+   changed/pending nonce, prior code at a predicted address, a stale pool deadline,
+   a failed receipt, or an exceeded gas budget.
+3. Do not edit or replace `deployments/sepolia/quiet-signal.json`. Verify it with:
+
+   ```sh
+   npm run verify:protocol:sepolia -- \
+     --manifest=deployments/sepolia/quiet-signal.json \
+     --out=evidence/sepolia/G6/DEP-01-DEPLOYMENT.json
+   ```
+
+The manifest records the deployment epoch at its deployment block. Future users may
+advance the live pool state without invalidating that immutable deployment baseline;
+live lifecycle evidence uses its own state-specific reports.
+
 ## Rotation and incident response
 
 If a key or mnemonic appears in source, Git history, logs, screenshots, evidence, or

@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "chainId": 11155111,
+  "sourceCommit": "e2161d892425546725e0295779464e0e0aa02264",
+  "deployment": {
+    "workItemId": "DEP-01",
+    "deployedAtBlock": "11383123",
+    "deployer": "0xDC1cc527423C882156a632C250528D1922d18Fc7",
+    "configuration": {
+      "feed": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+      "feedRuntimeCodeHash": "0x9190afba2a699a9627d64ed68c7cc60e4005a8830b33183c4413b4e1a93b9ccd",
+      "threshold": "200000000000",
+      "comparison": "greater-or-equal",
+      "observationNotBefore": "1785424608",
+      "maximumFeedAgeSeconds": "86400",
+      "poolId": "0x7b453746b5ced4b37b5ad9e7078102d8179e653efd420e34518b4ffcdd7e7be0",
+      "deploymentSalt": "0xb430a7da14ec39fb15c566124c7746a0359404c811f6107d7dc1976547e30c30"
+    }
+  },
+  "contracts": [
+    {
+      "id": "fixture",
+      "address": "0x691737def57e67805d534374fa814fefa37e15f0",
+      "runtimeCodeHash": "0x9ed7dd887c4fc51e7cd3b3c2d8248a5c6430706dfffd7156af5455a5441ab880",
+      "artifact": {
+        "contractName": "FeasibilityERC20",
+        "sourceName": "contracts/feasibility/FeasibilityERC20.sol",
+        "buildInfoId": "solc-0_8_35-cfcd395aa9de1efbd314bf64328ef5bbbf185b21",
+        "creationCodeHash": "0x2e82b628313ef8fd1a74a30723dfffe33c0702466cf80ac25e71173e584abcbe",
+        "templateRuntimeCodeHash": "0x9ed7dd887c4fc51e7cd3b3c2d8248a5c6430706dfffd7156af5455a5441ab880"
+      }
+    },
+    {
+      "id": "wrapper",
+      "address": "0x4573692a780edb31a18455f7bff160af8159128d",
+      "runtimeCodeHash": "0xe0f903fe699ad98237fbc95ce67c5d532dfd9e2dcaba7d95d310f900991f7c45",
+      "artifact": {
+        "contractName": "QuietSignalConfidentialCollateral",
+        "sourceName": "contracts/core/QuietSignalConfidentialCollateral.sol",
+        "buildInfoId": "solc-0_8_35-cfcd395aa9de1efbd314bf64328ef5bbbf185b21",
+        "creationCodeHash": "0x0ede50cd9ecba44e06e3d9675a800fbc4d5eb6672fcb1e1a44ba98259438e19c",
+        "templateRuntimeCodeHash": "0x012aaecef86b03d6eafcbd1cbc99088f507a636515c102552766263da5220732"
+      }
+    },
+    {
+      "id": "adapter",
+      "address": "0x646d694b3eec38f10cda8ff55f08f76d2f596e84",
+      "runtimeCodeHash": "0x750e094358b36351d1bfcc06513b07d42ee73bc207fdfbc13313dce2a084eda4",
+      "artifact": {
+        "contractName": "ChainlinkPriceFeedResolutionAdapter",
+        "sourceName": "contracts/adapters/ChainlinkPriceFeedResolutionAdapter.sol",
+        "buildInfoId": "solc-0_8_35-cfcd395aa9de1efbd314bf64328ef5bbbf185b21",
+        "creationCodeHash": "0x0726cad4a637bbeaf68426f0df9faee7b39f89b55cf53899085f2ed95a8b8c82",
+        "templateRuntimeCodeHash": "0x40188771b958a4bf041f2a2f15ba124f8c7ee9e9a18253b620507f7f5a67ac4a"
+      }
+    },
+    {
+      "id": "factory",
+      "address": "0x1c421a76c1e28a21fa6ae969b0273d3c4bd1f858",
+      "runtimeCodeHash": "0xc4c4908d17c2b2ec77c194a0c6b96a56955ab8a285075a804af4ae44e72d154e",
+      "artifact": {
+        "contractName": "QuietSignalFactory",
+        "sourceName": "contracts/core/QuietSignalFactory.sol",
+        "buildInfoId": "solc-0_8_35-cfcd395aa9de1efbd314bf64328ef5bbbf185b21",
+        "creationCodeHash": "0x83206f583c69b18bca0dd13540e002fac3cabb144d3b4f8864a39d9a8969fe70",
+        "templateRuntimeCodeHash": "0xc4c4908d17c2b2ec77c194a0c6b96a56955ab8a285075a804af4ae44e72d154e"
+      }
+    },
+    {
+      "id": "pool",
+      "address": "0xe73B691b490baaDa2FfC8da9Ee9c799B35770149",
+      "runtimeCodeHash": "0x87de3518050f61cfb7808c02fdb2fd7b29a5dc82d04536ead57b13bf6280289d",
+      "artifact": {
+        "contractName": "QuietSignalPool",
+        "sourceName": "contracts/core/QuietSignalPool.sol",
+        "buildInfoId": "solc-0_8_35-cfcd395aa9de1efbd314bf64328ef5bbbf185b21",
+        "creationCodeHash": "0x5727f308deba42d749f549c7cc2ac8e27be101017e6c4656aa438b2e169f01e1",
+        "templateRuntimeCodeHash": "0xc6fd5d14efb0261ded29d732c2a3ce256cb1e72c7b07dbec26031a329f02855a"
+      }
+    }
+  ],
+  "pools": [
+    {
+      "contractId": "pool",
+      "address": "0xe73B691b490baaDa2FfC8da9Ee9c799B35770149",
+      "confidentialCollateral": "0x4573692a780edb31A18455f7Bff160af8159128d",
+      "resolutionAdapter": "0x646d694B3eec38F10Cda8Ff55f08f76D2f596E84",
+      "epoch": {
+        "state": 0,
+        "winner": 0,
+        "participantCount": 0,
+        "publicYes": "0",
+        "publicNo": "0",
+        "settledRoundId": "0",
+        "settledAnswer": "0"
+      }
+    }
+  ],
+  "receipts": [
+    {
+      "id": "fixture",
+      "transactionHash": "0xd7ab51f96c6bc5701dc255fdbdf19dca62ef117be03e6c122fe69e248159df9a",
+      "blockNumber": "11383118"
+    },
+    {
+      "id": "wrapper",
+      "transactionHash": "0x695a841ac8afaba9e739bbbb06017105b61182f527fa4ce69136531fe0715064",
+      "blockNumber": "11383119"
+    },
+    {
+      "id": "adapter",
+      "transactionHash": "0x98eca4a0fd028cf14b48fd6450a4fc91388b2cf47fd550bab8303b13b8e0c07e",
+      "blockNumber": "11383121"
+    },
+    {
+      "id": "factory",
+      "transactionHash": "0x8a6caebf3289b144d85a69046f8902a0d1110967bf72dc047f53a112785977b4",
+      "blockNumber": "11383122"
+    },
+    {
+      "id": "pool",
+      "transactionHash": "0xdb26ce4e89b7c57cbd45ecefb91d093d9de034dadb6f96dd9c45ef91d1e6edac",
+      "blockNumber": "11383123"
+    }
+  ]
+}
