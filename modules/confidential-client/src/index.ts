@@ -27,6 +27,7 @@ export {
   createSepoliaProtocolTransactionClient,
   createViemProtocolPublicReader,
   prepareCommitSignal,
+  quietSignalCollateralAbi,
   quietSignalPoolAbi,
   type ProtocolPublicReader,
   type ProtocolTransactionSender,

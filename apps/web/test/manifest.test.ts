@@ -8,14 +8,27 @@ test('T-WEB-01-01: canonical Sepolia manifest is accepted', () => {
       schemaVersion: 1,
       chainId: 11155111,
       deployment: { deployedAtBlock: '1' },
-      pools: [{ address: '0x0000000000000000000000000000000000000001' }],
+      pools: [
+        {
+          address: '0x0000000000000000000000000000000000000001',
+          confidentialCollateral: '0x0000000000000000000000000000000000000002',
+        },
+      ],
     }).chainId,
     11155111,
   );
 });
 
-test('T-WEB-01-02: wrong chain and malformed pool reject', () => {
+test('T-WEB-01-02: wrong chain and malformed pool/collateral reject', () => {
   assert.throws(() =>
     parsePublicManifest({ schemaVersion: 1, chainId: 1, deployment: {}, pools: [] }),
+  );
+  assert.throws(() =>
+    parsePublicManifest({
+      schemaVersion: 1,
+      chainId: 11155111,
+      deployment: { deployedAtBlock: '1' },
+      pools: [{ address: '0x0000000000000000000000000000000000000001' }],
+    }),
   );
 });

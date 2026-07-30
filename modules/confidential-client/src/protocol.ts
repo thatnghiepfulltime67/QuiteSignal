@@ -103,6 +103,35 @@ export const quietSignalPoolAbi = [
       },
     ],
   },
+  {
+    type: 'function',
+    name: 'pendingAcceptanceHandle',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'bytes32' }],
+  },
+  {
+    type: 'function',
+    name: 'finalizeCommit',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'acceptanceProof', type: 'bytes' }],
+    outputs: [],
+  },
+] as const;
+
+export const quietSignalCollateralAbi = [
+  {
+    type: 'function',
+    name: 'confidentialTransferAndCall',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'encryptedAmount', type: 'bytes32' },
+      { name: 'inputProof', type: 'bytes' },
+      { name: 'data', type: 'bytes' },
+    ],
+    outputs: [{ name: 'transferred', type: 'bytes32' }],
+  },
 ] as const;
 
 export interface PublicEpoch {

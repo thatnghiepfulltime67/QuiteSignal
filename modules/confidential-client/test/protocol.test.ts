@@ -8,6 +8,7 @@ import {
   ProtocolTransactionClient,
   prepareCommitSignal,
   publicAddress,
+  quietSignalCollateralAbi,
   quietSignalPoolAbi,
   requestId,
 } from '../src/index.js';
@@ -38,7 +39,7 @@ async function preparedCommit() {
   );
 }
 
-test('T-SDK-03-01: frozen commit ABI stays compatible with the compiled pool artifact', () => {
+test('T-SDK-03-01: frozen callback ABI stays compatible with compiled pool and collateral artifacts', () => {
   const artifactPath = fileURLToPath(
     new URL(
       '../../protocol/artifacts/contracts/core/QuietSignalPool.sol/QuietSignalPool.json',
@@ -48,19 +49,58 @@ test('T-SDK-03-01: frozen commit ABI stays compatible with the compiled pool art
   const artifact = JSON.parse(readFileSync(artifactPath, 'utf8')) as {
     abi: Array<Record<string, unknown>>;
   };
-  const artifactCommit = artifact.abi.find(
-    (item) => item.type === 'function' && item.name === 'commitSignal',
-  );
-  const sdkCommit = quietSignalPoolAbi.find(
-    (item) => item.type === 'function' && item.name === 'commitSignal',
-  );
-  assert.deepEqual(
-    (sdkCommit?.inputs ?? []).map((input) => input.type),
-    ((artifactCommit?.inputs as Array<{ type: string }> | undefined) ?? []).map(
-      (input) => input.type,
+  const collateralArtifactPath = fileURLToPath(
+    new URL(
+      '../../protocol/artifacts/contracts/feasibility/FeasibilityConfidentialWrapper.sol/FeasibilityConfidentialWrapper.json',
+      import.meta.url,
     ),
   );
-  assert.equal(sdkCommit?.stateMutability, artifactCommit?.stateMutability);
+  const collateralArtifact = JSON.parse(readFileSync(collateralArtifactPath, 'utf8')) as {
+    abi: Array<Record<string, unknown>>;
+  };
+  const assertFunction = (
+    sdk: { name: string; inputs: readonly { type: string }[]; stateMutability: string } | undefined,
+    artifactAbi: Array<Record<string, unknown>>,
+    name: string,
+    inputTypes: readonly string[],
+  ) => {
+    const artifactFunction = artifactAbi.find(
+      (item) =>
+        item.type === 'function' &&
+        item.name === name &&
+        JSON.stringify((item.inputs as Array<{ type: string }>).map((input) => input.type)) ===
+          JSON.stringify(inputTypes),
+    );
+    assert.deepEqual(
+      sdk?.inputs.map((input) => input.type),
+      inputTypes,
+    );
+    assert.equal(sdk?.stateMutability, artifactFunction?.stateMutability);
+  };
+  assertFunction(
+    quietSignalPoolAbi.find((item) => item.name === 'commitSignal'),
+    artifact.abi,
+    'commitSignal',
+    ['bytes32', 'bytes', 'bytes32', 'bytes'],
+  );
+  assertFunction(
+    quietSignalPoolAbi.find((item) => item.name === 'pendingAcceptanceHandle'),
+    artifact.abi,
+    'pendingAcceptanceHandle',
+    [],
+  );
+  assertFunction(
+    quietSignalPoolAbi.find((item) => item.name === 'finalizeCommit'),
+    artifact.abi,
+    'finalizeCommit',
+    ['bytes'],
+  );
+  assertFunction(
+    quietSignalCollateralAbi[0],
+    collateralArtifact.abi,
+    'confidentialTransferAndCall',
+    ['address', 'bytes32', 'bytes', 'bytes'],
+  );
 });
 
 test('T-SDK-03-02: prepared commit data is sealed and one request maps to one send', async () => {

@@ -1,6 +1,7 @@
 export interface PublicManifest {
   chainId: 11155111;
   poolAddress: string;
+  collateralAddress: string;
   deployedAtBlock: string;
 }
 
@@ -18,13 +19,16 @@ export function parsePublicManifest(value: unknown): PublicManifest {
     typeof deployment.deployedAtBlock !== 'string' ||
     !pool ||
     typeof pool.address !== 'string' ||
-    !/^0x[0-9a-f]{40}$/i.test(pool.address)
+    !/^0x[0-9a-f]{40}$/i.test(pool.address) ||
+    typeof pool.confidentialCollateral !== 'string' ||
+    !/^0x[0-9a-f]{40}$/i.test(pool.confidentialCollateral)
   ) {
     throw new Error('Manifest is not a canonical Sepolia deployment.');
   }
   return {
     chainId: 11_155_111,
     poolAddress: pool.address,
+    collateralAddress: pool.confidentialCollateral,
     deployedAtBlock: deployment.deployedAtBlock,
   };
 }
