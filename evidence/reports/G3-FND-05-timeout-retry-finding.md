@@ -163,3 +163,7 @@ The eighth-attempt recovery completed at blocks `11379758` through `11379760`.
 It cancelled permissionlessly, refunded both owners, verified terminal confidential
 balances locally, and deleted the ignored actor record. The fixture has no remaining
 contract custody and remains excluded from G3 evidence.
+
+Lifecycle waits now use bounded direct `eth_getBlockByNumber("latest")` requests
+before and after a timestamp-derived wait. This avoids client-cache and polling-loop
+semantics; an unavailable or malformed RPC response fails the run.

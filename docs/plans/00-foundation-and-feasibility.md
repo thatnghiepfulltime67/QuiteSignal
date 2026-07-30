@@ -577,6 +577,8 @@ with bounded direct RPC latest-block reads before another fresh verification.
 The eighth-attempt recovery passed at blocks `11379758` through `11379760`,
 cancelled permissionlessly, refunded both owners, verified terminal balances locally,
 and deleted the ignored actor record.
+Lifecycle waits now use bounded direct `eth_getBlockByNumber("latest")` requests
+before and after a timestamp-derived wait, independent of client cache or polling.
 
 ## FND-01 — Toolchain lock
 

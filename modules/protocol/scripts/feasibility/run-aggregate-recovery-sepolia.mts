@@ -41,6 +41,7 @@ const PUBLIC_DECRYPT_MAX_ATTEMPTS = 8;
 const PUBLIC_DECRYPT_RETRY_DELAY_MS = 5_000;
 const RPC_TIMEOUT_MS = 30_000;
 const EXPECTED_REVERT_GAS = 2_000_000n;
+const LIFECYCLE_WAIT_PADDING_MS = 5_000;
 
 interface Artifact {
   abi: Abi;
@@ -336,12 +337,45 @@ async function decryptOwnerValue(
   fail('The owner balance did not produce a result.');
 }
 
-async function waitUntil(
-  publicClient: ReturnType<typeof createPublicClient>,
-  timestamp: bigint,
-): Promise<void> {
-  while ((await publicClient.getBlock()).timestamp < timestamp) {
-    await delay(PUBLIC_DECRYPT_RETRY_DELAY_MS);
+async function latestSepoliaTimestamp(rpcUrl: string): Promise<bigint> {
+  let response: Response;
+  try {
+    response = await fetch(rpcUrl, {
+      body: JSON.stringify({
+        id: 'quitesignal-lifecycle-timestamp',
+        jsonrpc: '2.0',
+        method: 'eth_getBlockByNumber',
+        params: ['latest', false],
+      }),
+      headers: { 'content-type': 'application/json' },
+      method: 'POST',
+      signal: AbortSignal.timeout(RPC_TIMEOUT_MS),
+    });
+  } catch {
+    fail('The Ethereum Sepolia latest-block RPC request did not complete.');
+  }
+  if (!response.ok) fail('The Ethereum Sepolia latest-block RPC request was rejected.');
+  const payload = (await response.json()) as {
+    result?: { timestamp?: unknown };
+  };
+  const timestamp = payload.result?.timestamp;
+  if (typeof timestamp !== 'string' || !/^0x[0-9a-fA-F]+$/.test(timestamp)) {
+    fail('The Ethereum Sepolia latest-block RPC response was malformed.');
+  }
+  return BigInt(timestamp);
+}
+
+async function waitUntil(rpcUrl: string, timestamp: bigint): Promise<void> {
+  const observedTimestamp = await latestSepoliaTimestamp(rpcUrl);
+  if (observedTimestamp < timestamp) {
+    const remainingMilliseconds = (timestamp - observedTimestamp) * 1_000n;
+    if (remainingMilliseconds > BigInt(Number.MAX_SAFE_INTEGER - LIFECYCLE_WAIT_PADDING_MS)) {
+      fail('The Ethereum Sepolia lifecycle wait exceeds the supported duration.');
+    }
+    await delay(Number(remainingMilliseconds) + LIFECYCLE_WAIT_PADDING_MS);
+  }
+  if ((await latestSepoliaTimestamp(rpcUrl)) < timestamp) {
+    fail('The Ethereum Sepolia lifecycle boundary was not reached after its bounded wait.');
   }
 }
 
@@ -861,7 +895,7 @@ async function main(): Promise<void> {
     spikeData('closeEpoch'),
     'Below-k close before the deadline',
   );
-  await waitUntil(publicClient, belowDeadline);
+  await waitUntil(rpcUrl, belowDeadline);
   await send(
     deployer,
     deployerWallet,
@@ -912,7 +946,7 @@ async function main(): Promise<void> {
     'timeout independent member',
   );
   const timeoutDeadline = (await read(contracts.timeoutSpike, spikeArtifact, 'deadline')) as bigint;
-  await waitUntil(publicClient, timeoutDeadline);
+  await waitUntil(rpcUrl, timeoutDeadline);
   await send(
     deployer,
     deployerWallet,
@@ -945,7 +979,7 @@ async function main(): Promise<void> {
   const timeoutAvailableAt =
     ((await read(contracts.timeoutSpike, spikeArtifact, 'aggregatePendingSince')) as bigint) +
     AGGREGATE_TIMEOUT_SECONDS;
-  await waitUntil(publicClient, timeoutAvailableAt);
+  await waitUntil(rpcUrl, timeoutAvailableAt);
   await send(
     secondary,
     secondaryWallet,
@@ -997,7 +1031,7 @@ async function main(): Promise<void> {
     spikeArtifact,
     'deadline',
   )) as bigint;
-  await waitUntil(publicClient, recoveryDeadline);
+  await waitUntil(rpcUrl, recoveryDeadline);
   await send(
     deployer,
     deployerWallet,
@@ -1119,7 +1153,7 @@ async function main(): Promise<void> {
     spikeData('recoverUnwrap', [unwrap.decryptionProof]),
     'Delayed unwrap recovery before the recovery window',
   );
-  await waitUntil(publicClient, recoveryAvailableAt);
+  await waitUntil(rpcUrl, recoveryAvailableAt);
   await send(
     secondary,
     secondaryWallet,
