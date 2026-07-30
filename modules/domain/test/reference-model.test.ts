@@ -190,14 +190,14 @@ test('T-DOMAIN-PK01-05: aggregate request and feed-resolution failures preserve 
   assertModelInvariants(epoch);
 });
 
-test('T-DOMAIN-PK01-06: one thousand deterministic model vectors preserve conservation and terminal bounds', () => {
+test('T-DOMAIN-PK01-06: ten thousand deterministic model vectors preserve conservation and terminal bounds', () => {
   let seed = 0x1234_5678n;
   const next = (maximum: bigint): bigint => {
     seed = (seed * 1_103_515_245n + 12_345n) % 2_147_483_648n;
     return seed % maximum;
   };
 
-  for (let vector = 0; vector < 1_000; vector += 1) {
+  for (let vector = 0; vector < 10_000; vector += 1) {
     const count = Number(next(7n) + 1n);
     let epoch = createEpoch(configuration({ kMin: 1n }));
     for (let index = 0; index < count; index += 1) {

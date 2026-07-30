@@ -67,7 +67,7 @@ contract, Nox, ACL, or Sepolia evidence and do not advance G5 by themselves.
 | `T-DOMAIN-PK01-03` | Success lifecycle, floor payout dust, one-time claim                          | I1, I2, I6, I8, FR-05               |
 | `T-DOMAIN-PK01-04` | Below-k and aggregate-timeout refunds                                         | I2, I8, FR-03, FR-07                |
 | `T-DOMAIN-PK01-05` | Request binding, premature/stale/incomplete round, zero-winner grace recovery | I4, I5, I7, I8, FR-04, FR-05, FR-07 |
-| `T-DOMAIN-PK01-06` | 1,000 deterministic conservation, payout-bound, and terminal-flag vectors     | I1, I2, I6, I8                      |
+| `T-DOMAIN-PK01-06` | 10,000 deterministic conservation, payout-bound, and terminal-flag vectors    | I1, I2, I6, I8                      |
 
 ## PK-02 ABI coverage
 
