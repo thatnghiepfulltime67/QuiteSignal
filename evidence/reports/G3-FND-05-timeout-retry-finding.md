@@ -284,3 +284,11 @@ wrong-epoch `finalizeAggregate` calls reverted at blocks `11380176`, `11380177`,
 finalization/recovery action. These three receipts are retained as partial Sepolia
 evidence only; the fixture remains excluded from FND-05C until the remaining proof,
 delayed rewrap, and both refund requirements terminate successfully.
+
+The following FND-05C resume from `9f928f0` reached the substituted-value reverted
+receipt again, then stopped before broadcasting the valid `finalizeAggregate` call.
+Its local sanitized marker records only `EstimateGasExecutionError` at valid-proof
+dry-run planning. The fixture remains `AGGREGATE_PENDING`. This is an RPC estimate
+failure before a write, not a Nox proof verdict. The correction sends that valid
+transaction with a fixed, budget-bounded gas limit and still requires a successful
+receipt before progressing to unwrap recovery.

@@ -831,6 +831,15 @@ wrong-chain, and wrong-epoch contexts at blocks `11380176`, `11380177`, and
 recovery, and refund steps. The existing receipts satisfy only their named negative
 cases; no aggregate-proof or recovery conclusion is recorded until a terminal run.
 
+The sanitized local marker from `9f928f0` identifies the next blocker as an
+`EstimateGasExecutionError` while planning the valid context-bound aggregate
+finalization. The spike remains `AGGREGATE_PENDING`; no valid finalization,
+unwrap, recovery, or refund write was sent. This is an RPC-estimation limitation,
+not evidence that the valid Nox proof is rejected. The runner must use a committed
+bounded fixed gas limit for that valid Sepolia transaction, subject to the same
+single-transaction and cumulative spend checks, rather than treating estimation
+failure as a protocol result.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

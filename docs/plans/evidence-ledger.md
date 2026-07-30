@@ -33,6 +33,12 @@ and `11380179` are the real wrong-context reverts for the same FND-05C spike. Th
 do not change its `AGGREGATE_PENDING` state and do not by themselves complete any
 remaining FND-05C requirement.
 
+The subsequent `9f928f0` retry added only repeated expected-revert receipts and
+left the spike `AGGREGATE_PENDING`. A local ignored marker reports an
+`EstimateGasExecutionError` before the valid finalization broadcast. This is not
+contract or Nox evidence; the valid finalization must use the next committed bounded
+fixed-gas path and obtain a successful Sepolia receipt.
+
 ## Evidence artifact contract
 
 Each evidence artifact must include:
