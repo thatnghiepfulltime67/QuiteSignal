@@ -19,37 +19,38 @@ production-key configuration.
 
 ## Root command contract
 
-| Command                                      | Environment                  | Purpose                                                                                     | Required by     |
-| -------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------- | --------------- |
-| `npm ci`                                     | network install              | Reproducible dependencies                                                                   | G0–G8           |
-| `npm run doctor`                             | offline/sepolia-read         | Versions, RPC/chain, public config, budget ledger; no secret values                         | G0              |
-| `npm run format:check`                       | offline                      | Formatting and generated-file cleanliness                                                   | every commit/CI |
-| `npm run lint`                               | offline                      | TS/Solidity/framework lint                                                                  | G5–G8           |
-| `npm run typecheck`                          | offline                      | Strict workspace type safety                                                                | G5–G8           |
-| `npm run compile`                            | offline                      | Contracts and module build graph                                                            | G0–G8           |
-| `npm run test:unit`                          | offline                      | Domain, SDK, reducer, component units                                                       | G5–G8           |
-| `npm run test:model`                         | offline                      | Pure state/math/reference-model property and fuzz tests                                     | G1/G5/G8        |
-| `npm run test:contracts:sepolia -- <case>`   | sepolia-write                | Named contract state/economic case                                                          | G1–G6/G8        |
-| `npm run test:nox:sepolia -- <case>`         | sepolia-write                | Named ACL/compute/proof/asset case                                                          | G1–G3/G5/G8     |
-| `npm run test:adapter:sepolia -- [--write]`  | sepolia-read / sepolia-write | Dry-run or confirmed immutable direct-adapter cases                                         | PK-03A/G5       |
-| `npm run test:factory:sepolia -- [--write]`  | sepolia-read / sepolia-write | Dry-run, confirmed CREATE2 shell deployment, or read-only verification                      | PK-03B/G5       |
-| `npm run test:commit:sepolia -- --stage=<name> [--write]` | sepolia-read / sepolia-write | One bounded real ERC-7984/Nox confidential commit or recovery operation per invocation | PK-04/G5 |
-| `npm run test:adversarial:sepolia -- <case>` | sepolia-write                | Replay, unauthorized, timeout, stale feed, reentrancy case                                  | G5/G8           |
-| `npm run test:e2e:sepolia`                   | sepolia-write                | Full lifecycle across deployed modules                                                      | G5–G8           |
-| `npm run test:web`                           | offline                      | Component, accessibility, and deterministic UI-state tests                                  | G7/G8           |
-| `npm run test:sepolia:read`                  | sepolia-read                 | Manifest, bytecode, events, public verifier                                                 | G6–G8           |
-| `npm run deploy:sepolia:plan`                | sepolia-read                 | Deterministic write plan, addresses, estimated cost                                         | G6              |
-| `npm run deploy:sepolia`                     | sepolia-write                | Confirmed deployment only                                                                   | G6              |
-| `npm run test:sepolia:write -- <case>`       | sepolia-write                | One named live gate case                                                                    | G1–G6           |
-| `npm run verify:deployment`                  | sepolia-read                 | Sources, runtime hashes, ABI/address sync                                                   | G6/G8           |
-| `npm run verify:evidence -- G3`              | sepolia-read                 | G3 evidence shape, receipts, commit reachability, runtime/binding context, terminal custody | G3              |
-| `npm run assess:g4:sepolia`                  | sepolia-read                 | Public target runtime and configuration discovery; may record a feasibility blocker         | G4              |
-| `npm run assess:g4:resolution:sepolia`       | sepolia-read                 | Chainlink ETH/USD target metadata, runtime, and current round assessment                    | G4              |
-| `npm run verify:g4:evidence`                 | sepolia-read                 | G4 source/receipt/runtime-template/target-round/negative-case and zero-custody evidence     | G4              |
-| `npm run scan:secrets`                       | offline                      | Repository/history/generated evidence scan                                                  | every commit/G8 |
-| `npm run scan:dependencies`                  | network/read                 | Advisories and licenses                                                                     | G0/G8           |
-| `npm run check:offline`                      | offline                      | Complete no-chain merge gate                                                                | G0–G8           |
-| `npm run check:sepolia:read`                 | sepolia-read                 | Complete no-write chain/evidence gate                                                       | G0/G6–G8        |
+| Command                                                   | Environment                  | Purpose                                                                                     | Required by     |
+| --------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------- | --------------- |
+| `npm ci`                                                  | network install              | Reproducible dependencies                                                                   | G0–G8           |
+| `npm run doctor`                                          | offline/sepolia-read         | Versions, RPC/chain, public config, budget ledger; no secret values                         | G0              |
+| `npm run format:check`                                    | offline                      | Formatting and generated-file cleanliness                                                   | every commit/CI |
+| `npm run lint`                                            | offline                      | TS/Solidity/framework lint                                                                  | G5–G8           |
+| `npm run typecheck`                                       | offline                      | Strict workspace type safety                                                                | G5–G8           |
+| `npm run compile`                                         | offline                      | Contracts and module build graph                                                            | G0–G8           |
+| `npm run test:unit`                                       | offline                      | Domain, SDK, reducer, component units                                                       | G5–G8           |
+| `npm run test:model`                                      | offline                      | Pure state/math/reference-model property and fuzz tests                                     | G1/G5/G8        |
+| `npm run test:contracts:sepolia -- <case>`                | sepolia-write                | Named contract state/economic case                                                          | G1–G6/G8        |
+| `npm run test:nox:sepolia -- <case>`                      | sepolia-write                | Named ACL/compute/proof/asset case                                                          | G1–G3/G5/G8     |
+| `npm run test:adapter:sepolia -- [--write]`               | sepolia-read / sepolia-write | Dry-run or confirmed immutable direct-adapter cases                                         | PK-03A/G5       |
+| `npm run test:factory:sepolia -- [--write]`               | sepolia-read / sepolia-write | Dry-run, confirmed CREATE2 shell deployment, or read-only verification                      | PK-03B/G5       |
+| `npm run test:commit:sepolia -- --stage=<name> [--write]` | sepolia-read / sepolia-write | One bounded real ERC-7984/Nox confidential commit or recovery operation per invocation      | PK-04/G5        |
+| `npm run test:adversarial:sepolia -- <case>`              | sepolia-write                | Replay, unauthorized, timeout, stale feed, reentrancy case                                  | G5/G8           |
+| `npm run test:e2e:sepolia`                                | sepolia-write                | Full lifecycle across deployed modules                                                      | G5–G8           |
+| `npm run test:web`                                        | offline                      | Component, accessibility, and deterministic UI-state tests                                  | G7/G8           |
+| `npm run test:sepolia:read`                               | sepolia-read                 | Manifest, bytecode, events, public verifier                                                 | G6–G8           |
+| `npm run deploy:sepolia:plan`                             | sepolia-read                 | Deterministic write plan, addresses, estimated cost                                         | G6              |
+| `npm run deploy:sepolia`                                  | sepolia-write                | Confirmed deployment only                                                                   | G6              |
+| `npm run test:sepolia:write -- <case>`                    | sepolia-write                | One named live gate case                                                                    | G1–G6           |
+| `npm run verify:deployment`                               | sepolia-read                 | Sources, runtime hashes, ABI/address sync                                                   | G6/G8           |
+| `npm run verify:evidence -- G3`                           | sepolia-read                 | G3 evidence shape, receipts, commit reachability, runtime/binding context, terminal custody | G3              |
+| `npm run assess:g4:sepolia`                               | sepolia-read                 | Public target runtime and configuration discovery; may record a feasibility blocker         | G4              |
+| `npm run assess:g4:resolution:sepolia`                    | sepolia-read                 | Chainlink ETH/USD target metadata, runtime, and current round assessment                    | G4              |
+| `npm run verify:g4:evidence`                              | sepolia-read                 | G4 source/receipt/runtime-template/target-round/negative-case and zero-custody evidence     | G4              |
+| `npm run verify:g5:evidence`                              | offline/sepolia-read         | Fail-closed aggregation of every named sanitized G5 component artifact                      | PK-09/G5        |
+| `npm run scan:secrets`                                    | offline                      | Repository/history/generated evidence scan                                                  | every commit/G8 |
+| `npm run scan:dependencies`                               | network/read                 | Advisories and licenses                                                                     | G0/G8           |
+| `npm run check:offline`                                   | offline                      | Complete no-chain merge gate                                                                | G0–G8           |
+| `npm run check:sepolia:read`                              | sepolia-read                 | Complete no-write chain/evidence gate                                                       | G0/G6–G8        |
 
 ## Test-layer matrix
 

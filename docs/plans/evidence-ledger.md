@@ -78,6 +78,11 @@ wrong-binding, wrong-epoch, and failed-receipt inputs. The fixture is not the fu
 canonical release manifest; PK-08 does not advance G5 until all remaining protocol
 components and the combined G5 verifier pass.
 
+The PK-09 combined evidence verifier is intentionally fail-closed while PK-07 is
+awaiting its immutable Sepolia terminal window: it rejects the current evidence set
+because `PK-07-TERMINALS.json` is absent. This is expected preparation evidence, not
+a G5 pass claim; the same command must pass only after every named component exists.
+
 ### G3 completion history
 
 The G3 row is `passed`. The historical FND-05C detail below is superseded by the latest

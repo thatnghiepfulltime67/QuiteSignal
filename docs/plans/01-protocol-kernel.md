@@ -666,7 +666,7 @@ move funds. Every live fixture must end with confidential owner custody, confide
 claim-pool custody, or a documented terminal transfer before any fresh fixture runs.
 
 Checks: `npm run test:model`, static policy tests, named Sepolia adversarial runners,
-G5 combined read verifier, `npm run check:offline`, and `git diff --check`.
+`npm run verify:g5:evidence`, `npm run check:offline`, and `git diff --check`.
 
 Evidence path: `evidence/{offline,sepolia}/G5/PK-09-INVARIANTS.json`. Intended
 commits: `test: expand protocol invariant coverage`, `test: add Sepolia adversarial

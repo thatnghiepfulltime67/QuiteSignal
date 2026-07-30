@@ -93,6 +93,16 @@ named CLI execution reads Ethereum Sepolia; neither test writes chain state.
 | `T-VERIFIER-PK08-02` | Matching runtime hashes, immutable bindings, public epoch facts, and successful receipt acceptance | FR-08, I5, I8, I9       |
 | `T-VERIFIER-PK08-03` | Wrong chain, missing/stale runtime, wrong pool binding/state, and failed receipt rejection         | FR-08, I5, I8, I9       |
 
+## PK-09 combined-evidence coverage
+
+`T-VERIFIER-PK09-*` verifies the fail-closed aggregator over the independent G5
+artifacts; it does not replace each component's named Sepolia verifier.
+
+| Test family          | Coverage                                                                                             | Invariants/requirements           |
+| -------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `T-VERIFIER-PK09-01` | Complete PK-03A through PK-08 artifact set produces a G5 report                                      | FR-08, I1–I10 observable evidence |
+| `T-VERIFIER-PK09-02` | Missing/failed component, wrong work item/chain, failed check, and prohibited-field mutations reject | FR-08, P1, P3, P7, I3, I5, I8, I9 |
+
 ## Evidence naming
 
 Evidence files use:
