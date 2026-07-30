@@ -9,7 +9,7 @@ suffixes but cannot silently rename or remove a required family.
 | Requirement | Contract/module owner | State/function boundary | Invariants | Required test families | Evidence gate |
 |---|---|---|---|---|---|
 | FR-01 Create pool | Factory, config | deploy → `OPEN` | I8, I9 | `T-FACTORY-*`, `T-CONFIG-*` | G4, G5, G6 |
-| FR-02 Commit signal | Pool, Nox client, confidential token | `OPEN.commitSignal` | I1, I2, I7, I10 | `T-COMMIT-*`, `T-ACL-*`, `T-ASSET-PULL-*` | G1, G2, G5, G6 |
+| FR-02 Commit signal | Pool, Nox client, confidential token | `OPEN.commitSignal` → pending callback → `finalizeCommit` | I1, I2, I7, I10 | `T-COMMIT-*`, `T-ACL-*`, `T-ASSET-PULL-*`, `T-PENDING-COMMIT-*` | G1, G2, G5, G6 |
 | FR-03 Cohort gate | Pool | `OPEN.closeEpoch` | I3, I8 | `T-K-GATE-*`, `T-BELOW-K-REFUND-*` | G3, G5, G6 |
 | FR-04 Aggregate finalization | Pool | aggregate → `RESOLUTION_PENDING` | I2, I4, I7, I9 | `T-AGGREGATE-*`, `T-RESOLUTION-PENDING-*` | G3–G6 |
 | FR-05 Settlement | Pool, resolution adapter | `RESOLUTION_PENDING.settle` | I5, I6, I8, I9 | `T-RESOLUTION-*`, `T-FEED-FRESHNESS-*`, `T-PAYOUT-BOUND-*` | G4–G6 |

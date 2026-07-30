@@ -16,13 +16,15 @@ cross-epoch ledgers and shared settlement state from the protocol kernel.
 ## Commit data flow
 
 1. The browser creates `stake` and `probabilityBps` handles bound to `(chainId, pool)`.
-2. `commitSignal` imports both proofs exactly once and clamps probability to `10_000`
-   using confidential comparison/select operations.
-3. The pool derives `yesAllocation = stake × p / 10_000` and
-   `noAllocation = stake - yesAllocation` inside confidential computation.
-4. The pool updates owner ledgers and epoch aggregates, grants owner viewer rights,
-   and grants the confidential token only transient access to the transfer handle.
-5. The token pulls exactly `stake`; the pool never receives plaintext user values.
+2. `commitSignal` imports both proofs exactly once, clamps probability to `10_000`,
+   derives exact confidential allocations, and records one bounded encrypted intent.
+3. The owner calls the unchanged collateral's `confidentialTransferAndCall`; the pool
+   derives the received amount from its pre/post confidential balance delta and returns
+   only an encrypted equality result to the wrapper with transient access.
+4. Anyone finalizes a true amount-free acceptance proof. Only then does the pool update
+   owner ledgers and epoch aggregates and grant owner viewer rights. A false proof or
+   elapsed commit timeout clears the intent; timeout returns only conditionally-held
+   encrypted collateral.
 
 One address can commit once per epoch. The participant counter measures distinct
 addresses, not economic uniqueness. The MVP makes no Sybil-resistance claim; a
@@ -66,6 +68,7 @@ denominators are checked as public non-zero values before confidential arithmeti
 | State               | Funds location          | Recovery                                              |
 | ------------------- | ----------------------- | ----------------------------------------------------- |
 | `OPEN`              | Confidential pool       | Refund only after deadline/cancellation policy        |
+| `COMMIT_PENDING`    | Owner custody or encrypted callback outcome pending | Permissionless proof finalization, rejection, or commit-timeout return |
 | `AGGREGATE_PENDING` | Confidential pool       | Timeout to `REFUNDABLE`                               |
 | `RESOLUTION_PENDING` | Confidential pool      | Valid fresh feed result or grace-timeout refund       |
 | `SETTLED`           | Confidential payout pot | Owner claims once; dust handled by immutable policy   |

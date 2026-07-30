@@ -218,3 +218,34 @@ boundary before G4 can pass. FND-06B passed direct Sepolia smoke evidence at blo
 block `11380856`. Product implementation may begin. The external oracle remains an
 explicit public trust dependency; QuietSignal makes no claim that it independently
 verifies the feed.
+
+## ADR-018 — Intent-bound two-step confidential commit
+
+**Status:** Accepted with PK-04 Sepolia gate
+
+The pre-PK-04 pool ABI is insufficient for real ERC-7984 custody. Nox input proofs
+are owner-submitter bound, while the unchanged wrapper invokes the receiver callback
+only after it updates the receiver's confidential balance and does not grant compute
+access to the callback amount. A single atomic `commitSignal` cannot safely import
+owner inputs, prove the exact callback delta, and expose the amount-free acceptance
+proof without a false acceptance or a plaintext/trusted shortcut.
+
+The production pool therefore uses a bounded two-step operation. The owner first
+calls `commitSignal` before the epoch deadline; it imports the encrypted stake and
+probability, clamps and allocates them, records one pending intent and confidential
+pre-transfer balance snapshot, and starts immutable `commitTimeout`. The same owner
+then invokes the unchanged collateral's `confidentialTransferAndCall`. The pool
+derives the encrypted balance delta, compares it with the pending stake, and returns
+the encrypted acceptance result to the wrapper with transient access only. Anyone
+may finalize a true acceptance proof into an owner-viewable position and aggregates,
+clear a false proof, or after timeout clear an uncalled intent or return only the
+conditionally-held encrypted amount to the owner.
+
+The public ABI adds finalization and pending-timeout methods, a public pending-status
+view, pending lifecycle events and errors, and immutable `commitTimeout`. This is a
+deliberate public-interface, custody, and state-transition change. It preserves
+owner-submitter proof binding, exact encrypted transfer matching, atomic wrapper
+refund on mismatch, no persistent wrapper ACL, aggregate-only public decryption,
+and permissionless recovery. One pending transfer is allowed per pool at a time; this
+MVP serialization bounds callback balance-delta ambiguity without a trusted queue or
+plaintext accounting.

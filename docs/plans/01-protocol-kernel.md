@@ -303,6 +303,74 @@ state, ABI-surface, runtime-binding, and zero-native-balance checks passed. No
 confidential callback, handle, proof, ACL operation, or asset transfer occurred.
 PK-03B is a completed G5 component and does not pass G5 by itself.
 
+## PK-04 work-item record
+
+ID: `PK-04`
+
+Status: `in_progress`
+
+Outcome: Implement and Sepolia-test the intent-bound two-step confidential commit
+defined by ADR-018. This is the smallest real custody slice: it may import owner
+inputs, perform confidential allocation, accept exact ERC-7984 collateral through
+the unchanged callback boundary, and recover an interrupted pending commit. It does
+not begin the cohort, aggregate, resolution, payout, or score lifecycle.
+
+Output files: `modules/protocol/contracts/core/QuietSignalPool.sol`,
+`modules/protocol/contracts/core/QuietSignalFactory.sol`,
+`modules/protocol/contracts/interfaces/QuietSignalTypes.sol`,
+`modules/protocol/contracts/interfaces/IQuietSignalErrors.sol`,
+`modules/protocol/contracts/interfaces/IQuietSignalPool.sol`,
+`modules/protocol/test/unit/interface-compatibility.test.ts`,
+`modules/protocol/scripts/core/run-pk04-commit-sepolia.mts`, package scripts,
+`evidence/{offline,sepolia}/G5/PK-04-COMMIT.json`, the spend ledger, protocol/API
+specifications, ADR-018, risk R-22, this record, and the traceability matrix.
+
+Acceptance criteria: A same-owner encrypted intent imports stake and probability
+once, clamps probability confidentially, derives exact overflow-safe YES/NO
+allocation, records no plaintext or handle in an event, and opens one bounded
+pending commit. The unchanged real ERC-7984 wrapper calls the pool; the pool checks
+wrapper/operator/owner binding, derives the received amount only from the
+pre/post-balance delta, grants the wrapper transient access only to an encrypted
+acceptance boolean, and lets the wrapper refund a mismatch atomically. A true proof
+stores only owner-viewable position handles, updates encrypted aggregates, and
+increments the public participant count once. False proof, abandoned intent, and a
+timed-out successful callback are permissionlessly recoverable without an admin.
+
+Negative cases: Empty or replayed input proof, duplicate owner/pending intent,
+late intent, wrong callback sender/operator/owner, mismatched amount, invalid or
+replayed acceptance proof, early timeout, timeout after no callback, timeout after
+successful callback, and native value must fail or recover without plaintext,
+unbounded authority, or collateral loss. Test all contract/Nox/ACL/asset behavior
+only against the real pinned ERC-7984 wrapper on Ethereum Sepolia.
+
+Privacy/custody impact: This is the first production custody slice. Owner input,
+allocation, balance delta, aggregate, and return amount remain encrypted; only
+sender, pending status/timing, and an amount-free acceptance boolean may be public.
+The pool receives persistent compute access only to its own handles, the owner gets
+viewer access only to final position handles, and the wrapper gets no persistent
+authority.
+
+Funds location/recovery impact: Before the callback, collateral stays in owner
+confidential custody. During a callback it is either atomically refunded by the
+wrapper or held as the encrypted pending amount in the pool. A true proof makes it
+confidential pool custody; a false proof clears it; timeout returns the
+conditionally-held encrypted amount to the owner or clears an uncalled intent.
+
+Checks: `npm run test:interfaces`, `npm run compile`, `npm run test:commit:sepolia`,
+`npm run check:offline`, `npm run check:sepolia:read`, and `git diff --check`.
+
+Evidence path: `evidence/{offline,sepolia}/G5/PK-04-COMMIT.json` plus append-only
+spend-ledger entries. This is a named G5 component only.
+
+Intended commits: `docs: define bounded confidential commit` followed by
+`feat: add confidential signal custody` and `test: record Sepolia commit evidence`.
+
+Rollback/failure action: Revert this isolated production custody slice and leave
+PK-04 incomplete. A failure of owner-bound proof import, exact callback-delta
+matching, scoped wrapper ACL, or timeout return is a stop-ship blocker; do not
+replace it with a mock, plaintext amount, trusted relayer, backend escrow, or
+permanent wrapper authority.
+
 ## Sequencing
 
 ```text

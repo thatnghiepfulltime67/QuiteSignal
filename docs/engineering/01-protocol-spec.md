@@ -57,7 +57,7 @@ the confidential-collateral standard and is not copied locally.
 ```text
 PoolConfig
   confidentialCollateral, resolutionAdapter, kMin,
-  commitDuration, aggregateTimeout, resolutionGrace
+  deadline, commitTimeout, aggregateTimeout, resolutionGrace
 
 Epoch (one per pool)
   state, deadline, participantCount, aggregateRequestId,
@@ -79,6 +79,7 @@ state from becoming coupled.
 
 ```text
 [factory deployment] → OPEN
+OPEN → COMMIT_PENDING → OPEN
 OPEN → AGGREGATE_PENDING | REFUNDABLE
 AGGREGATE_PENDING → RESOLUTION_PENDING | REFUNDABLE
 RESOLUTION_PENDING → SETTLED | REFUNDABLE
@@ -92,7 +93,11 @@ No transition moves backward. Individual claim/refund flags are monotonic.
 
 | Function                  | Required state and guards                                               | Result                                                                |
 | ------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `commitSignal`            | `OPEN`, before deadline, one commit/address, valid bound proofs         | Pull encrypted stake; update position and aggregates                  |
+| `commitSignal`            | `OPEN`, before deadline, no pending intent, one commit/address, valid owner-bound proofs | Record encrypted intent, private allocation, balance snapshot, and commit timeout |
+| collateral callback       | Pending intent, exact owner/operator/wrapper binding                    | Compare encrypted post-transfer delta to stake; wrapper atomically refunds a mismatch |
+| `finalizeCommit`          | Pending intent, true amount-free callback proof                         | Persist owner-viewable position and encrypted aggregates; increment participant count |
+| `rejectPendingCommit`    | Pending intent, false amount-free callback proof                         | Clear a wrapper-refunded pending intent                                |
+| `expirePendingCommit`    | Pending intent, `commitTimeout` elapsed                                  | Clear no-callback intent or confidentially return only conditionally-held stake |
 | `closeEpoch`              | Deadline reached                                                        | Below k: `REFUNDABLE`; otherwise `AGGREGATE_PENDING`                  |
 | `requestAggregateDecrypt` | `AGGREGATE_PENDING`, request not created                                | Public-decrypt YES/NO aggregate handles only                          |
 | `finalizeAggregate`       | Matching request context and valid proof                                | Store public totals, enter `RESOLUTION_PENDING`                         |

@@ -27,6 +27,8 @@ decrypted owner positions.
 PoolCreated(poolId, pool, configHash, confidentialCollateral, resolutionAdapter, deadline, kMin)
 EpochOpened(epochId, pool, deadline, kMin)
 SignalCommitted(epochId, sender, commitmentId)
+SignalIntentRegistered(epochId, sender, availableAt)
+SignalIntentCleared(epochId, sender, collateralReturned)
 EpochClosed(epochId, participantCount)
 AggregateDecryptRequested(epochId, requestId)
 AggregateFinalized(epochId, requestId, publicYes, publicNo)
@@ -40,7 +42,10 @@ The stable ABI deliberately excludes encrypted handles, proofs, stake,
 probability, payout, refund, and score values from every event. `commitSignal`
 accepts `(externalEncryptedStake, stakeProof, externalEncryptedProbability,
 probabilityProof)` only; all four values are opaque Nox/proof data, never plaintext
-amounts. `finalizeAggregate` accepts only its request id and bound proof. `settle`
+amounts. The owner then invokes the unchanged ERC-7984
+`confidentialTransferAndCall`; `finalizeCommit` or `rejectPendingCommit` accepts
+only the wrapper acceptance proof, and `expirePendingCommit` is permissionless after
+the immutable timeout. `finalizeAggregate` accepts only its request id and bound proof. `settle`
 has no result parameter and reads the immutable adapter condition itself.
 
 ## Read API
