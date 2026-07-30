@@ -35,8 +35,11 @@ hashes may be recorded only when they do not reveal confidential input.
 
 ## Budget contract
 
-The maximum cumulative write budget is `SEPOLIA_MAX_TOTAL_SPEND_ETH=0.5`. This is a
-hard ceiling, not a target. Write tooling must:
+The default maximum cumulative write budget is `SEPOLIA_MAX_TOTAL_SPEND_ETH=0.5`.
+The committed ledger is authoritative for this workspace and currently carries the
+user-authorized cap documented in
+[`plans/sepolia-spend-ledger.md`](plans/sepolia-spend-ledger.md). It is a hard
+ceiling, not a target. Write tooling must:
 
 - assert chain id `11155111`;
 - require `CONFIRM_SEPOLIA_WRITE=yes`;
@@ -51,15 +54,15 @@ are defined in [`plans/sepolia-spend-ledger.md`](plans/sepolia-spend-ledger.md).
 
 ## Planning forecast
 
-| Phase                 | Forecast ETH | Purpose                                                            |
-| --------------------- | -----------: | ------------------------------------------------------------------ |
-| P0 / G1–G4            |         0.08 | Feasibility arithmetic, ACL, asset, proof/recovery, adapter spikes |
-| P1 / G5               |         0.14 | Protocol deployments, invariants, adversarial and recovery cases   |
-| P2 / G6               |         0.12 | Canonical deployment and multi-wallet live lifecycle               |
-| P3 / G7               |         0.05 | Real browser success and refund/recovery journeys                  |
-| P4 / G8               |         0.06 | Clean reproduction, verification, final read/write regressions     |
-| Unallocated           |         0.05 | Retries, redeployment, or any phase that needs it                  |
-| **Initial allowance** |     **0.50** | Stop and report before exceeding it                                |
+| Phase                 | Forecast ETH | Purpose                                                              |
+| --------------------- | -----------: | -------------------------------------------------------------------- |
+| P0 / G1–G4            |         0.08 | Feasibility arithmetic, ACL, asset, proof/recovery, adapter spikes   |
+| P1 / G5               |         0.14 | Protocol deployments, invariants, adversarial and recovery cases     |
+| P2 / G6               |         0.12 | Canonical deployment and multi-wallet live lifecycle                 |
+| P3 / G7               |         0.05 | Real browser success and refund/recovery journeys                    |
+| P4 / G8               |         0.06 | Clean reproduction, verification, final read/write regressions       |
+| Unallocated           |         0.05 | Retries, redeployment, or any phase that needs it                    |
+| **Initial allowance** |     **0.50** | Default baseline; the current ledger may reflect later authorization |
 
 These are visibility estimates, not phase limits. The full allowance is available to
 any required Sepolia test. When it is nearly exhausted, stop and report to the user.

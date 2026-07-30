@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "chainId": 11155111,
-  "maxTotalSpendWei": "500000000000000000",
+  "maxTotalSpendWei": "888104896476698447",
   "entries": [
     {
       "workItemId": "FND-02",

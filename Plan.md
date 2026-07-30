@@ -153,7 +153,7 @@ A work item is complete only when:
 - Target protocol addresses, runtime code hashes, ABI hashes, and deployment inputs
   are recorded and independently verifiable.
 - Every load-bearing Nox/ACL/asset behavior is proven directly on Sepolia.
-- Cumulative Sepolia gas remains within the current user-authorized 0.5 ETH allowance.
+- Cumulative Sepolia gas remains within the current user-authorized ledger allowance.
 - The primary application path reads real chain state and has no mock branch.
 - No privileged backend, keeper, indexer, or relayer is required for correctness.
 
