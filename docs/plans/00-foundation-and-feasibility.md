@@ -822,6 +822,13 @@ actor record retained, so the next resume must accept that state and continue on
 the uncompleted proof and recovery operations. This remains a non-terminal fixture
 and is excluded from FND-05C evidence.
 
+The aggregate-pending resume from `08bae1f` preserved that state, replayed the
+three context-negative cases, and obtained real reverted receipts for cross-pool,
+wrong-chain, and wrong-epoch contexts at blocks `11380176`, `11380177`, and
+`11380179`. It stopped before the substituted aggregate, valid finalization, unwrap,
+recovery, and refund steps. The existing receipts satisfy only their named negative
+cases; no aggregate-proof or recovery conclusion is recorded until a terminal run.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:

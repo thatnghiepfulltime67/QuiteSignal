@@ -28,6 +28,11 @@ wrong-chain `finalizeAggregate` receipts reverted at blocks `11380148` and
 `11380149`. The fixture is not terminal and remains excluded from G3 evidence until
 the remaining proof, delayed rewrap, and refund checks complete.
 
+The next three append-only records from `08bae1f` at blocks `11380176`, `11380177`,
+and `11380179` are the real wrong-context reverts for the same FND-05C spike. They
+do not change its `AGGREGATE_PENDING` state and do not by themselves complete any
+remaining FND-05C requirement.
+
 ## Evidence artifact contract
 
 Each evidence artifact must include:

@@ -276,3 +276,11 @@ and terminal refund checks. The spike is `AGGREGATE_PENDING` and its ignored act
 record remains local. This is a resumable partial proof sequence, not FND-05C gate
 evidence; the next runner revision continues only the outstanding state-machine
 operations.
+
+The state-aware FND-05C resume from `08bae1f` left the aggregate-pending fixture
+unchanged except for real expected-revert proof checks. Cross-pool, wrong-chain, and
+wrong-epoch `finalizeAggregate` calls reverted at blocks `11380176`, `11380177`, and
+`11380179`. It stopped before sending the substituted-value check or any valid
+finalization/recovery action. These three receipts are retained as partial Sepolia
+evidence only; the fixture remains excluded from FND-05C until the remaining proof,
+delayed rewrap, and both refund requirements terminate successfully.
