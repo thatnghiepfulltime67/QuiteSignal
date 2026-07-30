@@ -128,3 +128,14 @@ The next runner revision records every contract-state negative assertion as a
 bounded Sepolia transaction with an expected-revert receipt. Nox gateway decryption
 denials remain an off-chain observation, but are bounded and fail the run if the
 gateway does not return a result; no transport timeout is accepted as evidence.
+
+The seventh fresh attempt from source commit `715bef5` deployed fixture
+`0x4b317e2379456b26bbe68767e05a6707f7341380`, unchanged wrapper
+`0xdad15c2ec05442ca55f6834a05865265fb6e028f`, and timeout spike
+`0xc2e11c9358110b0a840d3c342629d912ddad299b` at blocks `11379629` through
+`11379667`. It completed the below-k path and recorded real expected-revert receipts
+for early close, duplicate refund, and early timeout cancellation. The timeout spike
+entered aggregate pending at `1785379632`, but the runner's block polling retained a
+cached value after the on-chain timeout elapsed. No cancellation or timeout refund
+was sent. This is a runner cache defect, not a protocol outcome; the fixture remains
+recoverable through its retained ignored actor record and is excluded from G3.

@@ -551,6 +551,16 @@ Sepolia transaction with an expected-revert receipt. Only Nox gateway decryption
 denials remain off-chain observations; they have a hard timeout and fail the run if
 the gateway cannot return a result.
 
+The seventh attempt from `715bef5` deployed fixture
+`0x4b317e2379456b26bbe68767e05a6707f7341380`, unchanged wrapper
+`0xdad15c2ec05442ca55f6834a05865265fb6e028f`, and timeout spike
+`0xc2e11c9358110b0a840d3c342629d912ddad299b` at blocks `11379629` through
+`11379667`. It completed the below-k path and emitted expected-revert receipts for
+early close, duplicate refund, and early timeout cancellation. The runner then
+retained a cached block while the timeout was already elapsed on-chain, before it
+sent any cancellation or refund. The fixture is excluded and recoverable; set public
+client cache time to zero before a fresh run.
+
 ## FND-01 — Toolchain lock
 
 Definition of Ready:
