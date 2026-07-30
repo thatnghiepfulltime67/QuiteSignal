@@ -29,6 +29,14 @@ const repositoryRoot = resolve(protocolRoot, '../..');
 const artifactPath = (path: string) => resolve(protocolRoot, 'artifacts/contracts', path);
 const ledgerPath = resolve(repositoryRoot, 'evidence/sepolia/spend-ledger.json');
 
+function releaseId(): string | undefined {
+  const value = process.argv.find((argument) => argument.startsWith('--release='))?.slice(10);
+  if (value === undefined) return undefined;
+  if (!/^DEP-(?:0[2-9]|[1-9][0-9]*)$/.test(value))
+    throw new Error('DEP-01 plan failed: --release must be a new explicit DEP-<integer> ID.');
+  return value;
+}
+
 interface CompiledArtifact extends DeploymentArtifact {
   deployedBytecode: Hex;
   contractName: string;
@@ -127,6 +135,8 @@ function decimalString(value: bigint, decimals: number): string {
 }
 
 async function main(): Promise<void> {
+  const revision = releaseId();
+  const workItemId = revision ?? 'DEP-01';
   loadEnvironment();
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
   const privateKey = process.env.SEPOLIA_PRIVATE_KEY as Hex | undefined;
@@ -249,7 +259,7 @@ async function main(): Promise<void> {
     JSON.stringify({
       schemaVersion: 1,
       mode: 'read-only-plan',
-      workItemId: 'DEP-01',
+      workItemId,
       sourceCommit: sourceCommit(),
       chain: {
         id: SEPOLIA_CHAIN_ID,

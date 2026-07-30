@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -31,7 +31,21 @@ const protocolRoot = resolve(scriptDirectory, '../..');
 const repositoryRoot = resolve(protocolRoot, '../..');
 const artifactPath = (path: string) => resolve(protocolRoot, 'artifacts/contracts', path);
 const ledgerPath = resolve(repositoryRoot, 'evidence/sepolia/spend-ledger.json');
-const manifestPath = resolve(repositoryRoot, 'deployments/sepolia/quiet-signal.json');
+const canonicalManifestPath = resolve(repositoryRoot, 'deployments/sepolia/quiet-signal.json');
+
+function releaseId(): string | undefined {
+  const value = process.argv.find((argument) => argument.startsWith('--release='))?.slice(10);
+  if (value === undefined) return undefined;
+  if (!/^DEP-(?:0[2-9]|[1-9][0-9]*)$/.test(value))
+    throw new Error(
+      'DEP-01 deployment failed: --release must be an explicit new DEP-<integer> ID.',
+    );
+  if (value === 'DEP-01')
+    throw new Error(
+      'DEP-01 deployment failed: omit --release for the immutable DEP-01 manifest path.',
+    );
+  return value;
+}
 
 interface CompiledArtifact extends DeploymentArtifact {
   deployedBytecode: Hex;
@@ -218,13 +232,22 @@ function publicEpoch(value: unknown): PublicEpoch {
 }
 
 async function main(): Promise<void> {
+  const revision = releaseId();
+  const workItemId = revision ?? 'DEP-01';
+  const manifestPath = revision
+    ? resolve(repositoryRoot, 'deployments/sepolia/releases', `${revision}.json`)
+    : canonicalManifestPath;
   loadEnvironment();
   if (process.env.CONFIRM_SEPOLIA_WRITE !== 'yes') {
     fail('set CONFIRM_SEPOLIA_WRITE=yes for an irreversible Sepolia deployment.');
   }
   assertClean();
   if (existsSync(manifestPath))
-    fail('the canonical manifest already exists and must never be overwritten.');
+    fail(
+      revision
+        ? `the ${revision} revision manifest already exists and must never be overwritten.`
+        : 'the canonical manifest already exists and must never be overwritten.',
+    );
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
   const privateKey = process.env.SEPOLIA_PRIVATE_KEY as Hex | undefined;
   if (!rpcUrl || !privateKey) fail('Sepolia RPC and deployer configuration are required.');
@@ -307,7 +330,7 @@ async function main(): Promise<void> {
     receipt: { blockNumber: bigint; gasUsed: bigint; effectiveGasPrice: bigint },
   ): void => {
     appendSpend(ledger, {
-      workItemId: 'DEP-01',
+      workItemId,
       phase: 'P2',
       sender: deployer.address,
       transactionHash,
@@ -460,7 +483,7 @@ async function main(): Promise<void> {
     chainId: SEPOLIA_CHAIN_ID,
     sourceCommit: sourceCommit(),
     deployment: {
-      workItemId: 'DEP-01',
+      workItemId,
       deployedAtBlock: poolReceipt.blockNumber.toString(),
       deployer: deployer.address,
       configuration: {
@@ -496,9 +519,17 @@ async function main(): Promise<void> {
     ],
     receipts,
   };
+  mkdirSync(dirname(manifestPath), { recursive: true });
   writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { flag: 'wx' });
   process.stdout.write(
-    `${JSON.stringify({ status: 'deployed', manifest: 'deployments/sepolia/quiet-signal.json', pool: canonicalPool })}\n`,
+    `${JSON.stringify({
+      status: 'deployed',
+      workItemId,
+      manifest: revision
+        ? `deployments/sepolia/releases/${revision}.json`
+        : 'deployments/sepolia/quiet-signal.json',
+      pool: canonicalPool,
+    })}\n`,
   );
 }
 
