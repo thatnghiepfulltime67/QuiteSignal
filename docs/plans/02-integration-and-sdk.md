@@ -199,7 +199,7 @@ Outcome: Produce a deterministic, guarded Ethereum Sepolia deployment plan and
 canonical public manifest for the MVP's confidential collateral, immutable public
 adapter, permissionless factory, and one bound pool.
 
-Active slice: `DEP-01-WRITE-01`.
+Active slice: `DEP-01-VERIFY-01`.
 
 Output files: deployment plan/write/verify scripts, generated canonical manifest and
 consumer bindings, deployment tests, this record, evidence ledger entries, and
@@ -382,6 +382,51 @@ Rollback/failure action: Revert the unexecuted sender source. After any submitte
 transaction, retain the append-only ledger and public receipts, do not overwrite a
 manifest, and create a new explicit deployment plan only after reviewing the failed
 stage.
+
+Completion evidence: source commit `e2161d8` added the guarded sender. Its first
+confirmed canonical execution deployed the fixture, product collateral wrapper,
+adapter, factory, and CREATE2 pool at Sepolia blocks `11383118` through `11383123`.
+The sender wrote five successful receipt entries to the append-only spend ledger and
+created the canonical manifest only after runtime, factory/pool binding, immutable
+configuration, and initial empty `OPEN` epoch checks passed. This deployment is
+pending the separate independent verifier/evidence slice before DEP-01 is complete.
+
+### DEP-01-VERIFY-01 work-item record
+
+Status: `in_progress`
+
+Outcome: Make the independent manifest verifier distinguish a deployment baseline
+from a live pool, then verify the canonical deployment without freezing future epoch
+transitions.
+
+Output files: manifest parser/verifier source and mutation tests, canonical manifest,
+sanitized DEP-01 evidence, evidence ledger entry, this record, and deployment
+runbook updates.
+
+Acceptance criteria: A manifest containing a public deployment block reads the
+initial epoch at that exact Sepolia block while runtime, receipts, and immutable
+bindings are verified from live chain data. A normal live-evidence manifest retains
+current-state epoch verification. The verifier rejects malformed deployment block,
+wrong initial epoch, altered runtime/configuration/receipt, or forbidden fields.
+
+Privacy/custody impact: All new fields are public block/address/hash facts. The
+verifier has read-only RPC access and cannot obtain or process confidential values.
+
+Funds location/recovery impact: This slice sends no transaction. A failed verifier
+does not alter the freshly deployed empty pool; it leaves the manifest unpublished
+in Git until the public discrepancy is resolved.
+
+Checks: verifier mutation tests, `npm run check:offline`, canonical Sepolia verifier
+run with a generated report, evidence validator, and `git diff --check`.
+
+Evidence location: `deployments/sepolia/quiet-signal.json` and
+`evidence/{offline,sepolia}/G6/DEP-01-DEPLOYMENT.json`.
+
+Intended commit: `test: verify canonical deployment manifest`.
+
+Rollback/failure action: Revert only the verifier compatibility change before
+publishing evidence. Never alter the deployment receipts, runtime hashes, or
+immutable canonical configuration to force a passing report.
 
 ## Dependency graph
 

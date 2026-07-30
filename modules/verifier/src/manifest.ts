@@ -33,6 +33,7 @@ export interface ReceiptBinding {
 export interface ProtocolManifest {
   schemaVersion: 1;
   chainId: number;
+  epochVerificationBlock?: bigint;
   contracts: ContractBinding[];
   pools: PoolBinding[];
   receipts: ReceiptBinding[];
@@ -109,6 +110,14 @@ function parseEpoch(value: unknown, path: string): EpochExpectation {
   };
 }
 
+function deploymentEpochBlock(value: unknown): bigint | undefined {
+  if (value === undefined) return undefined;
+  const deployment = record(value, 'manifest.deployment');
+  const block = BigInt(decimal(deployment.deployedAtBlock, 'manifest.deployment.deployedAtBlock'));
+  if (block === 0n) fail('manifest.deployment.deployedAtBlock must be positive.');
+  return block;
+}
+
 export function parseManifest(value: unknown): ProtocolManifest {
   rejectForbiddenFields(value);
   const input = record(value, 'manifest');
@@ -166,5 +175,13 @@ export function parseManifest(value: unknown): ProtocolManifest {
     receipts.length
   )
     fail('receipt transaction hashes must be unique.');
-  return { schemaVersion: 1, chainId: SEPOLIA_CHAIN_ID, contracts, pools, receipts };
+  const epochVerificationBlock = deploymentEpochBlock(input.deployment);
+  return {
+    schemaVersion: 1,
+    chainId: SEPOLIA_CHAIN_ID,
+    ...(epochVerificationBlock === undefined ? {} : { epochVerificationBlock }),
+    contracts,
+    pools,
+    receipts,
+  };
 }

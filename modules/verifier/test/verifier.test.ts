@@ -131,3 +131,33 @@ test('T-VERIFIER-PK08-03: chain, runtime, binding, epoch, and receipt mutations 
     /manifest receipt failed/,
   );
 });
+
+test('T-VERIFIER-DEP-01-01: a deployment manifest verifies its initial epoch at the recorded block', async () => {
+  const deploymentManifest = parseManifest({
+    ...manifest(),
+    deployment: { deployedAtBlock: '11383123' },
+  });
+  let epochBlock: unknown;
+  const readClient = client();
+  const originalRead = readClient.readContract;
+  readClient.readContract = async (parameters: unknown) => {
+    if ((parameters as { functionName?: string }).functionName === 'epoch') {
+      epochBlock = (parameters as { blockNumber?: bigint }).blockNumber;
+    }
+    return originalRead(parameters);
+  };
+  const report = await verifyManifest(readClient, deploymentManifest);
+  assert.equal(epochBlock, 11_383_123n);
+  assert.equal(report.epochVerificationBlock, '11383123');
+});
+
+test('T-VERIFIER-DEP-01-02: malformed deployment epoch blocks fail before an RPC read', () => {
+  assert.throws(
+    () => parseManifest({ ...manifest(), deployment: { deployedAtBlock: '0' } }),
+    /must be positive/,
+  );
+  assert.throws(
+    () => parseManifest({ ...manifest(), deployment: { deployedAtBlock: '11.3' } }),
+    /canonical decimal/,
+  );
+});

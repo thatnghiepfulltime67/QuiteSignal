@@ -61,6 +61,7 @@ export interface VerificationReport {
   schemaVersion: 1;
   chainId: number;
   verificationBlock: string;
+  epochVerificationBlock: string | null;
   contractCount: number;
   poolCount: number;
   receiptCount: number;
@@ -127,7 +128,16 @@ export async function verifyManifest(
     manifest.pools.map(async (pool) => {
       const [configRaw, epochRaw] = await Promise.all([
         client.readContract({ address: pool.address, abi: POOL_ABI, functionName: 'config' }),
-        client.readContract({ address: pool.address, abi: POOL_ABI, functionName: 'epoch' }),
+        client.readContract(
+          manifest.epochVerificationBlock === undefined
+            ? { address: pool.address, abi: POOL_ABI, functionName: 'epoch' }
+            : {
+                address: pool.address,
+                abi: POOL_ABI,
+                functionName: 'epoch',
+                blockNumber: manifest.epochVerificationBlock,
+              },
+        ),
       ]);
       const config = record(configRaw, `${pool.contractId}.config`);
       if (
@@ -152,6 +162,7 @@ export async function verifyManifest(
     schemaVersion: 1,
     chainId: manifest.chainId,
     verificationBlock: (await client.getBlockNumber()).toString(),
+    epochVerificationBlock: manifest.epochVerificationBlock?.toString() ?? null,
     contractCount: manifest.contracts.length,
     poolCount: manifest.pools.length,
     receiptCount: manifest.receipts.length,
