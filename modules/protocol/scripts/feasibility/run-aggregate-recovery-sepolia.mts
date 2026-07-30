@@ -107,6 +107,7 @@ const spikeArtifactPath = resolve(
 );
 const spendLedgerPath = resolve(repositoryRoot, 'evidence/sepolia/spend-ledger.json');
 const secondaryActorPath = resolve(repositoryRoot, 'evidence/local/fnd-05-secondary-actor.json');
+const failureMarkerPath = resolve(repositoryRoot, 'evidence/local/fnd-05-last-failure.json');
 let failureStage = 'configuration validation';
 
 function fail(message: string): never {
@@ -287,6 +288,30 @@ function loadOrCreateSecondaryPrivateKey(): Hex {
 
 function clearSecondaryPrivateKey(): void {
   if (existsSync(secondaryActorPath)) unlinkSync(secondaryActorPath);
+}
+
+function writeFailureMarker(error: unknown): void {
+  try {
+    mkdirSync(dirname(failureMarkerPath), { recursive: true, mode: 0o700 });
+    const errorCategory = error instanceof Error ? error.name : typeof error;
+    writeFileSync(
+      failureMarkerPath,
+      `${JSON.stringify({
+        errorCategory,
+        failureStage,
+        schemaVersion: 1,
+        workItem: process.argv.find((value) => value.startsWith('FND-05')) ?? 'unknown',
+      })}\n`,
+      { mode: 0o600 },
+    );
+    chmodSync(failureMarkerPath, 0o600);
+  } catch {
+    // Preserve the original sanitized failure path if local diagnostics are unavailable.
+  }
+}
+
+function clearFailureMarker(): void {
+  if (existsSync(failureMarkerPath)) unlinkSync(failureMarkerPath);
 }
 
 async function assertRejected(action: () => Promise<unknown>, scenario: string): Promise<void> {
@@ -1404,6 +1429,7 @@ async function main(): Promise<void> {
     'refund recovered independent member',
   );
   clearSecondaryPrivateKey();
+  clearFailureMarker();
 
   console.log(
     JSON.stringify({
@@ -1416,7 +1442,8 @@ async function main(): Promise<void> {
   );
 }
 
-main().catch(() => {
+main().catch((error: unknown) => {
+  writeFailureMarker(error);
   console.error(
     `FND-05 failed during ${failureStage}: inspect the sanitized receipt, spend ledger, and Nox feedback report.`,
   );
