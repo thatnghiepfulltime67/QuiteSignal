@@ -91,10 +91,24 @@ moment), tight tracking, and centred composition. Body copy stays between 16px a
 
 The persistent header sits on cocoa with a 1px Walnut Vein bottom border. The
 QuietSignal wordmark is an orchid outlined diamond followed by the wordmark in
-display type. Navigation is a direct task bar: Overview, Market, Assets, Signal,
-Lifecycle, Position, Verify, and Test. Use uppercase 12px mono labels in Petal Wash;
-hover and the current task shift only to Neon Orchid. The task bar may wrap on small
-screens without hiding a route behind a workspace-level control.
+display type. Navigation is a grouped task bar: Overview, Markets, Portfolio, and Test
+Lab. Markets lists verified pools and exposes one selected pool's facts and action
+panels; the selected-pool list stays visible in its own viewport-height scroll rail while
+the detail column scrolls. Portfolio
+holds wallet-level ETH/QSFC/QSCC balance summary, Mint, Approve, Wrap, and explicit
+QSCC Reveal controls alongside position entry points; Test Lab contains Create/Join,
+including an explicit sequential flow for creating ten real verified test pools.
+Use uppercase 12px mono labels in Petal Wash; hover and the current task shift only to
+Neon Orchid. The task bar remains pinned to the top of the viewport while scrolling,
+with an opaque Cocoa background and a Walnut Vein separator so it never visually
+merges with page content. A selected market reveals only the panel the user opens;
+never expose transaction forms for every listed pool at once.
+
+When a wallet is connected, a compact balance strip below the header shows public
+Sepolia ETH and QSFC amounts. QSCC is labelled as hidden until the user explicitly
+presses the adjacent Reveal control; that owner-only amount is session-only and
+re-masks on account or chain change. The strip wraps on narrow viewports rather than
+creating horizontal scrolling.
 
 ### Action controls
 
@@ -105,6 +119,14 @@ disabled actions lower opacity without changing their purpose. Selection rows an
 inline text links may remain distinct because they are navigation or choice controls,
 not transaction actions. Do not make an action control imply a completed transaction;
 wallet and chain state are always stated beside it.
+
+### Self-test configuration
+
+Self-test creation exposes editable, bounded public values: an ETH/USD threshold and
+comparison, a commit-window duration, and a participant gate. Feed, collateral
+wrapper, timeout, recovery, and network bindings remain fixed and are stated beside
+the form. The shared join link carries the selected public configuration so a second
+participant can verify the immutable pool and adapter facts before any wallet action.
 
 ### Hero and section bands
 

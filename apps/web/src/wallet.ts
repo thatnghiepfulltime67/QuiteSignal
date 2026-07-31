@@ -188,6 +188,12 @@ export interface TestAssetState {
   nativeBalance: bigint;
 }
 
+export interface PublicTestAssetState {
+  account: string;
+  publicBalance: bigint;
+  nativeBalance: bigint;
+}
+
 export type OwnerTerminalAction = 'materializeScore' | 'claim' | 'refund';
 
 export interface PublicLifecycleSnapshot {
@@ -321,6 +327,26 @@ export async function readTestAssetState(
     confidentialBalance: decrypted.value as bigint,
     nativeBalance,
   };
+}
+
+export async function readPublicTestAssetState(
+  provider: BrowserProvider,
+  faucet: string,
+  collateral: string,
+): Promise<PublicTestAssetState> {
+  const { account } = await connectedSepoliaWallet(provider);
+  const reader = createPublicClient({ chain: sepolia, transport: custom(provider) });
+  const addresses = await verifyTestAssetBinding(reader, faucet, collateral);
+  const [publicBalance, nativeBalance] = await Promise.all([
+    reader.readContract({
+      address: addresses.faucet,
+      abi: testFaucetAbi,
+      functionName: 'balanceOf',
+      args: [account],
+    } as never) as Promise<bigint>,
+    reader.getBalance({ address: account }),
+  ]);
+  return { account, publicBalance, nativeBalance };
 }
 
 export async function mintTestAsset(

@@ -37,6 +37,8 @@ depending on a mock, private database, or privileged backend.
 | WEB-11               | Shared self-test entry         | Factory-verified public join route for a second participant                                       | mutation tests, web tests, production build, offline gate            | `feat: add verified self-test participant links`    |
 | WEB-12               | Permissionless lifecycle cockpit | Wallet-gated public lifecycle and recovery actions, including aggregate proof finalization      | state/action tests, web tests, production build, offline gate        | `feat: add permissionless lifecycle actions`        |
 | WEB-13               | Direct task navigation         | Header task routes, isolated lifecycle view, unified controls, landing-integrated guide          | route/source tests, responsive build, offline gate                   | `feat: simplify task navigation`                   |
+| WEB-14               | Persistent task navigation     | Sticky task bar with opaque scroll surface and mobile-safe wrapping                               | source test, responsive build, offline gate                          | `feat: pin task navigation`                         |
+| WEB-15               | Bounded custom self-test       | Preset condition, commit window, and participant gate with manifest-bound share verification     | self-test tests, web tests, build, offline gate                      | `feat: customize self-test markets`                 |
 
 ## WEB-01 work-item record
 
@@ -1387,6 +1389,128 @@ Intended commit: `feat: simplify task navigation`.
 
 Rollback/failure action: Restore the prior route links only; do not substitute an
 overlay, hidden menu, backend router, stored navigation state, or transaction shortcut.
+
+## WEB-14 work-item record
+
+ID: `WEB-14`
+
+Status: `complete`
+
+Prerequisite gates: WEB-13 is complete. This presentation-only slice cannot claim G7.
+
+Outcome: Keep the direct task bar available while users read long Market, Lifecycle,
+or landing content, without obscuring content or changing route, wallet, or protocol
+behavior.
+
+Output files: `apps/web/src/styles.css`, focused responsive/source coverage,
+`DESIGN.md`, and this work-item record.
+
+Acceptance criteria: The task bar remains at the viewport top while its page scrolls,
+uses an opaque surface and separator above content, preserves keyboard navigation and
+current-route indication, and wraps without horizontal clipping at the mobile
+viewport. It cannot cover the skip link or change a route's transaction behavior.
+
+Privacy/custody and funds/recovery impact: None. This CSS-only change introduces no
+new read, write, persistence, authority, or funds path.
+
+Commands/checks: focused source test, `npm run test:web`, production build, root
+typecheck, `npm run check:offline`, sanitized desktop/mobile scroll inspection, and
+`git diff --check`.
+
+Evidence path: source/test output and sanitized browser inspection only. This
+presentation slice is not G7 evidence.
+
+Completion evidence (2026-07-31): `npm run test:web` passed 39 tests; `npm run
+build:web` and `npm run check:offline` passed; `git diff --check` passed. A sanitized
+browser scroll check confirmed the task bar moves from desktop `top: 82` to `top: 0`
+after a 1,400px scroll and from mobile `top: 72` to `top: 0`; the 390px viewport had
+no horizontal overflow. No wallet request or transaction was made.
+
+Intended commit: `feat: pin task navigation`.
+
+Rollback/failure action: Remove the sticky positioning and restore normal task-bar
+flow; do not substitute JavaScript scroll tracking or a persistent browser store.
+
+## WEB-15 work-item record
+
+ID: `WEB-15`
+
+Status: `in_progress`
+
+Prerequisite gates: WEB-10 through WEB-14 are complete. This user-created test-market
+surface is separate from the canonical release and cannot claim G7.
+
+Outcome: Let a creator enter bounded public self-test values for ETH/USD condition,
+commit duration, and participant gate. Keep the manifest-bound factory,
+feed, wrapper, timeout, recovery, and network rules fixed; make the selected public
+configuration part of the shared join URL and verify the immutable pool/adapter facts
+before a join route opens participant actions.
+
+Output files: `apps/web/src/self-test.ts`, `apps/web/src/main.ts`,
+`apps/web/src/styles.css`, focused self-test and route tests, this work-item record,
+the decision log, `DESIGN.md`, and `vercel.json`.
+
+Acceptance criteria: A creator can enter a positive ETH/USD threshold from $1 to
+$1,000,000 (up to 8 feed decimals), a `greater-or-equal` or `less-than` comparison,
+a 5–180 minute commit window, and a 2–20 participant gate. The adapter and pool use
+the selected immutable condition and cohort gate, with a bounded commit window. The
+join link preserves the public selections; the second participant rejects
+an invalid link, a non-factory pool, mismatched condition/gate, changed fixed timeout,
+or invalid observation boundary without asking a wallet to sign. No selected value is
+private, no value is persisted, and a custom self-test cannot be presented as the
+canonical release.
+
+Privacy/custody and funds/recovery impact: The public configuration is in a URL and
+on-chain adapter/pool state only. No new confidential input, authority, custody,
+persistence, asset flow, or recovery transition is introduced.
+
+Commands/checks: focused self-test/route tests, `npm run test:web`, production build,
+root typecheck, `npm run check:offline`, sanitized two-browser join inspection, and
+`git diff --check`.
+
+Evidence path: source/test output and sanitized browser inspection only. This
+presentation slice is not G7 evidence.
+
+Intended commit: `feat: customize self-test markets`.
+
+Rollback/failure action: Restore the fixed self-test values and reject custom query
+parameters; do not retain selected values in a browser store or bypass factory and
+adapter verification.
+
+Navigation extension: The same slice uses Overview, Markets, Portfolio, and Test Lab.
+Markets is the single selected-pool action surface; Portfolio retains wallet-level
+collateral controls; Test Lab only creates or joins a pool. The canonical pool and
+session-verified self-test pools can be selected without an unverified address list or
+durable browser storage.
+
+Balance extension: The global header reads only connected-wallet public Sepolia ETH and
+QSFC facts. It masks QSCC until an explicit Reveal click requests owner-only access;
+the revealed value remains in memory for the current session only.
+
+Market-centric extension: Replace the global Signal, Verify, Lifecycle, and Position
+navigation with a verified Market directory and selected-pool panels. The directory
+shows the canonical pool plus self-test pools created or verified in the current
+browser session; it does not become an unverified address registry or a durable store.
+Each selected-pool panel keeps the existing public/owner-only boundary, explicit wallet
+confirmation, and chain-derived eligibility checks. Portfolio holds the compact
+wallet-level asset controls, ETH/QSFC/QSCC balance summary, explicit QSCC reveal, and
+links back to a selected pool position.
+
+The Market directory lists only the canonical pool and self-test pools verified in the
+current browser session. Selecting a pool updates the right-hand detail column without
+navigation; the left list remains sticky during scrolling. Test Lab may create ten
+real verified self-test pools sequentially, requiring explicit Sepolia wallet
+confirmation for each deployment and never listing a pool before verification.
+
+Pooled-local extension output files: `ops/scripts/create-self-test-pools-sepolia.mts`,
+`deployments/sepolia/verified-self-test-pools.json`, and `apps/web/src/main.ts` registry
+loader. Checks: Node 24/NPM 11 Sepolia preflight, spend-budget validation, per-write
+gas estimate, confirmed receipt, factory/config readback, and `git diff --check`.
+Evidence: sanitized pool receipt summary plus append-only spend-ledger entries. Privacy
+impact: registry records public addresses and public immutable configuration only;
+private keys and all confidential data remain absent. Recovery: a failed deployment
+stops the sequence, preserves already verified pools, and never changes canonical
+release state. Intended commit: `feat: add verified local test pools`.
 
 ## WEB-12 work-item record
 

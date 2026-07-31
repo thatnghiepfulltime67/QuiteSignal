@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validateSignalDraft } from '../src/signal.js';
+import { probabilityPercentToBps, validateSignalDraft } from '../src/signal.js';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -12,6 +12,11 @@ test('T-WEB-03-01: signal values validate without numbers or serialization', () 
     stakeBaseUnits: 1250000000000000000n,
     probabilityBps: 7500n,
   });
+});
+
+test('T-WEB-03-01b: the signal form accepts percentages and converts to protocol basis points', () => {
+  assert.equal(probabilityPercentToBps('70'), '7000');
+  assert.throws(() => probabilityPercentToBps('101'));
 });
 test('T-WEB-03-02: unsafe draft values reject before encryption', () => {
   assert.throws(() => validateSignalDraft({ stake: '0', probability: '10001' }));

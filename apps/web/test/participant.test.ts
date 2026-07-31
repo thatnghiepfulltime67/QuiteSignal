@@ -73,8 +73,8 @@ test('T-WEB-09-04: asset setup binds the faucet to the immutable wrapper and use
   assert.match(wallet, /functionName: 'wrap'/);
   assert.match(wallet, /if \(allowance < amount\)/);
   assert.match(wallet, /waitForConfirmedReceipt\(reader, transactionHash\)/);
-  assert.match(main, /Mint → approve → wrap/);
-  assert.match(main, /valueless Sepolia test token/);
+  assert.match(main, /Mint valueless QSFC, approve only the chosen amount, then wrap it into confidential QSCC/);
+  assert.match(main, /Mint QSFC/);
   assert.match(main, /data-asset-action="mint"/);
   assert.match(main, /data-asset-action="approve"/);
   assert.match(main, /data-asset-action="wrap"/);

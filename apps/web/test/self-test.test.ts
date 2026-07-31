@@ -3,7 +3,11 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { deriveSelfTestTiming, isSelfTestPoolAddress } from '../src/self-test.js';
+import {
+  deriveSelfTestTiming,
+  isSelfTestPoolAddress,
+  selfTestPolicyForSelection,
+} from '../src/self-test.js';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -12,7 +16,14 @@ test('T-WEB-10-01: a fresh self-test epoch has a bounded open commit window befo
   assert.equal(timing.deadline, 2_500n);
   assert.equal(timing.observationNotBefore, 3_100n);
   assert.ok(timing.deadline < timing.observationNotBefore);
+  assert.equal(deriveSelfTestTiming(1_000n, 600n).deadline, 1_600n);
   assert.throws(() => deriveSelfTestTiming(0n));
+  assert.throws(() => deriveSelfTestTiming(1_000n, 240n));
+  assert.equal(
+    selfTestPolicyForSelection('greater-or-equal', '300000000000', 60, 5)?.conditionLabel,
+    'ETH/USD ≥ $3000',
+  );
+  assert.equal(selfTestPolicyForSelection('greater-or-equal', '300000000000', 4, 5), undefined);
 });
 
 test('T-WEB-10-02: browser launch deploys only an immutable adapter then creates and rereads one pool', () => {
@@ -59,10 +70,15 @@ test('T-WEB-11-02: a shared self-test pool is factory-verified before its partic
   assert.match(selfTest, /functionName: 'poolOf'/);
   assert.match(selfTest, /not registered by the manifest-bound factory/);
   assert.match(selfTest, /canonical release is not a self-test market/);
-  assert.match(selfTest, /fixed self-test policy/);
+  assert.match(selfTest, /selected self-test policy/);
+  assert.match(selfTest, /selfTestPolicyForSelection/);
   assert.match(main, /\/self-test\/join\//);
+  assert.match(main, /comparison: policy\.comparison/);
   assert.match(main, /Verify and join pool/);
   assert.match(main, /No wallet request or transaction was sent/);
+  assert.match(main, /const selfTestMarkets: SelfTestMarket\[\] = \[\]/);
+  assert.match(main, /function rememberSelfTestMarket/);
+  assert.match(main, /data-select-self-test-pool/);
   assert.doesNotMatch(
     `${selfTest}\n${main}`,
     /localStorage|sessionStorage|privateKey|mnemonic|seed phrase|console\./i,

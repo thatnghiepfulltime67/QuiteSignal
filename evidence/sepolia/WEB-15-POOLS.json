@@ -1,0 +1,137 @@
+{
+  "workItemId": "WEB-15-POOLS",
+  "chainId": 11155111,
+  "createdAtUtc": "2026-07-31T12:12:26.372Z",
+  "pools": [
+    {
+      "poolAddress": "0x494D4E5F0fBEF86007D9B5572fF46be966eDB0d1",
+      "policy": {
+        "comparison": "greater-or-equal",
+        "threshold": "150000000000",
+        "minutes": 15,
+        "gate": 2
+      },
+      "startedAt": "1785499656",
+      "adapterAddress": "0x2f03eea67c0050f882dbd3932cdfc65e450b274f",
+      "adapterTransactionHash": "0x3d3f8e8469fe494aa881be1dd06575ee8fbc8f7a4e1b93fd883a61a21b3fe316",
+      "poolTransactionHash": "0x2ac87fce04690aea1495bca40dac7020a36fdecbb1c611444df0b6b2aec0e2e3"
+    },
+    {
+      "poolAddress": "0x3D9485a7923A794c4a45321A4Ee220C34adf8F4e",
+      "policy": {
+        "comparison": "greater-or-equal",
+        "threshold": "200000000000",
+        "minutes": 20,
+        "gate": 2
+      },
+      "startedAt": "1785499680",
+      "adapterAddress": "0x2226b5f71971ceb74914f7437a8989dc6830ecdb",
+      "adapterTransactionHash": "0x3aeccc3c0b8ffbcc703acf152dc942698eb9bfc30511b3da7d8b588359ae595a",
+      "poolTransactionHash": "0xb4e000341a0797306ddcda6fcd7c85c16f979519ed0b92b8932dbc6c8568baac"
+    },
+    {
+      "poolAddress": "0x86D0cdaC3e6B73056cBf253a0DdD29ab62b019b5",
+      "policy": {
+        "comparison": "greater-or-equal",
+        "threshold": "250000000000",
+        "minutes": 25,
+        "gate": 3
+      },
+      "startedAt": "1785499704",
+      "adapterAddress": "0x2e1da49a4a2375463417890c85e31f09b8f49bb6",
+      "adapterTransactionHash": "0x23985fc0b5c836ab398f35cae2b567e2ec9f9593e39b0cb649348c59e25f70b4",
+      "poolTransactionHash": "0x0334a8ddf1aa769ff29f4c64a5728cfc9529c9d00771f841b46a38dc1b411748"
+    },
+    {
+      "poolAddress": "0x3172E2995AB37c91115C4Ba3EC1B2fBDBADd725C",
+      "policy": {
+        "comparison": "greater-or-equal",
+        "threshold": "300000000000",
+        "minutes": 30,
+        "gate": 3
+      },
+      "startedAt": "1785499740",
+      "adapterAddress": "0x45a0336ff6c458819af0bd9e3c8c44a2afb61655",
+      "adapterTransactionHash": "0x67d48d65c00e712652a30f5e80d8e14d266eee898c483188009b509664e32d6f",
+      "poolTransactionHash": "0x025f57f449f4bb5ec65856c50e8e3d9432a289ee660c97f1c4ea3f37636f4318"
+    },
+    {
+      "poolAddress": "0x9206DF5Ef91e0C4bDab2D2CA53297792478B8E88",
+      "policy": {
+        "comparison": "greater-or-equal",
+        "threshold": "350000000000",
+        "minutes": 35,
+        "gate": 4
+      },
+      "startedAt": "1785499776",
+      "adapterAddress": "0xa595f70d740ca9cea536120093a5f90f39b8498d",
+      "adapterTransactionHash": "0x726d5bc677f6a8350f486c087cb03875430940e2150c344e75ffaaf10db5b519",
+      "poolTransactionHash": "0x13382bc37d438f335412c9b5ff701dfbe47698ddc0a0d62bb4a23b9448d8603e"
+    },
+    {
+      "poolAddress": "0xf8751C43df9239344Fade2F7Daa8562c9B80552b",
+      "policy": {
+        "comparison": "less-than",
+        "threshold": "200000000000",
+        "minutes": 45,
+        "gate": 4
+      },
+      "startedAt": "1785499812",
+      "adapterAddress": "0xdb8efb3da94de6dfa0297f030f243ba64eef4ad1",
+      "adapterTransactionHash": "0x2eea5ae28d32a2e77a980052d95a2646b52a6e8d23a63f298fe788b946356ce2",
+      "poolTransactionHash": "0xabdf9997d8440378fcfba4c482791c55b1846bac199844bdcfeadc1e3bbb0fd0"
+    },
+    {
+      "poolAddress": "0x0A350da7a1A53880aaE165dBf019Ca1c09C41cd5",
+      "policy": {
+        "comparison": "less-than",
+        "threshold": "250000000000",
+        "minutes": 60,
+        "gate": 5
+      },
+      "startedAt": "1785499836",
+      "adapterAddress": "0xeaa538555994a8edba3b11fb41e38a472f859a8d",
+      "adapterTransactionHash": "0x4cbaa52f985d130a852418b8e40b44aa8d21d7e50a145d500ecf3c1deede8c34",
+      "poolTransactionHash": "0xf917e62e4c35e4244111f9967f452ba6cb362308d9aadaf391f2eba9d51d7949"
+    },
+    {
+      "poolAddress": "0x3DB43a02FE2CcbfeFb41cf891e0389B05954BA2C",
+      "policy": {
+        "comparison": "less-than",
+        "threshold": "300000000000",
+        "minutes": 75,
+        "gate": 5
+      },
+      "startedAt": "1785499872",
+      "adapterAddress": "0x2051c5c52d017defee76c34948e1b3d161525ed9",
+      "adapterTransactionHash": "0x5f525c26ed29af681775615a202c18c3224b7f1240d7c19bc1f97ee03b2009f2",
+      "poolTransactionHash": "0x88a4c91783bb4e4386cca03c904a8d2ef56f7766457bf77d433696d721dd037a"
+    },
+    {
+      "poolAddress": "0x6C063432523Dc5A5ae0101817fC3F403c48E5D1b",
+      "policy": {
+        "comparison": "less-than",
+        "threshold": "350000000000",
+        "minutes": 90,
+        "gate": 6
+      },
+      "startedAt": "1785499896",
+      "adapterAddress": "0xaaca785c1ccd33f701401a41b760c1d03cd1c000",
+      "adapterTransactionHash": "0x08e8333726e75e2ac45af1790844a944133a36923a57349e31d2f0554c6d9639",
+      "poolTransactionHash": "0x597f9fb005e38a97b8b1d9ccc38cbdad70d1363358503a8a300399acbe6624ac"
+    },
+    {
+      "poolAddress": "0x2100708956113Bd058Ae58C4Fa0B76242ddC5d08",
+      "policy": {
+        "comparison": "less-than",
+        "threshold": "400000000000",
+        "minutes": 120,
+        "gate": 6
+      },
+      "startedAt": "1785499920",
+      "adapterAddress": "0xd28a78cb5cb6fffd84a6ca9961f173eec2a7581d",
+      "adapterTransactionHash": "0xd60bad95b9ab6587360ba793bdd38655904b69fa5b4a547e6be76f3d3d6c8da6",
+      "poolTransactionHash": "0x4308cffb52366945ae821c810359fcc254370375bfacd5b224b18b5f8309ffe2"
+    }
+  ]
+}

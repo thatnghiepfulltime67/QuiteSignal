@@ -473,3 +473,85 @@ authority, custody, persistence, or confidential-data path. It makes recovery mo
 visible by giving it an explicit task route rather than placing it below the market
 content. Existing tests and R-28 continue to guard explicit user actions and state
 selection.
+
+## ADR-029 — Bounded self-test configuration in public join links
+
+**Status:** Accepted before WEB-15 implementation
+
+Self-test is a user-owned, permissionless factory path, so its public market
+configuration may be selected without changing the canonical release. WEB-15 permits
+editable but bounded public values: a $1–$1,000,000 ETH/USD threshold with up to 8
+feed decimals, a comparison direction, a 5–180 minute commit window, and a 2–20
+participant gate.
+The Chainlink feed, collateral wrapper, factory, fixed timeout/recovery rules, and
+Sepolia network stay manifest-bound. The selected condition, window, and gate are
+encoded in the public join URL; no selected value is private or persisted.
+
+Before enabling participant routes, a joiner reads the public pool and adapter and
+fails closed unless factory registration, collateral, condition, direction, cohort,
+fixed timeouts, and observation boundary match the link and manifest. A URL is only a
+statement of expected public configuration; immutable chain state remains authoritative.
+This alters a public browser interface but not custody, privacy, Nox ACL, or protocol
+state transitions.
+
+## ADR-030 — Grouped navigation with pool context
+
+**Status:** Superseded by ADR-032
+
+The persistent task bar groups related work into Overview, Explore, Participate, Operate,
+and Test Lab. Explore keeps wallet-free Market and Verify routes together; Participate
+keeps Assets and Signal together; Operate keeps public Lifecycle and owner Position
+together. Test Lab is limited to creating or joining a self-test pool.
+
+After a self-test pool is created or joined, the shared Explore, Participate, and
+Operate routes use that selected pool and show an explicit self-test context badge.
+They are not duplicated beneath Test Lab. Canonical context remains the default and a
+visible back-to-canonical action exits the temporary test context. This is a browser
+information-architecture change only; it adds no authority, custody, persistence, or
+confidential-data path.
+
+## ADR-031 — Session-only header balance summary
+
+**Status:** Accepted before WEB-15 balance extension
+
+The global header may display a connected wallet's public Sepolia ETH and QSFC balances
+after a direct public read. QSCC is confidential owner data and therefore remains
+masked until the user explicitly selects Reveal. That click reuses the existing
+owner-only balance read, does not submit a transaction, and retains the result only in
+the current browser memory. Account/chain changes re-mask QSCC and discard all header
+balances. The header never polls or persists a confidential balance.
+
+## ADR-032 — Market-scoped interaction for verified pools
+
+**Status:** Accepted before WEB-15 market-centric extension
+
+The local product experience will replace global Signal, Verify, Lifecycle, and
+Position destinations with a verified Market directory and a selected-pool surface.
+The directory shows the canonical pool plus only self-test pools that this browser has
+created or independently verified during the current session; it never treats an
+arbitrary address as a trusted listing and it does not persist a confidential value.
+
+Within one selected pool, collapsible panels disclose public verification facts,
+the encrypted forecast form, public lifecycle actions, and owner-only position
+controls. Wallet-level collateral preparation and the explicit QSCC Reveal control
+belong in Portfolio, alongside a session-only ETH/QSFC/QSCC balance summary. Only one
+pool is selected at a time, and every write retains its existing explicit EIP-1193
+confirmation and chain-derived eligibility check. This changes browser routing and
+presentation only; it adds no backend, indexer authority, custody, or new protocol
+state transition. The directory keeps the selected pool list visible during detail
+scrolling. A sequential ten-pool Test Lab action is explicit and wallet-confirmed; a
+pool is listed only after factory registration and immutable configuration verification.
+
+## ADR-033 — Public verified self-test registry
+
+**Status:** Accepted before WEB-15 pooled-local extension
+
+The local web build may ship a small static registry of public self-test pool address,
+policy, and creation timestamp records. On load, the browser independently verifies
+each record against the manifest-bound Sepolia factory, collateral wrapper, feed, and
+immutable configuration before it lists the pool. A failed record is omitted.
+
+The registry contains no key, account, signature, confidential input, handle, proof,
+or owner state. It is a convenience list rather than a source of protocol truth. Pool
+creation remains an explicit guarded Sepolia write that records every receipt in the
+spend ledger.

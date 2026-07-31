@@ -1,0 +1,102 @@
+[
+  {
+    "poolAddress": "0x494D4E5F0fBEF86007D9B5572fF46be966eDB0d1",
+    "policy": {
+      "comparison": "greater-or-equal",
+      "threshold": "150000000000",
+      "minutes": 15,
+      "gate": 2
+    },
+    "startedAt": "1785499656"
+  },
+  {
+    "poolAddress": "0x3D9485a7923A794c4a45321A4Ee220C34adf8F4e",
+    "policy": {
+      "comparison": "greater-or-equal",
+      "threshold": "200000000000",
+      "minutes": 20,
+      "gate": 2
+    },
+    "startedAt": "1785499680"
+  },
+  {
+    "poolAddress": "0x86D0cdaC3e6B73056cBf253a0DdD29ab62b019b5",
+    "policy": {
+      "comparison": "greater-or-equal",
+      "threshold": "250000000000",
+      "minutes": 25,
+      "gate": 3
+    },
+    "startedAt": "1785499704"
+  },
+  {
+    "poolAddress": "0x3172E2995AB37c91115C4Ba3EC1B2fBDBADd725C",
+    "policy": {
+      "comparison": "greater-or-equal",
+      "threshold": "300000000000",
+      "minutes": 30,
+      "gate": 3
+    },
+    "startedAt": "1785499740"
+  },
+  {
+    "poolAddress": "0x9206DF5Ef91e0C4bDab2D2CA53297792478B8E88",
+    "policy": {
+      "comparison": "greater-or-equal",
+      "threshold": "350000000000",
+      "minutes": 35,
+      "gate": 4
+    },
+    "startedAt": "1785499776"
+  },
+  {
+    "poolAddress": "0xf8751C43df9239344Fade2F7Daa8562c9B80552b",
+    "policy": {
+      "comparison": "less-than",
+      "threshold": "200000000000",
+      "minutes": 45,
+      "gate": 4
+    },
+    "startedAt": "1785499812"
+  },
+  {
+    "poolAddress": "0x0A350da7a1A53880aaE165dBf019Ca1c09C41cd5",
+    "policy": {
+      "comparison": "less-than",
+      "threshold": "250000000000",
+      "minutes": 60,
+      "gate": 5
+    },
+    "startedAt": "1785499836"
+  },
+  {
+    "poolAddress": "0x3DB43a02FE2CcbfeFb41cf891e0389B05954BA2C",
+    "policy": {
+      "comparison": "less-than",
+      "threshold": "300000000000",
+      "minutes": 75,
+      "gate": 5
+    },
+    "startedAt": "1785499872"
+  },
+  {
+    "poolAddress": "0x6C063432523Dc5A5ae0101817fC3F403c48E5D1b",
+    "policy": {
+      "comparison": "less-than",
+      "threshold": "350000000000",
+      "minutes": 90,
+      "gate": 6
+    },
+    "startedAt": "1785499896"
+  },
+  {
+    "poolAddress": "0x2100708956113Bd058Ae58C4Fa0B76242ddC5d08",
+    "policy": {
+      "comparison": "less-than",
+      "threshold": "400000000000",
+      "minutes": 120,
+      "gate": 6
+    },
+    "startedAt": "1785499920"
+  }
+]
