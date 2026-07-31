@@ -76,8 +76,9 @@ test('T-WEB-09-04: asset setup binds the faucet to the immutable wrapper and use
   assert.match(main, /Mint valueless QSFC, approve only the chosen amount, then wrap it into confidential QSCC/);
   assert.match(main, /Mint QSFC/);
   assert.match(main, /data-asset-action="mint"/);
-  assert.match(main, /data-asset-action="approve"/);
   assert.match(main, /data-asset-action="wrap"/);
+  assert.doesNotMatch(main, /data-asset-action="approve"/);
+  assert.match(main, /approvalHash = await approveTestAsset/);
 });
 
 test('T-WEB-09-05: signal submission is blocked before encryption when the market or collateral is not ready', () => {

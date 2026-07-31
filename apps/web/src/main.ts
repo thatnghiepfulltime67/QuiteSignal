@@ -381,7 +381,7 @@ function assetPanelContent(): string {
     ? `<dl class="asset-facts"><div><dt>PUBLIC QSFC</dt><dd>${formatTokenAmount(assetState.publicBalance)}</dd></div><div><dt>WRAPPER ALLOWANCE</dt><dd>${formatTokenAmount(assetState.allowance)}</dd></div><div><dt>PRIVATE QSCC</dt><dd>${formatTokenAmount(assetState.confidentialBalance)}</dd></div><div><dt>SEPOLIA GAS</dt><dd>${formatTokenAmount(assetState.nativeBalance)} ETH</dd></div></dl>`
     : `<p class="muted">No owner balance has been read. This page does not store account or balance data between sessions.</p>`;
   const busy = assetBusy ? ' disabled' : '';
-  return `<div class="panel asset-panel compact-asset-panel"><label>Amount <input id="asset-amount" name="assetAmount" inputmode="decimal" autocomplete="off" value="${escapeHtml(assetAmount)}" /></label><div class="asset-actions"><button class="primary" type="button" data-asset-action="mint"${busy}>Mint QSFC</button><button class="secondary" type="button" data-asset-action="approve"${busy}>Approve</button><button class="secondary" type="button" data-asset-action="wrap"${busy}>Wrap QSCC</button><button class="secondary" id="reveal-collateral-qscc" type="button"${headerBalanceBusy ? ' disabled' : ''}>${headerBalanceBusy ? 'Reading…' : 'Reveal QSCC'}</button><button class="text-button asset-refresh-icon" type="button" data-asset-action="refresh"${busy} aria-label="Refresh balances" title="Refresh balances">↻</button></div><p role="status" class="asset-status">${readiness.label}: ${readiness.explanation} ${assetMessage}</p>${stateRows}</div>`;
+  return `<div class="panel asset-panel compact-asset-panel"><label>Amount <input id="asset-amount" name="assetAmount" inputmode="decimal" autocomplete="off" value="${escapeHtml(assetAmount)}" /></label><div class="asset-actions"><button class="primary" type="button" data-asset-action="mint"${busy}>Mint QSFC</button><button class="secondary" type="button" data-asset-action="wrap"${busy}>Wrap QSCC</button><button class="secondary" id="reveal-collateral-qscc" type="button"${headerBalanceBusy ? ' disabled' : ''}>${headerBalanceBusy ? 'Reading…' : 'Reveal QSCC'}</button><button class="text-button asset-refresh-icon" type="button" data-asset-action="refresh"${busy} aria-label="Refresh balances" title="Refresh balances">↻</button></div><p role="status" class="asset-status">${readiness.label}: ${readiness.explanation} ${assetMessage}</p>${stateRows}</div>`;
 }
 
 function assetSetupContent(): string {
@@ -951,19 +951,34 @@ async function runAssetAction(action: 'mint' | 'approve' | 'wrap' | 'refresh'): 
   try {
     const amount = parseTestAssetAmount(assetAmount);
     assetBusy = true;
+    let approvalHash: string | undefined;
     assetMessage = {
       mint: 'Requesting a valueless QSFC mint to your connected wallet. Confirm it in the wallet, then wait for the public Sepolia receipt.',
       approve:
         'Requesting an exact QSFC allowance for the immutable confidential wrapper. Confirm it in the wallet, then wait for the receipt.',
-      wrap: 'Requesting a 1:1 confidential wrap. Public QSFC remains yours until this wallet transaction confirms.',
+      wrap: 'Checking the exact QSFC allowance before the 1:1 confidential wrap. You may confirm approval, then confirm wrapping.',
     }[action];
     render();
-    const transactionHash = await {
-      mint: mintTestAsset,
-      approve: approveTestAsset,
-      wrap: wrapTestAsset,
-    }[action](provider, manifest.faucetAddress, manifest.collateralAddress, amount);
-    assetMessage = `${action === 'mint' ? 'Mint' : action === 'approve' ? 'Approval' : 'Wrap'} confirmed on Sepolia: ${transactionHash.slice(0, 10)}…. Refreshing the owner asset state.`;
+    if (action === 'wrap') {
+      if (!assetState || assetState.allowance < amount) {
+        assetMessage = 'Requesting an exact QSFC allowance for this wrap. Confirm approval in the wallet, then wait for its receipt.';
+        render();
+        approvalHash = await approveTestAsset(
+          provider,
+          manifest.faucetAddress,
+          manifest.collateralAddress,
+          amount,
+        );
+        assetMessage = `Approval confirmed on Sepolia: ${approvalHash.slice(0, 10)}…. Requesting the wrap transaction now; confirm it in the wallet.`;
+        render();
+      }
+    }
+    const transactionHash = await (action === 'mint'
+      ? mintTestAsset(provider, manifest.faucetAddress, manifest.collateralAddress, amount)
+      : action === 'approve'
+        ? approveTestAsset(provider, manifest.faucetAddress, manifest.collateralAddress, amount)
+        : wrapTestAsset(provider, manifest.faucetAddress, manifest.collateralAddress, amount));
+    assetMessage = `${action === 'mint' ? 'Mint' : action === 'approve' ? 'Approval' : approvalHash ? 'Approval and wrap' : 'Wrap'} confirmed on Sepolia: ${transactionHash.slice(0, 10)}…. Refreshing the owner asset state.`;
     assetBusy = false;
     render();
     await refreshAssetState();
