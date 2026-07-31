@@ -1780,6 +1780,14 @@ a {
   margin-top: 20px;
 }
 
+.asset-refresh-icon {
+  min-width: 44px;
+  padding-inline: 12px;
+  font-family: var(--font-ui);
+  font-size: 21px;
+  line-height: 1;
+}
+
 .asset-status {
   border-top: 1px solid var(--walnut);
   font-size: 16px;
