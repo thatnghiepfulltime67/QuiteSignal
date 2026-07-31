@@ -91,16 +91,20 @@ moment), tight tracking, and centred composition. Body copy stays between 16px a
 
 The persistent header sits on cocoa with a 1px Walnut Vein bottom border. The
 QuietSignal wordmark is an orchid outlined diamond followed by the wordmark in
-display type. Navigation uses uppercase 12px mono labels in Petal Wash; hover shifts
-only to Neon Orchid. The wallet control is a ghost button.
+display type. Navigation is a direct task bar: Overview, Market, Assets, Signal,
+Lifecycle, Position, Verify, and Test. Use uppercase 12px mono labels in Petal Wash;
+hover and the current task shift only to Neon Orchid. The task bar may wrap on small
+screens without hiding a route behind a workspace-level control.
 
-### Ghost and filled controls
+### Action controls
 
-Ghost controls: transparent background, 1px Lilac Whisper border, Lilac Whisper
-uppercase mono label, 4px radius, and `12px 20px` padding. A trailing `↗` may clarify
-an outward navigation action. Filled controls are Petal Wash with Cocoa text using
-the same geometry. Do not make a filled control imply a completed transaction; wallet
-and chain state are always stated beside it.
+All standard action controls use one solid Neon Orchid treatment: Orchid background,
+Petal Wash uppercase mono label, 1px Orchid border, 4px radius, and `12px 20px`
+padding. Hover shifts to Lilac Whisper while retaining dark, readable text contrast;
+disabled actions lower opacity without changing their purpose. Selection rows and
+inline text links may remain distinct because they are navigation or choice controls,
+not transaction actions. Do not make an action control imply a completed transaction;
+wallet and chain state are always stated beside it.
 
 ### Hero and section bands
 

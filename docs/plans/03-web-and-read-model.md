@@ -36,6 +36,7 @@ depending on a mock, private database, or privileged backend.
 | WEB-10               | Permissionless self-test pool  | Browser-created adapter/pool, session route, public binding checks, full participant handoff     | deployment mutation tests, web tests, production build, offline gate | `feat: add a permissionless self-test market`       |
 | WEB-11               | Shared self-test entry         | Factory-verified public join route for a second participant                                       | mutation tests, web tests, production build, offline gate            | `feat: add verified self-test participant links`    |
 | WEB-12               | Permissionless lifecycle cockpit | Wallet-gated public lifecycle and recovery actions, including aggregate proof finalization      | state/action tests, web tests, production build, offline gate        | `feat: add permissionless lifecycle actions`        |
+| WEB-13               | Direct task navigation         | Header task routes, isolated lifecycle view, unified controls, landing-integrated guide          | route/source tests, responsive build, offline gate                   | `feat: simplify task navigation`                   |
 
 ## WEB-01 work-item record
 
@@ -1330,6 +1331,62 @@ tests, production build, direct Sepolia rejection checks for canonical and
 unknown-code addresses, `npm run check:offline`, `npm run check:sepolia:read`, and
 sanitized desktop/mobile browser inspections pass. No user transaction was sent and
 this is not G7 evidence.
+
+## WEB-13 work-item record
+
+ID: `WEB-13`
+
+Status: `complete`
+
+Prerequisite gates: WEB-09 through WEB-12 are complete. This information-architecture
+slice cannot claim G7.
+
+Outcome: Replace the nested Workspace navigation with a clear, direct task bar and
+move the permissionless lifecycle cockpit out of Market, so users can move between
+market facts, collateral, signal, lifecycle, owner position, verification, and
+self-test without a crowded one-page workflow.
+
+Output files: `apps/web/src/main.ts`, `apps/web/src/styles.css`, focused web route
+and visual-source tests, this work-item record, the decision log, and relevant risk
+or design traceability updates.
+
+Acceptance criteria: The persistent header exposes direct, labelled routes for
+Overview, Market, Assets, Signal, Lifecycle, Position, Verify, and Test. The Guide is
+absorbed into the landing page; legacy guide links safely return to Overview rather
+than leaving an unmaintained task surface. Market contains only immutable market facts
+and the next contextual links. Lifecycle contains public state, all eligible
+permissionless actions, recovery copy, and refresh. Position remains owner-only.
+Canonical and session-bound self-test routes preserve the selected pool context.
+Every button uses one legible control system with consistent sizing, contrast,
+keyboard focus, disabled states, and responsive wrapping; no navigation or action
+submits a transaction without an explicit user click.
+
+Privacy/custody impact: Route and visual reorganization only. No new data is read,
+stored, logged, or transmitted. Existing wallet, Nox, owner-decrypt, proof, asset,
+and lifecycle action boundaries remain unchanged.
+
+Funds location/recovery impact: Navigation cannot move funds. Lifecycle action
+controls retain their prior explicit wallet/receipt gates and recovery copy; separating
+them from Market must not hide a terminal or refund path.
+
+Commands/checks: focused route/source tests, `npm run test:web`, production build,
+root typecheck, `npm run check:offline`, sanitized desktop/mobile browser inspection,
+and `git diff --check`.
+
+Evidence path: source/test output and sanitized browser inspection only. This
+presentation slice is not G7 evidence.
+
+Completion evidence (2026-07-31): `npm run test:web` passed 39 tests; `npm run
+build:web` and root `npm run typecheck` passed; `npm run check:offline` passed;
+`git diff --check` passed. Sanitized desktop inspection of the dedicated Lifecycle
+route and mobile inspection of Overview confirmed readable, wrapping task navigation,
+separate lifecycle controls, and the single Orchid action treatment. No transaction
+was requested or sent.
+
+Intended commit: `feat: simplify task navigation`.
+
+Rollback/failure action: Restore the prior route links only; do not substitute an
+overlay, hidden menu, backend router, stored navigation state, or transaction shortcut.
 
 ## WEB-12 work-item record
 

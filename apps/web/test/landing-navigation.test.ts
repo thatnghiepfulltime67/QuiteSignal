@@ -22,14 +22,16 @@ test('T-WEB-02-LANDING-01: landing and navigation orient users before wallet use
   assert.match(source, /href="#main-content"/);
   assert.match(source, /aria-current="page"/);
   assert.match(source, /navigationLink\('\/', 'Overview'/);
-  assert.match(source, /navigationLink\('\/markets', 'Workspace', isWorkspaceRoute\)/);
-  assert.match(source, /workspaceSubnavigation\(workspacePoolPath, canonicalVerifyPath/);
-  assert.match(source, /aria-label="Workspace functions"/);
-  for (const phrase of ['Market', 'Guide', 'Verify', 'Position']) {
-    assert.match(source, new RegExp(phrase));
+  for (const task of ['Market', 'Assets', 'Signal', 'Lifecycle', 'Position', 'Verify', 'Test']) {
+    assert.match(source, new RegExp(`navigationLink\\([^\\n]+, '${task}'`));
   }
+  assert.match(source, /aria-label="Primary tasks"/);
+  assert.doesNotMatch(source, /workspaceSubnavigation|Workspace functions/);
+  assert.match(source, /location\.pathname === '\/how-it-works'\) history\.replaceState\(\{\}, '', '\/'\)/);
+  assert.match(source, /function lifecycleContent\(/);
+  assert.match(source, /href="\$\{canonicalPoolPath\}\/lifecycle"/);
   assert.match(styles, /\.skip-link/);
   assert.match(styles, /\.site-nav a\[aria-current='page'\]/);
-  assert.match(styles, /\.workspace-subnav/);
-  assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.action-guide/);
+  assert.match(styles, /\.site-nav \{[\s\S]*?flex-wrap: wrap;/);
+  assert.match(styles, /\.wallet,[\s\S]*?\.text-button \{[\s\S]*?background: var\(--orchid\);/);
 });

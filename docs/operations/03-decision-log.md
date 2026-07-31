@@ -454,3 +454,22 @@ This adds a browser interface to existing permissionless public transitions; it 
 not alter contract state rules, custody, Nox ACL, public interfaces, or trust
 boundaries. R-28 tracks stale action selection, aggregate-proof mishandling, and a
 misleading transaction outcome.
+
+## ADR-028 — Direct task navigation and isolated lifecycle surface
+
+**Status:** Accepted and implemented in WEB-13
+
+The browser's nested Workspace navigation obscures its task model and encourages the
+Market route to accumulate unrelated controls. The web will use a single persistent
+task bar: Market, Assets, Signal, Lifecycle, Position, Verify, and Test, alongside
+Overview. Each route receives a narrow responsibility. In particular, lifecycle
+state, permissionless progression, and recovery controls live at a dedicated public
+Lifecycle route; owner actions remain at Position; collateral stays at Assets.
+
+The explainer is product education rather than an operational surface. Its essential
+guidance remains on Overview, while legacy `/how-it-works` navigation returns safely
+to that landing route. This is a public route/interface change, but it adds no state,
+authority, custody, persistence, or confidential-data path. It makes recovery more
+visible by giving it an explicit task route rather than placing it below the market
+content. Existing tests and R-28 continue to guard explicit user actions and state
+selection.
