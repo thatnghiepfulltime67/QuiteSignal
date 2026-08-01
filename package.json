@@ -1,6 +1,7 @@
 {
   "name": "quitesignal",
   "version": "0.0.0",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "packageManager": "npm@11.16.0",

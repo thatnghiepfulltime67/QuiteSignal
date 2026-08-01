@@ -37,3 +37,6 @@ test-results/
 .vscode/
 *.swp
 .vercel
+
+# Private competition submission drafts and media (never commit or push)
+dorahack/
