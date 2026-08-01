@@ -35,15 +35,23 @@ test('T-WEB-02-LANDING-01: landing and navigation orient users before wallet use
   assert.match(source, /data-select-self-test-pool/);
   assert.match(source, /Verify this market/);
   assert.match(source, /Make forecast/);
+  assert.match(source, /class="market-disclosure"/);
+  assert.match(source, /without leaving this page/);
   assert.doesNotMatch(source, /workspaceSubnavigation|Workspace functions/);
   assert.doesNotMatch(source, /SELF-TEST POOL|Back to canonical/);
-  assert.match(source, /location\.pathname === '\/how-it-works'\) history\.replaceState\(\{\}, '', '\/'\)/);
+  assert.match(
+    source,
+    /location\.pathname === '\/how-it-works'\) history\.replaceState\(\{\}, '', '\/'\)/,
+  );
   assert.match(source, /function lifecycleContent\(/);
   assert.match(styles, /\.skip-link/);
   assert.match(styles, /\.site-nav a\[aria-current='page'\]/);
   assert.match(styles, /\.site-nav \{[\s\S]*?flex-wrap: wrap;/);
   assert.match(styles, /\.site-nav \{[\s\S]*?position: sticky;[\s\S]*?top: 0;/);
-  assert.match(styles, /\.site-nav::before \{[\s\S]*?width: 100vw;[\s\S]*?background: var\(--cocoa\);/);
+  assert.match(
+    styles,
+    /\.site-nav::before \{[\s\S]*?width: 100vw;[\s\S]*?background: var\(--cocoa\);/,
+  );
   assert.match(styles, /\.market-disclosures \{[\s\S]*?border-top: 1px solid var\(--walnut\);/);
   assert.match(styles, /\.market-directory \{[\s\S]*?overflow: visible;/);
   assert.match(styles, /\.market-list \{[\s\S]*?position: sticky;/);

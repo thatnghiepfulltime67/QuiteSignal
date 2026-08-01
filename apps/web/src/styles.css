@@ -1169,38 +1169,25 @@ a {
 }
 
 .market-disclosures {
-  border-top: 1px solid var(--walnut);
+  border-top: 2px solid var(--cocoa);
   margin-top: 32px;
 }
 
-.market-disclosures details {
-  border-bottom: 1px solid var(--walnut);
-  padding: 0;
+.market-disclosure {
+  border-bottom: 2px solid var(--cocoa);
+  padding: 20px 0 4px;
 }
 
-.market-disclosures summary {
-  align-items: center;
+.market-disclosure h3 {
   color: var(--cocoa);
-  cursor: pointer;
-  display: flex;
   font-family: var(--font-mono);
   font-size: 13px;
-  justify-content: space-between;
   letter-spacing: 0.03em;
-  min-height: 60px;
+  margin: 0 0 16px;
   text-transform: uppercase;
 }
 
-.market-disclosures summary::after {
-  content: '+';
-  font-size: 20px;
-}
-
-.market-disclosures details[open] summary::after {
-  content: '−';
-}
-
-.market-disclosures details > p,
+.market-disclosure > p,
 .market-action-panel {
   margin: 0 0 20px;
 }
