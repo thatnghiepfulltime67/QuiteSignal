@@ -102,6 +102,11 @@ let selfTestBusy = false;
 const createdSelfTestMarkets: Array<{ owner: string; market: SelfTestMarket }> = [];
 let selfTestMessage =
   'Create a fresh verified market only when you are ready to approve two Sepolia deployment transactions from your own wallet.';
+type RegistryState = 'loading' | 'ready' | 'unavailable';
+let selfTestRegistryState: RegistryState = 'loading';
+let selfTestRegistryMessage = 'Loading verified self-test pools…';
+let registryLoadBusy = false;
+let releaseLoadBusy = false;
 type InteractionToastTone = 'pending' | 'success' | 'error';
 let interactionBusy = false;
 let interactionToast:
@@ -113,14 +118,67 @@ let interactionToast:
 const defaultSelfTestPolicy = selfTestPolicyForSelection('greater-or-equal', '200000000000', 25, 2);
 if (!defaultSelfTestPolicy) throw new Error('The default self-test policy is unavailable.');
 let selfTestPolicy = defaultSelfTestPolicy;
+let selfTestDraft = {
+  comparison: defaultSelfTestPolicy.comparison,
+  threshold: formatSelfTestUsdThreshold(defaultSelfTestPolicy.threshold),
+  minutes: defaultSelfTestPolicy.commitWindowMinutes,
+  gate: String(defaultSelfTestPolicy.participantGate),
+};
 
-function rememberSelfTestMarket(market: SelfTestMarket): void {
+function formatCommitWindow(minutes: number): string {
+  if (minutes % 1_440 === 0) {
+    const days = minutes / 1_440;
+    return `${days} day${days === 1 ? '' : 's'}`;
+  }
+  if (minutes % 60 === 0) {
+    const hours = minutes / 60;
+    return `${hours} hour${hours === 1 ? '' : 's'}`;
+  }
+  return `${minutes} minute${minutes === 1 ? '' : 's'}`;
+}
+
+function formatDeadline(timestamp: bigint | number): string {
+  return new Intl.DateTimeFormat(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  }).format(new Date(Number(timestamp) * 1000));
+}
+
+function captureSelfTestDraft(): void {
+  const comparison = document.querySelector<HTMLSelectElement>('#self-test-comparison');
+  const threshold = document.querySelector<HTMLInputElement>('#self-test-threshold');
+  const duration = document.querySelector<HTMLSelectElement>('#self-test-duration');
+  const gate = document.querySelector<HTMLInputElement>('#self-test-gate');
+  if (!comparison || !threshold || !duration || !gate) return;
+  const minutes = Number(duration.value);
+  selfTestDraft = {
+    comparison: comparison.value,
+    threshold: threshold.value,
+    minutes: Number.isInteger(minutes) ? minutes : selfTestDraft.minutes,
+    gate: gate.value,
+  };
+}
+
+function draftPolicy(): SelfTestPolicy | undefined {
+  return selfTestPolicyForDraft(
+    selfTestDraft.comparison,
+    selfTestDraft.threshold,
+    selfTestDraft.minutes,
+    Number(selfTestDraft.gate),
+  );
+}
+
+function rememberSelfTestMarket(market: SelfTestMarket, select = true): void {
   const index = selfTestMarkets.findIndex(
     (known) => known.poolAddress.toLowerCase() === market.poolAddress.toLowerCase(),
   );
   if (index >= 0) selfTestMarkets[index] = market;
   else selfTestMarkets.unshift(market);
-  selfTestMarket = market;
+  if (select) selfTestMarket = market;
 }
 
 function rememberCreatedSelfTestMarket(owner: string, market: SelfTestMarket): void {
@@ -144,64 +202,119 @@ interface PublishedSelfTestPool {
   startedAt: string;
 }
 
-async function loadPublishedSelfTestMarkets(): Promise<void> {
-  if (!manifest) return;
+async function fetchWithTimeout(url: string, timeoutMs = 8_000): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch('/verified-self-test-pools.json');
-    if (!response.ok) return;
-    const records = (await response.json()) as unknown;
-    if (!Array.isArray(records)) return;
-    const loaded = await Promise.all(
-      records.map(async (record): Promise<SelfTestMarket | undefined> => {
-        if (!record || typeof record !== 'object') return undefined;
-        const candidate = record as PublishedSelfTestPool;
-        if (
-          !isSelfTestPoolAddress(candidate.poolAddress) ||
-          !candidate.policy ||
-          typeof candidate.policy.comparison !== 'string' ||
-          typeof candidate.policy.threshold !== 'string' ||
-          !Number.isInteger(candidate.policy.minutes) ||
-          !Number.isInteger(candidate.policy.gate) ||
-          !/^\d+$/.test(candidate.startedAt)
-        )
-          return undefined;
-        const policy = selfTestPolicyForSelection(
-          candidate.policy.comparison,
-          candidate.policy.threshold,
-          candidate.policy.minutes,
-          candidate.policy.gate,
-        );
-        if (!policy) return undefined;
-        try {
-          return await loadSelfTestMarket(candidate.poolAddress, {
-            canonicalPoolAddress: manifest.poolAddress,
-            factoryAddress: manifest.factoryAddress,
-            factoryRuntimeCodeHash: manifest.factoryRuntimeCodeHash,
-            collateralAddress: manifest.collateralAddress,
-            feedAddress: manifest.feedAddress,
-            policy,
-            expectedStartTimestamp: BigInt(candidate.startedAt),
-          });
-        } catch {
-          return undefined;
-        }
-      }),
-    );
-    for (const market of loaded) {
-      if (market) rememberSelfTestMarket(market);
-    }
-    if (selfTestMarket) selectedMarketKey = 'canonical';
-  } catch {
-    // A registry failure leaves the canonical market available without trusting a record.
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    window.clearTimeout(timeout);
   }
 }
 
+async function loadPublishedSelfTestMarkets(): Promise<void> {
+  if (!manifest) throw new Error('The canonical manifest is unavailable.');
+  const response = await fetchWithTimeout('/verified-self-test-pools.json');
+  if (!response.ok) throw new Error(`Verified pool registry returned HTTP ${response.status}.`);
+  const records = (await response.json()) as unknown;
+  if (!Array.isArray(records)) throw new Error('Verified pool registry is malformed.');
+  const loaded = await Promise.all(
+    records.map(async (record): Promise<SelfTestMarket | undefined> => {
+      if (!record || typeof record !== 'object') return undefined;
+      const candidate = record as PublishedSelfTestPool;
+      if (
+        !isSelfTestPoolAddress(candidate.poolAddress) ||
+        !candidate.policy ||
+        typeof candidate.policy.comparison !== 'string' ||
+        typeof candidate.policy.threshold !== 'string' ||
+        !Number.isInteger(candidate.policy.minutes) ||
+        !Number.isInteger(candidate.policy.gate) ||
+        !/^\d+$/.test(candidate.startedAt)
+      )
+        return undefined;
+      const policy = selfTestPolicyForSelection(
+        candidate.policy.comparison,
+        candidate.policy.threshold,
+        candidate.policy.minutes,
+        candidate.policy.gate,
+      );
+      if (!policy) return undefined;
+      try {
+        return await loadSelfTestMarket(candidate.poolAddress, {
+          canonicalPoolAddress: manifest.poolAddress,
+          factoryAddress: manifest.factoryAddress,
+          factoryRuntimeCodeHash: manifest.factoryRuntimeCodeHash,
+          collateralAddress: manifest.collateralAddress,
+          feedAddress: manifest.feedAddress,
+          policy,
+          expectedStartTimestamp: BigInt(candidate.startedAt),
+        });
+      } catch {
+        return undefined;
+      }
+    }),
+  );
+  const verified = loaded.filter((market): market is SelfTestMarket => Boolean(market));
+  if (records.length > 0 && verified.length === 0)
+    throw new Error('No published self-test pool could be verified from Sepolia.');
+  for (const market of verified) rememberSelfTestMarket(market, false);
+  selectedMarketKey = 'canonical';
+}
+
 async function loadManifest(): Promise<void> {
-  const pointerResponse = await fetch('/active-release.json');
+  const pointerResponse = await fetchWithTimeout('/active-release.json');
+  if (!pointerResponse.ok)
+    throw new Error(`Active release pointer returned HTTP ${pointerResponse.status}.`);
   const release = parseActiveRelease(await pointerResponse.json());
-  const response = await fetch(release.manifestPath);
+  const response = await fetchWithTimeout(release.manifestPath);
+  if (!response.ok) throw new Error(`Release manifest returned HTTP ${response.status}.`);
   manifest = parsePublicManifest(await response.json());
   releaseId = release.releaseId;
+}
+
+async function refreshPublishedSelfTestMarkets(): Promise<void> {
+  if (registryLoadBusy) return;
+  registryLoadBusy = true;
+  selfTestRegistryState = 'loading';
+  selfTestRegistryMessage = 'Loading verified self-test pools…';
+  render();
+  try {
+    await loadPublishedSelfTestMarkets();
+    selfTestRegistryState = 'ready';
+    selfTestRegistryMessage = 'Verified self-test pools are ready.';
+  } catch (error) {
+    selfTestRegistryState = 'unavailable';
+    selfTestRegistryMessage =
+      error instanceof Error
+        ? `${error.message} The canonical market remains available; retry when ready.`
+        : 'Verified self-test pools could not be loaded. The canonical market remains available; retry when ready.';
+  } finally {
+    registryLoadBusy = false;
+    render();
+  }
+}
+
+async function startManifestLoad(): Promise<void> {
+  if (releaseLoadBusy) return;
+  releaseLoadBusy = true;
+  manifest = undefined;
+  releaseId = 'unselected';
+  manifestPhase = 'loading';
+  render('Checking the canonical Sepolia release. No wallet action is available yet.');
+  try {
+    await loadManifest();
+    manifestPhase = 'ready';
+    selfTestRegistryState = 'loading';
+    render();
+    void refreshLifecycle();
+    if (selfTestJoinAddress()) refreshSelfTestRoute();
+    void refreshPublishedSelfTestMarkets();
+  } catch {
+    manifestPhase = 'unavailable';
+    render('The canonical manifest could not be validated. Do not continue until it is available.');
+  } finally {
+    releaseLoadBusy = false;
+  }
 }
 
 function navigationLink(path: string, label: string, active: boolean): string {
@@ -211,7 +324,7 @@ function navigationLink(path: string, label: string, active: boolean): string {
 function releaseStatusContent(): string {
   return manifestPhase === 'loading'
     ? `<section class="band cocoa-band release-status"><div class="band-inner"><p class="eyebrow compute">{ verifying active release }</p><h1>Checking the live deployment.</h1><p role="status">Loading the canonical Sepolia release and public manifest. No wallet action is available during this check.</p><div class="status-rule" aria-hidden="true"><span></span><span></span><span></span></div></div></section>`
-    : `<section class="band petal-band release-status unavailable"><div class="band-inner"><p class="eyebrow private">{ release unavailable }</p><h1>Do not connect or submit yet.</h1><p role="alert">The active Sepolia release could not be validated from its canonical public manifest. Reload when the deployment record is available, then verify it before a wallet action.</p><a class="text-action dark-action" href="/">Read the product overview <span aria-hidden="true">↗</span></a></div></section>`;
+    : `<section class="band petal-band release-status unavailable"><div class="band-inner"><p class="eyebrow private">{ release unavailable }</p><h1>Do not connect or submit yet.</h1><p role="alert">The active Sepolia release could not be validated from its canonical public manifest. Retry when the deployment record is available, then verify it before a wallet action.</p><div class="hero-actions"><button class="primary" id="retry-release" type="button">Retry release check</button><a class="text-action dark-action" href="/">Read the product overview <span aria-hidden="true">↗</span></a></div></div></section>`;
 }
 
 function resetWalletContext(message: string): void {
@@ -401,12 +514,8 @@ function selfTestSharePath(poolAddress: string, policy: SelfTestPolicy, startedA
 }
 
 function selectedSelfTestPolicy(): SelfTestPolicy | undefined {
-  const comparison = document.querySelector<HTMLSelectElement>('#self-test-comparison')?.value;
-  const threshold = document.querySelector<HTMLInputElement>('#self-test-threshold')?.value;
-  const minutes = document.querySelector<HTMLSelectElement>('#self-test-duration')?.value;
-  const gate = document.querySelector<HTMLInputElement>('#self-test-gate')?.value;
-  if (!comparison || !threshold || !minutes || !gate) return undefined;
-  return selfTestPolicyForDraft(comparison, threshold, Number(minutes), Number(gate));
+  captureSelfTestDraft();
+  return draftPolicy();
 }
 
 function requestWalletDiscovery(): void {
@@ -424,7 +533,7 @@ function walletMenuContent(): string {
         )
         .join('')}</div>`
     : `<p class="wallet-empty">No compatible browser wallet was detected. Install or unlock one, then retry discovery. No funds can move from this page.</p>`;
-  return `<section class="wallet-menu" aria-label="Wallet connection"><p class="eyebrow">{ choose a browser wallet }</p><p>Connecting lets this page request your public account and Sepolia network. It does not submit a transaction.</p>${menu}<div class="wallet-menu-actions"><button class="text-button" id="refresh-wallets" type="button">Refresh wallets</button>${selectedWallet ? '<button class="text-button" id="disconnect-wallet" type="button">Disconnect app</button>' : ''}</div></section>`;
+  return `<section class="wallet-menu" id="wallet-menu" role="dialog" aria-label="Wallet connection"><p class="eyebrow">{ choose a browser wallet }</p><p>Connecting lets this page request your public account and Sepolia network. It does not submit a transaction.</p>${menu}<div class="wallet-menu-actions"><button class="text-button" id="refresh-wallets" type="button">Refresh wallets</button>${selectedWallet ? '<button class="text-button" id="disconnect-wallet" type="button">Disconnect app</button>' : ''}</div></section>`;
 }
 
 function headerBalanceContent(): string {
@@ -502,6 +611,17 @@ function positionPanelContent(): string {
   return `<div class="market-action-panel owner-panel"><p class="eyebrow private">{ owner only }</p><p role="status">${ownerMessage}</p><button class="primary" id="reveal-owner">Reveal with owner wallet</button>${ownerActions}</div>`;
 }
 
+function registryStatusContent(verifiedPools: string): string {
+  if (selfTestRegistryState === 'loading')
+    return `<p class="muted" role="status">${escapeHtml(selfTestRegistryMessage)}</p>`;
+  if (selfTestRegistryState === 'unavailable')
+    return `<div class="registry-notice" role="alert"><p>${escapeHtml(selfTestRegistryMessage)}</p><button class="text-button" id="retry-self-test-registry" type="button"${registryLoadBusy ? ' disabled' : ''}>Retry verified pools</button></div>`;
+  return (
+    verifiedPools ||
+    '<p class="muted">No additional verified pools are published yet. Create one from Create and it will appear here after Sepolia verification.</p>'
+  );
+}
+
 function marketSurfaceContent(market: ReturnType<typeof presentMarket>, selfTest = false): string {
   const mode = selfTest ? 'user-created market' : 'canonical market';
   return `<section class="market-detail"><p class="eyebrow public">{ ${mode} }</p><h2>${market.condition}</h2><p class="route-lead">Read one market and use its available actions without leaving this page.</p><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><div class="market-disclosures"><section class="market-disclosure"><h3>Verify this market</h3><p>Manifest-bound chain, pool, and release facts are shown above. Independent verification remains the source of invariant conclusions.</p></section><section class="market-disclosure"><h3>Make forecast</h3>${signalPanelContent(market, selfTest)}</section><section class="market-disclosure"><h3>Lifecycle</h3><div class="market-action-panel"><p id="lifecycle-status" role="status">${lifecycleMessage}</p>${lifecycleActionContent()}</div></section><section class="market-disclosure"><h3>Your position</h3>${positionPanelContent()}</section></div></section>`;
@@ -524,11 +644,11 @@ function marketDirectoryContent(canonicalMarket: ReturnType<typeof presentMarket
   const verifiedPools = selfTestMarkets
     .map(
       (market) =>
-        `<button class="market-list-item" type="button" data-select-market="self-test:${market.poolAddress}"${selectedMarketKey === `self-test:${market.poolAddress}` ? ' aria-pressed="true"' : ''}><span class="eyebrow compute">{ verified pool }</span><strong>${market.policy.conditionLabel}</strong><small>${market.policy.commitWindowMinutes}-minute window · ${market.participantGate}-participant gate</small></button>`,
+        `<button class="market-list-item" type="button" data-select-market="self-test:${market.poolAddress}"${selectedMarketKey === `self-test:${market.poolAddress}` ? ' aria-pressed="true"' : ''}><span class="eyebrow compute">{ verified pool }</span><strong>${market.policy.conditionLabel}</strong><small>${formatCommitWindow(market.policy.commitWindowMinutes)} · ${market.participantGate}-participant gate</small></button>`,
     )
     .join('');
   const detail = marketSurfaceContent(selectedMarket, Boolean(selectedSelfTest));
-  return `<section class="band petal-band market-directory"><div class="band-inner"><p class="eyebrow public">{ market directory }</p><div class="market-directory-heading"><h1>Markets</h1><button class="text-button market-refresh-icon" id="refresh-selected-market" type="button" aria-label="Refresh selected market" title="Refresh selected market">↻</button></div><p class="route-lead">Choose a verified pool on the left. Its facts and actions open here, without leaving the page.</p><div class="market-workspace"><aside class="market-list" aria-label="Verified pools"><p class="eyebrow public">{ verified pools }</p><button class="market-list-item canonical-pool" type="button" data-select-market="canonical"${selectedMarketKey === 'canonical' ? ' aria-pressed="true"' : ''}><span class="eyebrow public">{ verified pool }</span><strong>${canonicalMarket.condition}</strong><small>${canonicalMarket.cohortGate}</small></button>${verifiedPools || '<p class="muted">No additional verified pools in this browser session yet. Create one from Create and it will appear here after Sepolia verification.</p>'}<a class="text-action dark-action" href="/self-test?new=1">Create a verified market <span aria-hidden="true">↗</span></a></aside><div class="market-detail-column">${detail}</div></div></div></section>`;
+  return `<section class="band petal-band market-directory"><div class="band-inner"><p class="eyebrow public">{ market directory }</p><div class="market-directory-heading"><h1>Markets</h1><button class="text-button market-refresh-icon" id="refresh-selected-market" type="button" aria-label="Refresh selected market" title="Refresh selected market">↻</button></div><p class="route-lead">Choose a verified pool on the left. Its facts and actions open here, without leaving the page.</p><div class="market-workspace"><aside class="market-list" aria-label="Verified pools"><p class="eyebrow public">{ verified pools }</p><button class="market-list-item canonical-pool" type="button" data-select-market="canonical"${selectedMarketKey === 'canonical' ? ' aria-pressed="true"' : ''}><span class="eyebrow public">{ verified pool }</span><strong>${canonicalMarket.condition}</strong><small>${canonicalMarket.cohortGate}</small></button>${registryStatusContent(verifiedPools)}<a class="text-action dark-action" href="/self-test?new=1">Create a verified market <span aria-hidden="true">↗</span></a></aside><div class="market-detail-column">${detail}</div></div></div></section>`;
 }
 
 function portfolioContent(): string {
@@ -542,7 +662,7 @@ function portfolioContent(): string {
     ? `<div class="portfolio-pools">${createdPools
         .map(
           ({ market }) =>
-            `<article><strong>${market.policy.conditionLabel}</strong><small>${market.poolAddress} · ${market.participantGate}-participant gate · deadline ${new Date(Number(market.deadline) * 1000).toLocaleString()}</small></article>`,
+            `<article><strong>${market.policy.conditionLabel}</strong><small>${market.poolAddress} · ${market.participantGate}-participant gate · deadline ${formatDeadline(market.deadline)}</small></article>`,
         )
         .join('')}</div>`
     : `<p class="muted">${headerBalance ? 'This wallet has not created a pool in this browser session.' : 'Connect this wallet to view pools it creates in this browser session.'}</p>`;
@@ -585,7 +705,16 @@ function lifecycleContent(market: ReturnType<typeof presentMarket>, selfTest = f
 function selfTestContent(market: ReturnType<typeof presentMarket>): string {
   const busy = selfTestBusy ? ' disabled' : '';
   const creatingNewMarket = new URLSearchParams(location.search).has('new');
-  const policy = selfTestMarket?.policy ?? selfTestPolicy;
+  const activeSelfTestContext = Boolean(
+    selfTestMarket &&
+    (selfTestJoinAddress() ||
+      createdSelfTestMarkets.some(
+        (item) =>
+          item.market.poolAddress.toLowerCase() === selfTestMarket?.poolAddress.toLowerCase(),
+      )),
+  );
+  const editingDraft = creatingNewMarket || !activeSelfTestContext;
+  const policy = activeSelfTestContext && selfTestMarket ? selfTestMarket.policy : selfTestPolicy;
   const sharePath = selfTestMarket
     ? selfTestSharePath(selfTestMarket.poolAddress, selfTestMarket.policy, selfTestMarket.startedAt)
     : undefined;
@@ -597,17 +726,18 @@ function selfTestContent(market: ReturnType<typeof presentMarket>): string {
     [180, '3 hours'],
     [7_200, '5 days'],
     [14_400, '10 days'],
+    [20_160, '14 days'],
   ] as const;
   const durationOptionMarkup = durationOptions
     .map(
       ([minutes, label]) =>
-        `<option value="${minutes}"${policy.commitWindowMinutes === minutes ? ' selected' : ''}>${label}</option>`,
+        `<option value="${minutes}"${(editingDraft ? selfTestDraft.minutes : policy.commitWindowMinutes) === minutes ? ' selected' : ''}>${label}</option>`,
     )
     .join('');
-  const configuration = `<div class="self-test-configuration"><label>Comparison <select id="self-test-comparison"${busy}><option value="greater-or-equal"${policy.comparison === 'greater-or-equal' ? ' selected' : ''}>ETH/USD ≥ threshold</option><option value="less-than"${policy.comparison === 'less-than' ? ' selected' : ''}>ETH/USD &lt; threshold</option></select></label><label>Threshold (USD) <input id="self-test-threshold" inputmode="decimal" autocomplete="off" value="${formatSelfTestUsdThreshold(policy.threshold)}"${busy} /></label><label>Commit window <select id="self-test-duration"${busy}>${durationOptionMarkup}</select></label><label>Participant gate <input id="self-test-gate" type="number" min="2" max="20" step="1" inputmode="numeric" value="${policy.participantGate}"${busy} /></label></div>`;
+  const configuration = `<div class="self-test-configuration"><label>Comparison <select id="self-test-comparison"${busy}><option value="greater-or-equal"${(editingDraft ? selfTestDraft.comparison : policy.comparison) === 'greater-or-equal' ? ' selected' : ''}>ETH/USD ≥ threshold</option><option value="less-than"${(editingDraft ? selfTestDraft.comparison : policy.comparison) === 'less-than' ? ' selected' : ''}>ETH/USD &lt; threshold</option></select></label><label>Threshold (USD) <input id="self-test-threshold" type="number" min="1" max="1000000" step="0.00000001" inputmode="decimal" autocomplete="off" value="${escapeHtml(editingDraft ? selfTestDraft.threshold : formatSelfTestUsdThreshold(policy.threshold))}"${busy} /></label><label>Commit window <select id="self-test-duration"${busy}>${durationOptionMarkup}</select></label><label>Participant gate <input id="self-test-gate" type="number" min="2" max="20" step="1" inputmode="numeric" value="${escapeHtml(editingDraft ? selfTestDraft.gate : String(policy.participantGate))}"${busy} /></label></div>`;
   const active =
-    selfTestMarket && !creatingNewMarket
-      ? `<div class="route-callout"><p class="eyebrow public">{ verified market ready }</p><h2>Fresh OPEN epoch created.</h2><p>Pool ${selfTestMarket.poolAddress} is a user-created ${selfTestMarket.policy.conditionLabel} market with a ${selfTestMarket.policy.commitWindowMinutes}-minute commit window and a ${selfTestMarket.participantGate}-participant gate. It is not the canonical release or G7 evidence.</p><dl class="asset-facts self-test-facts"><div><dt>POOL</dt><dd>${selfTestMarket.poolAddress}</dd></div><div><dt>CONDITION</dt><dd>${selfTestMarket.policy.conditionLabel}</dd></div><div><dt>COMMIT WINDOW</dt><dd>Until ${new Date(Number(selfTestMarket.deadline) * 1000).toLocaleTimeString()}</dd></div><div><dt>COHORT</dt><dd>${selfTestMarket.participantGate} participants</dd></div></dl><div class="route-callout self-test-share"><p class="eyebrow public">{ second participant }</p><p>Share this public, read-only entry link with another Sepolia participant. Their browser verifies the factory and immutable configuration before any wallet action.</p><a class="text-action dark-action" href="${sharePath}">${sharePath} <span aria-hidden="true">↗</span></a></div><div class="route-actions"><a class="secondary" href="/self-test?new=1">Create another market</a><a class="text-action dark-action" href="/markets">Open Markets <span aria-hidden="true">↗</span></a></div></div>`
+    activeSelfTestContext && selfTestMarket && !creatingNewMarket
+      ? `<div class="route-callout"><p class="eyebrow public">{ verified market ready }</p><h2>Fresh OPEN epoch created.</h2><p>Pool ${selfTestMarket.poolAddress} is a user-created ${selfTestMarket.policy.conditionLabel} market with a ${formatCommitWindow(selfTestMarket.policy.commitWindowMinutes)} commit window and a ${selfTestMarket.participantGate}-participant gate. It is not the canonical release or G7 evidence.</p><dl class="asset-facts self-test-facts"><div><dt>POOL</dt><dd>${selfTestMarket.poolAddress}</dd></div><div><dt>CONDITION</dt><dd>${selfTestMarket.policy.conditionLabel}</dd></div><div><dt>COMMIT WINDOW</dt><dd>Until ${formatDeadline(selfTestMarket.deadline)}</dd></div><div><dt>COHORT</dt><dd>${selfTestMarket.participantGate} participants</dd></div></dl><div class="route-callout self-test-share"><p class="eyebrow public">{ second participant }</p><p>Share this public, read-only entry link with another Sepolia participant. Their browser verifies the factory and immutable configuration before any wallet action.</p><a class="text-action dark-action" href="${sharePath}">${sharePath} <span aria-hidden="true">↗</span></a></div><div class="route-actions"><a class="secondary" href="/self-test?new=1">Create another market</a><a class="text-action dark-action" href="/markets">Open Markets <span aria-hidden="true">↗</span></a></div></div>`
       : `<div class="panel self-test-panel"><p class="eyebrow compute">{ user-wallet deployment }</p><h2>Create a verified market.</h2><p>Choose a bounded public configuration. This creates one immutable adapter and one pool through the canonical permissionless factory; it uses only your Sepolia gas and no collateral moves during deployment.</p>${configuration}<p class="sealed">The Chainlink feed, collateral wrapper, timeout, recovery policy, and Sepolia network remain fixed.</p><button class="primary" id="launch-self-test" type="button"${busy}>Create verified market</button><p class="muted">The market appears in Markets only after its factory registration and immutable configuration are verified on Sepolia.</p><p role="status" class="asset-status">${selfTestMessage}</p></div>`;
   return `<section class="band petal-band asset-hero"><div class="band-inner"><p class="eyebrow compute">{ permissionless market }</p><h1>Create a new market.</h1><p class="route-lead">Create one public, immutable Sepolia market from your wallet without changing the canonical release.</p>${active}</div></section><section class="band blush-band asset-workflow"><div class="band-inner"><div class="asset-intro"><p class="eyebrow">{ what this does }</p><h2>Real contracts. Your wallet. No shortcut.</h2><p>The adapter has no asset custody. The factory has no owner. The new pool uses the existing valueless test collateral flow and the same permissionless recovery rules as the product.</p></div><ol class="setup-checklist"><li><strong>01</strong><span>Connect a Sepolia wallet with enough test ETH for two deployment transactions.</span></li><li><strong>02</strong><span>Create the market, then mint and wrap QSFC into confidential QSCC.</span></li><li><strong>03</strong><span>Use two wallets to submit signals before the immutable commit deadline.</span></li><li><strong>04</strong><span>Follow the public lifecycle, settlement, owner score, claim, or refund path.</span></li></ol></div></section>`;
 }
@@ -667,6 +797,7 @@ function handleInternalNavigation(event: MouseEvent): void {
   const currentPath = `${location.pathname}${location.search}${location.hash}`;
   if (nextPath === currentPath) return;
   event.preventDefault();
+  walletMenuOpen = false;
   history.pushState({}, '', nextPath);
   renderRoute();
 }
@@ -716,6 +847,7 @@ function normalizeLegacyRoute(): void {
 }
 
 function render(message?: string): void {
+  captureSelfTestDraft();
   const root = document.querySelector<HTMLDivElement>('#app');
   if (!root) return;
   if (location.pathname === '/how-it-works') history.replaceState({}, '', '/');
@@ -807,7 +939,7 @@ function render(message?: string): void {
     navigationLink('/portfolio', 'Portfolio', isPortfolioRoute),
     navigationLink('/self-test', 'Create', isCreateRoute),
   ].join('');
-  root.innerHTML = `<a class="skip-link" href="#main-content">Skip to content</a><main class="app-shell"${interactionBusy ? ' aria-busy="true"' : ''}><header class="site-header"><a class="wordmark" href="/" aria-label="QuietSignal overview">QuietSignal</a><div class="header-actions"><span class="network-status" aria-label="Network: Ethereum Sepolia">Sepolia</span><button class="wallet" id="wallet" aria-expanded="${walletMenuOpen}"${manifest ? '' : ' disabled'}>${manifest ? walletState : 'Release check'}</button>${walletMenuContent()}</div></header><div class="sticky-navigation">${headerBalanceContent()}<nav class="site-nav" aria-label="Primary tasks">${navigation}</nav></div><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section><div id="main-content" tabindex="-1">${content}</div><section class="deployment-band"><div><p class="eyebrow">{ active Sepolia release ${releaseId} }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : manifestPhase === 'loading' ? 'Checking the canonical manifest…' : 'Canonical manifest unavailable. Do not continue with a wallet action.')}</p></div></section></main>${interactionToastContent()}`;
+  root.innerHTML = `<a class="skip-link" href="#main-content">Skip to content</a><main class="app-shell"${interactionBusy ? ' aria-busy="true"' : ''}><header class="site-header"><a class="wordmark" href="/" aria-label="QuietSignal overview">QuietSignal</a><div class="header-actions"><span class="network-status" aria-label="Network: Ethereum Sepolia">Sepolia</span><button class="wallet" id="wallet" aria-expanded="${walletMenuOpen}" aria-controls="wallet-menu"${manifest ? '' : ' disabled'}>${manifest ? walletState : 'Release check'}</button>${walletMenuContent()}</div></header><div class="sticky-navigation">${headerBalanceContent()}<nav class="site-nav" aria-label="Primary tasks">${navigation}</nav></div><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section><div id="main-content" tabindex="-1">${content}</div><section class="deployment-band"><div><p class="eyebrow">{ active Sepolia release ${releaseId} }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : manifestPhase === 'loading' ? 'Checking the canonical manifest…' : 'Canonical manifest unavailable. Do not continue with a wallet action.')}</p></div></section></main>${interactionToastContent()}`;
   if (interactionBusy) {
     root.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
       button.disabled = true;
@@ -834,6 +966,12 @@ function render(message?: string): void {
     if (walletMenuOpen) requestWalletDiscovery();
     render();
   });
+  document.querySelector<HTMLButtonElement>('#retry-release')?.addEventListener('click', () => {
+    void startManifestLoad();
+  });
+  document
+    .querySelector<HTMLButtonElement>('#retry-self-test-registry')
+    ?.addEventListener('click', () => void refreshPublishedSelfTestMarkets());
   document.querySelector<HTMLButtonElement>('#refresh-wallets')?.addEventListener('click', () => {
     requestWalletDiscovery();
     render('Wallet discovery refreshed. Connecting remains a separate wallet request.');
@@ -1204,6 +1342,7 @@ async function runAssetAction(action: 'mint' | 'approve' | 'wrap' | 'refresh'): 
 }
 
 async function runSelfTestLaunch(): Promise<void> {
+  captureSelfTestDraft();
   const provider = activeWallet();
   if (!provider || !manifest) {
     selfTestMessage =
@@ -1446,7 +1585,9 @@ async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
   try {
     const [epoch, commitment] = await Promise.all([
       readPublicLifecycleSnapshot(pool, activeWallet()),
-      provider ? readOwnerCommitment(provider, pool).catch(() => undefined) : Promise.resolve(undefined),
+      provider
+        ? readOwnerCommitment(provider, pool).catch(() => undefined)
+        : Promise.resolve(undefined),
     ]);
     if (provider && commitment !== undefined) recordOwnerCommitment(pool, commitment);
     else if (provider) ownerCommitmentState = 'unchecked';
@@ -1539,18 +1680,17 @@ window.addEventListener('eip6963:announceProvider', (event) => {
 });
 
 document.addEventListener('click', handleInternalNavigation);
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || !walletMenuOpen) return;
+  walletMenuOpen = false;
+  render();
+});
+document.addEventListener('pointerdown', (event) => {
+  if (!walletMenuOpen) return;
+  const target = event.target as Element | null;
+  if (target?.closest('.header-actions')) return;
+  walletMenuOpen = false;
+  render();
+});
 window.addEventListener('popstate', renderRoute);
-
-render('Checking the canonical Sepolia release. No wallet action is available yet.');
-loadManifest()
-  .then(async () => {
-    manifestPhase = 'ready';
-    await loadPublishedSelfTestMarkets();
-    render();
-    if (selfTestJoinAddress()) refreshSelfTestRoute();
-    else void refreshLifecycle();
-  })
-  .catch(() => {
-    manifestPhase = 'unavailable';
-    render('The canonical manifest could not be validated. Do not continue until it is available.');
-  });
+void startManifestLoad();

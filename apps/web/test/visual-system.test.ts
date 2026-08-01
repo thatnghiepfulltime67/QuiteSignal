@@ -17,6 +17,10 @@ test('T-WEB-03-UI-01: application source uses the closed poster palette and band
   assert.match(source, /band blush-band market/);
   assert.match(source, /band plum-band signal-card/);
   assert.match(source, /band petal-band verification/);
+  assert.match(
+    styles,
+    /\.wallet,[\s\S]*?background: var\(--orchid\);[\s\S]*?color: var\(--cocoa\);/,
+  );
   assert.doesNotMatch(styles, /box-shadow\s*:/i);
   assert.doesNotMatch(styles, /(?:linear|radial)-gradient/i);
   assert.doesNotMatch(styles, /url\s*\(/i);

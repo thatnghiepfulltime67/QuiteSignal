@@ -35,3 +35,24 @@ test('T-WEB-07-TARGETS-01: primary navigation and utility actions meet the targe
     assert.match(source, new RegExp(`${escaped}\\s*\\{[\\s\\S]*?min-height: 44px;`));
   }
 });
+
+test('T-WEB-16-02: manifest and optional registry reads fail closed with bounded retry paths', () => {
+  const source = readFileSync(resolve(root, 'src', 'main.ts'), 'utf8');
+
+  assert.match(source, /function fetchWithTimeout/);
+  assert.match(source, /new AbortController\(\)/);
+  assert.match(source, /id="retry-release"/);
+  assert.match(source, /id="retry-self-test-registry"/);
+  assert.match(source, /function startManifestLoad/);
+  assert.match(source, /void refreshPublishedSelfTestMarkets\(\)/);
+  assert.match(source, /selfTestRegistryState === 'unavailable'/);
+});
+
+test('T-WEB-16-03: wallet chooser has explicit accessible dismissal behavior', () => {
+  const source = readFileSync(resolve(root, 'src', 'main.ts'), 'utf8');
+
+  assert.match(source, /id="wallet-menu" role="dialog"/);
+  assert.match(source, /aria-controls="wallet-menu"/);
+  assert.match(source, /event\.key !== 'Escape'/);
+  assert.match(source, /target\?\.closest\('\.header-actions'\)/);
+});

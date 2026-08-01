@@ -116,8 +116,9 @@ creating horizontal scrolling.
 ### Action controls
 
 All standard action controls use one solid Neon Orchid treatment: Orchid background,
-Petal Wash uppercase mono label, 1px Orchid border, 4px radius, and `12px 20px`
-padding. Hover shifts to Lilac Whisper while retaining dark, readable text contrast;
+Cocoa Husk uppercase mono label for readable contrast, 1px Orchid border, 4px radius,
+and `12px 20px` padding. Hover shifts to Lilac Whisper while retaining dark,
+readable text contrast;
 disabled actions lower opacity without changing their purpose. Selection rows and
 inline text links may remain distinct because they are navigation or choice controls,
 not transaction actions. Do not make an action control imply a completed transaction;

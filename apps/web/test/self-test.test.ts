@@ -64,6 +64,18 @@ test('T-WEB-10-03: self-test routing preserves the canonical release and uses se
   assert.doesNotMatch(source, /localStorage|sessionStorage/i);
 });
 
+test('T-WEB-16-01: Create drafts stay separate from published pools and expose the full duration range', () => {
+  const source = readFileSync(resolve(root, 'src', 'main.ts'), 'utf8');
+
+  assert.match(source, /let selfTestDraft =/);
+  assert.match(source, /function captureSelfTestDraft/);
+  assert.match(source, /const editingDraft = creatingNewMarket \|\| !activeSelfTestContext/);
+  assert.match(source, /rememberSelfTestMarket\(market, false\)/);
+  assert.match(source, /\[20_160, '14 days'\]/);
+  assert.match(source, /id="self-test-threshold" type="number" min="1" max="1000000"/);
+  assert.match(source, /function formatDeadline/);
+});
+
 test('T-WEB-11-01: shared pool links accept only complete public addresses', () => {
   assert.equal(isSelfTestPoolAddress('0x0000000000000000000000000000000000000000'), true);
   assert.equal(isSelfTestPoolAddress('0xnot-an-address'), false);

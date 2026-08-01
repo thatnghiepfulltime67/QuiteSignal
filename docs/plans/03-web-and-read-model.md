@@ -39,6 +39,7 @@ depending on a mock, private database, or privileged backend.
 | WEB-13               | Direct task navigation           | Header task routes, isolated lifecycle view, unified controls, landing-integrated guide          | route/source tests, responsive build, offline gate                    | `feat: simplify task navigation`                    |
 | WEB-14               | Persistent task navigation       | Sticky task bar with opaque scroll surface and mobile-safe wrapping                              | source test, responsive build, offline gate                           | `feat: pin task navigation`                         |
 | WEB-15               | Bounded custom self-test         | Preset condition, commit window, and participant gate with manifest-bound share verification     | self-test tests, web tests, build, offline gate                       | `feat: customize self-test markets`                 |
+| WEB-16               | UI resilience and draft recovery | Preserve Create drafts, decouple optional registry reads, and close audited accessibility/deadline gaps | focused web tests, responsive browser inspection, production build, typecheck, `git diff --check` | `fix: harden audited web ux states` |
 
 ## WEB-01 work-item record
 
@@ -1683,6 +1684,57 @@ Rollback/failure action: Restore the text label while retaining the same read-on
 handler if the icon-only control fails accessibility review.
 
 Intended commit: `refactor: compact lifecycle refresh control`.
+
+## WEB-16 work-item record
+
+ID: `WEB-16`
+
+Status: `in_progress`
+
+Prerequisite gates: WEB-01 through WEB-15 are implemented; this is a browser-only
+resilience and accessibility correction slice and does not claim G7 evidence.
+
+Outcome: Preserve user-entered Create-market drafts across renders and failed
+preflights, keep optional public self-test registry reads from blocking the canonical
+first render, and close the audited accessibility, deadline, formatting, and wallet
+menu interaction gaps.
+
+Output files: `apps/web/src/main.ts`, `apps/web/src/styles.css`, focused web tests,
+this work-item record, and any affected visual-system documentation.
+
+Acceptance criteria: The Create form renders from an explicit draft policy while a
+new market is being configured; no-wallet, validation, RPC, and wallet failures retain
+the draft; an optional registry cannot delay the canonical route or leave an infinite
+loading state; registry failure is visible and retryable; primary controls meet text
+contrast requirements; market durations and deadlines use human-readable units with
+an explicit timezone; the 14-day preset is available; and the wallet menu supports
+keyboard and outside-click dismissal without changing wallet authority or custody.
+
+Negative cases: A registry failure must not fabricate a pool or replace canonical
+market facts; a hung manifest/registry read must fail closed without enabling wallet
+actions; invalid Create input must preserve the draft and identify the safe next step;
+and no confidential value may enter URLs, storage, logs, or evidence.
+
+Privacy/custody impact: Presentation and public-read timing only. No confidential
+input, wallet credential, signer authority, storage, analytics, backend, or protocol
+state transition is introduced.
+
+Funds location/recovery impact: No transaction is created by this slice. Existing
+wallet and contract recovery paths remain authoritative; failed UI preflights leave
+funds unmoved and retain a retry-safe public state.
+
+Commands/checks: focused web tests, `npm run test:web`, `npm run build:web`, root
+typecheck, targeted formatting, responsive browser inspection at 360/768/1280/1440,
+and `git diff --check`.
+
+Evidence path: sanitized source/test output and read-only responsive inspection;
+no Sepolia write is required.
+
+Intended commit: `fix: harden audited web ux states`.
+
+Rollback/failure action: Revert only the browser presentation/state corrections;
+retain the manifest validation boundary, direct public reads, contract guards, and
+wallet receipt requirements.
 
 ## WEB-12 work-item record
 

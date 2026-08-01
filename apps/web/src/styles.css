@@ -139,7 +139,7 @@ a {
   border: 1px solid var(--orchid);
   border-radius: var(--control-radius);
   background: var(--orchid);
-  color: var(--petal);
+  color: var(--cocoa);
   cursor: pointer;
   font-family: var(--font-mono);
   font-size: 10px;
@@ -191,7 +191,7 @@ a {
   border: 1px solid var(--orchid);
   border-radius: var(--control-radius);
   background: var(--orchid);
-  color: var(--petal);
+  color: var(--cocoa);
   cursor: pointer;
   font-family: var(--font-mono);
   font-size: 12px;
@@ -224,7 +224,7 @@ a {
 
 .wallet:disabled:hover {
   background: var(--orchid);
-  color: var(--petal);
+  color: var(--cocoa);
   transform: none;
 }
 
@@ -299,6 +299,18 @@ a {
   flex-wrap: wrap;
   gap: 16px;
   margin-top: 20px;
+}
+
+.registry-notice {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--walnut);
+  margin-top: 8px;
+  padding-top: 16px;
+}
+
+.registry-notice p {
+  margin: 0;
 }
 
 .text-button {
