@@ -1784,8 +1784,24 @@ a {
   padding-top: 24px;
 }
 
-.lifecycle-actions > .eyebrow {
+.lifecycle-action-heading {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.lifecycle-action-heading .eyebrow {
   margin: 0 0 8px;
+}
+
+.lifecycle-refresh-icon {
+  min-width: 36px;
+  min-height: 36px;
+  margin-bottom: 8px;
+  padding: 7px 9px;
+  font-family: var(--font-ui);
+  font-size: 18px;
+  line-height: 1;
 }
 
 .lifecycle-actions > p:not(.eyebrow) {

@@ -133,6 +133,8 @@ Unavailable lifecycle controls remain visible rather than disappearing. Their di
 style is paired with a short public prerequisite and a hover/focus tooltip, so users
 can distinguish a future protocol step from a broken action without exposing any
 owner-only state.
+The lifecycle refresh is a compact icon-only control beside `{ public lifecycle action }`;
+its accessible label and tooltip explain that it performs a public read only.
 
 ### Self-test configuration
 

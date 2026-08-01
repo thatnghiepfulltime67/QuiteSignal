@@ -111,6 +111,9 @@ test('T-WEB-12-02: aggregate finalization uses transient public attestations and
   assert.match(wallet, /functionName: 'finalizeAggregate'/);
   assert.match(wallet, /waitForConfirmedReceipt\(reader, transactionHash\)/);
   assert.match(main, /data-lifecycle-action/);
+  assert.match(main, /id="refresh-lifecycle"/);
+  assert.match(main, /aria-label="Refresh public lifecycle"/);
+  assert.doesNotMatch(main, /id="refresh-lifecycle" type="button">Refresh public state/);
   assert.match(main, /lifecycle-action-tooltip/);
   assert.match(main, /Advance lifecycle/);
   assert.match(main, /Recovery paths/);

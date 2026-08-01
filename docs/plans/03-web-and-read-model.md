@@ -1659,6 +1659,31 @@ refresh control and public-read behavior unchanged.
 
 Intended commit: `feat: add selected market refresh control`.
 
+Lifecycle-refresh simplification extension: Replace the repeated text `Refresh public
+state` controls inside Lifecycle with one compact icon-only control beside the
+`{ public lifecycle action }` label. Keep the accessible label, title, and existing
+public-read handler so the control remains discoverable without taking a full action row.
+
+Output files: `apps/web/src/main.ts`, `apps/web/src/styles.css`,
+`apps/web/test/lifecycle.test.ts`, `DESIGN.md`, and this work-item record.
+
+Acceptance criteria: Each Lifecycle surface has one small icon refresh control and no
+duplicate text refresh button. The control refreshes the selected pool and does not
+request a signature or submit a transaction.
+
+Privacy/custody and recovery impact: None. This is a presentation-only reduction over
+the existing public read.
+
+Commands/checks: `npm run typecheck`, `npm run test:web`, `npm run build:web`, and
+`git diff --check`.
+
+Evidence path: source tests and production build output.
+
+Rollback/failure action: Restore the text label while retaining the same read-only
+handler if the icon-only control fails accessibility review.
+
+Intended commit: `refactor: compact lifecycle refresh control`.
+
 ## WEB-12 work-item record
 
 ID: `WEB-12`
