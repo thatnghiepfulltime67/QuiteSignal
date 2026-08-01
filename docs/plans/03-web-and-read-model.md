@@ -1519,6 +1519,13 @@ reports pending, confirmed, or error state. The lock is browser-memory-only and 
 released on either outcome; it neither persists nor changes custody, privacy, protocol
 state, or recovery rules.
 
+Lifecycle discoverability extension: The Lifecycle surface lists every
+contract-defined permissionless action after a direct public state read. Only actions
+eligible in that exact state are enabled; each unavailable action remains visibly
+disabled and explains its public prerequisite in both adjacent copy and a keyboard-
+accessible hover/focus tooltip. The transaction client still revalidates the selected
+action immediately before any wallet request.
+
 ## WEB-12 work-item record
 
 ID: `WEB-12`

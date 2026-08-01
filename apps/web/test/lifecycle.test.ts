@@ -4,7 +4,10 @@ import test from 'node:test';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { presentLifecycle } from '../src/lifecycle.js';
-import { presentEligibleLifecycleActions } from '../src/lifecycle-actions.js';
+import {
+  presentEligibleLifecycleActions,
+  presentLifecycleActionAvailability,
+} from '../src/lifecycle-actions.js';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -78,17 +81,35 @@ test('T-WEB-12-01: lifecycle controls expose only time- and state-eligible permi
     ['settle', 'cancel-after-resolution-grace'],
   );
   assert.deepEqual(presentEligibleLifecycleActions({ ...base, state: 5 }), []);
+
+  const openActions = presentLifecycleActionAvailability({ ...base, state: 0, now: 99n });
+  assert.equal(openActions.length, 7);
+  assert.equal(openActions.find(({ action }) => action === 'close-epoch')?.eligible, false);
+  assert.match(
+    openActions.find(({ action }) => action === 'close-epoch')?.unavailableExplanation ?? '',
+    /deadline/i,
+  );
+  const terminalActions = presentLifecycleActionAvailability({ ...base, state: 5 });
+  assert.ok(terminalActions.every(({ eligible }) => !eligible));
+  assert.ok(
+    terminalActions.every(({ unavailableExplanation }) => /terminal/i.test(unavailableExplanation)),
+  );
 });
 
 test('T-WEB-12-02: aggregate finalization uses transient public attestations and waits for receipt', () => {
   const wallet = readFileSync(resolve(root, 'src', 'wallet.ts'), 'utf8');
   const main = readFileSync(resolve(root, 'src', 'main.ts'), 'utf8');
+  const styles = readFileSync(resolve(root, 'src', 'styles.css'), 'utf8');
 
   assert.match(wallet, /functionName: 'aggregateDisclosureHandles'/);
   assert.match(wallet, /nox\.publicDecrypt\(handles\[0\]/);
   assert.match(wallet, /functionName: 'finalizeAggregate'/);
   assert.match(wallet, /waitForConfirmedReceipt\(reader, transactionHash\)/);
   assert.match(main, /data-lifecycle-action/);
+  assert.match(main, /lifecycle-action-tooltip/);
+  assert.match(main, /Hover an unavailable action/);
+  assert.match(wallet, /actionAvailability/);
+  assert.match(styles, /\.lifecycle-action-tooltip::after/);
   assert.match(main, /submitPermissionlessLifecycleAction/);
   assert.doesNotMatch(`${wallet}\n${main}`, /localStorage|sessionStorage|console\./i);
 });

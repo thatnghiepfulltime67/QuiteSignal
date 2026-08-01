@@ -22,6 +22,8 @@ import {
 import type { ValidSignalDraft } from './signal.js';
 import {
   presentEligibleLifecycleActions,
+  presentLifecycleActionAvailability,
+  type LifecycleActionAvailability,
   type LifecycleActionPresentation,
   type PermissionlessLifecycleAction,
 } from './lifecycle-actions.js';
@@ -206,6 +208,7 @@ export interface PublicLifecycleSnapshot {
   kMin: number;
   aggregateRequestId: string;
   actions: LifecycleActionPresentation[];
+  actionAvailability: LifecycleActionAvailability[];
 }
 
 type SignalJourneyStage =
@@ -474,6 +477,18 @@ async function readPublicLifecycleSnapshotWithReader(
     resolutionGrace: config.resolutionGrace,
     observationNotBefore,
   });
+  const actionAvailability = presentLifecycleActionAvailability({
+    state: epoch.state,
+    now: block.timestamp,
+    deadline: epoch.deadline,
+    pendingAvailableAt: pending[1],
+    aggregateRequestId: epoch.aggregateRequestId,
+    aggregatePendingAt: epoch.aggregatePendingAt,
+    aggregateTimeout: config.aggregateTimeout,
+    resolutionPendingAt: epoch.resolutionPendingAt,
+    resolutionGrace: config.resolutionGrace,
+    observationNotBefore,
+  });
   return {
     state: epoch.state,
     deadline: epoch.deadline,
@@ -484,6 +499,7 @@ async function readPublicLifecycleSnapshotWithReader(
     kMin: config.kMin,
     aggregateRequestId: epoch.aggregateRequestId,
     actions,
+    actionAvailability,
   };
 }
 

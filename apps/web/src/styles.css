@@ -1798,8 +1798,49 @@ a {
   padding: 16px;
 }
 
+.lifecycle-action-list > div.unavailable {
+  background: color-mix(in srgb, var(--petal) 68%, var(--blush));
+}
+
 .lifecycle-action-list .secondary {
   justify-content: center;
+}
+
+.lifecycle-action-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.lifecycle-action-tooltip::after {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 10px);
+  left: 0;
+  width: min(300px, calc(100vw - 64px));
+  border: 1px solid var(--cocoa);
+  border-radius: var(--control-radius);
+  background: var(--cocoa);
+  color: var(--petal);
+  content: attr(data-tooltip);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+  opacity: 0;
+  padding: 10px;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 120ms ease-out,
+    transform 120ms ease-out;
+  visibility: hidden;
+}
+
+.lifecycle-action-tooltip:hover::after,
+.lifecycle-action-tooltip:focus-within::after {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
 }
 
 .lifecycle-action-list p {

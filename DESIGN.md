@@ -126,6 +126,11 @@ notification in the upper-right reports the current wallet step and the confirme
 failed outcome. It states progress only; it does not expose a confidential value or
 imply finality before the public receipt is confirmed.
 
+Unavailable lifecycle controls remain visible rather than disappearing. Their disabled
+style is paired with a short public prerequisite and a hover/focus tooltip, so users
+can distinguish a future protocol step from a broken action without exposing any
+owner-only state.
+
 ### Self-test configuration
 
 Self-test creation exposes editable, bounded public values: an ETH/USD threshold and

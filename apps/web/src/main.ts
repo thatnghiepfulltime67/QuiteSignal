@@ -29,6 +29,7 @@ import {
   type TestAssetState,
 } from './wallet.js';
 import type {
+  LifecycleActionAvailability,
   LifecycleActionPresentation,
   PermissionlessLifecycleAction,
 } from './lifecycle-actions.js';
@@ -75,6 +76,7 @@ const walletCandidates: WalletCandidate[] = [];
 const boundWalletProviders = new WeakSet<Eip1193Provider>();
 let lifecycleMessage = 'Connect a Sepolia wallet to refresh public pool state.';
 let lifecycleActions: LifecycleActionPresentation[] = [];
+let lifecycleActionAvailability: LifecycleActionAvailability[] = [];
 let lifecycleActionMessage =
   'Refresh public state to see contract-eligible permissionless actions.';
 let lifecycleActionBusy = false;
@@ -484,16 +486,20 @@ function portfolioContent(): string {
 }
 
 function lifecycleActionContent(): string {
-  const busy = lifecycleActionBusy ? ' disabled' : '';
-  const controls = lifecycleActions.length
-    ? `<div class="lifecycle-action-list">${lifecycleActions
-        .map(
-          (item) =>
-            `<div><button class="secondary" type="button" data-lifecycle-action="${item.action}"${busy}>${item.label}</button><p>${item.explanation}</p></div>`,
-        )
+  const controls = lifecycleActionAvailability.length
+    ? `<div class="lifecycle-action-list">${lifecycleActionAvailability
+        .map((item) => {
+          const disabled = !item.eligible || lifecycleActionBusy;
+          const requirement = lifecycleActionBusy
+            ? 'Another wallet action is in progress. Wait for its confirmed or failed outcome.'
+            : item.eligible
+              ? item.explanation
+              : item.unavailableExplanation;
+          return `<div class="${item.eligible ? 'eligible' : 'unavailable'}"><span class="lifecycle-action-tooltip" tabindex="0" data-tooltip="${escapeHtml(requirement)}"><button class="secondary" type="button" data-lifecycle-action="${item.action}"${disabled ? ' disabled' : ''}>${item.label}</button></span><p>${escapeHtml(requirement)}</p></div>`;
+        })
         .join('')}</div>`
-    : '<p class="muted">No permissionless lifecycle action is eligible in the latest public state.</p>';
-  return `<section class="lifecycle-actions" aria-label="Permissionless lifecycle actions"><p class="eyebrow public">{ public lifecycle action }</p><p>These actions are contract-defined and wallet-gated. They never submit an owner claim or read a private signal.</p>${controls}<p class="muted" role="status">${lifecycleActionMessage}</p></section>`;
+    : '<p class="muted">Refresh public state to load the contract-defined lifecycle actions.</p>';
+  return `<section class="lifecycle-actions" aria-label="Permissionless lifecycle actions"><p class="eyebrow public">{ public lifecycle action }</p><p>Every contract-defined action is shown below. Hover an unavailable action to read its exact public prerequisite.</p>${controls}<p class="muted" role="status">${lifecycleActionMessage}</p></section>`;
 }
 
 function lifecycleContent(market: ReturnType<typeof presentMarket>, selfTest = false): string {
@@ -1429,6 +1435,7 @@ async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
   lifecycleActionMessage =
     'Checking which permissionless actions are eligible in the latest public state…';
   lifecycleActions = [];
+  lifecycleActionAvailability = [];
   render();
   try {
     const epoch = await readPublicLifecycleSnapshot(pool);
@@ -1446,12 +1453,14 @@ async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
     marketReadinessMessage = `${readiness.label}: ${readiness.explanation}`;
     lifecycleMessage = `${view.label}: ${view.explanation} Participants: ${epoch.participantCount}. ${view.recovery}`;
     lifecycleActions = epoch.actions;
+    lifecycleActionAvailability = epoch.actionAvailability;
     lifecycleActionMessage = epoch.actions.length
       ? 'The actions below were derived from the latest public Sepolia state. Each still requires its own wallet confirmation.'
-      : 'No permissionless lifecycle action is eligible in the latest public state.';
+      : 'No action is currently eligible. Hover a disabled action to read its public prerequisite.';
   } catch {
     marketActionable = false;
     lifecycleActions = [];
+    lifecycleActionAvailability = [];
     marketReadinessMessage =
       'The latest public market state could not be read. Signal submission stays disabled until a direct Sepolia refresh succeeds.';
     lifecycleMessage =

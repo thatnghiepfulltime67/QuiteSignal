@@ -26,6 +26,11 @@ export interface LifecycleActionPresentation {
   explanation: string;
 }
 
+export interface LifecycleActionAvailability extends LifecycleActionPresentation {
+  eligible: boolean;
+  unavailableExplanation: string;
+}
+
 const ZERO_REQUEST = `0x${'0'.repeat(64)}`;
 
 const presentations: Record<
@@ -90,4 +95,59 @@ export function presentEligibleLifecycleActions(
     return actions;
   }
   return [];
+}
+
+function unavailableExplanation(
+  action: PermissionlessLifecycleAction,
+  input: LifecycleActionInput,
+): string {
+  if (input.state >= 4)
+    return 'This epoch is already terminal, so no further public lifecycle action is available.';
+  if (action === 'expire-pending-commit') {
+    if (input.state !== 1)
+      return 'A pending commit must exist before its timeout recovery can be used.';
+    return 'Wait until the pending-commit timeout is reached.';
+  }
+  if (action === 'close-epoch') {
+    if (input.state !== 0) return 'The commit window has already been closed.';
+    return 'Wait until the immutable commit deadline is reached.';
+  }
+  if (action === 'request-aggregate-decrypt') {
+    if (input.state === 0)
+      return 'Wait for the commit deadline, then close the epoch. The cohort gate is applied at close.';
+    if (input.state !== 2) return 'The epoch must be in aggregate-pending state first.';
+    return 'An aggregate request has already been made; wait for its public proof or timeout path.';
+  }
+  if (action === 'finalize-aggregate') {
+    if (input.state !== 2) return 'The epoch must be in aggregate-pending state first.';
+    if (input.aggregateRequestId.toLowerCase() === ZERO_REQUEST)
+      return 'Request the public aggregate proof before finalizing it.';
+    return 'A valid Nox public proof for both aggregate handles is required.';
+  }
+  if (action === 'cancel-before-resolution') {
+    if (input.state !== 2) return 'The epoch must be in aggregate-pending state first.';
+    if (input.aggregateRequestId.toLowerCase() === ZERO_REQUEST)
+      return 'Request aggregate public decryption before its timeout recovery can begin.';
+    return 'Wait until the immutable aggregate timeout is reached.';
+  }
+  if (action === 'settle') {
+    if (input.state !== 3) return 'The public aggregate must be finalized before settlement.';
+    return 'Wait until the adapter observation boundary is reached.';
+  }
+  if (input.state !== 3)
+    return 'The public aggregate must be finalized before feed-grace recovery can begin.';
+  return 'Wait until the immutable resolution grace period is reached.';
+}
+
+export function presentLifecycleActionAvailability(
+  input: LifecycleActionInput,
+): LifecycleActionAvailability[] {
+  const eligible = new Set(presentEligibleLifecycleActions(input).map((item) => item.action));
+  return (Object.keys(presentations) as PermissionlessLifecycleAction[]).map((action) => ({
+    ...presentation(action),
+    eligible: eligible.has(action),
+    unavailableExplanation: eligible.has(action)
+      ? 'This action is eligible in the latest public Sepolia state.'
+      : unavailableExplanation(action, input),
+  }));
 }
