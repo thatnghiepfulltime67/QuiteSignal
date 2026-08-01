@@ -1786,9 +1786,8 @@ a {
 .lifecycle-action-list {
   display: flex;
   gap: 8px;
-  overflow-x: auto;
+  flex-wrap: wrap;
   margin: 8px 0 20px;
-  padding-bottom: 4px;
 }
 
 .lifecycle-action-list > div {
