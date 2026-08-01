@@ -1211,6 +1211,26 @@ a {
   margin: 28px 0 40px;
 }
 
+.market-directory-heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.market-directory-heading h1 {
+  margin-bottom: 40px;
+}
+
+.market-refresh-icon {
+  min-width: 40px;
+  min-height: 40px;
+  margin-bottom: 40px;
+  padding: 8px 10px;
+  font-family: var(--font-ui);
+  font-size: 20px;
+  line-height: 1;
+}
+
 .pool-directory {
   display: grid;
   gap: 16px;

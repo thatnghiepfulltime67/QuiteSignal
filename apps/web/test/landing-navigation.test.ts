@@ -27,6 +27,8 @@ test('T-WEB-02-LANDING-01: landing and navigation orient users before wallet use
   }
   assert.match(source, /aria-label="Primary tasks"/);
   assert.match(source, /function marketDirectoryContent/);
+  assert.match(source, /id="refresh-selected-market"/);
+  assert.match(source, /aria-label="Refresh selected market"/);
   assert.match(source, /function marketSurfaceContent/);
   assert.match(source, /function portfolioContent/);
   assert.match(source, /portfolio-balances/);
@@ -54,6 +56,7 @@ test('T-WEB-02-LANDING-01: landing and navigation orient users before wallet use
   );
   assert.match(styles, /\.market-disclosures \{[\s\S]*?border-top: 1px solid var\(--walnut\);/);
   assert.match(styles, /\.market-directory \{[\s\S]*?overflow: visible;/);
+  assert.match(styles, /\.market-refresh-icon \{/);
   assert.match(styles, /\.market-list \{[\s\S]*?position: sticky;/);
   assert.match(styles, /\.pool-directory \{[\s\S]*?grid-template-columns:/);
   assert.match(styles, /\.app-shell \{[\s\S]*?overflow: clip;/);

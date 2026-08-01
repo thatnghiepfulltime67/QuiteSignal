@@ -104,6 +104,8 @@ Neon Orchid. The task bar remains pinned to the top of the viewport while scroll
 with an opaque Cocoa background and a Walnut Vein separator so it never visually
 merges with page content. A selected market keeps its verified facts and action panels
 visible in the detail column; transaction controls remain gated by chain-derived state.
+The Markets title includes a compact icon-only control that refreshes the selected
+pool's public lifecycle state without requesting a wallet signature or transaction.
 
 When a wallet is connected, a compact balance strip below the header shows public
 Sepolia ETH and QSFC amounts. QSCC is labelled as hidden until the user explicitly

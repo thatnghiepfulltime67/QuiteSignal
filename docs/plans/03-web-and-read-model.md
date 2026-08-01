@@ -1632,6 +1632,33 @@ state or an application service.
 
 Intended commit: `feat: guard duplicate forecast submissions`.
 
+Selected-market refresh extension: Add a compact, icon-only refresh control beside
+the Markets title. It refreshes only the currently selected pool through the same
+public lifecycle reader as the Lifecycle panel; it never requests a signature or
+submits a transaction.
+
+Output files: `apps/web/src/main.ts`, `apps/web/src/styles.css`,
+`apps/web/test/landing-navigation.test.ts`, `DESIGN.md`, and this work-item record.
+
+Acceptance criteria: The Markets title has an accessible compact refresh control,
+with a visible tooltip label, that updates the selected pool rather than treating the
+click event as a pool address. Its state remains subject to the global interaction
+lock.
+
+Privacy/custody and recovery impact: None. The control invokes existing public reads
+only and changes no protocol or wallet state.
+
+Commands/checks: `npm run typecheck`, `npm run test:web`, `npm run build:web`, and
+`git diff --check`.
+
+Evidence path: focused source test and production build output. No wallet request or
+Sepolia write is required.
+
+Rollback/failure action: Remove the icon control and listener; retain the Lifecycle
+refresh control and public-read behavior unchanged.
+
+Intended commit: `feat: add selected market refresh control`.
+
 ## WEB-12 work-item record
 
 ID: `WEB-12`

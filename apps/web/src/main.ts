@@ -528,7 +528,7 @@ function marketDirectoryContent(canonicalMarket: ReturnType<typeof presentMarket
     )
     .join('');
   const detail = marketSurfaceContent(selectedMarket, Boolean(selectedSelfTest));
-  return `<section class="band petal-band market-directory"><div class="band-inner"><p class="eyebrow public">{ market directory }</p><h1>Markets</h1><p class="route-lead">Choose a verified pool on the left. Its facts and actions open here, without leaving the page.</p><div class="market-workspace"><aside class="market-list" aria-label="Verified pools"><p class="eyebrow public">{ verified pools }</p><button class="market-list-item canonical-pool" type="button" data-select-market="canonical"${selectedMarketKey === 'canonical' ? ' aria-pressed="true"' : ''}><span class="eyebrow public">{ verified pool }</span><strong>${canonicalMarket.condition}</strong><small>${canonicalMarket.cohortGate}</small></button>${verifiedPools || '<p class="muted">No additional verified pools in this browser session yet. Create one from Create and it will appear here after Sepolia verification.</p>'}<a class="text-action dark-action" href="/self-test?new=1">Create a verified market <span aria-hidden="true">↗</span></a></aside><div class="market-detail-column">${detail}</div></div></div></section>`;
+  return `<section class="band petal-band market-directory"><div class="band-inner"><p class="eyebrow public">{ market directory }</p><div class="market-directory-heading"><h1>Markets</h1><button class="text-button market-refresh-icon" id="refresh-selected-market" type="button" aria-label="Refresh selected market" title="Refresh selected market">↻</button></div><p class="route-lead">Choose a verified pool on the left. Its facts and actions open here, without leaving the page.</p><div class="market-workspace"><aside class="market-list" aria-label="Verified pools"><p class="eyebrow public">{ verified pools }</p><button class="market-list-item canonical-pool" type="button" data-select-market="canonical"${selectedMarketKey === 'canonical' ? ' aria-pressed="true"' : ''}><span class="eyebrow public">{ verified pool }</span><strong>${canonicalMarket.condition}</strong><small>${canonicalMarket.cohortGate}</small></button>${verifiedPools || '<p class="muted">No additional verified pools in this browser session yet. Create one from Create and it will appear here after Sepolia verification.</p>'}<a class="text-action dark-action" href="/self-test?new=1">Create a verified market <span aria-hidden="true">↗</span></a></aside><div class="market-detail-column">${detail}</div></div></div></section>`;
 }
 
 function portfolioContent(): string {
@@ -892,6 +892,9 @@ function render(message?: string): void {
   });
   document
     .querySelector<HTMLButtonElement>('#refresh-lifecycle')
+    ?.addEventListener('click', () => void refreshLifecycle());
+  document
+    .querySelector<HTMLButtonElement>('#refresh-selected-market')
     ?.addEventListener('click', () => void refreshLifecycle());
   document
     .querySelector<HTMLButtonElement>('#refresh-self-test-lifecycle')
