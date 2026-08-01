@@ -134,6 +134,19 @@ function policyLabel(comparison: string, threshold: string): string {
 async function main(): Promise<void> {
   process.loadEnvFile('.env');
   const write = process.argv.includes('--write');
+  const minuteArgument = process.argv.find((argument) => argument.startsWith('--minutes='));
+  const requestedMinutes = minuteArgument
+    ? Number(minuteArgument.slice('--minutes='.length))
+    : undefined;
+  if (minuteArgument && (!Number.isInteger(requestedMinutes) || (requestedMinutes ?? 0) <= 0))
+    fail('The requested pool duration must be a positive whole number of minutes.');
+  const minuteFilter = requestedMinutes;
+  const selectedPolicies =
+    minuteFilter === undefined
+      ? policies
+      : policies.filter(([, , minutes]) => minutes === minuteFilter);
+  if (selectedPolicies.length === 0)
+    fail('No configured verified-pool policy matches the requested duration.');
   const rpcUrl = process.env.SEPOLIA_RPC_URL;
   const privateKey = process.env.SEPOLIA_PRIVATE_KEY as Hex | undefined;
   if (!rpcUrl || !privateKey) fail('Sepolia RPC and deployer configuration are required.');
@@ -182,8 +195,8 @@ async function main(): Promise<void> {
       JSON.stringify({
         workItemId: WORK_ITEM_ID,
         action: 'dry-run',
-        poolCount: policies.length,
-        transactions: policies.length * 2,
+        poolCount: selectedPolicies.length,
+        transactions: selectedPolicies.length * 2,
         remainingBudgetWei: remaining.toString(),
         deployerBalanceWei: balance.toString(),
         maximumFeePerGas: maxFeePerGas.toString(),
@@ -243,7 +256,7 @@ async function main(): Promise<void> {
     return receipt;
   };
 
-  for (const [index, [comparison, threshold, minutes, gate]] of policies.entries()) {
+  for (const [index, [comparison, threshold, minutes, gate]] of selectedPolicies.entries()) {
     const block = await publicClient.getBlock();
     const startedAt = block.timestamp;
     const deadline = startedAt + BigInt(minutes * 60);
