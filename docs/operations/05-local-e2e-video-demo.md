@@ -1,317 +1,184 @@
-# QuietSignal local two-wallet E2E demo runbook
+# Kịch bản quay demo QuietSignal end to end
 
-This runbook covers the complete user-controlled QuietSignal journey in the local web
-application against Ethereum Sepolia. It uses two independent wallets, real Nox
-encryption, real contract transactions, and chain-derived state. It does not use a
-mock branch or alter the system clock.
+Thời lượng đề xuất: **4–5 phút**. Quay trên
+<https://quitesignal.vercel.app> hoặc `http://localhost:5173`.
 
-The primary journey is:
+## Chuẩn bị trước khi quay
 
-**Connect → create market → prepare collateral → submit two encrypted forecasts →
-close → request proof → finalize aggregate → settle → reveal → materialize score →
-claim**
+- Dùng hai cửa sổ hoặc hai browser profile độc lập:
+  - **Ví A:** tạo market và tham gia thứ nhất.
+  - **Ví B:** tham gia thứ hai.
+- Cả hai ví dùng Ethereum Sepolia, có Sepolia ETH và tối thiểu `2 QSCC`.
+- Không quay seed phrase, private key, file `.env`, developer tools hoặc calldata.
+- Để tiết kiệm thời gian, có thể chuẩn bị sẵn QSCC nhưng vẫn quay nhanh thao tác
+  **Mint → Wrap → Reveal** trên một ví.
+- Mỗi khi hiện popup ví, chỉ tiếp tục sau khi toast góc dưới bên phải báo giao dịch đã
+  xác nhận.
 
-The recovery journey is:
+## Kịch bản chính
 
-**Submit one encrypted forecast → reach deadline → close below threshold → refund**
+### 1. Overview — giới thiệu sản phẩm
 
-## 1. Recording safety
+1. Mở **Overview** khi chưa kết nối ví.
+2. Lướt nhanh phần mô tả `PRIVATE`, `COMPUTE`, `PUBLIC`, `PENDING`.
+3. Chỉ vào thanh điều hướng cố định: **Overview · Markets · Portfolio · Create**.
 
-- Never record a private key, seed phrase, wallet export, environment file, RPC
-  credential, or backup screen.
-- Use only disposable Sepolia wallets. QSFC and QSCC are valueless test assets;
-  Sepolia ETH is still required for gas.
-- Show a wallet popup only after checking the intended action and contract. Close the
-  popup after confirmation so the application remains readable.
-- A public market URL may be shown. Never expose raw encrypted handles, Nox proofs,
-  signatures, confidential calldata, or low-level owner data.
-- While the operation notification is visible, do not refresh or start another
-  action. The browser locks competing controls until the wallet request or receipt
-  reaches a terminal result.
-- A slow RPC or pending transaction is not success. Continue only after the receipt is
-  confirmed and the application has refreshed the authoritative state.
+Lời nói gợi ý:
 
-## 2. Prerequisites
+> QuietSignal là prediction market trên Ethereum Sepolia. Xác suất và collateral của
+> từng người được mã hóa; trạng thái lifecycle và kết quả tổng hợp là dữ liệu công khai.
 
-Prepare two independent browser profiles:
+### 2. Markets — xem market công khai không cần ví
 
-- **Browser A / Wallet A:** market creator and first participant.
-- **Browser B / Wallet B:** second participant and independent shared-link reader.
+1. Vào **Markets** khi chưa connect.
+2. Cho thấy danh sách **Verified pools** và pool đang chọn ở cột bên phải.
+3. Mở nhanh bộ lọc đang mặc định **All pools**, chọn thử một điều kiện rồi trả về All.
+4. Bấm icon refresh cạnh tiêu đề Markets.
 
-Both wallets must:
+Nhấn mạnh: xem pool, điều kiện, deadline và participant gate không cần ký giao dịch.
 
-1. Be unlocked and connected to Ethereum Sepolia.
-2. Hold enough Sepolia ETH for creation, faucet, approval, wrapping, forecast, and
-   lifecycle transactions.
-3. Be disposable test accounts without valuable assets or personal history.
+### 3. Portfolio — chuẩn bị collateral bằng Ví A
 
-QuietSignal never imports a wallet. It receives the selected account through the
-normal EIP-1193 connection flow.
+1. Kết nối **Ví A** trên Sepolia.
+2. Vào **Portfolio** và cho thấy các số dư ETH, QSFC, QSCC trên header và trang.
+3. Nhập Amount `2`.
+4. Bấm **Mint QSFC**, xác nhận và chờ receipt.
+5. Bấm **Wrap QSCC**:
+   - nếu thiếu allowance, xác nhận approval;
+   - sau đó xác nhận wrap.
+6. Bấm **Reveal QSCC** và cho thấy số dư riêng tư chỉ được mở trong session hiện tại.
 
-Before recording, close personal tabs, hide unrelated bookmarks, and disable unrelated
-desktop notifications.
+### 4. Create — tạo một market thật
 
-## 3. Start the local application
+Vẫn dùng Ví A:
 
-From the repository root:
+1. Vào **Create**.
+2. Chọn:
+   - Condition: `ETH/USD ≥ threshold`;
+   - Threshold: `2000`;
+   - Commit window: `5 minutes` nếu cả hai ví đã sẵn collateral, nếu không dùng
+     `15 minutes`;
+   - Participant gate: `2`.
+3. Bấm **Create verified market**.
+4. Xác nhận lần lượt transaction tạo adapter và tạo pool.
+5. Chờ toast xác nhận, rồi cho thấy địa chỉ pool, condition, deadline và gate.
 
-```sh
-npm run dev:web -- --host 127.0.0.1
-```
+### 5. Ví A gửi forecast thứ nhất
 
-Open <http://localhost:5173/> in both browser profiles. Keep the terminal outside the
-recording frame so environment values cannot be exposed.
+1. Vào **Markets**, chọn pool vừa tạo.
+2. Bấm refresh market và kiểm tra commit window còn mở.
+3. Trong **Make forecast**, nhập:
+   - Collateral: `1.00`;
+   - Probability: `70`.
+4. Bấm **Encrypt and submit forecast** và xác nhận các yêu cầu ví theo thứ tự.
+5. Chờ hoàn tất, sau đó cho thấy nút đổi thành **Forecast already submitted**.
 
-### Opening shot
+Lời nói gợi ý:
 
-Show:
+> Trình duyệt chuyển 70% thành 7.000 basis points rồi mã hóa cục bộ. Giao diện không
+> công khai xác suất hoặc collateral của vị thế này.
 
-- the QuietSignal Overview page;
-- the `PRIVATE`, `COMPUTE`, `PUBLIC`, and `PENDING` privacy legend;
-- the persistent Markets, Portfolio, and Create navigation;
-- the Sepolia network indicator.
+### 6. Đổi sang Ví B và gửi forecast thứ hai
 
-Open Markets before connecting a wallet. Confirm that the canonical pool and published
-verified pools render from public state. The collapsed filter should initially read
-`Filter: All pools`. Open it briefly to show the condition, participant-gate, and
-commit-window filters, then close it.
+Chuyển sang Browser B để việc đổi ví dễ nhìn và tránh nhầm account:
 
-This opening sequence is read-only and must not request a wallet transaction.
+1. Kết nối **Ví B** trên Sepolia.
+2. Vào **Portfolio**, Mint/Wrap/Reveal `2 QSCC` nếu chưa chuẩn bị trước.
+3. Vào **Markets** và bấm refresh để tìm pool Ví A vừa tạo.
+4. Chọn đúng pool, kiểm tra cùng address, condition, deadline và gate `2`.
+5. Nhập forecast:
+   - Collateral: `1.00`;
+   - Probability: `30`.
+6. Bấm **Encrypt and submit forecast**, xác nhận và chờ hoàn tất.
+7. Refresh lifecycle và cho thấy **Participants: 2**.
 
-## 4. Create a real market with Wallet A
+### 7. Trước deadline — giải thích các nút Lifecycle
 
-Use a new market so the immutable deadline is clear and the journey does not depend on
-an already closed pool.
+Trong pool đang chọn, kéo đến **Lifecycle**:
 
-1. In Browser A, select **Connect wallet**.
-2. Choose Wallet A and switch to Sepolia if requested.
-3. Open **Create**.
-4. Select:
-   - comparison: **ETH/USD ≥ threshold**;
-   - threshold: **2000**;
-   - commit window: **15 minutes**;
-   - participant gate: **2**.
-5. Select **Create verified market**.
-6. Confirm the immutable adapter deployment.
-7. Wait for the adapter receipt.
-8. Confirm pool creation through the manifest-bound factory.
-9. Wait for the pool receipt and verification readback.
-10. Show the success notification, pool address, condition, deadline, and gate.
-
-Use the five-minute window only if both wallets already hold enough QSCC. Fifteen
-minutes is safer when collateral must be minted and wrapped during the recording.
-
-The resulting participant link contains public configuration only. It must not contain
-an account, forecast, stake, private key, encrypted handle, or proof.
-
-## 5. Verify the shared market with Wallet B
-
-1. Open the public participant link in Browser B.
-2. Wait for the factory mapping and immutable configuration checks.
-3. Confirm that link verification requests no signature or transaction.
-4. Connect Wallet B on Sepolia.
-5. Open Markets and select the new pool.
-6. If it is not visible yet, use the compact Markets refresh control.
-
-Factory discovery reads public events and contract state only. It must not send a
-transaction.
-
-Show the same public condition, deadline, pool address, and `At least 2 participants`
-rule in Browser B. This demonstrates that the market is public Sepolia state rather
-than browser-local application data.
-
-## 6. Prepare collateral for both wallets
-
-Perform these steps in Browser A, then repeat them in Browser B:
-
-1. Open **Portfolio**.
-2. Enter **2** in Amount.
-3. Select **Mint QSFC**, confirm the faucet transaction, and wait for its receipt.
-4. Select **Wrap QSCC**.
-5. If the allowance is insufficient:
-   - confirm the exact-amount approval;
-   - wait for the approval receipt;
-   - confirm the wrap transaction;
-   - wait for the wrap receipt.
-6. Select **Reveal QSCC** to display the private balance for the current browser
-   session.
-7. Optionally use the compact balance refresh control to show the final state.
-
-The final Portfolio view should distinguish:
-
-- public Sepolia ETH used for gas;
-- public valueless QSFC;
-- session-revealed private QSCC;
-- the wrapper allowance.
-
-Wrap at least 2 QSCC for each wallet so both can submit a 1.00 QSCC forecast. Never put
-the private QSCC balance in a URL, terminal, log, or browser store.
-
-## 7. Submit two encrypted forecasts
-
-In both browsers, return to Markets, select the new pool, refresh its public state, and
-confirm that the forecast panel says the commit window is open.
-
-### Wallet A
-
-1. Enter collateral **1.00**.
-2. Enter probability **70**.
-3. Select **Encrypt and submit forecast**.
-4. Follow each explicit wallet request.
-5. Wait for every required receipt.
-6. Show the confirmed notification.
-7. Confirm that the button becomes **Forecast already submitted**.
-
-### Wallet B
-
-1. Enter collateral **1.00**.
-2. Enter probability **30**.
-3. Select **Encrypt and submit forecast**.
-4. Follow each explicit wallet request.
-5. Wait for every required receipt.
-6. Refresh the public lifecycle.
-7. Show that the participant count is **2**.
-
-The displayed values are user percentages. The browser converts them to integer basis
-points before Nox encryption. Do not open developer tools or expose plaintext values,
-encrypted handles, proofs, or confidential calldata during this sequence.
-
-## 8. Show lifecycle prerequisites before the deadline
-
-Open Lifecycle for the selected pool. Controls that are not yet eligible remain visible
-but disabled. Hover or focus each disabled control to show its prerequisite:
-
-- **Close window:** waits for the immutable deadline.
-- **Request proof:** waits for close with `participantCount ≥ kMin`.
-- **Finalize aggregate:** waits for a proof request and valid Nox attestations.
-- **Settle from price feed:** waits for aggregate finalization and the observation
-  boundary.
-- **Expire pending:** applies only to a timed-out pending commit.
-- **Refund before resolution:** applies only after aggregate-request timeout.
-- **Refund after grace:** applies only after resolution grace expires.
-
-Do not attempt a disabled action. Its adjacent copy and keyboard-accessible tooltip
-already explain why the contract will reject it.
-
-## 9. Close the commit window
-
-Wait for the displayed deadline; do not change the machine clock.
-
-1. Refresh Lifecycle.
-2. With two finalized participants, confirm that **Close window** is eligible.
-3. Submit it from either connected wallet.
-4. Confirm the transaction and wait for its receipt.
-5. Refresh public state.
-6. Show **Aggregate pending**.
-
-If a `k=2` pool has only one participant, close moves directly to `Refundable`. In that
-case, skip aggregate proof and settlement and follow the recovery journey below.
-
-## 10. Request and finalize the aggregate
-
-After a successful threshold close:
-
-1. Wait for **Request proof** to become eligible.
-2. Submit it and wait for the confirmed receipt.
-3. Select **Finalize aggregate**.
-4. Let the browser request the two transient Nox public attestations.
-5. Confirm the finalize transaction and wait for the receipt.
-6. Refresh public state.
-7. Show **Resolution pending** and the public YES/NO aggregate.
-
-Do not copy or display aggregate handles or proof bytes. Only the permitted aggregate,
-public lifecycle label, and confirmed transaction result belong in the recording.
-
-## 11. Settle from the immutable price feed
-
-The observation boundary is later than the commit deadline. Wait until **Settle from
-price feed** becomes eligible, then:
-
-1. Refresh public state.
-2. Submit settlement.
-3. Confirm the wallet transaction.
-4. Wait for the receipt and refresh again.
-5. Show **Settled**, the observed public price, Chainlink round, aggregate, and
-   resulting outcome.
-
-The user does not choose the outcome. The contract reads the immutable Chainlink
-adapter. If the feed is stale or invalid, or the winning aggregate is zero, show the
-safe retry/recovery state and do not claim settlement.
-
-## 12. Reveal owner results, materialize score, and claim
-
-Repeat this sequence for Wallet A and Wallet B. Each browser must use the wallet that
-submitted that position.
-
-1. Select the pool in Markets.
-2. Open **Your position**.
-3. Select **Reveal with owner wallet**.
-4. Approve the owner-only authorization/read if requested.
-5. Show the human-readable collateral, forecast, and position state.
-6. Show the expected payout card and exact floor-division formula.
-7. Select **Materialize score** and wait for its receipt.
-8. Reveal again if required to display the owner-only score.
-9. Select **Claim payout** and wait for its receipt.
-10. Show the refreshed QSCC balance and **Claimed** terminal status.
-
-Opening the position does not automatically claim or refund. Switching accounts or
-chains must immediately mask the owner view before the other wallet is recorded.
-
-## 13. Recovery journey: below-threshold refund
-
-Use a separate fresh pool so the successful settlement market remains intact:
-
-1. Wallet A creates a market with a five-minute commit window and gate `2`.
-2. Wallet A submits one encrypted forecast; Wallet B does not participate.
-3. Wait for the immutable deadline and refresh Lifecycle.
-4. Submit **Close window** and wait for the receipt.
-5. Show `Refundable` and confirm that aggregate/settlement actions are unavailable.
-6. In Wallet A, reveal the owner position.
-7. Select **Request refund** and wait for the receipt.
-8. Show the refreshed confidential balance and **Refunded** terminal status.
-
-This branch demonstrates that a below-threshold cohort never exposes aggregate proof
-or settlement actions.
-
-## 14. Recommended four-minute edit
-
-Use jump cuts and a visible `Waiting for immutable deadline` title card. Never change
-the clock or edit a pending transaction to look confirmed.
-
-Recommended order:
-
-1. Overview, privacy boundary, and navigation.
-2. Wallet A creates a market.
-3. Wallet B verifies the shared public market.
-4. Both wallets prepare collateral.
-5. Wallet A submits 70%; Wallet B submits 30%.
-6. The participant count reaches two.
-7. Close, request proof, and finalize aggregate.
-8. Settle from the price feed.
-9. Reveal owner result, materialize score, and claim.
-10. Briefly show the separate below-threshold refund terminal state if time permits.
-
-Long wallet waits, duplicate setup, and the full recovery journey can be accelerated or
-placed in a separate chapter, but every displayed success must come from a real
-confirmed Sepolia operation.
-
-## 15. Final review checklist
-
-Before exporting the video, verify that it shows:
-
-- Ethereum Sepolia and the QuietSignal application;
-- two independent wallets using the same public pool;
-- the public pool address, condition, gate, and deadline;
-- two confirmed encrypted forecast journeys;
-- participant count `2` in the success market;
-- close, proof request, aggregate finalization, and settlement in order;
-- owner data revealed only by the matching wallet;
-- score materialization and payout claim;
-- the exact payout formula and confirmed terminal status;
-- the below-threshold refundable path if included;
-- no private key, seed phrase, environment value, raw handle, proof, signature, or
+1. Cho thấy hai nhóm **Advance lifecycle** và **Recovery paths**.
+2. Hover nhanh vào một nút bị khóa để hiện điều kiện sử dụng.
+3. Cho thấy **Close window** chưa dùng được vì deadline chưa tới.
+
+Không thử ký một nút đang bị khóa.
+
+### 8. Chờ deadline rồi chạy lifecycle
+
+Chèn title card: **Waiting for the immutable Sepolia deadline**. Không đổi giờ máy.
+
+Sau deadline, dùng Ví A hoặc Ví B:
+
+1. Bấm icon refresh ở Lifecycle.
+2. Bấm **Close window**, xác nhận và chờ receipt.
+3. Refresh, bấm **Request proof**, xác nhận và chờ receipt.
+4. Bấm **Finalize aggregate**, chờ Nox tạo attestations, xác nhận transaction.
+5. Refresh và cho thấy:
+   - Public YES allocation;
+   - Public NO allocation;
+   - Total collateral;
+   - trạng thái chờ settlement.
+6. Khi **Settle from price feed** khả dụng, bấm và xác nhận.
+7. Refresh và cho thấy trạng thái **Settled**, giá Chainlink, round và outcome.
+
+Nếu một nút chưa khả dụng, hover để đọc điều kiện rồi chờ đúng mốc on-chain; không cố
+gửi transaction.
+
+### 9. Reveal kết quả và nhận thưởng bằng Ví A
+
+1. Chuyển lại Browser A / Ví A.
+2. Chọn đúng pool và kéo đến **Your position**.
+3. Bấm **Reveal with owner wallet**.
+4. Cho thấy collateral, probability và card **Estimated payout**.
+5. Dừng hình ở công thức:
+
+   `Payout = floor(your winning allocation × total collateral ÷ public winning allocation)`
+
+6. Bấm **Materialize score**, xác nhận, rồi Reveal lại để xem score.
+7. Bấm **Claim payout**, xác nhận và chờ receipt.
+8. Cho thấy trạng thái **Claimed** và số dư QSCC vừa được refresh.
+
+### 10. Chứng minh owner isolation bằng Ví B
+
+1. Chuyển sang Browser B / Ví B.
+2. Reveal cùng pool và cho thấy đây là vị thế riêng của Ví B.
+3. Quay nhanh payout/formula khác của Ví B.
+4. Claim payout của Ví B nếu cần chứng minh cả hai người đều nhận được kết quả.
+
+Đổi account hoặc network phải làm nội dung owner bị che lại; không có ví nào xem được
+vị thế riêng của ví còn lại.
+
+## Cảnh bổ sung ngắn: market thiếu người và refund
+
+Phần này có thể quay riêng rồi ghép khoảng 30–45 giây:
+
+1. Ví A tạo pool mới với gate `2` và deadline ngắn.
+2. Chỉ Ví A gửi một forecast; Ví B không tham gia.
+3. Chờ deadline, refresh rồi bấm **Close window**.
+4. Cho thấy pool chuyển sang **Refundable**, không đi qua aggregate hoặc settlement.
+5. Ví A bấm **Reveal with owner wallet**.
+6. Cho thấy refund amount, bấm **Request refund** và xác nhận.
+7. Cho thấy trạng thái **Refunded** cùng số dư QSCC đã cập nhật.
+
+## Thứ tự dựng video cuối cùng
+
+1. Overview và privacy boundary.
+2. Markets công khai khi chưa kết nối ví.
+3. Ví A: Portfolio → Create → forecast 70%.
+4. Ví B: Portfolio → tìm pool toàn cầu → forecast 30%.
+5. Participants đạt 2 và các điều kiện Lifecycle.
+6. Chờ deadline → Close → Request proof → Finalize aggregate → Settle.
+7. Ví A Reveal → công thức payout → Materialize score → Claim.
+8. Ví B Reveal để chứng minh owner isolation.
+9. Cảnh phụ dưới ngưỡng → Refundable → Request refund.
+
+## Checklist trước khi xuất video
+
+- Có Overview, Markets, Portfolio và Create.
+- Có hai ví độc lập tham gia cùng một pool thật trên Sepolia.
+- Có Mint, Wrap, Reveal QSCC và số dư global trên header.
+- Có tạo pool, global discovery và hai forecast mã hóa.
+- Có participant count `2`, deadline và đầy đủ lifecycle thành công.
+- Có public aggregate, Chainlink outcome, payout formula, score và claim.
+- Có nhánh dưới ngưỡng và refund.
+- Không xuất hiện private key, seed phrase, `.env`, raw handles, proofs, signatures hoặc
   confidential calldata.
-
-Keep the final competition video at or below four minutes. The public repository URL,
-production URL, Sepolia network, and `@iEx_ec` submission tag should appear in the
-published video description or accompanying X post.
