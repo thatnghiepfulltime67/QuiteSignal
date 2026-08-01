@@ -2,58 +2,65 @@
 
 Date: 2026-08-02 (Asia/Ho_Chi_Minh)
 
-Status: **failed — release blockers remain**
+Status: **not passed — operator-scoped release items remain**
 
 This is a sanitized run record. It contains no wallet credentials, confidential
 plaintext, encrypted handles, proofs, signatures, RPC credentials, or raw traces.
 
 ## Environment
 
-- Source checkpoint: `361a2eb`
+- Candidate checkpoint: `a25a6c5`
 - Node: `v24.18.0`
 - npm: `11.16.0`
+- Hardhat: `3.12.0`
 - Chain: Ethereum Sepolia (`11155111`)
-- Spend ledger: 714 entries, within the committed allowance
+- Spend ledger: 715 entries and within the committed allowance
 
-## Checks that passed
+## Resolved blockers
 
-| Check | Result |
-|---|---|
-| `npm run doctor` | Pass; pinned Nox runtime and public Sepolia preflight |
-| `npm run check:sepolia:read` | Pass; doctor and budget status within allowance |
-| `npm run check:offline` | Pass; format, lint, compile, verifier/SDK/automation/indexer tests, secret scan |
-| `npm run test:web` | Pass; 51 tests |
-| `npm run test:interfaces` | Pass; 14 tests |
-| `npm run build:web` | Pass |
-| `npm run verify:evidence` | Pass; G3 read verifier, 47 receipts, 3 recovery slices |
-| `npm run scan:secrets` | Pass; tracked files/history clear |
-| clean `git archive` → `npm ci` → `npm run compile` → `npm run build:web` | Pass; ignored Hardhat artifacts are now generated before typecheck |
-| Vercel production deployment | Pass; `dpl_CUfq8iUNjK1VBbFFZcPeX32Gwf7p` is Ready and `/`, `/markets`, `/portfolio`, `/self-test`, `/position` return HTTP 200 |
+1. The canonical deployment verifier passed at Sepolia block `11397936` through an
+   archive-capable public RPC. It verified runtime hashes, immutable pool bindings,
+   the historical deployment epoch, five successful receipts, factory binding,
+   collateral interface, adapter/feed configuration, current feed round, and zero
+   adapter native custody.
+2. Both Hardhat declarations were upgraded from `3.11.1` to `3.12.0`. The resolved
+   lockfile uses `adm-zip@0.6.0`; `npm ci`, `npm audit`, compile, interface tests, and
+   the license inventory now report zero vulnerabilities or missing licenses.
+3. The active web source passed 53 web tests, root typecheck, Solidity compilation,
+   14 interface tests, verifier/SDK/automation/indexer suites, production build,
+   secret scan, and the G3 live-evidence verifier under the exact Node/npm toolchain.
+4. The project owner explicitly confirmed the real production primary journey with
+   two user-controlled Sepolia wallets. P3 and G7 record that scope as
+   `user_confirmed`.
 
-## Blockers
+## Current production state
 
-1. `npm run verify:protocol:sepolia -- --manifest=deployments/sepolia/quiet-signal.json`
-   did not complete against the configured public RPC because the historical
-   `eth_call` requires archive access and the provider returned “Archive requests
-   require a personal token”. A provider with Sepolia archive support is required
-   before deployment verification can be marked passed.
-2. `npm run scan:dependencies` reports two high-severity `adm-zip` advisories through
-   Hardhat `3.11.1` (R-16). The gate allows a high-risk acceptance only with explicit
-   owner approval; no such acceptance is recorded here. No critical advisory was
-   reported.
-3. G7 is `user_confirmed`, not an independent `passed` gate. The attestation covers
-   the owner-operated primary journey with two real wallets only; it does not prove
-   recovery, wrong-owner ACL, accessibility, or the complete browser matrix.
-4. The worktree is not clean because it contains unrelated user changes in
-   `docs/operations/05-local-e2e-video-demo.md`,
-   `evidence/sepolia/spend-ledger.json`, and the untracked user script
-   `ops/scripts/patch-node.mjs`. G8 requires a clean source checkpoint.
+The public alias <https://quitesignal.vercel.app> serves the payout-enabled web asset
+and returns the application on its direct routes. Vercel deployment
+`dpl_A7wBNzYPWuqHGx4dqUyGorXwSNtm` is Ready. Two later CLI deployment attempts,
+`dpl_33uPj5emLcaUUJTzkt87nqSnShEt` and
+`dpl_45Kt4qAEAeUov5CsfKHoZw8jekx6`, were still reported as `UNKNOWN` and are not used
+as release evidence.
+
+## Remaining release items
+
+1. G7 remains `user_confirmed`, not `passed`. The confirmed scope is the real
+   two-wallet primary success journey; WEB-08's separate browser recovery acceptance
+   is not included in that attestation.
+2. The final source worktree contains the untracked local file
+   `ops/scripts/patch-node.mjs`. It is excluded from Vercel uploads but must be either
+   intentionally retained as a reviewed source file or removed by its owner before a
+   clean-worktree G8 claim.
+3. A clean archive run must be repeated after this updated report is committed. The
+   previous retry reached formatting validation and correctly stopped because the old
+   report was not Prettier-clean.
+4. The ready production deployment predates the final dependency and documentation
+   commits. A new Ready deployment from the final clean checkpoint, followed by route
+   health checks, remains required for source-to-production release attribution.
 
 ## Decision
 
-G8 remains failed and P4 must not be marked complete. The next release attempt is
-read-only until an archive-capable Sepolia RPC is configured, R-16 is closed or
-explicitly accepted by the owner, the missing G7 evidence scope is recorded, and
-the final source tree is clean. The competition submission pack is prepared locally
-under the ignored `dorahack/` directory; publishing the video, X post, Discord
-message, and DoraHacks form remains an owner account action.
+G8 is not marked passed. The archive-capable RPC and dependency-advisory blockers are
+closed; the remaining actions require the final clean source decision, a Ready
+deployment of that checkpoint, and the operator-scoped browser completion described
+above. Competition submission drafts remain under the ignored `dorahack/` directory.

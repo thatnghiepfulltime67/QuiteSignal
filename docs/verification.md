@@ -34,8 +34,7 @@ manifest values as proof.
 ## Named evidence
 
 The evidence ledger under `docs/plans/evidence-ledger.md` maps G0–G7 to sanitized
-artifacts. G7 currently has a scoped `user_confirmed` attestation for the production
-primary journey with two real Sepolia wallets; it is not an independent recovery,
-ACL, or accessibility report. G8 remains blocked until clean reproduction, live
-read checks, evidence validation, risk closure, and a clean committed worktree all
-pass.
+artifacts. G7 has a scoped `user_confirmed` attestation for the production primary
+journey with two real Sepolia wallets. The canonical archive read and dependency
+advisory are closed; G8 still requires the final clean reproduction/deployment and
+the remaining WEB-08 browser-recovery scope.
