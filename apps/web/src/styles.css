@@ -336,7 +336,7 @@ a {
 .operation-toast {
   position: fixed;
   z-index: 20;
-  top: 20px;
+  bottom: 20px;
   right: 20px;
   width: min(360px, calc(100vw - 40px));
   display: grid;
@@ -1324,6 +1324,106 @@ a {
   padding: 10px 12px;
 }
 
+.public-aggregate,
+.owner-payout-summary {
+  background: var(--petal);
+  border: 2px solid var(--cocoa);
+  border-radius: var(--card-radius);
+  color: var(--cocoa);
+  margin: 20px 0;
+  max-width: 680px;
+  padding: 20px;
+}
+
+.public-aggregate .eyebrow,
+.owner-payout-summary .eyebrow {
+  margin: 0 0 16px;
+}
+
+.public-aggregate dl,
+.owner-payout-summary dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.public-aggregate dl > div,
+.owner-payout-summary dl > div {
+  border-top: 1px solid var(--walnut);
+  display: grid;
+  gap: 6px;
+  padding: 14px 12px 14px 0;
+}
+
+.public-aggregate dl > div:nth-child(even),
+.owner-payout-summary dl > div:nth-child(even) {
+  border-left: 1px solid var(--walnut);
+  padding-left: 12px;
+}
+
+.public-aggregate dt,
+.owner-payout-summary dt,
+.payout-formula > span,
+.payout-total > span {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.public-aggregate dd,
+.owner-payout-summary dd {
+  font-size: 16px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.payout-total {
+  align-items: baseline;
+  display: grid;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.payout-total strong {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.payout-total small {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.payout-formula {
+  border-top: 2px solid var(--cocoa);
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 18px;
+}
+
+.payout-formula code {
+  background: var(--cocoa);
+  border-radius: var(--control-radius);
+  color: var(--petal);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  padding: 12px;
+  white-space: normal;
+}
+
+.payout-formula p {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .compact-asset-panel {
   margin-top: 20px;
 }
@@ -2145,6 +2245,12 @@ a {
 }
 
 @media (max-width: 700px) {
+  .operation-toast {
+    bottom: 12px;
+    right: 12px;
+    width: calc(100vw - 24px);
+  }
+
   .site-header,
   .site-nav,
   .balance-strip,
@@ -2334,6 +2440,17 @@ a {
 
   .facts {
     grid-template-columns: 1fr;
+  }
+
+  .public-aggregate dl,
+  .owner-payout-summary dl {
+    grid-template-columns: 1fr;
+  }
+
+  .public-aggregate dl > div:nth-child(even),
+  .owner-payout-summary dl > div:nth-child(even) {
+    border-left: 0;
+    padding-left: 0;
   }
 
   .asset-facts {

@@ -201,11 +201,14 @@ export type OwnerTerminalAction = 'materializeScore' | 'claim' | 'refund';
 export interface PublicLifecycleSnapshot {
   readSource: 'public-rpc' | 'wallet-provider';
   state: number;
+  winner: number;
   deadline: bigint;
   observedAt: bigint;
   participantCount: number;
   publicYes: bigint;
   publicNo: bigint;
+  settledRoundId: bigint;
+  settledAnswer: bigint;
   kMin: number;
   aggregateRequestId: string;
   actions: LifecycleActionPresentation[];
@@ -494,11 +497,14 @@ async function readPublicLifecycleSnapshotWithReader(
   return {
     readSource,
     state: epoch.state,
+    winner: epoch.winner,
     deadline: epoch.deadline,
     observedAt: block.timestamp,
     participantCount: epoch.participantCount,
     publicYes: epoch.publicYes,
     publicNo: epoch.publicNo,
+    settledRoundId: epoch.settledRoundId,
+    settledAnswer: epoch.settledAnswer,
     kMin: config.kMin,
     aggregateRequestId: epoch.aggregateRequestId,
     actions,

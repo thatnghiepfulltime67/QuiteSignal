@@ -120,6 +120,11 @@ test('T-WEB-12-02: aggregate finalization uses transient public attestations and
   assert.match(main, /Hover or focus a disabled action/);
   assert.doesNotMatch(main, /<p>\$\{escapeHtml\(requirement\)\}<\/p>/);
   assert.match(wallet, /actionAvailability/);
+  assert.match(wallet, /winner: epoch\.winner/);
+  assert.match(wallet, /settledAnswer: epoch\.settledAnswer/);
+  assert.match(main, /function publicAggregateContent/);
+  assert.match(main, /YES ALLOCATION/);
+  assert.match(main, /TOTAL COLLATERAL/);
   assert.match(styles, /\.lifecycle-action-tooltip::after/);
   assert.match(main, /submitPermissionlessLifecycleAction/);
   assert.doesNotMatch(`${wallet}\n${main}`, /localStorage|sessionStorage|console\./i);

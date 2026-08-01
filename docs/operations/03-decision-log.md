@@ -595,3 +595,21 @@ ACL, or lifecycle state machine. The already user-selected wallet provider can o
 public factory queries and the browser IP under its own transport policy; it receives
 no confidential value or account argument from discovery. No backend, indexer,
 persistent browser registry, or new external dependency is added.
+
+## ADR-036 — Owner-scoped payout presentation
+
+**Status:** Accepted before the WEB-15 payout presentation extension
+
+The selected Market may present the final public aggregate and outcome from the pool's
+existing public epoch read. After an explicit owner Reveal, Your position may also
+derive and display that owner's expected payout using the contract's integer allocation
+and floor-division formula. The card shows the formula and the concrete owner values
+used in it so rounding is inspectable; it does not predict a payout before settlement.
+
+Public aggregate values remain in the public Lifecycle area. Owner stake, probability,
+winning allocation, and payout remain in browser memory only, are masked on wallet or
+chain change, and are never logged, persisted, or sent to an application service. Claim
+and refund remain separate explicit contract calls. A confirmed terminal action may
+refresh the connected owner's confidential balance, but a failed refresh cannot change
+the confirmed receipt or funds-recovery path. This presentation change introduces no
+new protocol state, custody, trust dependency, or public contract interface.

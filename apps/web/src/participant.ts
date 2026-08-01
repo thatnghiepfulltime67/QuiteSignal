@@ -28,6 +28,24 @@ export interface AssetReadiness {
   explanation: string;
 }
 
+export interface OwnerPayoutInput {
+  state: number;
+  winner: number;
+  stake: bigint;
+  probabilityBps: bigint;
+  publicYes: bigint;
+  publicNo: bigint;
+}
+
+export interface OwnerPayoutPresentation {
+  yesAllocation: bigint;
+  noAllocation: bigint;
+  winningAllocation: bigint;
+  winningAggregate: bigint;
+  totalCollateral: bigint;
+  payout: bigint;
+}
+
 export function presentMarketReadiness(input: MarketReadinessInput): MarketReadiness {
   if (input.state !== 0) {
     return {
@@ -106,4 +124,35 @@ export function parseTestAssetAmount(value: string): bigint {
   const amount = parseBaseUnits(decimalInput(value, 18), 18);
   if (amount === 0n) throw new Error('Choose a test-token amount greater than zero.');
   return amount;
+}
+
+export function calculateOwnerPayout(input: OwnerPayoutInput): OwnerPayoutPresentation | undefined {
+  const scale = 10_000n;
+  if (
+    input.state !== 4 ||
+    (input.winner !== 1 && input.winner !== 2) ||
+    input.stake <= 0n ||
+    input.probabilityBps < 0n ||
+    input.probabilityBps > scale
+  )
+    return undefined;
+
+  const quotient = input.stake / scale;
+  const remainder = input.stake - quotient * scale;
+  const yesAllocation =
+    quotient * input.probabilityBps + (remainder * input.probabilityBps) / scale;
+  const noAllocation = input.stake - yesAllocation;
+  const winningAllocation = input.winner === 1 ? yesAllocation : noAllocation;
+  const winningAggregate = input.winner === 1 ? input.publicYes : input.publicNo;
+  const totalCollateral = input.publicYes + input.publicNo;
+  if (winningAggregate <= 0n || totalCollateral <= 0n) return undefined;
+
+  return {
+    yesAllocation,
+    noAllocation,
+    winningAllocation,
+    winningAggregate,
+    totalCollateral,
+    payout: (winningAllocation * totalCollateral) / winningAggregate,
+  };
 }

@@ -43,5 +43,7 @@ test('T-WEB-03-UX-03: one wallet interaction locks competing controls and report
   assert.match(source, /querySelectorAll<HTMLButtonElement>\('button'\)/);
   assert.match(source, /operation-toast/);
   assert.match(styles, /\.operation-toast \{/);
+  assert.match(styles, /\.operation-toast \{[^}]*bottom: 20px/);
+  assert.doesNotMatch(styles, /\.operation-toast \{[^}]*top:/);
   assert.match(styles, /\.app-shell\[aria-busy='true'\] a\[aria-disabled='true'\]/);
 });

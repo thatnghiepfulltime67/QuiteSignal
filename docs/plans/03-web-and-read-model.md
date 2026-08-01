@@ -1516,10 +1516,33 @@ release state. Intended commit: `feat: add verified local test pools`.
 
 Interaction-safety extension: While any wallet connection, owner authorization,
 signature request, or receipt wait is active, the browser disables every competing
-button, input, selection, and navigation link. A compact upper-right live notification
+button, input, selection, and navigation link. A compact lower-right live notification
 reports pending, confirmed, or error state. The lock is browser-memory-only and is
 released on either outcome; it neither persists nor changes custody, privacy, protocol
 state, or recovery rules.
+
+Payout-presentation extension (`WEB-15-PAYOUT-01`): The selected Market shows the
+contract's final public YES/NO allocation and outcome in Lifecycle. After explicit owner
+Reveal, Your position shows the winning owner allocation, total public collateral,
+public winning allocation, exact floor-division formula, expected payout, and terminal
+status. A successful claim or refund refreshes the session-only QSCC balance.
+
+Output files: `apps/web/src/participant.ts`, `apps/web/src/wallet.ts`,
+`apps/web/src/main.ts`, `apps/web/src/styles.css`, focused web tests, this work-item
+record, and the decision log. Checks: focused tests, `npm run test:web`, root typecheck,
+`npm run build:web`, and `git diff --check`. Evidence is deterministic payout arithmetic
+and the built browser surface; this is not contract or privacy evidence. Privacy impact:
+public aggregates stay public, while owner-derived values exist only after Reveal and
+remain in memory until wallet/chain context changes. Recovery: claim/refund remains an
+explicit owner transaction; a balance-refresh failure preserves the confirmed receipt.
+Intended commit: `feat: explain owner payouts`.
+
+Completion evidence (2026-08-02): The selected market now presents the final public
+aggregate and settlement facts, while the owner panel derives the exact floor-rounded
+payout only after an explicit owner reveal. Claim and refund confirmations refresh the
+session-only confidential balance without changing the receipt outcome when that read
+fails. All 53 web tests, root typecheck, the production build under Node `24.18.0`, and
+`git diff --check` passed. No Sepolia write was submitted by this presentation slice.
 
 Lifecycle discoverability extension: The Lifecycle surface lists every
 contract-defined permissionless action after a direct public state read. Only actions

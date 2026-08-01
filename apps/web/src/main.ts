@@ -9,6 +9,7 @@ import {
 import { presentVerification } from './verification.js';
 import { presentLifecycle } from './lifecycle.js';
 import {
+  calculateOwnerPayout,
   formatTokenAmount,
   parseTestAssetAmount,
   presentAssetReadiness,
@@ -31,6 +32,7 @@ import {
   submitSignalJourney,
   wrapTestAsset,
   type PublicTestAssetState,
+  type PublicLifecycleSnapshot,
   type TestAssetState,
 } from './wallet.js';
 import type {
@@ -91,6 +93,20 @@ let marketReadinessMessage = 'Checking whether the canonical market is accepting
 let marketCohortGate = 'Loading public cohort rule…';
 let ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
 let ownerActions = '';
+let ownerPayout:
+  | {
+      pool: string;
+      kind: 'payout' | 'refund';
+      amount: bigint;
+      winningAllocation?: bigint;
+      winningAggregate?: bigint;
+      totalCollateral?: bigint;
+      status: 'available' | 'claimed' | 'refunded';
+      currentBalance?: bigint;
+    }
+  | undefined;
+let publicLifecycleSnapshot: PublicLifecycleSnapshot | undefined;
+let publicLifecyclePool: string | undefined;
 let ownerCommitmentPool: string | undefined;
 let ownerCommitmentState: 'unchecked' | 'checking' | 'committed' | 'available' = 'unchecked';
 let assetState: TestAssetState | undefined;
@@ -161,6 +177,11 @@ function formatDeadline(timestamp: bigint | number): string {
     minute: '2-digit',
     timeZoneName: 'short',
   }).format(new Date(Number(timestamp) * 1000));
+}
+
+function formatFeedAnswer(value: bigint): string {
+  if (value <= 0n) return 'Unavailable';
+  return `$${formatSelfTestUsdThreshold(value.toString())}`;
 }
 
 function marketPoolFilterLabel(filter: MarketPoolFilter): string {
@@ -407,6 +428,7 @@ function resetWalletContext(message: string): void {
   walletState = 'Reconnect wallet';
   ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
   ownerActions = '';
+  ownerPayout = undefined;
   ownerCommitmentPool = undefined;
   ownerCommitmentState = 'unchecked';
   assetState = undefined;
@@ -683,8 +705,64 @@ function signalPanelContent(market: ReturnType<typeof presentMarket>, selfTest =
   return `<div class="market-action-panel"><p class="eyebrow compute">{ encrypted locally }</p><p>${signalReady ? marketReadinessMessage : unavailableMessage}</p><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required${submissionReady ? '' : ' disabled'} /></label><label>Probability (%) <input name="probability" type="number" min="0" max="100" step="1" inputmode="numeric" autocomplete="off" placeholder="70" required${submissionReady ? '' : ' disabled'} /></label><p class="sealed">COMPUTE · Enter a whole percentage from 0 to 100. The browser converts it to protocol basis points before encryption.</p><button class="primary" type="submit"${submissionReady ? '' : ' disabled'}>${buttonLabel}</button><button class="secondary" id="retry-finalize" type="button" hidden>Retry pending finalization</button><p id="signal-status" class="muted" role="status">${status}</p>${freshPoolAction}</form></div>`;
 }
 
+function publicAggregateContent(pool = routedPoolAddress()): string {
+  if (
+    !pool ||
+    !publicLifecycleSnapshot ||
+    publicLifecyclePool?.toLowerCase() !== pool.toLowerCase()
+  )
+    return '';
+  const snapshot = publicLifecycleSnapshot;
+  const total = snapshot.publicYes + snapshot.publicNo;
+  if (snapshot.state < 3 || total <= 0n) return '';
+  const outcome =
+    snapshot.state === 4
+      ? snapshot.winner === 1
+        ? 'YES'
+        : snapshot.winner === 2
+          ? 'NO'
+          : 'Unavailable'
+      : snapshot.state === 5
+        ? 'Refundable'
+        : 'Awaiting price settlement';
+  const settlement =
+    snapshot.state === 4
+      ? `<div><dt>PRICE OBSERVED</dt><dd>${formatFeedAnswer(snapshot.settledAnswer)}</dd></div><div><dt>CHAINLINK ROUND</dt><dd>${snapshot.settledRoundId.toString()}</dd></div>`
+      : '';
+  return `<section class="public-aggregate" aria-label="Public market aggregate"><p class="eyebrow public">{ public aggregate }</p><dl><div><dt>YES ALLOCATION</dt><dd>${formatTokenAmount(snapshot.publicYes)} QSCC</dd></div><div><dt>NO ALLOCATION</dt><dd>${formatTokenAmount(snapshot.publicNo)} QSCC</dd></div><div><dt>TOTAL COLLATERAL</dt><dd>${formatTokenAmount(total)} QSCC</dd></div><div><dt>OUTCOME</dt><dd>${outcome}</dd></div>${settlement}</dl></section>`;
+}
+
+function ownerPayoutContent(pool = routedPoolAddress()): string {
+  if (!pool || !ownerPayout || ownerPayout.pool.toLowerCase() !== pool.toLowerCase()) return '';
+  const status =
+    ownerPayout.status === 'claimed'
+      ? 'Claimed'
+      : ownerPayout.status === 'refunded'
+        ? 'Refunded'
+        : ownerPayout.kind === 'payout'
+          ? 'Ready to claim'
+          : 'Ready to refund';
+  const currentBalance =
+    ownerPayout.currentBalance === undefined
+      ? ''
+      : `<div><dt>CURRENT QSCC BALANCE</dt><dd>${formatTokenAmount(ownerPayout.currentBalance)} QSCC</dd></div>`;
+  if (ownerPayout.kind === 'refund') {
+    return `<section class="owner-payout-summary"><p class="eyebrow private">{ owner refund }</p><div class="payout-total"><span>Refund amount</span><strong>${formatTokenAmount(ownerPayout.amount)} QSCC</strong><small>${status}</small></div><dl>${currentBalance}</dl></section>`;
+  }
+  if (
+    ownerPayout.winningAllocation === undefined ||
+    ownerPayout.winningAggregate === undefined ||
+    ownerPayout.totalCollateral === undefined
+  )
+    return '';
+  const winningAllocation = formatTokenAmount(ownerPayout.winningAllocation);
+  const totalCollateral = formatTokenAmount(ownerPayout.totalCollateral);
+  const winningAggregate = formatTokenAmount(ownerPayout.winningAggregate);
+  return `<section class="owner-payout-summary" aria-label="Owner payout calculation"><p class="eyebrow private">{ owner payout }</p><div class="payout-total"><span>Estimated payout</span><strong>${formatTokenAmount(ownerPayout.amount)} QSCC</strong><small>${status}</small></div><dl><div><dt>YOUR WINNING ALLOCATION</dt><dd>${winningAllocation} QSCC</dd></div><div><dt>PUBLIC WINNING ALLOCATION</dt><dd>${winningAggregate} QSCC</dd></div><div><dt>TOTAL POOL COLLATERAL</dt><dd>${totalCollateral} QSCC</dd></div>${currentBalance}</dl><div class="payout-formula"><span>CONTRACT FORMULA</span><code>Payout = floor(your winning allocation × total collateral ÷ public winning allocation)</code><p>floor(${winningAllocation} × ${totalCollateral} ÷ ${winningAggregate}) = <strong>${formatTokenAmount(ownerPayout.amount)} QSCC</strong></p></div></section>`;
+}
+
 function positionPanelContent(): string {
-  return `<div class="market-action-panel owner-panel"><p class="eyebrow private">{ owner only }</p><p role="status">${ownerMessage}</p><button class="primary" id="reveal-owner">Reveal with owner wallet</button>${ownerActions}</div>`;
+  return `<div class="market-action-panel owner-panel"><p class="eyebrow private">{ owner only }</p><p role="status">${ownerMessage}</p><button class="primary" id="reveal-owner">Reveal with owner wallet</button>${ownerPayoutContent()}${ownerActions}</div>`;
 }
 
 function registryStatusContent(verifiedPools: string): string {
@@ -703,7 +781,7 @@ function registryStatusContent(verifiedPools: string): string {
 
 function marketSurfaceContent(market: ReturnType<typeof presentMarket>, selfTest = false): string {
   const mode = selfTest ? 'user-created market' : 'canonical market';
-  return `<section class="market-detail"><p class="eyebrow public">{ ${mode} }</p><h2>${market.condition}</h2><p class="route-lead">Read one market and use its available actions without leaving this page.</p><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><div class="market-disclosures"><section class="market-disclosure"><h3>Verify this market</h3><p>Manifest-bound chain, pool, and release facts are shown above. Independent verification remains the source of invariant conclusions.</p></section><section class="market-disclosure"><h3>Make forecast</h3>${signalPanelContent(market, selfTest)}</section><section class="market-disclosure"><h3>Lifecycle</h3><div class="market-action-panel"><p id="lifecycle-status" role="status">${lifecycleMessage}</p>${lifecycleActionContent()}</div></section><section class="market-disclosure"><h3>Your position</h3>${positionPanelContent()}</section></div></section>`;
+  return `<section class="market-detail"><p class="eyebrow public">{ ${mode} }</p><h2>${market.condition}</h2><p class="route-lead">Read one market and use its available actions without leaving this page.</p><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><div class="market-disclosures"><section class="market-disclosure"><h3>Verify this market</h3><p>Manifest-bound chain, pool, and release facts are shown above. Independent verification remains the source of invariant conclusions.</p></section><section class="market-disclosure"><h3>Make forecast</h3>${signalPanelContent(market, selfTest)}</section><section class="market-disclosure"><h3>Lifecycle</h3><div class="market-action-panel"><p id="lifecycle-status" role="status">${lifecycleMessage}</p>${publicAggregateContent(market.poolAddress)}${lifecycleActionContent()}</div></section><section class="market-disclosure"><h3>Your position</h3>${positionPanelContent()}</section></div></section>`;
 }
 
 function marketDirectoryContent(canonicalMarket: ReturnType<typeof presentMarket>): string {
@@ -799,7 +877,7 @@ function lifecycleContent(market: ReturnType<typeof presentMarket>, selfTest = f
   if (!pool) {
     return `<section class="band petal-band asset-hero"><div class="band-inner"><p class="eyebrow public">{ public lifecycle }</p><h1>No created market is selected.</h1><p class="route-lead">Choose a verified market before reading its lifecycle or submitting a permissionless recovery action.</p><div class="route-actions"><a class="primary" href="/markets">Open Markets</a></div></div></section>`;
   }
-  return `<section class="band blush-band market"><div class="band-inner"><p class="eyebrow public">{ public lifecycle }</p><h1>${selfTest ? 'Created market lifecycle' : 'Market lifecycle'}</h1><p class="route-lead">This route is the public operational record for ${pool}. It separates permissionless lifecycle and recovery controls from market reading and participant setup.</p><div class="facts"><p><b>Pool</b>${pool}</p><p><b>Network</b>${market.chainLabel}</p><p><b>Mode</b>${selfTest ? 'User-created market' : 'Canonical release'}</p></div><section class="timeline"><p id="lifecycle-status" role="status">${lifecycleMessage}</p></section>${lifecycleActionContent()}<div class="route-actions"><a class="primary" href="${signalPath}">Open signal route</a><a class="secondary" href="${positionPath}">Open position</a></div></div></section>`;
+  return `<section class="band blush-band market"><div class="band-inner"><p class="eyebrow public">{ public lifecycle }</p><h1>${selfTest ? 'Created market lifecycle' : 'Market lifecycle'}</h1><p class="route-lead">This route is the public operational record for ${pool}. It separates permissionless lifecycle and recovery controls from market reading and participant setup.</p><div class="facts"><p><b>Pool</b>${pool}</p><p><b>Network</b>${market.chainLabel}</p><p><b>Mode</b>${selfTest ? 'User-created market' : 'Canonical release'}</p></div><section class="timeline"><p id="lifecycle-status" role="status">${lifecycleMessage}</p></section>${publicAggregateContent(pool)}${lifecycleActionContent()}<div class="route-actions"><a class="primary" href="${signalPath}">Open signal route</a><a class="secondary" href="${positionPath}">Open position</a></div></div></section>`;
 }
 
 function selfTestContent(market: ReturnType<typeof presentMarket>): string {
@@ -1183,7 +1261,17 @@ function render(message?: string): void {
       render();
       try {
         const transactionHash = await submitOwnerTerminalAction(provider, pool, action);
-        ownerMessage = `${action} confirmed on Sepolia: ${transactionHash.slice(0, 10)}…. Refresh the owner position before another action.`;
+        if (action === 'claim' || action === 'refund') {
+          reportWalletInteraction(
+            `${action === 'claim' ? 'Claim' : 'Refund'} confirmed. Refreshing the owner QSCC balance…`,
+          );
+          await refreshAssetState();
+          if (ownerPayout && ownerPayout.pool.toLowerCase() === pool.toLowerCase()) {
+            ownerPayout.status = action === 'claim' ? 'claimed' : 'refunded';
+            ownerPayout.currentBalance = assetState?.confidentialBalance;
+          }
+        }
+        ownerMessage = `${action} confirmed on Sepolia: ${transactionHash.slice(0, 10)}…. ${action === 'materializeScore' ? 'Reveal the owner position again to read the materialized score.' : 'The owner balance was refreshed for this session.'}`;
         endWalletInteraction(`${action} was confirmed on Sepolia.`, 'success');
       } catch (error) {
         ownerMessage =
@@ -1640,6 +1728,7 @@ async function revealOwner(): Promise<void> {
   if (!beginWalletInteraction('Requesting owner-only position access for this browser session.'))
     return;
   ownerMessage = 'Requesting owner-only decrypt authorization…';
+  ownerPayout = undefined;
   render();
   try {
     const [position, epoch] = await Promise.all([
@@ -1651,6 +1740,36 @@ async function revealOwner(): Promise<void> {
       ? `Position revealed for this session. Collateral: ${formatTokenAmount(position.stake)} QSCC. Forecast: ${formatProbabilityPercent(position.probabilityBps)}. ${position.scoreAvailable ? `Score: ${formatProbabilityPercent(position.scoreBps)}.` : 'Score has not been materialized.'} ${position.claimed ? 'Claimed.' : position.refunded ? 'Refunded.' : 'No terminal action submitted.'}`
       : 'This wallet has no committed position for the selected public pool.';
     ownerActions = '';
+    const payout = position.committed
+      ? calculateOwnerPayout({
+          state: epoch.state,
+          winner: epoch.winner,
+          stake: position.stake,
+          probabilityBps: position.probabilityBps,
+          publicYes: epoch.publicYes,
+          publicNo: epoch.publicNo,
+        })
+      : undefined;
+    if (payout) {
+      ownerPayout = {
+        pool,
+        kind: 'payout',
+        amount: payout.payout,
+        winningAllocation: payout.winningAllocation,
+        winningAggregate: payout.winningAggregate,
+        totalCollateral: payout.totalCollateral,
+        status: position.claimed ? 'claimed' : 'available',
+        currentBalance: position.claimed ? assetState?.confidentialBalance : undefined,
+      };
+    } else if (position.committed && epoch.state === 5) {
+      ownerPayout = {
+        pool,
+        kind: 'refund',
+        amount: position.stake,
+        status: position.refunded ? 'refunded' : 'available',
+        currentBalance: position.refunded ? assetState?.confidentialBalance : undefined,
+      };
+    }
     if (position.committed && !position.claimed && !position.refunded) {
       if (epoch.state === 4) {
         ownerActions = `<div class="owner-actions"><button class="secondary" data-owner-action="materializeScore">Materialize score</button><button class="secondary" data-owner-action="claim">Claim payout</button></div><p class="muted">Settlement is public. Score materialization and payout are separate explicit owner-wallet requests.</p>`;
@@ -1661,6 +1780,7 @@ async function revealOwner(): Promise<void> {
       }
     }
   } catch {
+    ownerPayout = undefined;
     ownerMessage =
       'Viewer access was denied or unavailable. Verify the connected owner account, then retry safely.';
   }
@@ -1683,6 +1803,8 @@ async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
     'Checking which permissionless actions are eligible in the latest public state…';
   lifecycleActions = [];
   lifecycleActionAvailability = [];
+  publicLifecyclePool = pool;
+  publicLifecycleSnapshot = undefined;
   const provider = selectedWallet;
   if (provider) {
     ownerCommitmentPool = pool.toLowerCase();
@@ -1708,6 +1830,7 @@ async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
       observedAt: epoch.observedAt,
     });
     marketActionable = readiness.actionable;
+    publicLifecycleSnapshot = epoch;
     marketCohortGate = `At least ${epoch.kMin} participants`;
     marketReadinessMessage = `${readiness.label}: ${readiness.explanation}`;
     lifecycleMessage = `${view.label}: ${view.explanation} Participants: ${epoch.participantCount}. ${view.recovery}${epoch.readSource === 'wallet-provider' ? ' Public state was refreshed through your connected wallet after the public RPC was unavailable.' : ''}`;
@@ -1721,6 +1844,7 @@ async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
     marketActionable = false;
     lifecycleActions = [];
     lifecycleActionAvailability = [];
+    publicLifecycleSnapshot = undefined;
     marketReadinessMessage =
       'The latest public market state could not be read. Signal submission stays disabled until a direct Sepolia refresh succeeds.';
     lifecycleMessage =
