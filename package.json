@@ -70,7 +70,7 @@
     "verify:g4:evidence": "tsx ops/scripts/verify-g4-evidence.mts",
     "scan:secrets": "tsx ops/scripts/check-secrets.mts",
     "scan:dependencies": "npm audit --audit-level=critical && tsx ops/scripts/dependency-report.mts",
-    "check:offline": "npm run format:check && npm run lint && npm run compile && npm run test:verifier && npm run test:sdk && npm run test:automation && npm run test:indexer && npm run scan:secrets",
+    "check:offline": "npm run format:check && npm run compile && npm run lint && npm run test:verifier && npm run test:sdk && npm run test:automation && npm run test:indexer && npm run scan:secrets",
     "check:sepolia:read": "npm run doctor && npm run budget:status"
   },
   "devDependencies": {

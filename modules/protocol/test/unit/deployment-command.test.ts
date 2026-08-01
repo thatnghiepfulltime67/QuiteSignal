@@ -36,3 +36,13 @@ test('T-DEP-02-01: deployment commands require an explicit caller-supplied revis
     assert.doesNotMatch(command, /DEP-\d+/);
   }
 });
+
+test('T-REL-04-01: the offline gate generates protocol artifacts before typechecking', () => {
+  const rootScripts = loadManifest(rootManifestPath).scripts;
+  const offlineGate = rootScripts?.['check:offline'];
+
+  assert.equal(typeof offlineGate, 'string');
+  assert.ok(offlineGate!.indexOf('npm run compile') < offlineGate!.indexOf('npm run lint'));
+  assert.match(rootScripts?.compile ?? '', /protocol compile/);
+  assert.match(rootScripts?.compile ?? '', /typecheck/);
+});
