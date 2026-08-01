@@ -66,7 +66,7 @@
     "budget:status": "tsx ops/scripts/budget-status.mts",
     "assess:g4:sepolia": "tsx ops/scripts/assess-g4-candidates.mts",
     "assess:g4:resolution:sepolia": "tsx ops/scripts/assess-g4-resolution-target.mts",
-    "verify:evidence": "tsx ops/scripts/verify-evidence.mts",
+    "verify:evidence": "tsx ops/scripts/verify-evidence.mts G3",
     "verify:g4:evidence": "tsx ops/scripts/verify-g4-evidence.mts",
     "scan:secrets": "tsx ops/scripts/check-secrets.mts",
     "scan:dependencies": "npm audit --audit-level=critical && tsx ops/scripts/dependency-report.mts",
