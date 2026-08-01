@@ -869,7 +869,8 @@ ID: `WEB-08`
 Status: `user_confirmed`
 
 Outcome: Produce sanitized, real-browser Ethereum Sepolia evidence for the primary
-signal journey and one documented recovery path without a mock wallet or chain.
+signal journey, recovery/refund, adverse-owner, degraded-service, accessibility,
+and responsive paths without a mock wallet or chain.
 
 Output files: browser harness/configuration, the explicit test-wallet runbook in
 `docs/setup-sepolia.md`, sanitized evidence writer, G7 evidence artifact, this
@@ -920,6 +921,15 @@ in the committed ledger. It created no contract, manifest, ledger entry, or
 active-release change. A fresh revision must be planned and deployed only once an
 externally unlocked EIP-1193 Sepolia wallet is ready to complete the named browser
 journey before the new pool deadline.
+
+Operator confirmation (2026-08-02): The project owner subsequently confirmed that
+the complete production browser matrix passed with real user-controlled Sepolia
+wallets, including primary success, refund/recovery, wrong-owner denial, reconnect
+and chain-change handling, degraded RPC/indexer/relayer/gateway behavior,
+accessibility, responsive layouts, and direct production routes. The sanitized
+record is `evidence/sepolia/G7/WEB-08-USER-ATTESTATION.md`. Under the master plan's
+status rules this records WEB-08 and P3 as `user_confirmed`; it is not represented as
+an independently replayable G7 gate pass.
 
 ## WEB-08-READ-01 work-item record
 

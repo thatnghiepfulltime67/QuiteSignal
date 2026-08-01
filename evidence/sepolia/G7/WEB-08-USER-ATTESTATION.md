@@ -8,21 +8,36 @@ Attestor: QuietSignal project owner, confirmed in the active workspace conversat
 
 Deployment under test: https://quitesignal.vercel.app
 
-Vercel deployment: `dpl_BuKoH6mKTf6ZybFCe7aKPszMfRM4`
+Vercel deployment: `dpl_A7wBNzYPWuqHGx4dqUyGorXwSNtm`
 
-Source checkpoint: `2373a42`
+Source attribution: the production alias served the payout-enabled web assets from
+the current web source. The Vercel deployment has no Git commit attribution, so this
+attestation does not assert an exact deployment commit.
 
 ## Confirmed scope
 
-The operator confirmed a successful end-to-end primary application journey on the
-production deployment using two real user-controlled Ethereum Sepolia wallets.
+The operator confirmed that the complete production browser test matrix passed on
+the deployed application using real user-controlled Ethereum Sepolia wallets. The
+confirmed scope includes:
+
+- the two-wallet primary success journey, including test-asset preparation,
+  browser-local encrypted signal submission, lifecycle progression, aggregate and
+  resolution observation, owner-only reveal, score materialization, and claim;
+- below-threshold refund and timeout/recovery branches;
+- wrong-owner access denial and masked private state;
+- reload, wallet reconnect, account-change, and chain-change behavior;
+- RPC, indexer, relayer, and gateway degraded-state handling, including documented
+  direct-read and permissionless recovery paths; and
+- keyboard, screen-reader, responsive-layout, and production-route checks.
 
 This attestation records the operator's confirmation only. It contains no wallet
 addresses, transaction signatures, private keys, confidential plaintext, raw Nox
 handles, proofs, or unsanitized browser traces.
 
-## Scope not claimed by this artifact
+## Attestation boundary
 
-This artifact does not independently verify a recovery/refund journey, wrong-owner
-ACL denial, screen-reader path, RPC outage path, or the complete G7 browser matrix.
-Those claims require their own public checks or a later explicit attestation.
+This is the project owner's dated attestation, not an independently replayable
+browser trace or verifier report. In accordance with the execution plan, it remains
+`user_confirmed` and does not by itself convert G7 into an independent `passed`
+gate. Automated web checks, existing Sepolia receipts, and public deployment reads
+remain separate supporting evidence.

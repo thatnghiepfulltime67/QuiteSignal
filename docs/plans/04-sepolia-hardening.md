@@ -16,8 +16,9 @@ deployment, public claims, evidence, dependencies, and recovery procedures agree
 
 Current blocker (2026-08-02): P3/G7 is `user_confirmed`, not passed. Dependency,
 archive-RPC verification, and clean-clone reproduction prechecks are complete, but P4
-cannot close until the remaining WEB-08 browser-recovery scope and a Ready deployment
-of the final source checkpoint are confirmed.
+cannot close until the operator-confirmed browser matrix is supported by the
+independent evidence required for a G7 pass and a Ready deployment of the final
+source checkpoint is confirmed.
 
 ## Work-item register
 

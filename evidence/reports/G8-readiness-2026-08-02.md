@@ -29,9 +29,10 @@ plaintext, encrypted handles, proofs, signatures, RPC credentials, or raw traces
 3. The active web source passed 53 web tests, root typecheck, Solidity compilation,
    14 interface tests, verifier/SDK/automation/indexer suites, production build,
    secret scan, and the G3 live-evidence verifier under the exact Node/npm toolchain.
-4. The project owner explicitly confirmed the real production primary journey with
-   two user-controlled Sepolia wallets. P3 and G7 record that scope as
-   `user_confirmed`.
+4. The project owner explicitly confirmed that the complete production browser
+   matrix passed with real user-controlled Sepolia wallets, including primary,
+   recovery/refund, wrong-owner, reconnect, degraded-service, accessibility,
+   responsive, and route paths. P3 and G7 record that scope as `user_confirmed`.
 5. A fresh local clone of candidate `5896376` passed exact-toolchain `npm ci`, the
    complete offline gate, secret/history scan, 53 web tests, 14 interface tests, and
    the production web build. The offline gate now compiles Hardhat artifacts before
@@ -48,9 +49,9 @@ as release evidence.
 
 ## Remaining release items
 
-1. G7 remains `user_confirmed`, not `passed`. The confirmed scope is the real
-   two-wallet primary success journey; WEB-08's separate browser recovery acceptance
-   is not included in that attestation.
+1. G7 remains `user_confirmed`, not `passed`. The operator attestation now covers the
+   complete browser matrix, but Plan policy requires independently replayable
+   evidence before an attestation can become a formal gate pass.
 2. The final source worktree contains the untracked local file
    `ops/scripts/patch-node.mjs`. It is excluded from Vercel uploads but must be either
    intentionally retained as a reviewed source file or removed by its owner before a
@@ -63,6 +64,5 @@ as release evidence.
 
 G8 is not marked passed. The archive-capable RPC, dependency advisory, and clean-clone
 reproduction blockers are closed; the remaining actions require the local-file
-decision, a Ready deployment of the final checkpoint, and the operator-scoped browser
-completion described above. Competition submission drafts remain under the ignored
-`dorahack/` directory.
+decision, a Ready deployment of the final checkpoint, and independent G7 evidence.
+Competition submission drafts remain under the ignored `dorahack/` directory.
