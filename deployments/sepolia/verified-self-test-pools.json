@@ -98,5 +98,35 @@
       "gate": 6
     },
     "startedAt": "1785499920"
+  },
+  {
+    "poolAddress": "0x42CeA9381C87e2BcF2cab962AD399b5D3E431ca7",
+    "policy": {
+      "comparison": "greater-or-equal",
+      "threshold": "200000000000",
+      "minutes": 7200,
+      "gate": 2
+    },
+    "startedAt": "1785572160"
+  },
+  {
+    "poolAddress": "0x973d9165E6F5f9570684b25a3558DCE25d4EE31C",
+    "policy": {
+      "comparison": "less-than",
+      "threshold": "200000000000",
+      "minutes": 14400,
+      "gate": 2
+    },
+    "startedAt": "1785572196"
+  },
+  {
+    "poolAddress": "0x47765c8bDF8869808925AB3d15743515A0e75390",
+    "policy": {
+      "comparison": "less-than",
+      "threshold": "200000000000",
+      "minutes": 14400,
+      "gate": 2
+    },
+    "startedAt": "1785572340"
   }
 ]

@@ -1,7 +1,7 @@
 {
   "workItemId": "WEB-15-POOLS",
   "chainId": 11155111,
-  "createdAtUtc": "2026-07-31T12:12:26.372Z",
+  "createdAtUtc": "2026-08-01T08:18:56.487Z",
   "pools": [
     {
       "poolAddress": "0x494D4E5F0fBEF86007D9B5572fF46be966eDB0d1",
@@ -132,6 +132,45 @@
       "adapterAddress": "0xd28a78cb5cb6fffd84a6ca9961f173eec2a7581d",
       "adapterTransactionHash": "0xd60bad95b9ab6587360ba793bdd38655904b69fa5b4a547e6be76f3d3d6c8da6",
       "poolTransactionHash": "0x4308cffb52366945ae821c810359fcc254370375bfacd5b224b18b5f8309ffe2"
+    },
+    {
+      "poolAddress": "0x42CeA9381C87e2BcF2cab962AD399b5D3E431ca7",
+      "policy": {
+        "comparison": "greater-or-equal",
+        "threshold": "200000000000",
+        "minutes": 7200,
+        "gate": 2
+      },
+      "startedAt": "1785572160",
+      "adapterAddress": "0x3d9ba64929633edaaaeebb05fc79f7a45e69486b",
+      "adapterTransactionHash": "0xc9587d01d856f775cb218cde2dbba9e57ab9b15670f90ea65d120fe1c5892241",
+      "poolTransactionHash": "0x08c655245174a2bdd88897f06dcd4a71488dd1792f0b35172c60139d300ee479"
+    },
+    {
+      "poolAddress": "0x973d9165E6F5f9570684b25a3558DCE25d4EE31C",
+      "policy": {
+        "comparison": "less-than",
+        "threshold": "200000000000",
+        "minutes": 14400,
+        "gate": 2
+      },
+      "startedAt": "1785572196",
+      "adapterAddress": "0xbd71cab830b539b404fe4da3ba61b9f6ef120ec0",
+      "adapterTransactionHash": "0x1095cb043159f0bf677ae52418924808a631e199605d4bae3c52634a9a2c33a2",
+      "poolTransactionHash": "0x4c89722dde8f1e1303aa7a4016f6822f191d3813a6d95625b3b9daee67b8f3f9"
+    },
+    {
+      "poolAddress": "0x47765c8bDF8869808925AB3d15743515A0e75390",
+      "policy": {
+        "comparison": "less-than",
+        "threshold": "200000000000",
+        "minutes": 14400,
+        "gate": 2
+      },
+      "startedAt": "1785572340",
+      "adapterAddress": "0xbdb6676f2d0ce79c834b1b747120d5c69baea643",
+      "adapterTransactionHash": "0x764b15b872d5903b6c3c749b857611b1f88db9e453754f77bba20faa2c573571",
+      "poolTransactionHash": "0x6a7fb97c8c27400c0c95097c2636cb33ff0f399dd751ea8498f62ba3b2424588"
     }
   ]
 }
