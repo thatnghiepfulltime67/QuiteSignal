@@ -56,3 +56,11 @@ test('T-WEB-16-03: wallet chooser has explicit accessible dismissal behavior', (
   assert.match(source, /event\.key !== 'Escape'/);
   assert.match(source, /target\?\.closest\('\.header-actions'\)/);
 });
+
+test('T-WEB-15-DEPLOY-01: production deep links fall back to the SPA entry point', () => {
+  const config = JSON.parse(
+    readFileSync(resolve(root, '..', '..', 'vercel.json'), 'utf8'),
+  ) as { rewrites?: Array<{ source: string; destination: string }> };
+
+  assert.deepEqual(config.rewrites, [{ source: '/(.*)', destination: '/index.html' }]);
+});
