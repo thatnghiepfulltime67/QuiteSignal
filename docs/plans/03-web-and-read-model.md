@@ -16,30 +16,30 @@ depending on a mock, private database, or privileged backend.
 
 ## Work-item register
 
-| ID                   | Outcome                          | Primary artifacts                                                                                | Required checks                                                       | Intended commit                                     |
-| -------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- | --------------------------------------------------- |
-| WEB-01               | Application/provider shell       | Routes, providers, error boundaries, manifest loader                                             | wrong chain, no wallet, provider discovery/reconnect                  | `feat: add application and wallet shell`            |
-| WEB-02               | Market/privacy onboarding        | Market list/detail, privacy legend, trust/limitation copy                                        | public/private copy audit, empty/loading/error                        | `feat: add market privacy onboarding`               |
-| WEB-03               | Sealed signal flow               | Probability/stake form, encrypt, approve, commit progress                                        | decimal boundaries, reject/retry/replacement/reload                   | `feat: add encrypted signal journey`                |
-| WEB-04               | Public lifecycle view            | Epoch timeline, aggregate, adapter execution, resolution                                         | event/reorg refresh, direct-RPC fallback                              | `feat: add public lifecycle timeline`               |
-| WEB-05               | Owner position/terminal flow     | Owner decrypt, score materialize, claim/refund/recovery                                          | account mismatch, ACL failure, duplicate, pending states              | `feat: add private position and settlement`         |
-| WEB-06               | Verification experience          | Manifest/code hash/invariant/evidence view                                                       | stale manifest, wrong chain, verifier failure                         | `feat: add public verification view`                |
-| WEB-07               | Accessibility/resilience         | Keyboard, screen reader, mobile, offline/RPC/gateway states                                      | automated a11y, console/log scan, responsive matrix                   | `test: harden accessible recovery ux`               |
-| WEB-08               | Real browser lifecycle           | Live browser e2e and sanitized result report                                                     | primary success plus one refund/recovery path                         | `test: prove live web user journey`                 |
-| WEB-03-UI-01         | Poster-system visual refresh     | Revised design system, responsive banded application presentation, visual assertions             | token/source audit, responsive build and interaction checks           | `feat: refresh web visual system`                   |
-| WEB-02-LANDING-01    | Product landing and navigation   | Complete product narrative, task-oriented navigation, route guidance, accessibility improvements | route/source assertions, keyboard/navigation checks, production build | `feat: improve product landing and navigation`      |
-| WEB-02-NAV-02        | Two-level product navigation     | Overview plus a task-described Workspace menu                                                    | source/navigation tests, production build, typecheck, clean diff      | `feat: clarify workspace navigation`                |
-| WEB-02-NAV-03        | Persistent workspace subnav      | Workspace defaults to Market and exposes its functions in a secondary navigation bar             | source/navigation tests, production build, typecheck, clean diff      | `feat: add persistent workspace navigation`         |
-| WEB-08-DEPLOYMENT-02 | Revision command preparation     | Explicit append-only revision invocation and operator runbook                                    | static command policy test, formatter, typecheck, clean diff          | `build: prepare explicit release revision commands` |
-| WEB-08-EVIDENCE-03   | Browser evidence verifier        | Public-only G7 browser evidence schema and independent receipt/manifest validation               | parser mutation tests, verifier tests, typecheck, clean diff          | `test: add browser evidence verifier`               |
-| WEB-09               | Complete participant cockpit     | Live readiness, test-asset faucet/wrap, guarded signal journey, owner/recovery cockpit           | web tests, production build, offline gate, clean diff                 | `feat: complete the participant web journey`        |
-| WEB-10               | Permissionless self-test pool    | Browser-created adapter/pool, session route, public binding checks, full participant handoff     | deployment mutation tests, web tests, production build, offline gate  | `feat: add a permissionless self-test market`       |
-| WEB-11               | Shared self-test entry           | Factory-verified public join route for a second participant                                      | mutation tests, web tests, production build, offline gate             | `feat: add verified self-test participant links`    |
-| WEB-12               | Permissionless lifecycle cockpit | Wallet-gated public lifecycle and recovery actions, including aggregate proof finalization       | state/action tests, web tests, production build, offline gate         | `feat: add permissionless lifecycle actions`        |
-| WEB-13               | Direct task navigation           | Header task routes, isolated lifecycle view, unified controls, landing-integrated guide          | route/source tests, responsive build, offline gate                    | `feat: simplify task navigation`                    |
-| WEB-14               | Persistent task navigation       | Sticky task bar with opaque scroll surface and mobile-safe wrapping                              | source test, responsive build, offline gate                           | `feat: pin task navigation`                         |
-| WEB-15               | Bounded custom self-test         | Preset condition, commit window, and participant gate with manifest-bound share verification     | self-test tests, web tests, build, offline gate                       | `feat: customize self-test markets`                 |
-| WEB-16               | UI resilience and draft recovery | Preserve Create drafts, decouple optional registry reads, and close audited accessibility/deadline gaps | focused web tests, responsive browser inspection, production build, typecheck, `git diff --check` | `fix: harden audited web ux states` |
+| ID                   | Outcome                          | Primary artifacts                                                                                       | Required checks                                                                                   | Intended commit                                     |
+| -------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| WEB-01               | Application/provider shell       | Routes, providers, error boundaries, manifest loader                                                    | wrong chain, no wallet, provider discovery/reconnect                                              | `feat: add application and wallet shell`            |
+| WEB-02               | Market/privacy onboarding        | Market list/detail, privacy legend, trust/limitation copy                                               | public/private copy audit, empty/loading/error                                                    | `feat: add market privacy onboarding`               |
+| WEB-03               | Sealed signal flow               | Probability/stake form, encrypt, approve, commit progress                                               | decimal boundaries, reject/retry/replacement/reload                                               | `feat: add encrypted signal journey`                |
+| WEB-04               | Public lifecycle view            | Epoch timeline, aggregate, adapter execution, resolution                                                | event/reorg refresh, direct-RPC fallback                                                          | `feat: add public lifecycle timeline`               |
+| WEB-05               | Owner position/terminal flow     | Owner decrypt, score materialize, claim/refund/recovery                                                 | account mismatch, ACL failure, duplicate, pending states                                          | `feat: add private position and settlement`         |
+| WEB-06               | Verification experience          | Manifest/code hash/invariant/evidence view                                                              | stale manifest, wrong chain, verifier failure                                                     | `feat: add public verification view`                |
+| WEB-07               | Accessibility/resilience         | Keyboard, screen reader, mobile, offline/RPC/gateway states                                             | automated a11y, console/log scan, responsive matrix                                               | `test: harden accessible recovery ux`               |
+| WEB-08               | Real browser lifecycle           | Live browser e2e and sanitized result report                                                            | primary success plus one refund/recovery path                                                     | `test: prove live web user journey`                 |
+| WEB-03-UI-01         | Poster-system visual refresh     | Revised design system, responsive banded application presentation, visual assertions                    | token/source audit, responsive build and interaction checks                                       | `feat: refresh web visual system`                   |
+| WEB-02-LANDING-01    | Product landing and navigation   | Complete product narrative, task-oriented navigation, route guidance, accessibility improvements        | route/source assertions, keyboard/navigation checks, production build                             | `feat: improve product landing and navigation`      |
+| WEB-02-NAV-02        | Two-level product navigation     | Overview plus a task-described Workspace menu                                                           | source/navigation tests, production build, typecheck, clean diff                                  | `feat: clarify workspace navigation`                |
+| WEB-02-NAV-03        | Persistent workspace subnav      | Workspace defaults to Market and exposes its functions in a secondary navigation bar                    | source/navigation tests, production build, typecheck, clean diff                                  | `feat: add persistent workspace navigation`         |
+| WEB-08-DEPLOYMENT-02 | Revision command preparation     | Explicit append-only revision invocation and operator runbook                                           | static command policy test, formatter, typecheck, clean diff                                      | `build: prepare explicit release revision commands` |
+| WEB-08-EVIDENCE-03   | Browser evidence verifier        | Public-only G7 browser evidence schema and independent receipt/manifest validation                      | parser mutation tests, verifier tests, typecheck, clean diff                                      | `test: add browser evidence verifier`               |
+| WEB-09               | Complete participant cockpit     | Live readiness, test-asset faucet/wrap, guarded signal journey, owner/recovery cockpit                  | web tests, production build, offline gate, clean diff                                             | `feat: complete the participant web journey`        |
+| WEB-10               | Permissionless self-test pool    | Browser-created adapter/pool, session route, public binding checks, full participant handoff            | deployment mutation tests, web tests, production build, offline gate                              | `feat: add a permissionless self-test market`       |
+| WEB-11               | Shared self-test entry           | Factory-verified public join route for a second participant                                             | mutation tests, web tests, production build, offline gate                                         | `feat: add verified self-test participant links`    |
+| WEB-12               | Permissionless lifecycle cockpit | Wallet-gated public lifecycle and recovery actions, including aggregate proof finalization              | state/action tests, web tests, production build, offline gate                                     | `feat: add permissionless lifecycle actions`        |
+| WEB-13               | Direct task navigation           | Header task routes, isolated lifecycle view, unified controls, landing-integrated guide                 | route/source tests, responsive build, offline gate                                                | `feat: simplify task navigation`                    |
+| WEB-14               | Persistent task navigation       | Sticky task bar with opaque scroll surface and mobile-safe wrapping                                     | source test, responsive build, offline gate                                                       | `feat: pin task navigation`                         |
+| WEB-15               | Bounded custom self-test         | Preset condition, commit window, and participant gate with manifest-bound share verification            | self-test tests, web tests, build, offline gate                                                   | `feat: customize self-test markets`                 |
+| WEB-16               | UI resilience and draft recovery | Preserve Create drafts, decouple optional registry reads, and close audited accessibility/deadline gaps | focused web tests, responsive browser inspection, production build, typecheck, `git diff --check` | `fix: harden audited web ux states`                 |
 
 ## WEB-01 work-item record
 
@@ -1536,6 +1536,54 @@ browser records the public pool address and public policy in memory only after i
 factory creation flow verifies immutable configuration. It stores neither the result
 nor a wallet identifier after the current browser memory is reset, and it never infers
 creator ownership from an arbitrary pool address.
+
+Global-directory extension (`WEB-15-GLOBAL-01`): Markets discovers every compatible
+pool emitted by the manifest-bound factory from its recorded Sepolia deployment block
+through the explicitly connected EIP-1193 provider. Every event candidate must be
+revalidated against the factory mapping, pool configuration, collateral wrapper,
+resolution adapter, Chainlink feed, fixed timeout/recovery policy, and supported public
+condition bounds before it is listed. The static verified registry remains a
+wallet-free bootstrap, while the connected-wallet scan makes a newly created pool
+visible to other accounts and browsers without a backend or browser persistence.
+
+Output files: `apps/web/src/self-test.ts`, `apps/web/src/main.ts`, focused self-test and
+resilience tests, this work-item record, the decision log, risk register, and source
+register.
+
+Acceptance criteria: A successful wallet connection and the Markets refresh control
+scan `PoolCreated` logs in bounded block ranges; compatible pools appear once, remain
+selectable in the two-column Market surface, and show their immutable deadline. A log
+or arbitrary address alone is insufficient for listing. A failed scan preserves the
+canonical market and already verified static/session pools, reports a retryable public
+read failure, requests no signature, and moves no funds.
+
+Privacy/custody impact: The wallet provider receives only public chain id, block, log,
+bytecode, and contract-call queries after the user has connected it. No account is
+included in discovery calls; no confidential value, signature, transaction, durable
+store, backend, or indexer is introduced. Pool creation and every lifecycle action keep
+their existing explicit wallet confirmations.
+
+Recovery/rollback: On provider or log-range failure, retain the static verified
+registry and session-created entries and allow an explicit retry. Revert the discovery
+reader and connection/refresh hooks to restore static-only listing without changing any
+on-chain state.
+
+Checks and evidence: focused deterministic discovery tests, `npm run test:web`,
+`npm run typecheck`, `npm run build:web`, and `git diff --check`; sanitized read-only
+Sepolia discovery output when an archive-capable connected provider is available. This
+slice is not G7 evidence.
+
+Intended commit: `feat: discover verified markets globally`.
+
+Completion evidence (2026-08-01): `PoolCreated` discovery now scans bounded Sepolia
+factory ranges through the connected EIP-1193 provider, validates every candidate's
+factory mapping and immutable pool/adapter bindings, deduplicates it into the existing
+Market directory, and preserves existing entries on failure. The Market refresh icon
+and successful wallet connection invoke the same read-only sync. Focused discovery
+tests, all 50 web tests, root typecheck, production web build, targeted Prettier, and
+`git diff --check` passed. The broader offline gate remains environment-blocked at the
+protocol Hardhat compile because this runner has Node 20.12.2 while Hardhat requires
+Node 22.13+; no wallet request or Sepolia write was made by this slice.
 
 Create-surface simplification extension: Replace the user-facing Test Lab name with
 Create, remove the manual address-entry/join control and ten-market batch deployment,

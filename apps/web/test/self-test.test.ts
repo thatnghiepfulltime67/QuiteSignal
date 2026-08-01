@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
+  deriveDiscoveredCommitWindowMinutes,
   deriveSelfTestTiming,
   isSelfTestPoolAddress,
   selfTestPolicyForSelection,
@@ -121,4 +122,33 @@ test('T-WEB-15-01: Portfolio keeps only a connected wallet’s session-created p
   assert.match(main, /function rememberCreatedSelfTestMarket/);
   assert.match(main, /connectedWalletAddress/);
   assert.doesNotMatch(main, /localStorage|sessionStorage/i);
+});
+
+test('T-WEB-15-GLOBAL-01: discovered factory windows stay bounded without claiming an exact creation draft', () => {
+  assert.equal(deriveDiscoveredCommitWindowMinutes(2_500n, 1_020n), 25);
+  assert.equal(deriveDiscoveredCommitWindowMinutes(1_300n, 1_020n), 5);
+  assert.equal(deriveDiscoveredCommitWindowMinutes(1_300n, 1_000n), 5);
+  assert.throws(() => deriveDiscoveredCommitWindowMinutes(1_000n, 1_000n));
+  assert.throws(() => deriveDiscoveredCommitWindowMinutes(2_000_000n, 1_000n));
+});
+
+test('T-WEB-15-GLOBAL-02: connected browsers discover and independently verify factory-created pools', () => {
+  const selfTest = readFileSync(resolve(root, 'src', 'self-test.ts'), 'utf8');
+  const main = readFileSync(resolve(root, 'src', 'main.ts'), 'utf8');
+
+  assert.match(selfTest, /export const poolCreatedEvent/);
+  assert.match(selfTest, /export async function discoverSelfTestMarkets/);
+  assert.match(selfTest, /fromBlock \+= blockSpan/);
+  assert.match(selfTest, /const blockSpan = 2_000n/);
+  assert.match(selfTest, /event: poolCreatedEvent/);
+  assert.match(selfTest, /functionName: 'poolOf'/);
+  assert.match(selfTest, /createViemProtocolPublicReader\(reader\)\.readConfig/);
+  assert.match(selfTest, /readAdapterFacts/);
+  assert.match(selfTest, /adapter\.targetRuntimeCodeHash !== keccak256\(feedCode\)/);
+  assert.match(main, /function loadFactorySelfTestMarkets/);
+  assert.match(main, /factoryDeploymentBlock: BigInt\(manifest\.deployedAtBlock\)/);
+  assert.match(main, /void refreshPublishedSelfTestMarkets\(\);/);
+  assert.match(main, /void refreshMarketDirectory\(\)/);
+  assert.match(main, /Deadline \$\{formatDeadline\(market\.deadline\)\}/);
+  assert.doesNotMatch(`${selfTest}\n${main}`, /localStorage|sessionStorage/i);
 });

@@ -571,3 +571,27 @@ factory, Chainlink feed, collateral wrapper, timeout, recovery rules, Sepolia ne
 confidential inputs, custody, ACLs, and permission model are unchanged. Every
 published long-window pool remains independently verified from immutable on-chain
 state before Market lists it.
+
+## ADR-035 — Wallet-assisted global factory discovery
+
+**Status:** Accepted before WEB-15-GLOBAL-01 implementation
+
+The static verified-pool file cannot make a newly permissionless-created market visible
+to another browser until the repository is republished, and the factory deliberately
+has no mutable enumerable registry. After an explicit Sepolia wallet connection, the
+browser may therefore query the manifest-bound factory's public `PoolCreated` logs from
+the manifest deployment block through that EIP-1193 provider. Reads are split into
+bounded block ranges; they request no signature and submit no transaction.
+
+An event is discovery evidence, not verification evidence. Before Market lists a
+candidate, the browser must re-read the factory mapping, pool runtime/configuration,
+collateral binding, adapter condition, feed/runtime binding, observation boundary, and
+fixed timeout/recovery values. Unsupported or inconsistent candidates are omitted. A
+scan failure preserves the canonical market, static verified entries, and session
+entries and exposes a retry rather than fabricating completeness.
+
+This changes the browser public-read interface, not the protocol, custody, privacy,
+ACL, or lifecycle state machine. The already user-selected wallet provider can observe
+public factory queries and the browser IP under its own transport policy; it receives
+no confidential value or account argument from discovery. No backend, indexer,
+persistent browser registry, or new external dependency is added.

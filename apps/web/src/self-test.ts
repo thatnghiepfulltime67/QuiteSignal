@@ -92,7 +92,22 @@ export function formatSelfTestUsdThreshold(threshold: string): string {
   return fraction ? `${whole}.${fraction}` : whole;
 }
 
+export const poolCreatedEvent = {
+  type: 'event',
+  name: 'PoolCreated',
+  inputs: [
+    { name: 'poolId', type: 'bytes32', indexed: true },
+    { name: 'pool', type: 'address', indexed: true },
+    { name: 'configHash', type: 'bytes32', indexed: true },
+    { name: 'confidentialCollateral', type: 'address', indexed: false },
+    { name: 'resolutionAdapter', type: 'address', indexed: false },
+    { name: 'deadline', type: 'uint64', indexed: false },
+    { name: 'kMin', type: 'uint32', indexed: false },
+  ],
+} as const;
+
 const factoryAbi = [
+  poolCreatedEvent,
   {
     type: 'function',
     name: 'createPool',
@@ -176,6 +191,13 @@ export interface SelfTestMarket {
   policy: SelfTestPolicy;
 }
 
+export interface SelfTestDiscoveryInput extends Omit<
+  SelfTestLaunchInput,
+  'policy' | 'expectedStartTimestamp'
+> {
+  factoryDeploymentBlock: bigint;
+}
+
 export function isSelfTestPoolAddress(value: string): boolean {
   return /^0x[0-9a-f]{40}$/i.test(value);
 }
@@ -199,6 +221,18 @@ export function deriveSelfTestTiming(
   if (deadline <= timestamp || observationNotBefore < deadline)
     throw new Error('The fresh self-test timing could not be derived safely.');
   return { deadline, observationNotBefore };
+}
+
+export function deriveDiscoveredCommitWindowMinutes(
+  deadline: bigint,
+  creationBlockTimestamp: bigint,
+): number {
+  if (deadline <= creationBlockTimestamp)
+    throw new Error('The discovered pool did not have an open commit window when it was created.');
+  const minutes = Number((deadline - creationBlockTimestamp + 59n) / 60n);
+  if (minutes > MAX_SELF_TEST_COMMIT_WINDOW_MINUTES)
+    throw new Error('The discovered pool commit window exceeds the supported bound.');
+  return Math.max(MIN_SELF_TEST_COMMIT_WINDOW_MINUTES, minutes);
 }
 
 function randomSalt(): Hex {
@@ -247,13 +281,19 @@ async function confirmed(
   return receipt;
 }
 
-async function readVerifiedAdapter(
+interface AdapterFacts {
+  target: Address;
+  greaterOrEqual: boolean;
+  threshold: bigint;
+  observationNotBefore: bigint;
+  maximumFeedAge: bigint;
+  targetRuntimeCodeHash: Hex;
+}
+
+async function readAdapterFacts(
   reader: ReturnType<typeof createPublicClient>,
   adapter: Address,
-  feed: Address,
-  feedCode: Hex,
-  policy: SelfTestPolicy,
-): Promise<bigint> {
+): Promise<AdapterFacts> {
   const [
     target,
     greaterOrEqual,
@@ -293,16 +333,34 @@ async function readVerifiedAdapter(
       functionName: 'targetRuntimeCodeHash',
     } as never),
   ]);
+  return {
+    target: target as Address,
+    greaterOrEqual: greaterOrEqual as boolean,
+    threshold: threshold as bigint,
+    observationNotBefore: observationNotBefore as bigint,
+    maximumFeedAge: maximumFeedAge as bigint,
+    targetRuntimeCodeHash: targetRuntimeCodeHash as Hex,
+  };
+}
+
+async function readVerifiedAdapter(
+  reader: ReturnType<typeof createPublicClient>,
+  adapter: Address,
+  feed: Address,
+  feedCode: Hex,
+  policy: SelfTestPolicy,
+): Promise<bigint> {
+  const facts = await readAdapterFacts(reader, adapter);
   if (
-    String(target).toLowerCase() !== feed.toLowerCase() ||
-    greaterOrEqual !== (policy.comparison === 'greater-or-equal') ||
-    threshold !== BigInt(policy.threshold) ||
-    maximumFeedAge !== MAXIMUM_FEED_AGE_SECONDS ||
-    targetRuntimeCodeHash !== keccak256(feedCode)
+    facts.target.toLowerCase() !== feed.toLowerCase() ||
+    facts.greaterOrEqual !== (policy.comparison === 'greater-or-equal') ||
+    facts.threshold !== BigInt(policy.threshold) ||
+    facts.maximumFeedAge !== MAXIMUM_FEED_AGE_SECONDS ||
+    facts.targetRuntimeCodeHash !== keccak256(feedCode)
   ) {
     throw new Error('The adapter configuration does not match the selected self-test condition.');
   }
-  return observationNotBefore as bigint;
+  return facts.observationNotBefore;
 }
 
 export async function loadSelfTestMarket(
@@ -395,6 +453,165 @@ export async function loadSelfTestMarket(
     startedAt: input.expectedStartTimestamp ?? config.deadline - policy.commitWindowSeconds,
     policy,
   };
+}
+
+async function verifyDiscoveredSelfTestMarket(
+  reader: ReturnType<typeof createPublicClient>,
+  input: SelfTestDiscoveryInput,
+  feed: Address,
+  feedCode: Hex,
+  event: {
+    poolId: Hex;
+    pool: Address;
+    confidentialCollateral: Address;
+    resolutionAdapter: Address;
+    deadline: bigint;
+    kMin: number;
+    blockNumber: bigint;
+  },
+): Promise<SelfTestMarket | undefined> {
+  try {
+    if (event.pool.toLowerCase() === input.canonicalPoolAddress.toLowerCase()) return undefined;
+    const factory = publicAddress(input.factoryAddress) as Address;
+    const collateral = publicAddress(input.collateralAddress) as Address;
+    if (event.confidentialCollateral.toLowerCase() !== collateral.toLowerCase()) return undefined;
+    const [poolCode, poolId, factoryPool, config, creationBlock] = await Promise.all([
+      reader.getCode({ address: event.pool }),
+      reader.readContract({
+        address: event.pool,
+        abi: poolIdentityAbi,
+        functionName: 'poolId',
+      } as never) as Promise<Hex>,
+      reader.readContract({
+        address: factory,
+        abi: factoryAbi,
+        functionName: 'poolOf',
+        args: [event.poolId],
+      } as never) as Promise<Address>,
+      createViemProtocolPublicReader(reader).readConfig(publicAddress(event.pool)),
+      reader.getBlock({ blockNumber: event.blockNumber }),
+    ]);
+    if (
+      !poolCode ||
+      poolCode === '0x' ||
+      poolId !== event.poolId ||
+      factoryPool.toLowerCase() !== event.pool.toLowerCase() ||
+      config.confidentialCollateral.toLowerCase() !== collateral.toLowerCase() ||
+      config.resolutionAdapter.toLowerCase() !== event.resolutionAdapter.toLowerCase() ||
+      config.deadline !== event.deadline ||
+      config.kMin !== event.kMin ||
+      config.commitTimeout !== COMMIT_TIMEOUT_SECONDS ||
+      config.aggregateTimeout !== AGGREGATE_TIMEOUT_SECONDS ||
+      config.resolutionGrace !== RESOLUTION_GRACE_SECONDS
+    )
+      return undefined;
+    const adapter = await readAdapterFacts(
+      reader,
+      publicAddress(config.resolutionAdapter) as Address,
+    );
+    if (
+      adapter.target.toLowerCase() !== feed.toLowerCase() ||
+      adapter.maximumFeedAge !== MAXIMUM_FEED_AGE_SECONDS ||
+      adapter.targetRuntimeCodeHash !== keccak256(feedCode) ||
+      adapter.observationNotBefore !== config.deadline + RESOLUTION_GRACE_SECONDS
+    )
+      return undefined;
+    const commitWindowMinutes = deriveDiscoveredCommitWindowMinutes(
+      config.deadline,
+      creationBlock.timestamp,
+    );
+    const policy = selfTestPolicyForSelection(
+      adapter.greaterOrEqual ? 'greater-or-equal' : 'less-than',
+      adapter.threshold.toString(),
+      commitWindowMinutes,
+      config.kMin,
+    );
+    if (!policy) return undefined;
+    return {
+      poolAddress: event.pool,
+      adapterAddress: config.resolutionAdapter,
+      deadline: config.deadline,
+      observationNotBefore: adapter.observationNotBefore,
+      participantGate: config.kMin,
+      startedAt: config.deadline - policy.commitWindowSeconds,
+      policy,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+export async function discoverSelfTestMarkets(
+  provider: BrowserProvider,
+  input: SelfTestDiscoveryInput,
+): Promise<SelfTestMarket[]> {
+  if (input.factoryDeploymentBlock <= 0n)
+    throw new Error('The manifest factory deployment block is unavailable.');
+  const reader = createPublicClient({ chain: sepolia, transport: custom(provider) });
+  if ((await reader.getChainId()) !== sepolia.id)
+    throw new Error('Global market discovery requires Ethereum Sepolia.');
+  const factory = publicAddress(input.factoryAddress) as Address;
+  const collateral = publicAddress(input.collateralAddress) as Address;
+  const feed = publicAddress(input.feedAddress) as Address;
+  const [factoryCode, collateralCode, feedCode, latestBlock] = await Promise.all([
+    reader.getCode({ address: factory }),
+    reader.getCode({ address: collateral }),
+    reader.getCode({ address: feed }),
+    reader.getBlockNumber(),
+  ]);
+  if (
+    !factoryCode ||
+    factoryCode === '0x' ||
+    keccak256(factoryCode) !== input.factoryRuntimeCodeHash
+  )
+    throw new Error('The canonical factory runtime does not match the validated manifest.');
+  if (!collateralCode || collateralCode === '0x' || !feedCode || feedCode === '0x')
+    throw new Error('The manifest-bound collateral wrapper or price feed has no Sepolia runtime.');
+  if (latestBlock < input.factoryDeploymentBlock) return [];
+
+  const discovered: SelfTestMarket[] = [];
+  const blockSpan = 2_000n;
+  for (
+    let fromBlock = input.factoryDeploymentBlock;
+    fromBlock <= latestBlock;
+    fromBlock += blockSpan
+  ) {
+    const toBlock =
+      fromBlock + blockSpan - 1n < latestBlock ? fromBlock + blockSpan - 1n : latestBlock;
+    const logs = await reader.getLogs({
+      address: factory,
+      event: poolCreatedEvent,
+      fromBlock,
+      toBlock,
+    });
+    const verified = await Promise.all(
+      logs.map(async (log) => {
+        const { poolId, pool, confidentialCollateral, resolutionAdapter, deadline, kMin } =
+          log.args;
+        if (
+          !poolId ||
+          !pool ||
+          !confidentialCollateral ||
+          !resolutionAdapter ||
+          deadline === undefined ||
+          kMin === undefined ||
+          log.blockNumber === null
+        )
+          return undefined;
+        return verifyDiscoveredSelfTestMarket(reader, input, feed, feedCode, {
+          poolId,
+          pool,
+          confidentialCollateral,
+          resolutionAdapter,
+          deadline,
+          kMin,
+          blockNumber: log.blockNumber,
+        });
+      }),
+    );
+    discovered.push(...verified.filter((market): market is SelfTestMarket => Boolean(market)));
+  }
+  return discovered;
 }
 
 export async function launchSelfTestMarket(

@@ -112,6 +112,14 @@ R-24 record the availability and IP/public-query metadata limitation. The browse
 must show a retryable degraded state on transport failure and must not replace a
 failed read with a fixture or static lifecycle claim.
 
+After an explicit wallet connection, global market discovery also uses that existing
+EIP-1193 provider to read only the manifest-bound factory's public `PoolCreated` logs,
+blocks, bytecode, mappings, and immutable configurations. This avoids adding a hosted
+indexer or another runtime endpoint. Provider log retention and range limits are
+operational assumptions, so the browser chunks requests, revalidates every candidate,
+preserves the static verified registry on failure, and never claims a failed scan is
+complete. ADR-035 and R-27 define this boundary.
+
 ## FND-02 verified arithmetic feasibility
 
 The isolated arithmetic spike passed direct Ethereum Sepolia verification for the

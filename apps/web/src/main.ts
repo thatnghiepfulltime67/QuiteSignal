@@ -39,6 +39,7 @@ import type {
   PermissionlessLifecycleAction,
 } from './lifecycle-actions.js';
 import {
+  discoverSelfTestMarkets,
   isSelfTestPoolAddress,
   launchSelfTestMarket,
   loadSelfTestMarket,
@@ -108,7 +109,7 @@ let selfTestMessage =
   'Create a fresh verified market only when you are ready to approve two Sepolia deployment transactions from your own wallet.';
 type RegistryState = 'loading' | 'ready' | 'unavailable';
 let selfTestRegistryState: RegistryState = 'loading';
-let selfTestRegistryMessage = 'Loading verified self-test pools…';
+let selfTestRegistryMessage = 'Loading verified markets…';
 let registryLoadBusy = false;
 let releaseLoadBusy = false;
 type InteractionToastTone = 'pending' | 'success' | 'error';
@@ -260,9 +261,21 @@ async function loadPublishedSelfTestMarkets(): Promise<void> {
   );
   const verified = loaded.filter((market): market is SelfTestMarket => Boolean(market));
   if (records.length > 0 && verified.length === 0)
-    throw new Error('No published self-test pool could be verified from Sepolia.');
+    throw new Error('No published pool could be verified from Sepolia.');
   for (const market of verified) rememberSelfTestMarket(market, false);
-  selectedMarketKey = 'canonical';
+}
+
+async function loadFactorySelfTestMarkets(provider: Eip1193Provider): Promise<void> {
+  if (!manifest) throw new Error('The canonical manifest is unavailable.');
+  const verified = await discoverSelfTestMarkets(provider, {
+    canonicalPoolAddress: manifest.poolAddress,
+    factoryAddress: manifest.factoryAddress,
+    factoryRuntimeCodeHash: manifest.factoryRuntimeCodeHash,
+    collateralAddress: manifest.collateralAddress,
+    feedAddress: manifest.feedAddress,
+    factoryDeploymentBlock: BigInt(manifest.deployedAtBlock),
+  });
+  for (const market of verified) rememberSelfTestMarket(market, false);
 }
 
 async function loadManifest(): Promise<void> {
@@ -280,22 +293,37 @@ async function refreshPublishedSelfTestMarkets(): Promise<void> {
   if (registryLoadBusy) return;
   registryLoadBusy = true;
   selfTestRegistryState = 'loading';
-  selfTestRegistryMessage = 'Loading verified self-test pools…';
+  selfTestRegistryMessage = selectedWallet
+    ? 'Syncing verified markets from the Sepolia factory…'
+    : 'Loading published verified markets…';
   render();
+  const [publishedResult, factoryResult] = await Promise.allSettled([
+    loadPublishedSelfTestMarkets(),
+    selectedWallet ? loadFactorySelfTestMarkets(selectedWallet) : Promise.resolve(),
+  ]);
   try {
-    await loadPublishedSelfTestMarkets();
+    if (selectedWallet && factoryResult.status === 'rejected') throw factoryResult.reason;
+    if (!selectedWallet && publishedResult.status === 'rejected') throw publishedResult.reason;
     selfTestRegistryState = 'ready';
-    selfTestRegistryMessage = 'Verified self-test pools are ready.';
+    selfTestRegistryMessage = selectedWallet
+      ? 'Factory-created markets are synced from Sepolia.'
+      : 'Published verified markets are ready.';
   } catch (error) {
     selfTestRegistryState = 'unavailable';
     selfTestRegistryMessage =
       error instanceof Error
-        ? `${error.message} The canonical market remains available; retry when ready.`
-        : 'Verified self-test pools could not be loaded. The canonical market remains available; retry when ready.';
+        ? `${error.message} Existing verified markets remain available; retry when ready.`
+        : 'Global market discovery could not be completed. Existing verified markets remain available; retry when ready.';
   } finally {
     registryLoadBusy = false;
     render();
   }
+}
+
+async function refreshMarketDirectory(): Promise<void> {
+  const pool = routedPoolAddress();
+  await refreshPublishedSelfTestMarkets();
+  await refreshLifecycle(pool);
 }
 
 async function startManifestLoad(): Promise<void> {
@@ -617,13 +645,16 @@ function positionPanelContent(): string {
 
 function registryStatusContent(verifiedPools: string): string {
   if (selfTestRegistryState === 'loading')
-    return `<p class="muted" role="status">${escapeHtml(selfTestRegistryMessage)}</p>`;
+    return `${verifiedPools}<p class="muted" role="status">${escapeHtml(selfTestRegistryMessage)}</p>`;
   if (selfTestRegistryState === 'unavailable')
-    return `<div class="registry-notice" role="alert"><p>${escapeHtml(selfTestRegistryMessage)}</p><button class="text-button" id="retry-self-test-registry" type="button"${registryLoadBusy ? ' disabled' : ''}>Retry verified pools</button></div>`;
-  return (
-    verifiedPools ||
-    '<p class="muted">No additional verified pools are published yet. Create one from Create and it will appear here after Sepolia verification.</p>'
-  );
+    return `${verifiedPools}<div class="registry-notice" role="alert"><p>${escapeHtml(selfTestRegistryMessage)}</p><button class="text-button" id="retry-self-test-registry" type="button"${registryLoadBusy ? ' disabled' : ''}>Retry market sync</button></div>`;
+  if (verifiedPools)
+    return `${verifiedPools}${
+      selectedWallet
+        ? ''
+        : '<p class="muted">Connect a Sepolia wallet to sync every factory-created market.</p>'
+    }`;
+  return '<p class="muted">No additional verified pools were found. Connect a Sepolia wallet to sync the factory or create a market.</p>';
 }
 
 function marketSurfaceContent(market: ReturnType<typeof presentMarket>, selfTest = false): string {
@@ -648,7 +679,7 @@ function marketDirectoryContent(canonicalMarket: ReturnType<typeof presentMarket
   const verifiedPools = selfTestMarkets
     .map(
       (market) =>
-        `<button class="market-list-item" type="button" data-select-market="self-test:${market.poolAddress}"${selectedMarketKey === `self-test:${market.poolAddress}` ? ' aria-pressed="true"' : ''}><span class="eyebrow compute">{ verified pool }</span><strong>${market.policy.conditionLabel}</strong><small>${formatCommitWindow(market.policy.commitWindowMinutes)} · ${market.participantGate}-participant gate</small></button>`,
+        `<button class="market-list-item" type="button" data-select-market="self-test:${market.poolAddress}"${selectedMarketKey === `self-test:${market.poolAddress}` ? ' aria-pressed="true"' : ''}><span class="eyebrow compute">{ verified pool }</span><strong>${market.policy.conditionLabel}</strong><small>Deadline ${formatDeadline(market.deadline)} · ${market.participantGate}-participant gate</small></button>`,
     )
     .join('');
   const detail = marketSurfaceContent(selectedMarket, Boolean(selectedSelfTest));
@@ -1037,7 +1068,7 @@ function render(message?: string): void {
     ?.addEventListener('click', () => void refreshLifecycle());
   document
     .querySelector<HTMLButtonElement>('#refresh-selected-market')
-    ?.addEventListener('click', () => void refreshLifecycle());
+    ?.addEventListener('click', () => void refreshMarketDirectory());
   document
     .querySelector<HTMLButtonElement>('#refresh-self-test-lifecycle')
     ?.addEventListener('click', () => void refreshLifecycle(selfTestMarket?.poolAddress));
@@ -1667,6 +1698,7 @@ async function connectWallet(provider?: Eip1193Provider): Promise<void> {
     endWalletInteraction('Wallet connection to Sepolia was confirmed.', 'success');
     void refreshHeaderBalances();
     void refreshLifecycle();
+    void refreshPublishedSelfTestMarkets();
   } catch {
     walletState = 'Connection declined';
     endWalletInteraction(
