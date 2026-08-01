@@ -1,6 +1,6 @@
 # Gate register and kill conditions
 
-Gate status values: `not_run`, `running`, `passed`, `failed`, `waived`.
+Gate status values: `not_run`, `running`, `user_confirmed`, `passed`, `failed`, `waived`.
 
 A gate may be marked `passed` only when its required artifacts, checks, and sanitized
 evidence are committed. `waived` requires an ADR, risk acceptance, and explicit user
@@ -151,6 +151,13 @@ Kill conditions:
 - The lifecycle requires manually editing chain state or substituting fixture data.
 
 ## G7 — Real application journey
+
+An owner-operated web-live run may be recorded as `user_confirmed` when the operator
+attests to the real production deployment, wallet count, and executed journey in a
+sanitized artifact. This lightweight checkpoint does not claim independent evidence,
+recovery, ACL, or accessibility coverage that the attestation does not explicitly
+name; those claims remain pending until their corresponding public checks are
+recorded.
 
 Pass criteria:
 

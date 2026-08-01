@@ -1,6 +1,12 @@
 # QuietSignal execution plan
 
-Status values: `not_started`, `in_progress`, `awaiting_chain`, `blocked`, `complete`.
+Status values: `not_started`, `in_progress`, `awaiting_chain`, `blocked`,
+`user_confirmed`, `complete`.
+
+`user_confirmed` records a dated operator attestation for a real user-controlled
+run. It is an evidence checkpoint, not an independent gate pass; it must state its
+scope and limitations and cannot support broader release claims than the attestation
+actually covers.
 
 `awaiting_chain` records a fully staged Sepolia-only action whose next valid action
 is gated by an immutable on-chain time or finality condition. It never means passed,
