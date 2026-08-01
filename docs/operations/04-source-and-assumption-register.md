@@ -98,8 +98,12 @@ The Nox protocol SDK maps Ethereum Sepolia (`11155111`) to
 rechecks the chain ID and confirms that this address has runtime code without
 printing RPC configuration values.
 
-The baseline contains no critical npm advisory. Its current high-severity Hardhat
-transitive advisory is tracked as R-16 and must be re-evaluated before G8.
+The original feasibility baseline contained no critical npm advisory and retained a
+high-severity Hardhat transitive advisory as R-16. Release hardening upgraded both
+workspace declarations to Hardhat `3.12.0` on 2026-08-02. That release uses
+`adm-zip@0.6.0`; exact-toolchain clean install, compile, interface tests, license
+inventory, and `npm audit` passed with zero vulnerabilities. Historical evidence keeps
+the version used when it was produced and is not rewritten.
 
 ## Browser public-read transport
 

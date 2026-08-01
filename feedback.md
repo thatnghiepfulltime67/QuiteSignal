@@ -33,7 +33,7 @@ confidential plaintext, raw encrypted handles, proofs, calldata, or RPC secrets.
 | Node.js                                 | `24.18.0`                                          |
 | npm                                     | `11.16.0`                                          |
 | Solidity                                | `0.8.35`, EVM target `cancun`, IR pipeline enabled |
-| Hardhat                                 | `3.11.1`                                           |
+| Hardhat                                 | `3.11.1` during findings; `3.12.0` release lock    |
 | `@iexec-nox/nox-protocol-contracts`     | `0.2.4`                                            |
 | `@iexec-nox/nox-confidential-contracts` | `0.2.2`                                            |
 | `@iexec-nox/handle`                     | `0.1.0-beta.13`                                    |
@@ -41,7 +41,9 @@ confidential plaintext, raw encrypted handles, proofs, calldata, or RPC secrets.
 
 The versions are pinned in `package.json` and `package-lock.json`. The repository
 also checks the Sepolia chain ID, the live Nox deployment mapping, and runtime
-bytecode before a named write flow can run.
+bytecode before a named write flow can run. Hardhat `3.12.0` replaced `3.11.1` during
+release hardening to resolve its vulnerable `adm-zip` dependency; the Nox findings
+below retain the versions active when each case was reproduced.
 
 ## How QuietSignal uses Nox
 
