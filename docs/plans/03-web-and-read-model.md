@@ -1,6 +1,6 @@
 # P3 — Web product and public verification experience
 
-Status: `in_progress`
+Status: `user_confirmed`
 
 ## Objective
 
@@ -519,7 +519,7 @@ diff --check` pass. This remains read-only evidence, not G7 wallet evidence.
 
 ID: `WEB-03`
 
-Status: `blocked`
+Status: `complete`
 
 Outcome: Provide the browser-local sealed signal journey using the production Nox
 SDK and the protocol's real two-step commit/collateral callback lifecycle.
@@ -670,7 +670,7 @@ layout legible. This does not constitute browser lifecycle evidence or a G7 clai
 
 ID: `WEB-04`
 
-Status: `blocked`
+Status: `complete`
 
 Outcome: Render a chain-derived public epoch timeline with clear aggregate,
 verification, settlement, pending, and recovery states.
@@ -710,7 +710,7 @@ RPC reads with static state or introduce indexer authority.
 
 ID: `WEB-05`
 
-Status: `blocked`
+Status: `complete`
 
 Outcome: Provide the connected-owner position and terminal-action experience without
 exposing owner values, weakening ACL, or confusing claims with recovery refunds.
@@ -794,7 +794,7 @@ and no G7 claim is made.
 
 ID: `WEB-06`
 
-Status: `blocked`
+Status: `complete`
 
 Outcome: Provide a public verification route that exposes canonical manifest facts,
 runtime/evidence status, and clear failure handling without treating the web app as
@@ -830,7 +830,7 @@ evidence with a fixture or claim an unverified manifest is valid.
 
 ID: `WEB-07`
 
-Status: `blocked`
+Status: `complete`
 
 Outcome: Harden the primary browser experience for keyboard, screen-reader, mobile,
 reduced-motion, RPC/wallet/Nox failure, and confidential-data handling.
@@ -866,7 +866,7 @@ checks or use an inaccessible fallback state.
 
 ID: `WEB-08`
 
-Status: `blocked`
+Status: `user_confirmed`
 
 Outcome: Produce sanitized, real-browser Ethereum Sepolia evidence for the primary
 signal journey and one documented recovery path without a mock wallet or chain.
@@ -909,7 +909,7 @@ read-only run is complete, but no user-approved externally unlocked EIP-1193 tes
 wallet is available for the required signal and recovery writes. Importing the
 ignored deployment key into a browser, injecting a signing shim, or relaying wallet
 requests through a local service would violate WEB-08's privacy/custody boundary.
-No transaction was sent and no G7 claim is made. R-25 records this release blocker;
+No transaction was sent and no G7 claim was made by that deployment-only slice;
 the next permitted action is the documented external-wallet run against a fresh open
 release when such approval is available.
 
@@ -1105,11 +1105,11 @@ provider declaration, duplicate receipt, and owner-only refund selector. The
 read-only verifier never writes to Sepolia or prints transaction input. This is
 evidence infrastructure, not a browser run or G7 claim.
 
-Status normalization: WEB-03 through WEB-07 retain their implemented source and
-offline completion evidence, but their remaining live-browser acceptance criteria
-are blocked by WEB-08, G7, and R-25. WEB-08 is blocked directly by R-25. They are not
-active engineering slices while WEB-09 completes the dependency-independent local
-participant experience.
+Status normalization (2026-08-02): WEB-03 through WEB-07 are complete after their
+implemented source checks, Sepolia public reads, responsive checks, and the project
+owner's explicit confirmation of the production two-wallet primary journey. WEB-08
+is `user_confirmed`: the operator-controlled success journey is confirmed, while its
+separately defined recovery-browser acceptance remains outside the attested scope.
 
 ## WEB-09 work-item record
 
@@ -1118,8 +1118,8 @@ ID: `WEB-09`
 Status: `complete`
 
 Prerequisite gates: G6 passed. Existing manifest, browser wallet, confidential-input,
-public-reader, and owner-action boundaries are available. G7 remains blocked by R-25
-and is not claimed by this slice.
+public-reader, and owner-action boundaries are available. G7 is not claimed by this
+implementation slice.
 
 Outcome: Deliver one coherent local participant experience that detects whether the
 canonical Sepolia market is actionable, guides a user-controlled wallet through
@@ -1193,9 +1193,8 @@ Node `v24.18.0` and npm `11.16.0`, `npm run test:web`, `npm run build:web`, and
 compile, verifier/SDK/automation/indexer tests, and secret scanning. A production
 local build was inspected against the DEP-02 Sepolia manifest at desktop and 390px
 width, with the chain-derived elapsed-deadline path safely disabling signal
-submission. G7 remains unclaimed and blocked by R-25: an externally unlocked wallet
-and a fresh, operator-published open release are still required for real browser
-signal/recovery receipts.
+submission. This implementation slice did not itself claim G7; the later scoped
+operator attestation is recorded separately.
 
 ## WEB-10 work-item record
 
@@ -1204,8 +1203,7 @@ ID: `WEB-10`
 Status: `complete`
 
 Prerequisite gates: G6 passed. WEB-09 provides the manifest-bound wallet, test-asset,
-signal, owner, lifecycle, and recovery surfaces. G7 remains blocked for the canonical
-release under R-25 and is not claimed by this item.
+signal, owner, lifecycle, and recovery surfaces. G7 is not claimed by this item.
 
 Outcome: Let a user-controlled Sepolia wallet create a fresh, immutable test market
 through the verified canonical factory, so the local application can exercise a real
@@ -1279,8 +1277,7 @@ ID: `WEB-11`
 
 Status: `complete`
 
-Prerequisite gates: WEB-10 is complete. G7 remains blocked for the canonical
-release under R-25 and is not claimed by this item.
+Prerequisite gates: WEB-10 is complete. G7 is not claimed by this item.
 
 Outcome: Let a second user independently open a public self-test-pool link and use
 the existing real participant journey, so the k=2 cohort is possible across browser
@@ -1436,7 +1433,7 @@ flow; do not substitute JavaScript scroll tracking or a persistent browser store
 
 ID: `WEB-15`
 
-Status: `in_progress`
+Status: `complete`
 
 Prerequisite gates: WEB-10 through WEB-14 are complete. This user-created test-market
 surface is separate from the canonical release and cannot claim G7.
@@ -1872,8 +1869,7 @@ ID: `WEB-12`
 
 Status: `complete`
 
-Prerequisite gates: WEB-09 through WEB-11 are complete. G7 remains blocked for the
-canonical release under R-25 and is not claimed by this item.
+Prerequisite gates: WEB-09 through WEB-11 are complete. G7 is not claimed by this item.
 
 Outcome: Expose every contract-defined permissionless lifecycle action in the
 browser, so any connected Sepolia wallet can advance a valid public epoch or invoke
