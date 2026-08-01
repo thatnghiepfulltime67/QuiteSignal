@@ -43,6 +43,7 @@ test('T-WEB-04-03: public lifecycle reads prefer the documented Sepolia transpor
   assert.match(wallet, /deadline: epoch\.deadline/);
   assert.match(wallet, /observedAt: block\.timestamp/);
   assert.match(main, /void refreshLifecycle\(\);/);
+  assert.match(main, /addEventListener\('click', \(\) => void refreshLifecycle\(\)\)/);
   assert.match(main, /readPublicLifecycleSnapshot\(pool, activeWallet\(\)\)/);
   assert.match(main, /refreshed through your connected wallet/);
   assert.match(main, /Direct public read is degraded/);

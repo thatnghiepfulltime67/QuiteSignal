@@ -849,7 +849,7 @@ function render(message?: string): void {
   });
   document
     .querySelector<HTMLButtonElement>('#refresh-lifecycle')
-    ?.addEventListener('click', refreshLifecycle);
+    ?.addEventListener('click', () => void refreshLifecycle());
   document
     .querySelector<HTMLButtonElement>('#refresh-self-test-lifecycle')
     ?.addEventListener('click', () => void refreshLifecycle(selfTestMarket?.poolAddress));
