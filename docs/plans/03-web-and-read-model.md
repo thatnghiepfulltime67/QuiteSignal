@@ -1567,6 +1567,37 @@ discovery.
 
 Intended commit: `refactor: simplify market creation surface`.
 
+Public-read resilience extension: Lifecycle reads continue to prefer the documented,
+wallet-free Sepolia public RPC. When that read fails and the user has already connected
+a Sepolia wallet, the browser retries the same public contract/block reads through that
+wallet's EIP-1193 provider. The fallback asks for no signature, sends no transaction,
+and is labelled in the lifecycle status. Lifecycle writes use the same fallback only
+to revalidate public eligibility before their already-explicit wallet transaction.
+
+Output files: `apps/web/src/wallet.ts`, `apps/web/src/main.ts`,
+`apps/web/test/lifecycle.test.ts`, and this work-item record.
+
+Acceptance criteria: A transient public-RPC failure does not degrade a connected
+user's lifecycle view if their Sepolia wallet can serve the identical public reads.
+Without either source, the existing fail-closed state remains. No fallback exposes
+owner values, persists data, or changes the transaction/receipt requirements.
+
+Privacy/custody and recovery impact: None. Both sources expose only public chain data;
+the connected wallet remains user-controlled and receives no signing request from a
+read fallback. Contract state and recovery eligibility are unchanged.
+
+Commands/checks: `npm run typecheck`, `npm run test:web`, `npm run build:web`, direct
+Sepolia lifecycle reads for the affected pool, and `git diff --check`.
+
+Evidence path: source/test output plus a read-only Sepolia snapshot. No write is
+required for this reliability change.
+
+Rollback/failure action: Remove the provider fallback and retain the original
+fail-closed public-RPC behavior; do not fall back to an application server, indexer,
+or private data source.
+
+Intended commit: `fix: recover lifecycle reads through wallet provider`.
+
 ## WEB-12 work-item record
 
 ID: `WEB-12`

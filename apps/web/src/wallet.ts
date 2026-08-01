@@ -199,6 +199,7 @@ export interface PublicTestAssetState {
 export type OwnerTerminalAction = 'materializeScore' | 'claim' | 'refund';
 
 export interface PublicLifecycleSnapshot {
+  readSource: 'public-rpc' | 'wallet-provider';
   state: number;
   deadline: bigint;
   observedAt: bigint;
@@ -445,6 +446,7 @@ export async function wrapTestAsset(
 async function readPublicLifecycleSnapshotWithReader(
   client: ReturnType<typeof createPublicClient>,
   pool: string,
+  readSource: PublicLifecycleSnapshot['readSource'],
 ): Promise<PublicLifecycleSnapshot> {
   const address = publicAddress(pool) as Address;
   const publicReader = createViemProtocolPublicReader(client);
@@ -490,6 +492,7 @@ async function readPublicLifecycleSnapshotWithReader(
     observationNotBefore,
   });
   return {
+    readSource,
     state: epoch.state,
     deadline: epoch.deadline,
     observedAt: block.timestamp,
@@ -503,16 +506,41 @@ async function readPublicLifecycleSnapshotWithReader(
   };
 }
 
-export async function readPublicLifecycleSnapshot(pool: string): Promise<PublicLifecycleSnapshot> {
-  const client = createPublicClient({
+function publicRpcClient(): ReturnType<typeof createPublicClient> {
+  return createPublicClient({
     chain: sepolia,
     transport: http(SEPOLIA_PUBLIC_READ_RPC, { retryCount: 0, timeout: 10_000 }),
   });
-  return readPublicLifecycleSnapshotWithReader(client, pool);
 }
 
-export async function readPublicEpoch(pool: string): Promise<PublicLifecycleSnapshot> {
-  return readPublicLifecycleSnapshot(pool);
+function walletPublicClient(provider: BrowserProvider): ReturnType<typeof createPublicClient> {
+  return createPublicClient({
+    chain: sepolia,
+    transport: custom(provider),
+  });
+}
+
+export async function readPublicLifecycleSnapshot(
+  pool: string,
+  fallbackProvider?: BrowserProvider,
+): Promise<PublicLifecycleSnapshot> {
+  try {
+    return await readPublicLifecycleSnapshotWithReader(publicRpcClient(), pool, 'public-rpc');
+  } catch (publicReadError) {
+    if (!fallbackProvider) throw publicReadError;
+    return readPublicLifecycleSnapshotWithReader(
+      walletPublicClient(fallbackProvider),
+      pool,
+      'wallet-provider',
+    );
+  }
+}
+
+export async function readPublicEpoch(
+  pool: string,
+  fallbackProvider?: BrowserProvider,
+): Promise<PublicLifecycleSnapshot> {
+  return readPublicLifecycleSnapshot(pool, fallbackProvider);
 }
 
 const lifecycleFunctionNames: Record<
@@ -546,16 +574,19 @@ export async function submitPermissionlessLifecycleAction(
   reportProgress: (message: string) => void,
 ): Promise<string> {
   const { account, wallet } = await connectedSepoliaWallet(provider);
-  const reader = createPublicClient({
-    chain: sepolia,
-    transport: http(SEPOLIA_PUBLIC_READ_RPC, { retryCount: 0, timeout: 10_000 }),
-  });
+  let reader = publicRpcClient();
   const poolAddress = publicAddress(pool) as Address;
   try {
     reportProgress(
       'Revalidating the latest public lifecycle before requesting a wallet transaction.',
     );
-    const snapshot = await readPublicLifecycleSnapshotWithReader(reader, pool);
+    let snapshot: PublicLifecycleSnapshot;
+    try {
+      snapshot = await readPublicLifecycleSnapshotWithReader(reader, pool, 'public-rpc');
+    } catch {
+      reader = walletPublicClient(provider);
+      snapshot = await readPublicLifecycleSnapshotWithReader(reader, pool, 'wallet-provider');
+    }
     if (!lifecycleActionIsEligible(snapshot, action))
       throw new Error('This permissionless action is not eligible in the latest public lifecycle.');
     let data: Hex;

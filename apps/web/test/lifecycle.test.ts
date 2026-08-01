@@ -28,7 +28,7 @@ test('T-WEB-04-DEADLINE-01: elapsed OPEN deadline fails closed before a close tr
   assert.match(elapsed.recovery, /Do not submit a new signal/i);
 });
 
-test('T-WEB-04-03: public lifecycle reads use the documented wallet-free Sepolia transport', () => {
+test('T-WEB-04-03: public lifecycle reads prefer the documented Sepolia transport and recover through the connected wallet', () => {
   const wallet = readFileSync(resolve(root, 'src', 'wallet.ts'), 'utf8');
   const main = readFileSync(resolve(root, 'src', 'main.ts'), 'utf8');
 
@@ -37,10 +37,14 @@ test('T-WEB-04-03: public lifecycle reads use the documented wallet-free Sepolia
     /SEPOLIA_PUBLIC_READ_RPC = 'https:\/\/ethereum-sepolia-rpc\.publicnode\.com'/,
   );
   assert.match(wallet, /transport: http\(SEPOLIA_PUBLIC_READ_RPC/);
+  assert.match(wallet, /transport: custom\(provider\)/);
+  assert.match(wallet, /walletPublicClient\(fallbackProvider\),\s*pool,\s*'wallet-provider'/);
   assert.match(wallet, /client\.getBlock\(\)/);
   assert.match(wallet, /deadline: epoch\.deadline/);
   assert.match(wallet, /observedAt: block\.timestamp/);
   assert.match(main, /void refreshLifecycle\(\);/);
+  assert.match(main, /readPublicLifecycleSnapshot\(pool, activeWallet\(\)\)/);
+  assert.match(main, /refreshed through your connected wallet/);
   assert.match(main, /Direct public read is degraded/);
 });
 

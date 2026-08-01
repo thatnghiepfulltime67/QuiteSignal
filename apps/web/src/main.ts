@@ -1345,7 +1345,7 @@ async function revealOwner(): Promise<void> {
   try {
     const [position, epoch] = await Promise.all([
       decryptOwnerPosition(provider, pool),
-      readPublicEpoch(pool),
+      readPublicEpoch(pool, provider),
     ]);
     ownerMessage = position.committed
       ? `Position revealed for this session. Collateral: ${formatTokenAmount(position.stake)} QSCC. Forecast: ${position.probabilityBps.toString()} bps. ${position.scoreAvailable ? `Score: ${position.scoreBps.toString()} bps.` : 'Score has not been materialized.'} ${position.claimed ? 'Claimed.' : position.refunded ? 'Refunded.' : 'No terminal action submitted.'}`
@@ -1385,7 +1385,7 @@ async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
   lifecycleActionAvailability = [];
   render();
   try {
-    const epoch = await readPublicLifecycleSnapshot(pool);
+    const epoch = await readPublicLifecycleSnapshot(pool, activeWallet());
     const view = presentLifecycle(epoch.state, {
       deadline: epoch.deadline,
       observedAt: epoch.observedAt,
@@ -1398,7 +1398,7 @@ async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
     marketActionable = readiness.actionable;
     marketCohortGate = `At least ${epoch.kMin} participants`;
     marketReadinessMessage = `${readiness.label}: ${readiness.explanation}`;
-    lifecycleMessage = `${view.label}: ${view.explanation} Participants: ${epoch.participantCount}. ${view.recovery}`;
+    lifecycleMessage = `${view.label}: ${view.explanation} Participants: ${epoch.participantCount}. ${view.recovery}${epoch.readSource === 'wallet-provider' ? ' Public state was refreshed through your connected wallet after the public RPC was unavailable.' : ''}`;
     lifecycleActions = epoch.actions;
     lifecycleActionAvailability = epoch.actionAvailability;
     lifecycleActionMessage = epoch.actions.length
