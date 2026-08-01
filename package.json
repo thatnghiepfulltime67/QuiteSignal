@@ -20,7 +20,7 @@
     "format:write": "prettier --write package.json package-lock.json tsconfig.base.json prettier.config.mjs ops evidence modules services",
     "lint": "npm run format:check && npm run typecheck",
     "typecheck": "tsc --noEmit --project tsconfig.base.json",
-    "compile": "npm run typecheck && npm run --workspace @quitesignal/protocol compile",
+    "compile": "npm run --workspace @quitesignal/protocol compile && npm run typecheck",
     "test:unit": "node --test --test-reporter=spec",
     "test:interfaces": "npm run --workspace @quitesignal/protocol test:interfaces",
     "test:verifier": "npm run --workspace @quitesignal/verifier test",
