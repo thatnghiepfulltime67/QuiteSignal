@@ -52,17 +52,13 @@ as release evidence.
 1. G7 remains `user_confirmed`, not `passed`. The operator attestation now covers the
    complete browser matrix, but Plan policy requires independently replayable
    evidence before an attestation can become a formal gate pass.
-2. The final source worktree contains the untracked local file
-   `ops/scripts/patch-node.mjs`. It is excluded from Vercel uploads but must be either
-   intentionally retained as a reviewed source file or removed by its owner before a
-   clean-worktree G8 claim.
-3. The ready production deployment predates the final dependency and documentation
+2. The ready production deployment predates the final dependency and documentation
    commits. A new Ready deployment from the final clean checkpoint, followed by route
    health checks, remains required for source-to-production release attribution.
 
 ## Decision
 
 G8 is not marked passed. The archive-capable RPC, dependency advisory, and clean-clone
-reproduction blockers are closed; the remaining actions require the local-file
-decision, a Ready deployment of the final checkpoint, and independent G7 evidence.
+reproduction blockers are closed; the remaining actions require a Ready deployment
+of the final checkpoint and independent G7 evidence.
 Competition submission drafts remain under the ignored `dorahack/` directory.

@@ -1,15 +1,6 @@
 # Source and assumption register
 
-Last reviewed: 2026-07-30
-
-## Competition sources
-
-- The normalized challenge brief is preserved at
-  [`01-competition-source/docs/original/user-provided-challenge-brief-normalized.md`](../../01-competition-source/docs/original/user-provided-challenge-brief-normalized.md).
-- Technical and submission context is preserved at
-  [`01-competition-source/docs/original/discord-context-extract.md`](../../01-competition-source/docs/original/discord-context-extract.md).
-- These user-provided snapshots are not independent archives. Official rules and
-  deadlines must be checked again during final release preparation.
+Last reviewed: 2026-08-02
 
 ## Official technical sources
 
