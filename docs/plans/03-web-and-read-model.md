@@ -1512,6 +1512,13 @@ private keys and all confidential data remain absent. Recovery: a failed deploym
 stops the sequence, preserves already verified pools, and never changes canonical
 release state. Intended commit: `feat: add verified local test pools`.
 
+Interaction-safety extension: While any wallet connection, owner authorization,
+signature request, or receipt wait is active, the browser disables every competing
+button, input, selection, and navigation link. A compact upper-right live notification
+reports pending, confirmed, or error state. The lock is browser-memory-only and is
+released on either outcome; it neither persists nor changes custody, privacy, protocol
+state, or recovery rules.
+
 ## WEB-12 work-item record
 
 ID: `WEB-12`

@@ -311,6 +311,78 @@ a {
   display: none;
 }
 
+.app-shell[aria-busy='true'] {
+  cursor: wait;
+}
+
+.app-shell[aria-busy='true'] a[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.54;
+  pointer-events: none;
+}
+
+.operation-toast {
+  position: fixed;
+  z-index: 20;
+  top: 20px;
+  right: 20px;
+  width: min(360px, calc(100vw - 40px));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  border: 2px solid var(--cocoa);
+  border-radius: var(--card-radius);
+  background: var(--petal);
+  color: var(--cocoa);
+  padding: 16px;
+}
+
+.operation-toast.pending {
+  background: var(--plum);
+  border-color: var(--lilac);
+  color: var(--petal);
+}
+
+.operation-toast.success {
+  background: var(--blush);
+}
+
+.operation-toast.error {
+  background: var(--cocoa);
+  border-color: var(--orchid);
+  color: var(--petal);
+}
+
+.operation-toast .eyebrow {
+  color: inherit;
+  margin: 0 0 8px;
+}
+
+.operation-toast > div > p:last-child {
+  font-size: 14px;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.toast-dismiss {
+  width: 32px;
+  height: 32px;
+  border: 1px solid currentColor;
+  border-radius: var(--control-radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.toast-dismiss:hover {
+  background: var(--orchid);
+  border-color: var(--orchid);
+  color: var(--cocoa);
+}
+
 .site-nav {
   display: flex;
   flex-wrap: wrap;

@@ -96,6 +96,14 @@ let selectedMarketKey = 'canonical';
 let selfTestBusy = false;
 let selfTestMessage =
   'Create a fresh public test market only when you are ready to approve two Sepolia deployment transactions from your own wallet.';
+type InteractionToastTone = 'pending' | 'success' | 'error';
+let interactionBusy = false;
+let interactionToast:
+  | {
+      message: string;
+      tone: InteractionToastTone;
+    }
+  | undefined;
 const defaultSelfTestPolicy = selfTestPolicyForSelection('greater-or-equal', '200000000000', 25, 2);
 if (!defaultSelfTestPolicy) throw new Error('The default self-test policy is unavailable.');
 let selfTestPolicy = defaultSelfTestPolicy;
@@ -213,6 +221,40 @@ function escapeHtml(value: string): string {
     };
     return entities[character] ?? character;
   });
+}
+
+function interactionToastContent(): string {
+  if (!interactionToast) return '';
+  const label =
+    interactionToast.tone === 'success'
+      ? 'Confirmed'
+      : interactionToast.tone === 'error'
+        ? 'Action needs attention'
+        : 'Wallet action in progress';
+  return `<aside class="operation-toast ${interactionToast.tone}" role="status" aria-live="polite"><div><p class="eyebrow">{ ${label.toLowerCase()} }</p><p>${escapeHtml(interactionToast.message)}</p></div><button class="toast-dismiss" id="dismiss-operation-toast" type="button" aria-label="Dismiss notification">×</button></aside>`;
+}
+
+function beginWalletInteraction(message: string): boolean {
+  if (interactionBusy) return false;
+  interactionBusy = true;
+  interactionToast = { message, tone: 'pending' };
+  render();
+  return true;
+}
+
+function reportWalletInteraction(message: string): void {
+  if (!interactionBusy) return;
+  interactionToast = { message, tone: 'pending' };
+  render();
+}
+
+function endWalletInteraction(
+  message: string,
+  tone: Exclude<InteractionToastTone, 'pending'>,
+): void {
+  interactionBusy = false;
+  interactionToast = { message, tone };
+  render();
 }
 
 function bindWalletEvents(provider: Eip1193Provider): void {
@@ -690,7 +732,28 @@ function render(message?: string): void {
     navigationLink('/portfolio', 'Portfolio', isPortfolioRoute),
     navigationLink('/self-test', 'Test Lab', isTestLabRoute),
   ].join('');
-  root.innerHTML = `<a class="skip-link" href="#main-content">Skip to content</a><main class="app-shell"><header class="site-header"><a class="wordmark" href="/" aria-label="QuietSignal overview">QuietSignal</a><div class="header-actions"><span class="network-status" aria-label="Network: Ethereum Sepolia">Sepolia</span><button class="wallet" id="wallet" aria-expanded="${walletMenuOpen}"${manifest ? '' : ' disabled'}>${manifest ? walletState : 'Release check'}</button>${walletMenuContent()}</div></header><div class="sticky-navigation">${headerBalanceContent()}<nav class="site-nav" aria-label="Primary tasks">${navigation}</nav></div><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section><div id="main-content" tabindex="-1">${content}</div><section class="deployment-band"><div><p class="eyebrow">{ active Sepolia release ${releaseId} }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : manifestPhase === 'loading' ? 'Checking the canonical manifest…' : 'Canonical manifest unavailable. Do not continue with a wallet action.')}</p></div></section></main>`;
+  root.innerHTML = `<a class="skip-link" href="#main-content">Skip to content</a><main class="app-shell"${interactionBusy ? ' aria-busy="true"' : ''}><header class="site-header"><a class="wordmark" href="/" aria-label="QuietSignal overview">QuietSignal</a><div class="header-actions"><span class="network-status" aria-label="Network: Ethereum Sepolia">Sepolia</span><button class="wallet" id="wallet" aria-expanded="${walletMenuOpen}"${manifest ? '' : ' disabled'}>${manifest ? walletState : 'Release check'}</button>${walletMenuContent()}</div></header><div class="sticky-navigation">${headerBalanceContent()}<nav class="site-nav" aria-label="Primary tasks">${navigation}</nav></div><section class="legend" aria-label="Privacy legend"><span>PRIVATE · owner-only</span><span>COMPUTE · encrypted work</span><span>PUBLIC · chain facts</span><span>PENDING · waiting</span></section><div id="main-content" tabindex="-1">${content}</div><section class="deployment-band"><div><p class="eyebrow">{ active Sepolia release ${releaseId} }</p><p>${message ?? (manifest ? `Verified deployment block ${manifest.deployedAtBlock}` : manifestPhase === 'loading' ? 'Checking the canonical manifest…' : 'Canonical manifest unavailable. Do not continue with a wallet action.')}</p></div></section></main>${interactionToastContent()}`;
+  if (interactionBusy) {
+    root.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
+      button.disabled = true;
+    });
+    root.querySelectorAll<HTMLInputElement>('input').forEach((input) => {
+      input.disabled = true;
+    });
+    root.querySelectorAll<HTMLSelectElement>('select').forEach((select) => {
+      select.disabled = true;
+    });
+    root.querySelectorAll<HTMLAnchorElement>('a[href]').forEach((anchor) => {
+      anchor.setAttribute('aria-disabled', 'true');
+      anchor.tabIndex = -1;
+    });
+  }
+  document
+    .querySelector<HTMLButtonElement>('#dismiss-operation-toast')
+    ?.addEventListener('click', () => {
+      interactionToast = undefined;
+      render();
+    });
   document.querySelector<HTMLButtonElement>('#wallet')?.addEventListener('click', () => {
     walletMenuOpen = !walletMenuOpen;
     if (walletMenuOpen) requestWalletDiscovery();
@@ -795,18 +858,25 @@ function render(message?: string): void {
         render();
         return;
       }
+      if (
+        !beginWalletInteraction(
+          `Requesting ${action} from the owner wallet. Confirm it in the wallet, then wait for the Sepolia receipt.`,
+        )
+      )
+        return;
       ownerMessage = `Requesting ${action} from the owner wallet. Check the wallet before approving.`;
       render();
       try {
         const transactionHash = await submitOwnerTerminalAction(provider, pool, action);
         ownerMessage = `${action} confirmed on Sepolia: ${transactionHash.slice(0, 10)}…. Refresh the owner position before another action.`;
+        endWalletInteraction(`${action} was confirmed on Sepolia.`, 'success');
       } catch (error) {
         ownerMessage =
           error instanceof Error
             ? error.message
             : 'Owner action is unavailable. Read public pool state before retrying.';
+        endWalletInteraction(ownerMessage, 'error');
       }
-      render();
     });
   });
   document
@@ -817,21 +887,30 @@ function render(message?: string): void {
         const provider = activeWallet();
         const pool = routedPoolAddress();
         if (!provider || !pool) throw new Error('Connect a Sepolia wallet first.');
+        if (
+          !beginWalletInteraction(
+            'Preparing pending finalization. Confirm the wallet request when it appears.',
+          )
+        )
+          return;
         if (status)
           status.textContent =
             'Checking the pending finalization. No new collateral transfer is requested.';
         const transactionHash = await finalizePendingSignal(provider, pool, (progress) => {
           if (status) status.textContent = progress;
+          reportWalletInteraction(progress);
         });
         event.currentTarget.hidden = true;
         if (status)
           status.textContent = `Pending signal finalized on Sepolia: ${transactionHash.slice(0, 10)}…. Public pool state is authoritative.`;
+        endWalletInteraction('Pending signal finalization was confirmed on Sepolia.', 'success');
       } catch (error) {
-        if (status)
-          status.textContent =
-            error instanceof Error
-              ? error.message
-              : 'Pending finalization is unavailable. Read public pool state before retrying.';
+        const failureMessage =
+          error instanceof Error
+            ? error.message
+            : 'Pending finalization is unavailable. Read public pool state before retrying.';
+        if (status) status.textContent = failureMessage;
+        if (interactionBusy) endWalletInteraction(failureMessage, 'error');
       }
     });
   document.querySelectorAll<HTMLButtonElement>('[data-asset-action]').forEach((button) => {
@@ -860,6 +939,12 @@ function render(message?: string): void {
         const pool = routedPoolAddress();
         if (!provider || !manifest || !pool) throw new Error('Connect a Sepolia wallet first.');
         if (status) status.textContent = 'Valid inputs. No funds moved. Starting local encryption…';
+        if (
+          !beginWalletInteraction(
+            'Encrypting the signal locally. Confirm each wallet request as it appears.',
+          )
+        )
+          return;
         const result = await submitSignalJourney(
           provider,
           pool,
@@ -867,10 +952,12 @@ function render(message?: string): void {
           values,
           (progress) => {
             if (status) status.textContent = progress;
+            reportWalletInteraction(progress);
           },
         );
         if (status)
           status.textContent = `Signal finalized on Sepolia: ${result.finalizeTransactionHash.slice(0, 10)}…. Public pool state is authoritative.`;
+        endWalletInteraction('Signal finalization was confirmed on Sepolia.', 'success');
       } catch (error) {
         const retry = document.querySelector<HTMLButtonElement>('#retry-finalize');
         if (error instanceof SignalJourneyError && error.allowsFinalizationRetry && retry)
@@ -878,6 +965,11 @@ function render(message?: string): void {
         if (status)
           status.textContent =
             error instanceof Error ? error.message : 'Unable to submit the signal journey.';
+        if (interactionBusy)
+          endWalletInteraction(
+            error instanceof Error ? error.message : 'Unable to submit the signal journey.',
+            'error',
+          );
       } finally {
         event.currentTarget.reset();
       }
@@ -908,11 +1000,23 @@ async function refreshHeaderBalances(): Promise<void> {
 }
 
 async function revealHeaderQscc(): Promise<void> {
+  if (!beginWalletInteraction('Requesting owner-only QSCC access for this browser session.'))
+    return;
   headerBalanceBusy = true;
   render();
-  await refreshAssetState();
-  headerBalanceBusy = false;
-  render();
+  try {
+    await refreshAssetState();
+    headerBalanceBusy = false;
+    endWalletInteraction('QSCC access was refreshed for this browser session.', 'success');
+  } catch (error) {
+    headerBalanceBusy = false;
+    endWalletInteraction(
+      error instanceof Error ? error.message : 'QSCC access could not be refreshed.',
+      'error',
+    );
+  } finally {
+    headerBalanceBusy = false;
+  }
 }
 
 async function refreshAssetState(): Promise<void> {
@@ -951,7 +1055,9 @@ async function refreshAssetState(): Promise<void> {
 
 async function runAssetAction(action: 'mint' | 'approve' | 'wrap' | 'refresh'): Promise<void> {
   if (action === 'refresh') {
+    if (!beginWalletInteraction('Refreshing owner asset state for this browser session.')) return;
     await refreshAssetState();
+    endWalletInteraction('Owner asset state was refreshed.', 'success');
     return;
   }
   const amountInput = document.querySelector<HTMLInputElement>('#asset-amount');
@@ -964,6 +1070,14 @@ async function runAssetAction(action: 'mint' | 'approve' | 'wrap' | 'refresh'): 
   }
   try {
     const amount = parseTestAssetAmount(assetAmount);
+    if (
+      !beginWalletInteraction(
+        action === 'mint'
+          ? 'Requesting a QSFC mint. Confirm the wallet transaction when it appears.'
+          : 'Checking collateral preparation. Confirm each wallet transaction when it appears.',
+      )
+    )
+      return;
     assetBusy = true;
     let approvalHash: string | undefined;
     assetMessage = {
@@ -997,13 +1111,18 @@ async function runAssetAction(action: 'mint' | 'approve' | 'wrap' | 'refresh'): 
     assetBusy = false;
     render();
     await refreshAssetState();
+    endWalletInteraction(
+      `${action === 'mint' ? 'QSFC mint' : action === 'approve' ? 'QSFC approval' : 'QSCC wrap'} was confirmed on Sepolia.`,
+      'success',
+    );
   } catch (error) {
     assetBusy = false;
     assetMessage =
       error instanceof Error
         ? `${error.message} Read the current wallet and public state before retrying.`
         : 'The asset action was not confirmed. No application-controlled transfer occurred; refresh before retrying.';
-    render();
+    if (interactionBusy) endWalletInteraction(assetMessage, 'error');
+    else render();
   }
 }
 
@@ -1023,6 +1142,12 @@ async function runSelfTestLaunch(): Promise<void> {
     return;
   }
   selfTestPolicy = policy;
+  if (
+    !beginWalletInteraction(
+      'Validating the deployment, then requesting the first self-test market transaction.',
+    )
+  )
+    return;
   selfTestBusy = true;
   selfTestMessage =
     'Validating the canonical factory, wrapper, and feed before requesting the first wallet deployment.';
@@ -1040,7 +1165,7 @@ async function runSelfTestLaunch(): Promise<void> {
       },
       (progress) => {
         selfTestMessage = progress;
-        render();
+        reportWalletInteraction(progress);
       },
     );
     rememberSelfTestMarket(launched);
@@ -1049,13 +1174,14 @@ async function runSelfTestLaunch(): Promise<void> {
     marketCohortGate = `At least ${launched.participantGate} participants`;
     selfTestMessage = `Self-test pool ${launched.poolAddress.slice(0, 10)}… is confirmed. Refreshing its public lifecycle.`;
     await refreshLifecycle(launched.poolAddress);
+    endWalletInteraction('Self-test market was confirmed and verified on Sepolia.', 'success');
   } catch (error) {
     selfTestBusy = false;
     selfTestMessage =
       error instanceof Error
         ? `${error.message} No canonical release was changed; inspect any confirmed receipt before retrying.`
         : 'The self-test market was not confirmed. No canonical release was changed; retry only after checking your wallet history.';
-    render();
+    endWalletInteraction(selfTestMessage, 'error');
   }
 }
 
@@ -1088,6 +1214,12 @@ async function runSelfTestBatch(): Promise<void> {
       ),
     )
     .filter((policy): policy is SelfTestPolicy => Boolean(policy));
+  if (
+    !beginWalletInteraction(
+      'Creating verified pools sequentially. Confirm each wallet transaction as it appears.',
+    )
+  )
+    return;
   selfTestBusy = true;
   render();
   try {
@@ -1106,7 +1238,7 @@ async function runSelfTestBatch(): Promise<void> {
         },
         (progress) => {
           selfTestMessage = `Pool ${index + 1} of ${policies.length}: ${progress}`;
-          render();
+          reportWalletInteraction(selfTestMessage);
         },
       );
       rememberSelfTestMarket(launched);
@@ -1119,13 +1251,17 @@ async function runSelfTestBatch(): Promise<void> {
     history.pushState({}, '', '/markets');
     renderRoute();
     if (selfTestMarkets[0]) await refreshLifecycle(selfTestMarkets[0].poolAddress);
+    endWalletInteraction(
+      `All ${policies.length} verified pools were created on Sepolia.`,
+      'success',
+    );
   } catch (error) {
     selfTestBusy = false;
     selfTestMessage =
       error instanceof Error
         ? `${error.message} Pools already confirmed remain listed; inspect the wallet before retrying.`
         : 'The batch stopped before all pools were confirmed. Confirmed pools remain listed.';
-    render();
+    endWalletInteraction(selfTestMessage, 'error');
   }
 }
 
@@ -1206,6 +1342,14 @@ async function runPermissionlessLifecycleAction(
     return;
   }
   lifecycleActionBusy = true;
+  if (
+    !beginWalletInteraction(
+      'Revalidating lifecycle state before requesting the wallet transaction.',
+    )
+  ) {
+    lifecycleActionBusy = false;
+    return;
+  }
   lifecycleActionMessage =
     'Preparing the contract-defined lifecycle action. No transaction has been sent.';
   render();
@@ -1216,19 +1360,20 @@ async function runPermissionlessLifecycleAction(
       action,
       (progress) => {
         lifecycleActionMessage = progress;
-        render();
+        reportWalletInteraction(progress);
       },
     );
     lifecycleActionBusy = false;
     lifecycleActionMessage = `Lifecycle action confirmed on Sepolia: ${transactionHash.slice(0, 10)}…. Refreshing public state.`;
     await refreshLifecycle(pool);
+    endWalletInteraction('Lifecycle action was confirmed on Sepolia.', 'success');
   } catch (error) {
     lifecycleActionBusy = false;
     lifecycleActionMessage =
       error instanceof Error
         ? error.message
         : 'The lifecycle action was not confirmed. Refresh public state before retrying.';
-    render();
+    endWalletInteraction(lifecycleActionMessage, 'error');
   }
 }
 
@@ -1240,6 +1385,8 @@ async function revealOwner(): Promise<void> {
     render();
     return;
   }
+  if (!beginWalletInteraction('Requesting owner-only position access for this browser session.'))
+    return;
   ownerMessage = 'Requesting owner-only decrypt authorization…';
   render();
   try {
@@ -1264,7 +1411,10 @@ async function revealOwner(): Promise<void> {
     ownerMessage =
       'Viewer access was denied or unavailable. Verify the connected owner account, then retry safely.';
   }
-  render();
+  endWalletInteraction(
+    ownerMessage,
+    ownerMessage.startsWith('Viewer access') ? 'error' : 'success',
+  );
 }
 
 async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
@@ -1324,6 +1474,8 @@ async function connectWallet(provider?: Eip1193Provider): Promise<void> {
   }
   selectedWallet = wallet;
   bindWalletEvents(wallet);
+  if (!beginWalletInteraction('Requesting wallet connection and Sepolia network confirmation.'))
+    return;
   walletMenuOpen = false;
   walletState = 'Connecting…';
   render();
@@ -1346,11 +1498,14 @@ async function connectWallet(provider?: Eip1193Provider): Promise<void> {
       Array.isArray(accounts) && typeof accounts[0] === 'string'
         ? `${accounts[0].slice(0, 6)}…${accounts[0].slice(-4)}`
         : 'Disconnected';
-    render('Connected to Sepolia. No transaction has been requested.');
+    endWalletInteraction('Wallet connection to Sepolia was confirmed.', 'success');
     void refreshHeaderBalances();
   } catch {
     walletState = 'Connection declined';
-    render('Connection was not completed. Retrying is safe and does not move funds.');
+    endWalletInteraction(
+      'Wallet connection was not completed. Retrying is safe and does not move funds.',
+      'error',
+    );
   }
 }
 

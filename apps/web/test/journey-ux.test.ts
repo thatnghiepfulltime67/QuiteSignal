@@ -31,3 +31,17 @@ test('T-WEB-03-UX-02: high-intent routes explain safe sequence and wallet bounda
   }
   assert.match(styles, /@media \(max-width: 700px\)[\s\S]*\.journey-steps/);
 });
+
+test('T-WEB-03-UX-03: one wallet interaction locks competing controls and reports its outcome', () => {
+  const source = readFileSync(resolve(root, 'src/main.ts'), 'utf8');
+  const styles = readFileSync(resolve(root, 'src/styles.css'), 'utf8');
+
+  assert.match(source, /function beginWalletInteraction/);
+  assert.match(source, /function reportWalletInteraction/);
+  assert.match(source, /function endWalletInteraction/);
+  assert.match(source, /interactionBusy \? ' aria-busy="true"'/);
+  assert.match(source, /querySelectorAll<HTMLButtonElement>\('button'\)/);
+  assert.match(source, /operation-toast/);
+  assert.match(styles, /\.operation-toast \{/);
+  assert.match(styles, /\.app-shell\[aria-busy='true'\] a\[aria-disabled='true'\]/);
+});

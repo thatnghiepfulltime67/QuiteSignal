@@ -120,6 +120,12 @@ inline text links may remain distinct because they are navigation or choice cont
 not transaction actions. Do not make an action control imply a completed transaction;
 wallet and chain state are always stated beside it.
 
+When a wallet request, signature, or receipt is pending, the page disables competing
+controls and navigation until that operation succeeds or fails. A compact, live
+notification in the upper-right reports the current wallet step and the confirmed or
+failed outcome. It states progress only; it does not expose a confidential value or
+imply finality before the public receipt is confirmed.
+
 ### Self-test configuration
 
 Self-test creation exposes editable, bounded public values: an ETH/USD threshold and
