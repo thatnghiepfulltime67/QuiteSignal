@@ -1785,9 +1785,9 @@ a {
 
 .lifecycle-action-list {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin: 12px 0 24px;
+  margin: 8px 0 20px;
 }
 
 .lifecycle-action-list > div {
@@ -1795,8 +1795,8 @@ a {
   border: 1px solid var(--walnut);
   display: grid;
   gap: 16px;
-  min-height: 76px;
-  padding: 16px;
+  min-height: 56px;
+  padding: 8px;
 }
 
 .lifecycle-action-list > div.unavailable {
@@ -1804,6 +1804,10 @@ a {
 }
 
 .lifecycle-action-list .secondary {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 11px;
+  white-space: nowrap;
   width: 100%;
   justify-content: center;
 }
