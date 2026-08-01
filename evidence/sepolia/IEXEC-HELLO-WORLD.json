@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "journey": "https://docs.noxprotocol.io/getting-started/hello-world",
+  "network": {
+    "name": "Ethereum Sepolia",
+    "chainId": 11155111
+  },
+  "wallet": "0xDC1cc527423C882156a632C250528D1922d18Fc7",
+  "contract": {
+    "name": "ConfidentialPiggyBank",
+    "address": "0x3d26435f9340De7e98160AA388052a38f9d86C37",
+    "ownerVerified": true,
+    "compilerVersion": "0.8.35",
+    "sourceMatchesPublishedTutorial": true,
+    "runtimeCodeHash": "0x7edbb3db0ba1f683b718a8e5a57bdae9ae30985a8e9684354755461ec298f6f8",
+    "runtimeCodeSizeBytes": 1126
+  },
+  "transactions": [
+    {
+      "action": "deploy",
+      "transactionHash": "0xaf26a715a27e889c7e3bee6a9d1b162a719c45db5150c0446903a07491a55f69",
+      "blockNumber": 11398013,
+      "timestampUtc": "2026-08-01T18:02:12.000Z",
+      "status": "success",
+      "gasUsed": "361483",
+      "effectiveGasPriceWei": "1071851892",
+      "actualGasCostWei": "387456237475836"
+    },
+    {
+      "action": "deposit",
+      "transactionHash": "0x996c6e539b515f33a51987237931942ebcc57ddf0fd750959acf86bdf61de432",
+      "blockNumber": 11398017,
+      "timestampUtc": "2026-08-01T18:03:00.000Z",
+      "status": "success",
+      "functionSelector": "0xe29973fc",
+      "gasUsed": "112893",
+      "effectiveGasPriceWei": "1036068387",
+      "actualGasCostWei": "116964868413591"
+    },
+    {
+      "action": "withdraw",
+      "transactionHash": "0x8b4f8f5b7a6a46314961238763dbc3aecb5b7cfe4bb5503613a2632dc4f087f2",
+      "blockNumber": 11398022,
+      "timestampUtc": "2026-08-01T18:04:00.000Z",
+      "status": "success",
+      "functionSelector": "0x4a2e35ba",
+      "gasUsed": "114672",
+      "effectiveGasPriceWei": "1087173293",
+      "actualGasCostWei": "124668335854896"
+    }
+  ],
+  "ownerDecryptionChecks": {
+    "initialStateVerified": true,
+    "postDepositStateVerified": true,
+    "postWithdrawStateVerified": true
+  },
+  "sanitization": {
+    "privateKeyExcluded": true,
+    "plaintextValuesExcluded": true,
+    "encryptedHandlesExcluded": true,
+    "handleProofsExcluded": true,
+    "transactionInputExcluded": true,
+    "rpcCredentialsExcluded": true
+  },
+  "sourceCommit": "a50fc5827525df48b6483c61cbe800e03a053705",
+  "recordedAtUtc": "2026-08-01T18:04:39Z"
+}
