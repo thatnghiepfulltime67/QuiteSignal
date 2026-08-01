@@ -96,6 +96,7 @@ let selfTestMarket: SelfTestMarket | undefined;
 const selfTestMarkets: SelfTestMarket[] = [];
 let selectedMarketKey = 'canonical';
 let selfTestBusy = false;
+const createdSelfTestMarkets: Array<{ owner: string; market: SelfTestMarket }> = [];
 let selfTestMessage =
   'Create a fresh public test market only when you are ready to approve two Sepolia deployment transactions from your own wallet.';
 type InteractionToastTone = 'pending' | 'success' | 'error';
@@ -117,6 +118,16 @@ function rememberSelfTestMarket(market: SelfTestMarket): void {
   if (index >= 0) selfTestMarkets[index] = market;
   else selfTestMarkets.unshift(market);
   selfTestMarket = market;
+}
+
+function rememberCreatedSelfTestMarket(owner: string, market: SelfTestMarket): void {
+  rememberSelfTestMarket(market);
+  const existing = createdSelfTestMarkets.findIndex(
+    (item) => item.market.poolAddress.toLowerCase() === market.poolAddress.toLowerCase(),
+  );
+  const record = { owner: owner.toLowerCase(), market };
+  if (existing >= 0) createdSelfTestMarkets[existing] = record;
+  else createdSelfTestMarkets.unshift(record);
 }
 
 interface PublishedSelfTestPool {
@@ -297,6 +308,13 @@ function activeWallet(): Eip1193Provider | undefined {
   return selectedWallet ?? window.ethereum;
 }
 
+async function connectedWalletAddress(provider: Eip1193Provider): Promise<string> {
+  const accounts = await provider.request({ method: 'eth_accounts' });
+  if (!Array.isArray(accounts) || typeof accounts[0] !== 'string')
+    throw new Error('A connected wallet account is required.');
+  return accounts[0];
+}
+
 function routedPoolAddress(): string | undefined {
   const selectedSelfTestAddress = selectedMarketKey.startsWith('self-test:')
     ? selectedMarketKey.slice('self-test:'.length)
@@ -474,15 +492,18 @@ function portfolioContent(): string {
   const eth = headerBalance ? `${formatTokenAmount(headerBalance.nativeBalance)} ETH` : '—';
   const qsfc = headerBalance ? formatTokenAmount(headerBalance.publicBalance) : '—';
   const qscc = assetState ? formatTokenAmount(assetState.confidentialBalance) : 'Hidden';
-  const knownPools = selfTestMarkets.length
-    ? `<div class="portfolio-pools">${selfTestMarkets
+  const createdPools = headerBalance
+    ? createdSelfTestMarkets.filter((item) => item.owner === headerBalance.account.toLowerCase())
+    : [];
+  const createdPoolList = createdPools.length
+    ? `<div class="portfolio-pools">${createdPools
         .map(
-          (market) =>
-            `<button class="secondary" type="button" data-select-self-test-pool="${market.poolAddress}">${market.policy.conditionLabel}</button>`,
+          ({ market }) =>
+            `<article><strong>${market.policy.conditionLabel}</strong><small>${market.poolAddress} · ${market.participantGate}-participant gate · deadline ${new Date(Number(market.deadline) * 1000).toLocaleString()}</small></article>`,
         )
         .join('')}</div>`
-    : '<p class="muted">Open a market before revealing a pool-specific position.</p>';
-  return `<section class="band petal-band portfolio"><div class="band-inner"><p class="eyebrow private">{ your wallet }</p><h1>Portfolio</h1><p class="route-lead">Review wallet balances, prepare test collateral, then return to a selected market to forecast or reveal a position.</p><div class="portfolio-balances" aria-label="Wallet balance summary"><article><span>SEPOLIA GAS</span><strong>${eth}</strong></article><article><span>PUBLIC QSFC</span><strong>${qsfc}</strong></article><article><span>PRIVATE QSCC</span><strong>${qscc}</strong><small>${assetState ? 'Revealed for this session only.' : 'Use Reveal QSCC below to read it.'}</small></article></div><section class="portfolio-collateral"><p class="eyebrow compute">{ test collateral }</p><h2>Prepare collateral</h2><p>Mint valueless QSFC, approve only the chosen amount, then wrap it into confidential QSCC.</p>${assetPanelContent()}</section><div class="portfolio-positions"><h2>Your verified test pools</h2>${knownPools}</div></div></section>`;
+    : `<p class="muted">${headerBalance ? 'This wallet has not created a pool in this browser session.' : 'Connect this wallet to view pools it creates in this browser session.'}</p>`;
+  return `<section class="band petal-band portfolio"><div class="band-inner"><p class="eyebrow private">{ your wallet }</p><h1>Portfolio</h1><p class="route-lead">Review wallet balances, prepare test collateral, then return to a selected market to forecast or reveal a position.</p><div class="portfolio-balances" aria-label="Wallet balance summary"><article><span>SEPOLIA GAS</span><strong>${eth}</strong></article><article><span>PUBLIC QSFC</span><strong>${qsfc}</strong></article><article><span>PRIVATE QSCC</span><strong>${qscc}</strong><small>${assetState ? 'Revealed for this session only.' : 'Use Reveal QSCC below to read it.'}</small></article></div><section class="portfolio-collateral"><p class="eyebrow compute">{ test collateral }</p><h2>Prepare collateral</h2><p>Mint valueless QSFC, approve only the chosen amount, then wrap it into confidential QSCC.</p>${assetPanelContent()}</section><section class="portfolio-positions"><p class="eyebrow public">{ browser session }</p><h2>Pools created by this wallet</h2>${createdPoolList}</section></div></section>`;
 }
 
 function lifecycleActionContent(): string {
@@ -1146,6 +1167,15 @@ async function runSelfTestLaunch(): Promise<void> {
     render();
     return;
   }
+  let creator: string;
+  try {
+    creator = await connectedWalletAddress(provider);
+  } catch (error) {
+    selfTestMessage =
+      error instanceof Error ? error.message : 'A connected wallet account is required.';
+    render();
+    return;
+  }
   const policy = selectedSelfTestPolicy();
   if (!policy) {
     selfTestMessage =
@@ -1180,7 +1210,7 @@ async function runSelfTestLaunch(): Promise<void> {
         reportWalletInteraction(progress);
       },
     );
-    rememberSelfTestMarket(launched);
+    rememberCreatedSelfTestMarket(creator, launched);
     selfTestBusy = false;
     marketActionable = true;
     marketCohortGate = `At least ${launched.participantGate} participants`;
@@ -1202,6 +1232,15 @@ async function runSelfTestBatch(): Promise<void> {
   if (!provider || !manifest) {
     selfTestMessage =
       'Connect a Sepolia wallet before creating verified pools. No transaction was sent.';
+    render();
+    return;
+  }
+  let creator: string;
+  try {
+    creator = await connectedWalletAddress(provider);
+  } catch (error) {
+    selfTestMessage =
+      error instanceof Error ? error.message : 'A connected wallet account is required.';
     render();
     return;
   }
@@ -1253,7 +1292,7 @@ async function runSelfTestBatch(): Promise<void> {
           reportWalletInteraction(selfTestMessage);
         },
       );
-      rememberSelfTestMarket(launched);
+      rememberCreatedSelfTestMarket(creator, launched);
     }
     selfTestBusy = false;
     selfTestMessage = `All ${policies.length} pools were created and verified against the Sepolia factory. Opening Markets.`;

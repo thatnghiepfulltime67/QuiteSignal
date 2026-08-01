@@ -1528,6 +1528,13 @@ action immediately before any wallet request. The seven controls are grouped vis
 into `Advance lifecycle` and `Recovery paths`; grouping does not combine transactions
 or change contract state transitions.
 
+Creator-history extension: Portfolio replaces its session-derived verified-pool list
+with the pools created through this browser by the currently connected wallet. The
+browser records the public pool address and public policy in memory only after its own
+factory creation flow verifies immutable configuration. It stores neither the result
+nor a wallet identifier after the current browser memory is reset, and it never infers
+creator ownership from an arbitrary pool address.
+
 ## WEB-12 work-item record
 
 ID: `WEB-12`

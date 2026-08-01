@@ -1450,10 +1450,29 @@ a {
 }
 
 .portfolio-pools {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 12px;
   margin-top: 20px;
+}
+
+.portfolio-pools article {
+  border: 1px solid var(--walnut);
+  border-radius: var(--card-radius);
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+}
+
+.portfolio-pools strong,
+.portfolio-pools small {
+  overflow-wrap: anywhere;
+}
+
+.portfolio-pools small {
+  color: var(--walnut);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .signal-card {

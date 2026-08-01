@@ -95,3 +95,13 @@ test('T-WEB-11-02: a shared self-test pool is factory-verified before its partic
     /localStorage|sessionStorage|privateKey|mnemonic|seed phrase|console\./i,
   );
 });
+
+test('T-WEB-15-01: Portfolio keeps only a connected wallet’s session-created pools without browser storage', () => {
+  const main = readFileSync(resolve(root, 'src', 'main.ts'), 'utf8');
+
+  assert.match(main, /Pools created by this wallet/);
+  assert.match(main, /const createdSelfTestMarkets/);
+  assert.match(main, /function rememberCreatedSelfTestMarket/);
+  assert.match(main, /connectedWalletAddress/);
+  assert.doesNotMatch(main, /localStorage|sessionStorage/i);
+});
