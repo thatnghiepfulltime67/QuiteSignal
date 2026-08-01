@@ -12,3 +12,4 @@ evidence
 dorahack
 playwright-report
 test-results
+ops/scripts/patch-node.mjs
