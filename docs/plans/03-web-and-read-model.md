@@ -1689,7 +1689,7 @@ Intended commit: `refactor: compact lifecycle refresh control`.
 
 ID: `WEB-16`
 
-Status: `in_progress`
+Status: `complete`
 
 Prerequisite gates: WEB-01 through WEB-15 are implemented; this is a browser-only
 resilience and accessibility correction slice and does not claim G7 evidence.
@@ -1735,6 +1735,17 @@ Intended commit: `fix: harden audited web ux states`.
 Rollback/failure action: Revert only the browser presentation/state corrections;
 retain the manifest validation boundary, direct public reads, contract guards, and
 wallet receipt requirements.
+
+Completion evidence (2026-08-01): Commit `8628815` preserves Create drafts through
+no-wallet and render-error paths, separates published registry pools from the Create
+form, renders the canonical route before optional registry verification, bounds
+manifest/registry reads with abortable retries, adds visible registry/release recovery,
+uses accessible action contrast, adds human-readable durations/deadlines and the
+14-day preset, and adds Escape/outside-click wallet-menu dismissal. Focused WEB-16
+source tests, all 47 web tests, root typecheck, `npm run lint`, production build,
+responsive headless checks at 360/768/1280/1440, and `git diff --check` passed. The
+build still reports the pre-existing Node 20.12.2 versus Vite's 20.19+ requirement;
+the artifact was generated successfully.
 
 ## WEB-12 work-item record
 
