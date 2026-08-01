@@ -1784,22 +1784,17 @@ a {
 }
 
 .lifecycle-action-list {
-  display: grid;
+  display: flex;
   gap: 8px;
+  overflow-x: auto;
   margin: 8px 0 20px;
-}
-
-.lifecycle-action-group.advance .lifecycle-action-list {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.lifecycle-action-group.recovery .lifecycle-action-list {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding-bottom: 4px;
 }
 
 .lifecycle-action-list > div {
   align-items: center;
   border: 1px solid var(--walnut);
+  flex: 0 0 auto;
   display: grid;
   gap: 16px;
   min-height: 56px;
@@ -1815,7 +1810,7 @@ a {
   padding: 8px 12px;
   font-size: 12px;
   white-space: nowrap;
-  width: 100%;
+  width: auto;
   justify-content: center;
 }
 
@@ -2341,21 +2336,12 @@ a {
     width: 100%;
   }
 
-  .lifecycle-action-list {
-    grid-template-columns: 1fr;
-  }
-
-  .lifecycle-action-group.advance .lifecycle-action-list,
-  .lifecycle-action-group.recovery .lifecycle-action-list {
-    grid-template-columns: 1fr;
-  }
-
   .lifecycle-action-list > div {
     align-items: stretch;
   }
 
   .lifecycle-action-list .secondary {
-    width: 100%;
+    width: auto;
   }
 
   .asset-actions .primary,
