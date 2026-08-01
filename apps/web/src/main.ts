@@ -489,7 +489,8 @@ function lifecycleActionContent(): string {
   const renderGroup = (title: string, actions: PermissionlessLifecycleAction[]): string => {
     const items = lifecycleActionAvailability.filter((item) => actions.includes(item.action));
     if (!items.length) return '';
-    return `<section class="lifecycle-action-group"><h4>${title}</h4><div class="lifecycle-action-list">${items
+    const groupClass = title === 'Advance lifecycle' ? 'advance' : 'recovery';
+    return `<section class="lifecycle-action-group ${groupClass}"><h4>${title}</h4><div class="lifecycle-action-list">${items
       .map((item) => {
         const disabled = !item.eligible || lifecycleActionBusy;
         const requirement = lifecycleActionBusy

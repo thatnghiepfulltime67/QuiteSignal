@@ -38,24 +38,24 @@ const presentations: Record<
   Omit<LifecycleActionPresentation, 'action'>
 > = {
   'expire-pending-commit': {
-    label: 'Expire stalled commit',
+    label: 'Expire pending',
     explanation: 'Clears the timed-out pending intent through the contract recovery path.',
   },
   'close-epoch': {
-    label: 'Close commit window',
+    label: 'Close window',
     explanation: 'Applies the immutable cohort rule after the public deadline.',
   },
   'request-aggregate-decrypt': {
-    label: 'Request aggregate proof',
+    label: 'Request proof',
     explanation: 'Enables public proof retrieval only for the two k-gated aggregate handles.',
   },
   'finalize-aggregate': {
-    label: 'Finalize public aggregate',
+    label: 'Finalize aggregate',
     explanation:
       'Requests two transient Nox public attestations, then stores only verified totals.',
   },
   'cancel-before-resolution': {
-    label: 'Enter aggregate refund path',
+    label: 'Refund before resolution',
     explanation: 'The aggregate request timed out; the contract can make each owner refundable.',
   },
   settle: {
@@ -63,7 +63,7 @@ const presentations: Record<
     explanation: 'Reads the immutable adapter; this action accepts no caller-selected outcome.',
   },
   'cancel-after-resolution-grace': {
-    label: 'Enter feed-grace refund path',
+    label: 'Refund after grace',
     explanation: 'The resolution grace elapsed; the contract can make each owner refundable.',
   },
 };

@@ -1786,8 +1786,15 @@ a {
 .lifecycle-action-list {
   display: grid;
   gap: 8px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin: 8px 0 20px;
+}
+
+.lifecycle-action-group.advance .lifecycle-action-list {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.lifecycle-action-group.recovery .lifecycle-action-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .lifecycle-action-list > div {
@@ -1806,7 +1813,7 @@ a {
 .lifecycle-action-list .secondary {
   min-height: 40px;
   padding: 8px 12px;
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
   width: 100%;
   justify-content: center;
@@ -2335,6 +2342,11 @@ a {
   }
 
   .lifecycle-action-list {
+    grid-template-columns: 1fr;
+  }
+
+  .lifecycle-action-group.advance .lifecycle-action-list,
+  .lifecycle-action-group.recovery .lifecycle-action-list {
     grid-template-columns: 1fr;
   }
 
