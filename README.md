@@ -12,8 +12,9 @@ to confidential inputs. Public resolution is isolated behind a zero-custody adap
 while contracts enforce lifecycle transitions, access control, accounting, and
 recovery.
 
-Try the production application at
-[quitesignal.vercel.app](https://quitesignal.vercel.app).
+Try the [production application](https://quitesignal.vercel.app), watch the
+[end-to-end Sepolia demo](https://www.youtube.com/watch?v=1vt95Ue9IE0), and read the
+[launch thread on X](https://x.com/thatnghiep67/status/2083646821952586007).
 
 ## Quickstart
 
