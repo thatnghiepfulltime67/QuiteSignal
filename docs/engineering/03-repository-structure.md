@@ -60,7 +60,7 @@ services/*  apps/web
   addresses/runtime hashes, immutable pool bindings, public epoch facts, and receipt
   hashes. Its CLI is RPC-read-only and has no signer, confidential-value field, or
   write path. The PK-08 fixture lives under `deployments/sepolia/`; canonical release
-  deployments remain a later G6/G8 deliverable.
+  deployments are recorded by the G6 deliverable.
 - Services consume public chain state and cannot depend on owner-decryption APIs.
 - Web may consume clients/read models but cannot delegate confidential plaintext to services.
 - `ops/scripts` orchestrates published package interfaces and cannot become runtime authority.

@@ -45,7 +45,7 @@
   "knownLimitations": [
     "The isolated harness has no confidential asset, pool, adapter, or recovery path; FND-04 through FND-06 remain required P0 work.",
     "F-003 records that an owner-bound external input must be submitted by the importing application caller; production flows must retain that binding.",
-    "R-16 remains open for the pinned Hardhat transitive advisory and must be re-evaluated before G8."
+    "R-16 tracked the original pinned Hardhat transitive advisory; the current dependency scan reports zero vulnerabilities."
   ],
   "reproduction": [
     "Use Node 24.18.0 and npm 11.16.0 with the committed lockfile.",

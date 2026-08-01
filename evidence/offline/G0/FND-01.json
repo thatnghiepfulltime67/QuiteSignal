@@ -69,7 +69,7 @@
   },
   "requirementsCovered": ["NFR-02", "NFR-04", "NFR-05"],
   "knownLimitations": [
-    "R-16 tracks the current high-severity Hardhat transitive advisory. It is not a contract or privacy conclusion and must be closed or explicitly accepted where permitted before G8."
+    "R-16 tracked the original high-severity Hardhat transitive advisory. It is not a contract or privacy conclusion; the current dependency scan reports zero vulnerabilities."
   ],
   "reproduction": [
     "Use Node 24.18.0 and npm 11.16.0.",

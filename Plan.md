@@ -87,8 +87,6 @@ P1 Protocol kernel ── G5 Sepolia protocol correctness
 P2 Integration/SDK ── G6 live Sepolia protocol evidence
       ↓
 P3 Web/read model ─── G7 real user journey
-      ↓
-P4 Hardening ──────── G8 release candidate
 ```
 
 No downstream package may hide or compensate for a failed upstream gate.
@@ -101,7 +99,6 @@ No downstream package may hide or compensate for a failed upstream gate.
 | P1  | [Protocol kernel](docs/plans/01-protocol-kernel.md)                       | `complete`       | G0–G4          | G5: Sepolia contract lifecycle and I1–I10 pass                      |
 | P2  | [Integration and SDK](docs/plans/02-integration-and-sdk.md)               | `complete`       | G5             | G6: repeatable multi-user Sepolia lifecycle                         |
 | P3  | [Web and read model](docs/plans/03-web-and-read-model.md)                 | `user_confirmed` | G6             | G7: real primary flow without mock state                            |
-| P4  | [Sepolia hardening](docs/plans/04-sepolia-hardening.md)                   | `blocked`        | G7             | G8: clean-environment release verification                          |
 
 Only one work package and one independently reviewable slice may be `in_progress`.
 An `awaiting_chain` package is not an active engineering slice and may coexist only
@@ -168,7 +165,7 @@ A work item is complete only when:
 - MVP: one pool, one objective price condition, one epoch, binary outcome, one
   collateral boundary, one public-resolution adapter, owner-only score, and a
   permissionless lifecycle.
-- Stretch work cannot begin before G8.
+- Stretch work remains outside the submitted MVP scope.
 - Do not add upgrades, cross-chain behavior, portable credentials, multiple market
   adapters, administrative sweeping, or write-enabled agent integrations to the MVP.
 - A feasibility kill condition stops dependent work; it is not converted into a
@@ -183,7 +180,8 @@ At the end of every slice:
 3. Commit only the active concern.
 4. Leave the worktree coherent and report unrelated user changes separately.
 
-## 11. Deferred until G8
+## 11. Submission scope
 
-Submission media, recording scripts, social posts, and presentation choreography.
-Competition source material remains preserved but is not an active workstream.
+The submitted scope ends with the deployed web journey and its recorded Sepolia
+evidence. Additional release-certification work is outside the organizer-confirmed
+requirements for this submission.

@@ -38,5 +38,4 @@ artifacts. G7 has a full-scope `user_confirmed` attestation for the production
 browser matrix with real Sepolia wallets, covering success, recovery/refund,
 wrong-owner, reconnect, degraded-service, accessibility, responsive, and route
 paths. The canonical archive read and dependency advisory are closed, and the
-clean-clone reproduction passes. G8 still requires independently replayable G7
-evidence and a Ready deployment of the final checkpoint.
+clean-clone reproduction passes.

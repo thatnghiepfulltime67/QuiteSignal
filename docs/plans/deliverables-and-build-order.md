@@ -42,7 +42,6 @@ work item; empty scaffolding does not count as progress.
 | B07 | Nox client SDK | B03 + G1–G3 | Typed encryption, binding, owner decrypt, tx preparation | G6 |
 | B08 | Relayer and indexer | B06–B07 | Idempotent jobs, public event model, checkpoint/reorg behavior | G6 |
 | B09 | Web application | G6 + B07–B08 | Real wallet/encrypt/commit/position/score/claim/refund/verify routes | G7 |
-| B10 | Deployment/release | G7 | Verified deployment, evidence, runbooks, scans, clean reproduction | G8 |
 
 ## B00 — Workspace/toolchain outputs
 
@@ -142,20 +141,6 @@ apps/web/e2e/
 
 The route names may adapt to the selected framework, but feature boundaries and
 acceptance paths are stable. The primary route cannot import fixture/demo modules.
-
-## B10 — Release outputs
-
-```text
-deployments/sepolia/manifest.json
-evidence/reports/G8-summary.md
-docs/setup.md
-docs/deployment.md
-docs/security.md
-docs/verification.md
-docs/runbooks/recovery.md
-docs/runbooks/relayer.md
-LICENSE
-```
 
 ## Artifact synchronization rules
 

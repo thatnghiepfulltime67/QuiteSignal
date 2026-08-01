@@ -65,7 +65,6 @@ checks, or commit cannot be reviewed as one concern.
 | `DEP-*`  | Deployment and manifests       |
 | `LIVE-*` | Live Sepolia cases             |
 | `WEB-*`  | Product application            |
-| `REL-*`  | Hardening and release          |
 
 ## Commit rules
 
@@ -90,5 +89,5 @@ checks, or commit cannot be reviewed as one concern.
 
 ## Scope rule
 
-No stretch feature, media/presentation work, additional adapter, upgrade system,
-cross-chain behavior, or administrative sweep enters the active plan before G8.
+No stretch feature, additional adapter, upgrade system, cross-chain behavior, or
+administrative sweep enters the submitted MVP scope.

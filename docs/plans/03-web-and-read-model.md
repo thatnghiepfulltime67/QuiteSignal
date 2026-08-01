@@ -2020,7 +2020,7 @@ private, whether retry is safe, and the next user action.
 - [ ] Public/private language matches the threat model and traceability matrix.
 - [ ] G7 is passed with sanitized browser evidence.
 - [ ] An unfamiliar tester completes success and recovery paths using documentation only.
-- [ ] Worktree is clean and P4 prerequisites are recorded.
+- [ ] Worktree is clean and the submitted web scope is recorded.
 
 ## Stop conditions
 

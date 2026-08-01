@@ -15,7 +15,7 @@ lifecycle without introducing plaintext or privileged service authority.
 ## Prerequisites
 
 - P1 is complete and G5 is passed.
-- Contract ABI/events and manifest schema are frozen for the P2 release candidate.
+- Contract ABI/events and manifest schema are frozen for the P2 delivery.
 - The selected resolution adapter passed G4 and its live target facts are rechecked.
 
 ## Work-item register

@@ -60,8 +60,7 @@ are defined in [`plans/sepolia-spend-ledger.md`](plans/sepolia-spend-ledger.md).
 | P1 / G5               |         0.14 | Protocol deployments, invariants, adversarial and recovery cases     |
 | P2 / G6               |         0.12 | Canonical deployment and multi-wallet live lifecycle                 |
 | P3 / G7               |         0.05 | Real browser success and refund/recovery journeys                    |
-| P4 / G8               |         0.06 | Clean reproduction, verification, final read/write regressions       |
-| Unallocated           |         0.05 | Retries, redeployment, or any phase that needs it                    |
+| Unallocated           |         0.11 | Retries, redeployment, or any phase that needs it                    |
 | **Initial allowance** |     **0.50** | Default baseline; the current ledger may reflect later authorization |
 
 These are visibility estimates, not phase limits. The full allowance is available to

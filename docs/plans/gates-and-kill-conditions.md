@@ -171,20 +171,6 @@ Kill conditions:
 - A primary route requires a mock-data switch or application database as truth.
 - Confidential input reaches application logs, analytics, relayer, or indexer.
 
-## G8 — Release candidate
-
-Pass criteria:
-
-- Clean install, compile, all tests, lint, typecheck, build, scans, deployment
-  verification, evidence validation, and live read checks pass.
-- All high/critical risks are closed or explicitly accepted where acceptance is allowed.
-- Documentation, public claims, manifests, generated bindings, and verified sources agree.
-- No stop-ship condition remains and the worktree is clean.
-
-Kill conditions:
-
-- Any privacy/custody gate is waived, any secret is detected, or clean reproduction fails.
-
 ## Failure protocol
 
 When a gate fails:
