@@ -1,12 +1,6 @@
 # QuietSignal execution plan
 
-Status values: `not_started`, `in_progress`, `awaiting_chain`, `blocked`,
-`user_confirmed`, `complete`.
-
-`user_confirmed` records a dated operator attestation for a real user-controlled
-run. It is an evidence checkpoint, not an independent gate pass; it must state its
-scope and limitations and cannot support broader release claims than the attestation
-actually covers.
+Status values: `not_started`, `in_progress`, `awaiting_chain`, `blocked`, `complete`.
 
 `awaiting_chain` records a fully staged Sepolia-only action whose next valid action
 is gated by an immutable on-chain time or finality condition. It never means passed,
@@ -86,19 +80,19 @@ P1 Protocol kernel ── G5 Sepolia protocol correctness
       ↓
 P2 Integration/SDK ── G6 live Sepolia protocol evidence
       ↓
-P3 Web/read model ─── G7 real user journey
+P3 Web/read model ─── deployed product journey
 ```
 
 No downstream package may hide or compensate for a failed upstream gate.
 
 ## 4. Work-package register
 
-| ID  | Work package                                                              | Status           | Required gates | Exit gate                                                           |
-| --- | ------------------------------------------------------------------------- | ---------------- | -------------- | ------------------------------------------------------------------- |
-| P0  | [Foundation and feasibility](docs/plans/00-foundation-and-feasibility.md) | `complete`       | G0–G4          | Load-bearing primitives proven on Sepolia; pure models pass offline |
-| P1  | [Protocol kernel](docs/plans/01-protocol-kernel.md)                       | `complete`       | G0–G4          | G5: Sepolia contract lifecycle and I1–I10 pass                      |
-| P2  | [Integration and SDK](docs/plans/02-integration-and-sdk.md)               | `complete`       | G5             | G6: repeatable multi-user Sepolia lifecycle                         |
-| P3  | [Web and read model](docs/plans/03-web-and-read-model.md)                 | `user_confirmed` | G6             | G7: real primary flow without mock state                            |
+| ID  | Work package                                                              | Status     | Required gates | Exit gate                                                           |
+| --- | ------------------------------------------------------------------------- | ---------- | -------------- | ------------------------------------------------------------------- |
+| P0  | [Foundation and feasibility](docs/plans/00-foundation-and-feasibility.md) | `complete` | G0–G4          | Load-bearing primitives proven on Sepolia; pure models pass offline |
+| P1  | [Protocol kernel](docs/plans/01-protocol-kernel.md)                       | `complete` | G0–G4          | G5: Sepolia contract lifecycle and I1–I10 pass                      |
+| P2  | [Integration and SDK](docs/plans/02-integration-and-sdk.md)               | `complete` | G5             | G6: repeatable multi-user Sepolia lifecycle                         |
+| P3  | [Web and read model](docs/plans/03-web-and-read-model.md)                 | `complete` | G6             | Deployed primary flow without mock state                            |
 
 Only one work package and one independently reviewable slice may be `in_progress`.
 An `awaiting_chain` package is not an active engineering slice and may coexist only

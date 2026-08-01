@@ -401,7 +401,7 @@ and 35-minute adapter observation boundary. It generates a fresh salt locally,
 requires a successful receipt for the adapter before factory creation, then re-reads
 the created pool configuration. The resulting pool is a user-created public test
 market held only in memory for the browser session; it never changes the canonical
-manifest or active-release pointer and must never be called canonical, G6, or G7
+manifest or active-release pointer and must never be called canonical or G6
 evidence. Refreshing clears the session state rather than persisting a wallet or
 private value.
 
@@ -428,7 +428,7 @@ published canonical pool is rejected even if it happens to share this configurat
 The address is public chain data and is kept only in current browser memory after
 validation. Opening a link makes no wallet request and cannot move funds. The route
 adds neither a pool registry nor any persistent storage; it cannot promote a
-user-created pool to the canonical release or G7 evidence. Invalid or stale links
+user-created pool to the canonical release. Invalid or stale links
 fail closed, while a verified pool uses the unchanged asset, confidential signal,
 owner, settlement, and permissionless recovery paths. R-27 covers link tampering,
 stale state, and participant confusion.

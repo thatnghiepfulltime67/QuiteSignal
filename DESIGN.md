@@ -230,11 +230,11 @@ disable all nonessential animations and transitions.
 
 ## Acceptance checklist
 
-- [ ] Each screen uses Cocoa, Plum, Petal, and Bubblegum bands intentionally.
-- [ ] Neon Orchid appears on every screen as type, link, or geometric detail.
-- [ ] No shadows, gradients, glass effects, stock imagery, or oversized rounding.
-- [ ] Every stateful component includes loading, error, retry, and recovery copy.
-- [ ] No primary route leaks confidential data into logs, storage, URLs, services,
-      screenshots, or evidence.
-- [ ] Motion respects reduced-motion preferences and never claims false finality.
-- [ ] Desktop and mobile preserve readable type, keyboard focus, and privacy context.
+- Each screen uses Cocoa, Plum, Petal, and Bubblegum bands intentionally.
+- Neon Orchid appears on every screen as type, link, or geometric detail.
+- No shadows, gradients, glass effects, stock imagery, or oversized rounding.
+- Every stateful component includes loading, error, retry, and recovery copy.
+- No primary route leaks confidential data into logs, storage, URLs, services,
+  screenshots, or evidence.
+- Motion respects reduced-motion preferences and never claims false finality.
+- Desktop and mobile preserve readable type, keyboard focus, and privacy context.

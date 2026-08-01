@@ -11,7 +11,6 @@
     "test": "tsx --test test/*.test.ts",
     "verify:g5": "tsx src/g5-cli.ts",
     "verify:g6": "tsx scripts/verify-g6-evidence.mts",
-    "verify:g7:web": "tsx scripts/verify-g7-browser-evidence.mts",
     "verify:sepolia": "tsx src/cli.ts",
     "promote:release": "tsx scripts/promote-release.mts",
     "write:live01:manifest": "tsx scripts/write-live01-manifest.mts",

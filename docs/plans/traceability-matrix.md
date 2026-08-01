@@ -6,27 +6,27 @@ suffixes but cannot silently rename or remove a required family.
 
 ## Functional requirements
 
-| Requirement                  | Contract/module owner                | State/function boundary                                   | Invariants               | Required test families                                                 | Evidence gate  |
-| ---------------------------- | ------------------------------------ | --------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------- | -------------- |
-| FR-01 Create pool            | Factory, config                      | deploy → `OPEN`                                           | I8, I9                   | `T-FACTORY-*`, `T-CONFIG-*`                                            | G4, G5, G6     |
-| FR-02 Commit signal          | Pool, Nox client, confidential token | `OPEN.commitSignal` → pending callback → `finalizeCommit` | I1, I2, I7, I10          | `T-COMMIT-*`, `T-ACL-*`, `T-ASSET-PULL-*`, `T-PENDING-COMMIT-*`        | G1, G2, G5, G6 |
-| FR-03 Cohort gate            | Pool                                 | `OPEN.closeEpoch`                                         | I3, I8                   | `T-K-GATE-*`, `T-BELOW-K-REFUND-*`                                     | G3, G5, G6     |
-| FR-04 Aggregate finalization | Pool                                 | aggregate → `RESOLUTION_PENDING`                          | I2, I4, I7, I9           | `T-AGGREGATE-*`, `T-RESOLUTION-PENDING-*`                              | G3–G6          |
-| FR-05 Settlement             | Pool, resolution adapter             | `RESOLUTION_PENDING.settle`                               | I5, I6, I8, I9           | `T-RESOLUTION-*`, `T-FEED-FRESHNESS-*`, `T-PAYOUT-BOUND-*`             | G4–G6          |
-| FR-06 Private view           | Pool, Nox client, web                | owner decrypt position                                    | I3, I10                  | `T-VIEWER-*`, `T-UNAUTHORIZED-DECRYPT-*`, `T-WEB-POSITION-*`           | G1, G5–G7      |
-| FR-07 Refund/recovery        | Pool, relayer                        | timeout/grace → `REFUNDABLE`                              | I2, I3, I7, I8, I10      | `T-TIMEOUT-*`, `T-ZERO-WINNER-*`, `T-RESOLUTION-GRACE-*`, `T-REFUND-*` | G2, G3, G5–G7  |
-| FR-08 Independent audit      | Verifier, config                     | public chain → report                                     | I1–I10 observable subset | `T-VERIFIER-MUTATION-*`, `T-MANIFEST-*`, `T-EVIDENCE-*`                | G5–G7          |
-| FR-09 Private score          | Pool, Nox client, web                | `SETTLED.materializeScore`                                | I3, I8, I10              | `T-BRIER-MATH-*`, `T-SCORE-ACL-*`, `T-WEB-SCORE-*`                     | G1, G5–G7      |
+| Requirement                  | Contract/module owner                | State/function boundary                                   | Invariants               | Required test families                                                 | Evidence gate               |
+| ---------------------------- | ------------------------------------ | --------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------- | --------------------------- |
+| FR-01 Create pool            | Factory, config                      | deploy → `OPEN`                                           | I8, I9                   | `T-FACTORY-*`, `T-CONFIG-*`                                            | G4, G5, G6                  |
+| FR-02 Commit signal          | Pool, Nox client, confidential token | `OPEN.commitSignal` → pending callback → `finalizeCommit` | I1, I2, I7, I10          | `T-COMMIT-*`, `T-ACL-*`, `T-ASSET-PULL-*`, `T-PENDING-COMMIT-*`        | G1, G2, G5, G6              |
+| FR-03 Cohort gate            | Pool                                 | `OPEN.closeEpoch`                                         | I3, I8                   | `T-K-GATE-*`, `T-BELOW-K-REFUND-*`                                     | G3, G5, G6                  |
+| FR-04 Aggregate finalization | Pool                                 | aggregate → `RESOLUTION_PENDING`                          | I2, I4, I7, I9           | `T-AGGREGATE-*`, `T-RESOLUTION-PENDING-*`                              | G3–G6                       |
+| FR-05 Settlement             | Pool, resolution adapter             | `RESOLUTION_PENDING.settle`                               | I5, I6, I8, I9           | `T-RESOLUTION-*`, `T-FEED-FRESHNESS-*`, `T-PAYOUT-BOUND-*`             | G4–G6                       |
+| FR-06 Private view           | Pool, Nox client, web                | owner decrypt position                                    | I3, I10                  | `T-VIEWER-*`, `T-UNAUTHORIZED-DECRYPT-*`, `T-WEB-POSITION-*`           | G1, G5, G6 + web checks     |
+| FR-07 Refund/recovery        | Pool, relayer                        | timeout/grace → `REFUNDABLE`                              | I2, I3, I7, I8, I10      | `T-TIMEOUT-*`, `T-ZERO-WINNER-*`, `T-RESOLUTION-GRACE-*`, `T-REFUND-*` | G2, G3, G5, G6 + web checks |
+| FR-08 Independent audit      | Verifier, config                     | public chain → report                                     | I1–I10 observable subset | `T-VERIFIER-MUTATION-*`, `T-MANIFEST-*`, `T-EVIDENCE-*`                | G5, G6                      |
+| FR-09 Private score          | Pool, Nox client, web                | `SETTLED.materializeScore`                                | I3, I8, I10              | `T-BRIER-MATH-*`, `T-SCORE-ACL-*`, `T-WEB-SCORE-*`                     | G1, G5, G6 + web checks     |
 
 ## Non-functional requirements
 
-| Requirement                 | Owner              | Required checks                                                                    | Risks      | Gate       |
-| --------------------------- | ------------------ | ---------------------------------------------------------------------------------- | ---------- | ---------- |
-| NFR-01 State safety         | Domain, contracts  | transition map, invalid-state tests, replay, idempotency, model equivalence        | R-05, R-08 | G5         |
-| NFR-02 Typed SDK            | Nox client         | strict typecheck, branded-type compile tests, encoding vectors, decimal boundaries | R-01, R-03 | G0, G6     |
-| NFR-03 Accessible UX        | Web                | keyboard, screen reader, mobile, reconnect, retry, clear privacy/recovery copy     | R-10, R-12 | G7         |
-| NFR-04 Plaintext exclusion  | All apps/CI        | schema rejection, structured-log tests, secret/plaintext scan, analytics audit     | R-09       | every gate |
-| NFR-05 Reproducible release | Config, operations | frozen install, code/ABI hash sync, source verification, evidence validation       | R-01, R-10 | G0, G6     |
+| Requirement                 | Owner              | Required checks                                                                    | Risks      | Gate           |
+| --------------------------- | ------------------ | ---------------------------------------------------------------------------------- | ---------- | -------------- |
+| NFR-01 State safety         | Domain, contracts  | transition map, invalid-state tests, replay, idempotency, model equivalence        | R-05, R-08 | G5             |
+| NFR-02 Typed SDK            | Nox client         | strict typecheck, branded-type compile tests, encoding vectors, decimal boundaries | R-01, R-03 | G0, G6         |
+| NFR-03 Accessible UX        | Web                | keyboard, screen reader, mobile, reconnect, retry, clear privacy/recovery copy     | R-10, R-12 | Product checks |
+| NFR-04 Plaintext exclusion  | All apps/CI        | schema rejection, structured-log tests, secret/plaintext scan, analytics audit     | R-09       | every gate     |
+| NFR-05 Reproducible release | Config, operations | frozen install, code/ABI hash sync, source verification, evidence validation       | R-01, R-10 | G0, G6         |
 
 ## Privacy claims
 
@@ -42,18 +42,18 @@ suffixes but cannot silently rename or remove a required family.
 
 ## Protocol invariants
 
-| Invariant                   | Primary assertion                                         | Reference oracle                    | Negative mutation                                          | Evidence                |
-| --------------------------- | --------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------- | ----------------------- |
-| I1 Input conservation       | YES + NO allocation = stake                               | Domain bigint model                 | Off-by-one division/allocation mutation                    | G5 invariant report     |
-| I2 Epoch conservation       | Aggregate allocation = confidential collateral pulled     | Domain sum + token delta            | Dropped/duplicated commit mutation                         | G5/G6 verifier          |
-| I3 Disclosure scope         | No owner-shaped public decrypt                            | ACL event/static policy             | Inject owner-handle reveal call                            | G1/G5 ACL report        |
-| I4 Aggregate/payout binding | Rate derives only from proof-verified aggregates          | Aggregate proof and domain model    | Keeper substitutes rate input                              | G5/G6 verifier          |
-| I5 Resolution integrity     | Immutable adapter returns only a fresh valid target round | Target ABI/runtime and round fields | Stale, incomplete, wrong-target, or caller-result mutation | G4/G5/G6                |
-| I6 Payout bound             | Sum payouts ≤ confidential pool collateral                | Bigint floor model                  | Round-up or duplicate claim                                | G5 fuzz/G6 pot report   |
-| I7 Replay safety            | Context-bound request consumed once                       | Request-id set model                | Reuse proof across pool/epoch                              | G3/G5/G6                |
-| I8 State safety             | Monotonic state and terminal owner flags                  | Explicit transition table           | Backward/claim-refund transition                           | G5 transition report    |
-| I9 Integration integrity    | Target/adapter code + ABI match manifest                  | RPC runtime code hash               | Wrong address/stale binding                                | G4/G6 manifest check    |
-| I10 ACL minimality          | Pool persistent authority; owner viewer only              | ACL matrix                          | Grant keeper/token persistent access                       | G1/G5/G6                |
+| Invariant                   | Primary assertion                                         | Reference oracle                    | Negative mutation                                          | Evidence              |
+| --------------------------- | --------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------- | --------------------- |
+| I1 Input conservation       | YES + NO allocation = stake                               | Domain bigint model                 | Off-by-one division/allocation mutation                    | G5 invariant report   |
+| I2 Epoch conservation       | Aggregate allocation = confidential collateral pulled     | Domain sum + token delta            | Dropped/duplicated commit mutation                         | G5/G6 verifier        |
+| I3 Disclosure scope         | No owner-shaped public decrypt                            | ACL event/static policy             | Inject owner-handle reveal call                            | G1/G5 ACL report      |
+| I4 Aggregate/payout binding | Rate derives only from proof-verified aggregates          | Aggregate proof and domain model    | Keeper substitutes rate input                              | G5/G6 verifier        |
+| I5 Resolution integrity     | Immutable adapter returns only a fresh valid target round | Target ABI/runtime and round fields | Stale, incomplete, wrong-target, or caller-result mutation | G4/G5/G6              |
+| I6 Payout bound             | Sum payouts ≤ confidential pool collateral                | Bigint floor model                  | Round-up or duplicate claim                                | G5 fuzz/G6 pot report |
+| I7 Replay safety            | Context-bound request consumed once                       | Request-id set model                | Reuse proof across pool/epoch                              | G3/G5/G6              |
+| I8 State safety             | Monotonic state and terminal owner flags                  | Explicit transition table           | Backward/claim-refund transition                           | G5 transition report  |
+| I9 Integration integrity    | Target/adapter code + ABI match manifest                  | RPC runtime code hash               | Wrong address/stale binding                                | G4/G6 manifest check  |
+| I10 ACL minimality          | Pool persistent authority; owner viewer only              | ACL matrix                          | Grant keeper/token persistent access                       | G1/G5/G6              |
 
 ## PK-01 reference-model coverage
 

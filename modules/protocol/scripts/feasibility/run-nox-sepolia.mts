@@ -7,8 +7,6 @@ const workItem = process.argv.find(
     argument === 'FND-05-TIMEOUT' ||
     argument === 'FND-05-RECOVERY' ||
     argument === 'FND-05-RECOVERY-RESUME' ||
-    argument === 'FND-05-PROOF-DIAGNOSTIC' ||
-    argument === 'FND-05-STALE-RECOVERY' ||
     argument === 'FND-05-BELOW-K' ||
     argument === 'FND-05-BELOW-K-RESUME',
 );
@@ -27,10 +25,6 @@ if (workItem === 'FND-02') {
   await import('./run-fnd05-aggregate-recovery-sepolia.mjs');
 } else if (workItem === 'FND-05-RECOVERY-RESUME') {
   await import('./resume-fnd05-aggregate-recovery-sepolia.mjs');
-} else if (workItem === 'FND-05-PROOF-DIAGNOSTIC') {
-  await import('./run-fnd05-aggregate-proof-diagnostic-sepolia.mjs');
-} else if (workItem === 'FND-05-STALE-RECOVERY') {
-  await import('./recover-fnd05-stale-aggregate-sepolia.mjs');
 } else if (workItem === 'FND-05-BELOW-K') {
   await import('./run-fnd05-below-k-sepolia.mjs');
 } else if (workItem === 'FND-05-BELOW-K-RESUME') {

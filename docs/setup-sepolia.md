@@ -59,7 +59,7 @@ are defined in [`plans/sepolia-spend-ledger.md`](plans/sepolia-spend-ledger.md).
 | P0 / G1–G4            |         0.08 | Feasibility arithmetic, ACL, asset, proof/recovery, adapter spikes   |
 | P1 / G5               |         0.14 | Protocol deployments, invariants, adversarial and recovery cases     |
 | P2 / G6               |         0.12 | Canonical deployment and multi-wallet live lifecycle                 |
-| P3 / G7               |         0.05 | Real browser success and refund/recovery journeys                    |
+| P3                    |         0.05 | Real browser success and refund/recovery journeys                    |
 | Unallocated           |         0.11 | Retries, redeployment, or any phase that needs it                    |
 | **Initial allowance** |     **0.50** | Default baseline; the current ledger may reflect later authorization |
 
@@ -135,10 +135,10 @@ If planning, deployment, verification, or browser-wallet readiness fails, retain
 current active release and the public record of any completed write. Never deploy a
 fresh epoch merely to keep it open while no real browser journey is ready.
 
-## Browser acceptance wallet runbook
+## Browser product wallet runbook
 
-G7 uses a real, disposable Ethereum Sepolia wallet extension connected directly to
-the production web build. It is deliberately separate from the ignored deployment
+Use a real, disposable Ethereum Sepolia wallet extension connected directly to the
+production web build. Keep it separate from the ignored deployment
 key in `.env`: no browser test, browser source file, injected provider, local bridge,
 or automation script may read, import, expose, or relay that key.
 
@@ -165,27 +165,9 @@ or automation script may read, import, expose, or relay that key.
    permissionless recovery selector; never substitute a local chain, fake provider,
    manual state edit, or an application-side signer.
 
-After the primary and recovery browser runs, create a public-only `WEB-08` evidence
-record with the exact schema enforced by `verify:g7:web`. It may contain only the
-release IDs, bound pool/collateral addresses, four public transaction hashes, the
-browser sanitation booleans, and the source commit. Do not include transaction input,
-form values, raw encrypted material, wallet credential, extension export, screenshot,
-trace, console payload, or RPC URL. Verify it independently before treating it as G7
-evidence:
-
-```sh
-npm run verify:g7:web -- \
-  --evidence=evidence/sepolia/G7/WEB-08-<release>-browser.json \
-  --out=evidence/sepolia/G7/WEB-08-<release>-verification.json
-```
-
-The command makes direct Sepolia reads only. It validates both immutable release
-manifests, successful receipt status, recipient and function-selector bindings, and
-the permissionless recovery selector; it never prints or writes transaction input.
-
-The required G7 record is a primary browser signal journey plus a separate
-permissionless recovery observation or completion. A route-only read check is useful
-deployment evidence but cannot satisfy G7 by itself.
+The product run remains wallet-controlled. Never commit transaction input, form
+values, raw encrypted material, wallet credentials, extension exports, screenshots,
+traces, console payloads, or RPC URLs.
 
 ## Rotation and incident response
 

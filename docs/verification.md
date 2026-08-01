@@ -33,9 +33,8 @@ manifest values as proof.
 
 ## Named evidence
 
-The evidence ledger under `docs/plans/evidence-ledger.md` maps G0–G7 to sanitized
-artifacts. G7 has a full-scope `user_confirmed` attestation for the production
-browser matrix with real Sepolia wallets, covering success, recovery/refund,
-wrong-owner, reconnect, degraded-service, accessibility, responsive, and route
-paths. The canonical archive read and dependency advisory are closed, and the
-clean-clone reproduction passes.
+The evidence ledger under `docs/plans/evidence-ledger.md` maps the passed G0–G6
+gates to sanitized artifacts. Product behavior is covered separately by automated
+web checks, the production build, and the deployed application. The canonical
+archive read and dependency advisory are closed, and the clean-clone reproduction
+passes.

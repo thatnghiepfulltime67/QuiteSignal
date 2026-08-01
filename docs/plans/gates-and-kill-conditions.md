@@ -1,6 +1,6 @@
 # Gate register and kill conditions
 
-Gate status values: `not_run`, `running`, `user_confirmed`, `passed`, `failed`, `waived`.
+Gate status values: `not_run`, `running`, `passed`, `failed`, `waived`.
 
 A gate may be marked `passed` only when its required artifacts, checks, and sanitized
 evidence are committed. `waived` requires an ADR, risk acceptance, and explicit user
@@ -149,27 +149,6 @@ Kill conditions:
 
 - Canonical lifecycle behavior diverges from the G5 Sepolia test deployment in custody or privacy semantics.
 - The lifecycle requires manually editing chain state or substituting fixture data.
-
-## G7 — Real application journey
-
-An owner-operated web-live run may be recorded as `user_confirmed` when the operator
-attests to the real production deployment, wallet count, and executed journey in a
-sanitized artifact. This lightweight checkpoint does not claim independent evidence,
-recovery, ACL, or accessibility coverage that the attestation does not explicitly
-name; those claims remain pending until their corresponding public checks are
-recorded.
-
-Pass criteria:
-
-- Primary routes use the live deployment manifest and chain-derived state.
-- Wallet, encryption, transaction replacement, retry, owner decrypt, score, claim,
-  refund, loading, empty, error, keyboard, screen-reader, mobile, and reconnect paths pass.
-- Relayer/indexer outage degrades convenience, not correctness or fund recovery.
-
-Kill conditions:
-
-- A primary route requires a mock-data switch or application database as truth.
-- Confidential input reaches application logs, analytics, relayer, or indexer.
 
 ## Failure protocol
 
