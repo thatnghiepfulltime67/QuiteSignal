@@ -486,20 +486,25 @@ function portfolioContent(): string {
 }
 
 function lifecycleActionContent(): string {
+  const renderGroup = (title: string, actions: PermissionlessLifecycleAction[]): string => {
+    const items = lifecycleActionAvailability.filter((item) => actions.includes(item.action));
+    if (!items.length) return '';
+    return `<section class="lifecycle-action-group"><h4>${title}</h4><div class="lifecycle-action-list">${items
+      .map((item) => {
+        const disabled = !item.eligible || lifecycleActionBusy;
+        const requirement = lifecycleActionBusy
+          ? 'Another wallet action is in progress. Wait for its confirmed or failed outcome.'
+          : item.eligible
+            ? item.explanation
+            : item.unavailableExplanation;
+        return `<div class="${item.eligible ? 'eligible' : 'unavailable'}"><span class="lifecycle-action-tooltip" tabindex="0" data-tooltip="${escapeHtml(requirement)}"><button class="secondary" type="button" data-lifecycle-action="${item.action}"${disabled ? ' disabled' : ''}>${item.label}</button></span></div>`;
+      })
+      .join('')}</div></section>`;
+  };
   const controls = lifecycleActionAvailability.length
-    ? `<div class="lifecycle-action-list">${lifecycleActionAvailability
-        .map((item) => {
-          const disabled = !item.eligible || lifecycleActionBusy;
-          const requirement = lifecycleActionBusy
-            ? 'Another wallet action is in progress. Wait for its confirmed or failed outcome.'
-            : item.eligible
-              ? item.explanation
-              : item.unavailableExplanation;
-          return `<div class="${item.eligible ? 'eligible' : 'unavailable'}"><span class="lifecycle-action-tooltip" tabindex="0" data-tooltip="${escapeHtml(requirement)}"><button class="secondary" type="button" data-lifecycle-action="${item.action}"${disabled ? ' disabled' : ''}>${item.label}</button></span><p>${escapeHtml(requirement)}</p></div>`;
-        })
-        .join('')}</div>`
+    ? `${renderGroup('Advance lifecycle', ['close-epoch', 'request-aggregate-decrypt', 'finalize-aggregate', 'settle'])}${renderGroup('Recovery paths', ['expire-pending-commit', 'cancel-before-resolution', 'cancel-after-resolution-grace'])}`
     : '<p class="muted">Refresh public state to load the contract-defined lifecycle actions.</p>';
-  return `<section class="lifecycle-actions" aria-label="Permissionless lifecycle actions"><p class="eyebrow public">{ public lifecycle action }</p><p>Every contract-defined action is shown below. Hover an unavailable action to read its exact public prerequisite.</p>${controls}<p class="muted" role="status">${lifecycleActionMessage}</p></section>`;
+  return `<section class="lifecycle-actions" aria-label="Permissionless lifecycle actions"><p class="eyebrow public">{ public lifecycle action }</p><p>Actions are grouped by purpose. Hover or focus a disabled action to read its exact public prerequisite.</p>${controls}<p class="muted" role="status">${lifecycleActionMessage}</p></section>`;
 }
 
 function lifecycleContent(market: ReturnType<typeof presentMarket>, selfTest = false): string {

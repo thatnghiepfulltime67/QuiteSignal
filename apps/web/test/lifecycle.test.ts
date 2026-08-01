@@ -107,7 +107,10 @@ test('T-WEB-12-02: aggregate finalization uses transient public attestations and
   assert.match(wallet, /waitForConfirmedReceipt\(reader, transactionHash\)/);
   assert.match(main, /data-lifecycle-action/);
   assert.match(main, /lifecycle-action-tooltip/);
-  assert.match(main, /Hover an unavailable action/);
+  assert.match(main, /Advance lifecycle/);
+  assert.match(main, /Recovery paths/);
+  assert.match(main, /Hover or focus a disabled action/);
+  assert.doesNotMatch(main, /<p>\$\{escapeHtml\(requirement\)\}<\/p>/);
   assert.match(wallet, /actionAvailability/);
   assert.match(styles, /\.lifecycle-action-tooltip::after/);
   assert.match(main, /submitPermissionlessLifecycleAction/);

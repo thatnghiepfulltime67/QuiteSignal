@@ -1524,7 +1524,9 @@ contract-defined permissionless action after a direct public state read. Only ac
 eligible in that exact state are enabled; each unavailable action remains visibly
 disabled and explains its public prerequisite in both adjacent copy and a keyboard-
 accessible hover/focus tooltip. The transaction client still revalidates the selected
-action immediately before any wallet request.
+action immediately before any wallet request. The seven controls are grouped visually
+into `Advance lifecycle` and `Recovery paths`; grouping does not combine transactions
+or change contract state transitions.
 
 ## WEB-12 work-item record
 
