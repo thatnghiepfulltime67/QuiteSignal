@@ -1466,6 +1466,7 @@ async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
       ? 'The actions below were derived from the latest public Sepolia state. Each still requires its own wallet confirmation.'
       : 'No action is currently eligible. Hover a disabled action to read its public prerequisite.';
   } catch {
+    if (provider) ownerCommitmentState = 'unchecked';
     marketActionable = false;
     lifecycleActions = [];
     lifecycleActionAvailability = [];
