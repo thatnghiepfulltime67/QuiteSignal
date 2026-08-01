@@ -1,6 +1,6 @@
 # P4 — Sepolia and release hardening
 
-Status: `not_started`
+Status: `blocked`
 
 ## Objective
 
@@ -14,18 +14,23 @@ deployment, public claims, evidence, dependencies, and recovery procedures agree
 - No feature or architecture change is accepted during hardening without returning
   to the owning upstream gate.
 
+Current blocker (2026-08-02): P3/G7 is `user_confirmed`, not passed. Dependency,
+archive-RPC verification, and clean-clone reproduction prechecks are complete, but P4
+cannot close until the remaining WEB-08 browser-recovery scope and a Ready deployment
+of the final source checkpoint are confirmed.
+
 ## Work-item register
 
-| ID | Outcome | Primary artifacts | Required checks | Intended commit |
-|---|---|---|---|---|
-| REL-01 | Reproducible build freeze | Engines, lockfile, compiler/settings, generated bindings | clean `npm ci`, compile/build twice, artifact hashes | `build: freeze release toolchain and artifacts` |
-| REL-02 | Verified deployment | Canonical manifest, verified sources, runtime/ABI hashes | RPC re-read, constructor args, target provenance | `docs: publish verified sepolia manifest` |
-| REL-03 | Security/quality closure | Static, dependency, license, secret, fuzz, coverage reports | no unresolved stop-ship/high-critical issue | `test: close release security gates` |
-| REL-04 | Clean reproduction | Fresh-checkout run record and deterministic outputs | install, doctor, offline checks, Sepolia reads and named live cases | `test: prove clean release reproduction` |
-| REL-05 | Recovery operations | Recovery, automation, indexer, RPC/gateway outage runbooks | live/read rehearsals and funds-location audit | `docs: add operational recovery runbooks` |
-| REL-06 | Documentation/claims sync | Setup, usage, deployment, security, verification, feedback | link/command check, P1–P7 claim audit | `docs: finalize release documentation` |
-| REL-07 | Risk and exception closure | Risk register, ADRs, accepted limitations | owner/date/evidence for every residual risk | `docs: close release risks and limitations` |
-| REL-08 | G8 evidence and readiness | G8 report, evidence ledger, release checklist | evidence validator, clean worktree, complete traceability | `docs: record release readiness evidence` |
+| ID     | Outcome                    | Primary artifacts                                           | Required checks                                                     | Intended commit                                 |
+| ------ | -------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------- |
+| REL-01 | Reproducible build freeze  | Engines, lockfile, compiler/settings, generated bindings    | clean `npm ci`, compile/build twice, artifact hashes                | `build: freeze release toolchain and artifacts` |
+| REL-02 | Verified deployment        | Canonical manifest, verified sources, runtime/ABI hashes    | RPC re-read, constructor args, target provenance                    | `docs: publish verified sepolia manifest`       |
+| REL-03 | Security/quality closure   | Static, dependency, license, secret, fuzz, coverage reports | no unresolved stop-ship/high-critical issue                         | `test: close release security gates`            |
+| REL-04 | Clean reproduction         | Fresh-checkout run record and deterministic outputs         | install, doctor, offline checks, Sepolia reads and named live cases | `test: prove clean release reproduction`        |
+| REL-05 | Recovery operations        | Recovery, automation, indexer, RPC/gateway outage runbooks  | live/read rehearsals and funds-location audit                       | `docs: add operational recovery runbooks`       |
+| REL-06 | Documentation/claims sync  | Setup, usage, deployment, security, verification, feedback  | link/command check, P1–P7 claim audit                               | `docs: finalize release documentation`          |
+| REL-07 | Risk and exception closure | Risk register, ADRs, accepted limitations                   | owner/date/evidence for every residual risk                         | `docs: close release risks and limitations`     |
+| REL-08 | G8 evidence and readiness  | G8 report, evidence ledger, release checklist               | evidence validator, clean worktree, complete traceability           | `docs: record release readiness evidence`       |
 
 ## Freeze policy
 

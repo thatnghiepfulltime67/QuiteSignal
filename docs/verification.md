@@ -36,5 +36,6 @@ manifest values as proof.
 The evidence ledger under `docs/plans/evidence-ledger.md` maps G0–G7 to sanitized
 artifacts. G7 has a scoped `user_confirmed` attestation for the production primary
 journey with two real Sepolia wallets. The canonical archive read and dependency
-advisory are closed; G8 still requires the final clean reproduction/deployment and
-the remaining WEB-08 browser-recovery scope.
+advisory are closed, and the clean-clone reproduction passes. G8 still requires a
+Ready deployment of the final checkpoint and the remaining WEB-08 browser-recovery
+scope.

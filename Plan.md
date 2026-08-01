@@ -101,7 +101,7 @@ No downstream package may hide or compensate for a failed upstream gate.
 | P1  | [Protocol kernel](docs/plans/01-protocol-kernel.md)                       | `complete`       | G0–G4          | G5: Sepolia contract lifecycle and I1–I10 pass                      |
 | P2  | [Integration and SDK](docs/plans/02-integration-and-sdk.md)               | `complete`       | G5             | G6: repeatable multi-user Sepolia lifecycle                         |
 | P3  | [Web and read model](docs/plans/03-web-and-read-model.md)                 | `user_confirmed` | G6             | G7: real primary flow without mock state                            |
-| P4  | [Sepolia hardening](docs/plans/04-sepolia-hardening.md)                   | `not_started`    | G7             | G8: clean-environment release verification                          |
+| P4  | [Sepolia hardening](docs/plans/04-sepolia-hardening.md)                   | `blocked`        | G7             | G8: clean-environment release verification                          |
 
 Only one work package and one independently reviewable slice may be `in_progress`.
 An `awaiting_chain` package is not an active engineering slice and may coexist only
