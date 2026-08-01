@@ -1775,8 +1775,11 @@ shareable and refresh-safe. The rewrite serves the same production `index.html` 
 client routes while Vercel continues to serve existing static assets and public
 release JSON files directly.
 
-Output files: `vercel.json`, `apps/web/test/resilience.test.ts`, and this work-item
-record.
+Output files: `vercel.json`, `.vercelignore`, `apps/web/test/resilience.test.ts`, and
+this work-item record. The deployment ignore file excludes local credentials,
+dependencies, generated output, private submission drafts, and repository-only
+documentation/evidence from the upload while retaining every workspace source and
+manifest required by the production build.
 
 Acceptance criteria: `/markets`, `/portfolio`, `/self-test`, `/position`, pool, and
 verification URLs return the production application when opened directly or

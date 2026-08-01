@@ -1,0 +1,14 @@
+.env
+.env.*
+.git
+.vercel
+node_modules
+apps/web/dist
+artifacts
+cache
+coverage
+docs
+evidence
+dorahack
+playwright-report
+test-results
