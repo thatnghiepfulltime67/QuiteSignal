@@ -1598,6 +1598,40 @@ or private data source.
 
 Intended commit: `fix: recover lifecycle reads through wallet provider`.
 
+Owner-commitment guard extension: Before enabling a forecast for a connected wallet,
+the browser reads only that caller's `ownerPosition.committed` boolean through its
+EIP-1193 provider. It never decrypts, renders, persists, or logs the opaque position
+handles. A committed owner sees a disabled `Forecast already submitted` control; the
+same guard is checked again immediately before encryption, and a confirmed finalization
+locks the form in browser memory. The guard is refreshed after wallet connection and
+public lifecycle refresh, so a later visit detects an existing forecast without an
+explicit position reveal.
+
+Output files: `apps/web/src/wallet.ts`, `apps/web/src/main.ts`,
+`apps/web/test/signal.test.ts`, and this work-item record.
+
+Acceptance criteria: A connected owner who has already committed cannot submit a second
+forecast through the UI, both during the current session and after reconnecting/reloading.
+The form names the reason and directs the user to the owner-only position panel. A wallet
+that has not committed can submit while the immutable public commit window is open.
+
+Privacy/custody and recovery impact: The added read is owner-bound and returns no
+plaintext. It introduces no signature, transaction, persistence, private-key access,
+custody, or recovery-state change. The contract remains the authoritative final guard
+against a duplicate commit.
+
+Commands/checks: `npm run typecheck`, `npm run test:web`, `npm run build:web`, direct
+Sepolia read of the committed pool, and `git diff --check`.
+
+Evidence path: source/test output and a read-only owner-bound call from a user-controlled
+wallet. No new write is required.
+
+Rollback/failure action: Remove the UI preflight while preserving the contract's
+`AlreadyCommitted` guard; do not replace the owner-bound call with persisted browser
+state or an application service.
+
+Intended commit: `feat: guard duplicate forecast submissions`.
+
 ## WEB-12 work-item record
 
 ID: `WEB-12`

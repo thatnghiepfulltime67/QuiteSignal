@@ -16,6 +16,7 @@ import {
   decryptOwnerPosition,
   finalizePendingSignal,
   mintTestAsset,
+  readOwnerCommitment,
   readPublicTestAssetState,
   readTestAssetState,
   readPublicEpoch,
@@ -85,6 +86,8 @@ let marketReadinessMessage = 'Checking whether the canonical market is accepting
 let marketCohortGate = 'Loading public cohort rule…';
 let ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
 let ownerActions = '';
+let ownerCommitmentPool: string | undefined;
+let ownerCommitmentState: 'unchecked' | 'checking' | 'committed' | 'available' = 'unchecked';
 let assetState: TestAssetState | undefined;
 let headerBalance: PublicTestAssetState | undefined;
 let headerBalanceBusy = false;
@@ -215,6 +218,8 @@ function resetWalletContext(message: string): void {
   walletState = 'Reconnect wallet';
   ownerMessage = 'Owner values are masked. Reveal requires your connected owner wallet.';
   ownerActions = '';
+  ownerCommitmentPool = undefined;
+  ownerCommitmentState = 'unchecked';
   assetState = undefined;
   headerBalance = undefined;
   headerBalanceBusy = false;
@@ -323,6 +328,27 @@ function routedPoolAddress(): string | undefined {
   if (location.pathname === '/self-test' || location.pathname.startsWith('/self-test/'))
     return selfTestMarket?.poolAddress;
   return manifest?.poolAddress;
+}
+
+function ownerHasCommitted(pool: string | undefined): boolean {
+  return (
+    Boolean(pool) &&
+    ownerCommitmentPool === pool?.toLowerCase() &&
+    ownerCommitmentState === 'committed'
+  );
+}
+
+function ownerCommitmentIsChecking(pool: string | undefined): boolean {
+  return (
+    Boolean(pool) &&
+    ownerCommitmentPool === pool?.toLowerCase() &&
+    ownerCommitmentState === 'checking'
+  );
+}
+
+function recordOwnerCommitment(pool: string, committed: boolean): void {
+  ownerCommitmentPool = pool.toLowerCase();
+  ownerCommitmentState = committed ? 'committed' : 'available';
 }
 
 function selfTestJoinAddress(): string | undefined {
@@ -446,13 +472,30 @@ function assetSetupContent(): string {
 function signalPanelContent(market: ReturnType<typeof presentMarket>, selfTest = false): string {
   const signalPool = selfTest ? selfTestMarket?.poolAddress : market.poolAddress;
   const signalReady = marketActionable && Boolean(signalPool);
+  const alreadyCommitted = ownerHasCommitted(signalPool);
+  const checkingOwnerCommitment = ownerCommitmentIsChecking(signalPool);
+  const submissionReady = signalReady && !alreadyCommitted && !checkingOwnerCommitment;
   const unavailableMessage = marketReadinessMessage.includes('Checking')
     ? 'The commit window is unavailable until a direct Sepolia lifecycle read succeeds.'
     : marketReadinessMessage;
   const freshPoolAction = signalReady
     ? ''
     : '<a class="text-action dark-action" href="/self-test?new=1">Create a verified market <span aria-hidden="true">↗</span></a>';
-  return `<div class="market-action-panel"><p class="eyebrow compute">{ encrypted locally }</p><p>${signalReady ? marketReadinessMessage : unavailableMessage}</p><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required${signalReady ? '' : ' disabled'} /></label><label>Probability (%) <input name="probability" type="number" min="0" max="100" step="1" inputmode="numeric" autocomplete="off" placeholder="70" required${signalReady ? '' : ' disabled'} /></label><p class="sealed">COMPUTE · Enter a whole percentage from 0 to 100. The browser converts it to protocol basis points before encryption.</p><button class="primary" type="submit"${signalReady ? '' : ' disabled'}>${signalReady ? 'Encrypt and submit forecast' : 'Commit window closed'}</button><button class="secondary" id="retry-finalize" type="button" hidden>Retry pending finalization</button><p id="signal-status" class="muted" role="status">${signalReady ? 'No funds moved.' : 'No forecast can be submitted after this pool commit window closes.'}</p>${freshPoolAction}</form></div>`;
+  const status = alreadyCommitted
+    ? 'You already submitted a forecast for this market. Open Your position to reveal it for this session.'
+    : checkingOwnerCommitment
+      ? 'Checking whether this connected wallet already submitted a forecast. No private value is revealed.'
+      : signalReady
+        ? 'No funds moved.'
+        : 'No forecast can be submitted after this pool commit window closes.';
+  const buttonLabel = alreadyCommitted
+    ? 'Forecast already submitted'
+    : checkingOwnerCommitment
+      ? 'Checking your position'
+      : signalReady
+        ? 'Encrypt and submit forecast'
+        : 'Commit window closed';
+  return `<div class="market-action-panel"><p class="eyebrow compute">{ encrypted locally }</p><p>${signalReady ? marketReadinessMessage : unavailableMessage}</p><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required${submissionReady ? '' : ' disabled'} /></label><label>Probability (%) <input name="probability" type="number" min="0" max="100" step="1" inputmode="numeric" autocomplete="off" placeholder="70" required${submissionReady ? '' : ' disabled'} /></label><p class="sealed">COMPUTE · Enter a whole percentage from 0 to 100. The browser converts it to protocol basis points before encryption.</p><button class="primary" type="submit"${submissionReady ? '' : ' disabled'}>${buttonLabel}</button><button class="secondary" id="retry-finalize" type="button" hidden>Retry pending finalization</button><p id="signal-status" class="muted" role="status">${status}</p>${freshPoolAction}</form></div>`;
 }
 
 function positionPanelContent(): string {
@@ -962,6 +1005,12 @@ function render(message?: string): void {
         const provider = activeWallet();
         const pool = routedPoolAddress();
         if (!provider || !manifest || !pool) throw new Error('Connect a Sepolia wallet first.');
+        if (ownerHasCommitted(pool))
+          throw new Error('This connected wallet already submitted a forecast for this market.');
+        const committed = await readOwnerCommitment(provider, pool);
+        recordOwnerCommitment(pool, committed);
+        if (committed)
+          throw new Error('This connected wallet already submitted a forecast for this market.');
         if (status) status.textContent = 'Valid inputs. No funds moved. Starting local encryption…';
         if (
           !beginWalletInteraction(
@@ -981,6 +1030,7 @@ function render(message?: string): void {
         );
         if (status)
           status.textContent = `Signal finalized on Sepolia: ${result.finalizeTransactionHash.slice(0, 10)}…. Public pool state is authoritative.`;
+        recordOwnerCommitment(pool, true);
         endWalletInteraction('Signal finalization was confirmed on Sepolia.', 'success');
       } catch (error) {
         const retry = document.querySelector<HTMLButtonElement>('#retry-finalize');
@@ -1347,6 +1397,7 @@ async function revealOwner(): Promise<void> {
       decryptOwnerPosition(provider, pool),
       readPublicEpoch(pool, provider),
     ]);
+    recordOwnerCommitment(pool, position.committed);
     ownerMessage = position.committed
       ? `Position revealed for this session. Collateral: ${formatTokenAmount(position.stake)} QSCC. Forecast: ${position.probabilityBps.toString()} bps. ${position.scoreAvailable ? `Score: ${position.scoreBps.toString()} bps.` : 'Score has not been materialized.'} ${position.claimed ? 'Claimed.' : position.refunded ? 'Refunded.' : 'No terminal action submitted.'}`
       : 'This wallet has no committed position for the selected public pool.';
@@ -1383,9 +1434,19 @@ async function refreshLifecycle(pool = routedPoolAddress()): Promise<void> {
     'Checking which permissionless actions are eligible in the latest public state…';
   lifecycleActions = [];
   lifecycleActionAvailability = [];
+  const provider = selectedWallet;
+  if (provider) {
+    ownerCommitmentPool = pool.toLowerCase();
+    ownerCommitmentState = 'checking';
+  }
   render();
   try {
-    const epoch = await readPublicLifecycleSnapshot(pool, activeWallet());
+    const [epoch, commitment] = await Promise.all([
+      readPublicLifecycleSnapshot(pool, activeWallet()),
+      provider ? readOwnerCommitment(provider, pool).catch(() => undefined) : Promise.resolve(undefined),
+    ]);
+    if (provider && commitment !== undefined) recordOwnerCommitment(pool, commitment);
+    else if (provider) ownerCommitmentState = 'unchecked';
     const view = presentLifecycle(epoch.state, {
       deadline: epoch.deadline,
       observedAt: epoch.observedAt,
@@ -1456,6 +1517,7 @@ async function connectWallet(provider?: Eip1193Provider): Promise<void> {
         : 'Disconnected';
     endWalletInteraction('Wallet connection to Sepolia was confirmed.', 'success');
     void refreshHeaderBalances();
+    void refreshLifecycle();
   } catch {
     walletState = 'Connection declined';
     endWalletInteraction(

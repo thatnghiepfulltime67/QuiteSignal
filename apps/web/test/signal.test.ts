@@ -58,3 +58,16 @@ test('T-WEB-03-05: a closed pool explains the terminal state and offers market c
   assert.match(main, /Create a verified market/);
   assert.match(main, /after this pool commit window closes/);
 });
+
+test('T-WEB-03-06: a connected owner cannot resubmit a forecast after the pool records it', () => {
+  const main = readFileSync(resolve(root, 'src', 'main.ts'), 'utf8');
+  const wallet = readFileSync(resolve(root, 'src', 'wallet.ts'), 'utf8');
+
+  assert.match(wallet, /export async function readOwnerCommitment/);
+  assert.match(wallet, /functionName: 'ownerPosition'/);
+  assert.match(main, /You already submitted a forecast for this market/);
+  assert.match(main, /Forecast already submitted/);
+  assert.match(main, /readOwnerCommitment\(provider, pool\)/);
+  assert.match(main, /recordOwnerCommitment\(pool, true\)/);
+  assert.doesNotMatch(main, /localStorage|sessionStorage/i);
+});

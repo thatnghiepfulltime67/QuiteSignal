@@ -699,6 +699,21 @@ export async function decryptOwnerPosition(
   };
 }
 
+export async function readOwnerCommitment(
+  provider: BrowserProvider,
+  pool: string,
+): Promise<boolean> {
+  const { account } = await connectedSepoliaWallet(provider);
+  const reader = createPublicClient({ chain: sepolia, transport: custom(provider) });
+  const position = (await reader.readContract({
+    address: publicAddress(pool),
+    account,
+    abi: quietSignalPoolAbi,
+    functionName: 'ownerPosition',
+  } as never)) as { committed: boolean };
+  return position.committed;
+}
+
 export async function submitOwnerTerminalAction(
   provider: BrowserProvider,
   pool: string,
