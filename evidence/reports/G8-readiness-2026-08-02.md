@@ -45,7 +45,8 @@ plaintext, encrypted handles, proofs, signatures, RPC credentials, or raw traces
    the owner-operated primary journey with two real wallets only; it does not prove
    recovery, wrong-owner ACL, accessibility, or the complete browser matrix.
 4. The worktree is not clean because it contains unrelated user changes in
-   `docs/operations/05-local-e2e-video-demo.md` and the untracked user script
+   `docs/operations/05-local-e2e-video-demo.md`,
+   `evidence/sepolia/spend-ledger.json`, and the untracked user script
    `ops/scripts/patch-node.mjs`. G8 requires a clean source checkpoint.
 
 ## Decision
