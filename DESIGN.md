@@ -91,18 +91,19 @@ moment), tight tracking, and centred composition. Body copy stays between 16px a
 
 The persistent header sits on cocoa with a 1px Walnut Vein bottom border. The
 QuietSignal wordmark is an orchid outlined diamond followed by the wordmark in
-display type. Navigation is a grouped task bar: Overview, Markets, Portfolio, and Test
-Lab. Markets lists verified pools and exposes one selected pool's facts and action
+display type. Navigation is a grouped task bar: Overview, Markets, Portfolio, and
+Create. Markets lists verified pools and exposes one selected pool's facts and action
 panels; the selected-pool list stays visible in its own viewport-height scroll rail while
 the detail column scrolls. Portfolio
 holds wallet-level ETH/QSFC/QSCC balance summary, Mint, Approve, Wrap, and explicit
-QSCC Reveal controls alongside position entry points; Test Lab contains Create/Join,
-including an explicit sequential flow for creating ten real verified test pools.
+QSCC Reveal controls alongside position entry points; Create contains one bounded
+verified-market deployment form. A direct shared-market URL remains a verified handoff
+for a second participant, but there is no address-entry or bulk-creation control.
 Use uppercase 12px mono labels in Petal Wash; hover and the current task shift only to
 Neon Orchid. The task bar remains pinned to the top of the viewport while scrolling,
 with an opaque Cocoa background and a Walnut Vein separator so it never visually
-merges with page content. A selected market reveals only the panel the user opens;
-never expose transaction forms for every listed pool at once.
+merges with page content. A selected market keeps its verified facts and action panels
+visible in the detail column; transaction controls remain gated by chain-derived state.
 
 When a wallet is connected, a compact balance strip below the header shows public
 Sepolia ETH and QSFC amounts. QSCC is labelled as hidden until the user explicitly

@@ -1477,11 +1477,12 @@ Rollback/failure action: Restore the fixed self-test values and reject custom qu
 parameters; do not retain selected values in a browser store or bypass factory and
 adapter verification.
 
-Navigation extension: The same slice uses Overview, Markets, Portfolio, and Test Lab.
+Navigation extension: The same slice uses Overview, Markets, Portfolio, and Create.
 Markets is the single selected-pool action surface; Portfolio retains wallet-level
-collateral controls; Test Lab only creates or joins a pool. The canonical pool and
+collateral controls; Create deploys one pool at a time. The canonical pool and
 session-verified self-test pools can be selected without an unverified address list or
-durable browser storage.
+durable browser storage. A direct shared URL remains a factory-verified second-participant
+handoff, but Create does not expose an address-entry control.
 
 Balance extension: The global header reads only connected-wallet public Sepolia ETH and
 QSFC facts. It masks QSCC until an explicit Reveal click requests owner-only access;
@@ -1496,11 +1497,11 @@ confirmation, and chain-derived eligibility checks. Portfolio holds the compact
 wallet-level asset controls, ETH/QSFC/QSCC balance summary, explicit QSCC reveal, and
 links back to a selected pool position.
 
-The Market directory lists only the canonical pool and self-test pools verified in the
-current browser session. Selecting a pool updates the right-hand detail column without
-navigation; the left list remains sticky during scrolling. Test Lab may create ten
-real verified self-test pools sequentially, requiring explicit Sepolia wallet
-confirmation for each deployment and never listing a pool before verification.
+The Market directory lists the canonical pool and verified self-test pools available in
+the current browser session or public registry. Selecting a pool updates the right-hand
+detail column without navigation; the left list remains sticky during scrolling. Create
+deploys one real verified market per explicit user action and never lists a pool before
+verification.
 
 Pooled-local extension output files: `ops/scripts/create-self-test-pools-sepolia.mts`,
 `deployments/sepolia/verified-self-test-pools.json`, and `apps/web/src/main.ts` registry
@@ -1534,6 +1535,37 @@ browser records the public pool address and public policy in memory only after i
 factory creation flow verifies immutable configuration. It stores neither the result
 nor a wallet identifier after the current browser memory is reset, and it never infers
 creator ownership from an arbitrary pool address.
+
+Create-surface simplification extension: Replace the user-facing Test Lab name with
+Create, remove the manual address-entry/join control and ten-market batch deployment,
+and label the remaining action `Create verified market`. Keep the direct factory-verified
+shared URL for a second participant because it is a safe, explicit handoff and does not
+make the Market directory an unverified address registry.
+
+Output files: `apps/web/src/main.ts`, `apps/web/src/styles.css`,
+`apps/web/test/self-test.test.ts`, `apps/web/test/landing-navigation.test.ts`,
+`apps/web/test/signal.test.ts`, this work-item record, and `DESIGN.md`.
+
+Acceptance criteria: The primary navigation says Create; the Create route contains one
+bounded deployment form and one `Create verified market` action. It contains neither a
+manual pool-address field, a join button, nor a ten-market batch action. Existing shared
+URLs still verify immutable factory and configuration facts before opening a market.
+
+Privacy/custody and recovery impact: None. This removes optional local controls only;
+the shared-URL verification boundary, pool state, asset custody, and recovery paths are
+unchanged.
+
+Commands/checks: `npm run typecheck`, `npm run test:web`, `npm run build:web`, and
+`git diff --check`.
+
+Evidence path: focused source tests and production build output. No wallet request or
+Sepolia write is required for this presentation-only change.
+
+Rollback/failure action: Restore only the removed Create controls and their matching
+tests/styles; do not weaken direct shared-URL verification or add unverified pool
+discovery.
+
+Intended commit: `refactor: simplify market creation surface`.
 
 ## WEB-12 work-item record
 

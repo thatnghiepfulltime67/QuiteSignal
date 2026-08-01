@@ -58,7 +58,7 @@ test('T-WEB-10-03: self-test routing preserves the canonical release and uses se
   assert.match(source, /function routedPoolAddress/);
   assert.match(source, /location\.pathname\.startsWith\('\/self-test\/'\)/);
   assert.match(source, /id="launch-self-test"/);
-  assert.match(source, /Create a fresh self-test market/);
+  assert.match(source, /Create verified market/);
   assert.match(source, /No canonical release was changed/);
   assert.match(source, /history\.pushState/);
   assert.doesNotMatch(source, /localStorage|sessionStorage/i);
@@ -83,13 +83,18 @@ test('T-WEB-11-02: a shared self-test pool is factory-verified before its partic
   assert.match(selfTest, /selfTestPolicyForSelection/);
   assert.match(main, /\/self-test\/join\//);
   assert.match(main, /comparison: policy\.comparison/);
-  assert.match(main, /Verify and join pool/);
+  assert.match(main, /function selfTestSharePath/);
+  assert.match(main, /Verified shared market/);
   assert.match(main, /No wallet request or transaction was sent/);
   assert.match(main, /const selfTestMarkets: SelfTestMarket\[\] = \[\]/);
   assert.match(main, /function rememberSelfTestMarket/);
   assert.match(main, /data-select-self-test-pool/);
   assert.match(main, /5 days/);
   assert.match(main, /10 days/);
+  assert.doesNotMatch(main, /id="join-self-test"/);
+  assert.doesNotMatch(main, /id="join-self-test-address"/);
+  assert.doesNotMatch(main, /id="launch-self-test-batch"/);
+  assert.doesNotMatch(main, /Create 10 verified pools/);
   assert.doesNotMatch(
     `${selfTest}\n${main}`,
     /localStorage|sessionStorage|privateKey|mnemonic|seed phrase|console\./i,

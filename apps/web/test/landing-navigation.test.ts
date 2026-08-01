@@ -22,7 +22,7 @@ test('T-WEB-02-LANDING-01: landing and navigation orient users before wallet use
   assert.match(source, /href="#main-content"/);
   assert.match(source, /aria-current="page"/);
   assert.match(source, /navigationLink\('\/', 'Overview'/);
-  for (const task of ['Markets', 'Portfolio', 'Test Lab']) {
+  for (const task of ['Markets', 'Portfolio', 'Create']) {
     assert.match(source, new RegExp(`navigationLink\\([^\\n]+, '${task}'`));
   }
   assert.match(source, /aria-label="Primary tasks"/);
