@@ -1,284 +1,317 @@
-# QuietSignal local E2E video-demo runbook
+# QuietSignal local two-wallet E2E demo runbook
 
-This runbook records the real two-wallet Ethereum Sepolia journey in the local
-QuietSignal web app. It is written for a screen recording, not for injecting keys or
-simulating chain state.
+This runbook covers the complete user-controlled QuietSignal journey in the local web
+application against Ethereum Sepolia. It uses two independent wallets, real Nox
+encryption, real contract transactions, and chain-derived state. It does not use a
+mock branch or alter the system clock.
 
-The main recording proves the successful path:
+The primary journey is:
 
-`connect → create market → prepare collateral → submit two forecasts → close →
-request proof → finalize aggregate → settle → reveal → score → claim`
+**Connect → create market → prepare collateral → submit two encrypted forecasts →
+close → request proof → finalize aggregate → settle → reveal → materialize score →
+claim**
 
-An optional second recording proves the insufficient-cohort recovery path:
+The recovery journey is:
 
-`one forecast → deadline → close → refundable → owner refund`
+**Submit one encrypted forecast → reach deadline → close below threshold → refund**
 
-## Safety and recording rules
+## 1. Recording safety
 
-- Never show a private key, seed phrase, wallet export, `.env` file, terminal secret,
-  or wallet backup screen.
-- Use only disposable Sepolia wallets. The QSFC faucet and QSCC wrapper are test-only
-  and valueless; native Sepolia ETH is still required for gas.
-- Record wallet popups only after the requested transaction and recipient are visible.
-  Close the popup after confirmation so the next step is clear.
-- Keep the browser address bar visible when showing a public market URL, but do not
-  record confidential input, decrypted position bytes, Nox proof bytes, or wallet
-  signatures.
-- The page disables competing controls during a wallet request or receipt wait. Do not
-  refresh or click another action while the upper-right operation toast is pending.
-- A public read or receipt delay is a retry state, not a reason to claim success. Wait
-  for the confirmed toast and the refreshed public state.
+- Never record a private key, seed phrase, wallet export, environment file, RPC
+  credential, or backup screen.
+- Use only disposable Sepolia wallets. QSFC and QSCC are valueless test assets;
+  Sepolia ETH is still required for gas.
+- Show a wallet popup only after checking the intended action and contract. Close the
+  popup after confirmation so the application remains readable.
+- A public market URL may be shown. Never expose raw encrypted handles, Nox proofs,
+  signatures, confidential calldata, or low-level owner data.
+- While the operation notification is visible, do not refresh or start another
+  action. The browser locks competing controls until the wallet request or receipt
+  reaches a terminal result.
+- A slow RPC or pending transaction is not success. Continue only after the receipt is
+  confirmed and the application has refreshed the authoritative state.
 
-## Before recording
+## 2. Prerequisites
 
-Prepare two separate browser profiles or windows:
+Prepare two independent browser profiles:
 
-- **Browser A / Wallet A** — market creator and first participant.
-- **Browser B / Wallet B** — second participant and independent viewer.
+- **Browser A / Wallet A:** market creator and first participant.
+- **Browser B / Wallet B:** second participant and independent shared-link reader.
 
-Both wallets should already be:
+Both wallets must:
 
-1. switched to Ethereum Sepolia;
-2. funded with enough Sepolia ETH for deployment, faucet/wrapper, signal, and
-   lifecycle transactions; and
-3. unlocked in the browser extension.
+1. Be unlocked and connected to Ethereum Sepolia.
+2. Hold enough Sepolia ETH for creation, faucet, approval, wrapping, forecast, and
+   lifecycle transactions.
+3. Be disposable test accounts without valuable assets or personal history.
 
-Do not import either wallet into the application. The app must receive the account only
-through the wallet's normal EIP-1193 connection.
+QuietSignal never imports a wallet. It receives the selected account through the
+normal EIP-1193 connection flow.
 
-## Start the local web app
+Before recording, close personal tabs, hide unrelated bookmarks, and disable unrelated
+desktop notifications.
+
+## 3. Start the local application
 
 From the repository root:
 
-```bash
+```sh
 npm run dev:web -- --host 127.0.0.1
 ```
 
 Open <http://localhost:5173/> in both browser profiles. Keep the terminal outside the
-recording frame or crop it so no environment values are visible.
+recording frame so environment values cannot be exposed.
 
 ### Opening shot
 
-Record the landing page briefly:
+Show:
 
-- QuietSignal overview and the privacy legend (`PRIVATE`, `COMPUTE`, `PUBLIC`,
-  `PENDING`);
-- the sticky navigation: `Markets`, `Portfolio`, and `Create`; and
-- the `Sepolia` network indicator.
+- the QuietSignal Overview page;
+- the `PRIVATE`, `COMPUTE`, `PUBLIC`, and `PENDING` privacy legend;
+- the persistent Markets, Portfolio, and Create navigation;
+- the Sepolia network indicator.
 
-Then open `Markets`. Before a wallet is connected, the page should show the canonical
-pool and the published verified pools. The compact filter is closed and reads
-`Filter: All pools`; click it once to show the available condition, participant-gate,
-and window filters, then close it again. This is a read-only step.
+Open Markets before connecting a wallet. Confirm that the canonical pool and published
+verified pools render from public state. The collapsed filter should initially read
+`Filter: All pools`. Open it briefly to show the condition, participant-gate, and
+commit-window filters, then close it.
 
-## Part 1 — Create one real market with Wallet A
+This opening sequence is read-only and must not request a wallet transaction.
 
-Use a fresh market for the successful path so its deadline is known and the recording
-does not depend on an already closed pool.
+## 4. Create a real market with Wallet A
 
-1. In Browser A, click `Connect wallet`, choose Wallet A, and confirm Sepolia if the
-   wallet asks to switch networks.
-2. Open `Create`.
-3. Select a simple public configuration:
-   - comparison: `ETH/USD ≥ threshold`;
-   - threshold: `2000`;
-   - commit window: `15 minutes` (use `5 minutes` only if both collateral balances are
-     already prepared); and
-   - participant gate: `2`.
-4. Click `Create verified market`.
-5. Approve the immutable adapter deployment in Wallet A and wait for its receipt.
-6. Approve the factory pool creation in Wallet A and wait for its receipt.
-7. Capture the success toast, the public pool address, condition, deadline, and
-   participant gate. Do not record any wallet signature details.
+Use a new market so the immutable deadline is clear and the journey does not depend on
+an already closed pool.
 
-The page should say that the market is verified and offer a public second-participant
-link. Copy or open that link for Browser B. The link contains only public market
-configuration; it contains no account, stake, probability, key, handle, or proof.
+1. In Browser A, select **Connect wallet**.
+2. Choose Wallet A and switch to Sepolia if requested.
+3. Open **Create**.
+4. Select:
+   - comparison: **ETH/USD ≥ threshold**;
+   - threshold: **2000**;
+   - commit window: **15 minutes**;
+   - participant gate: **2**.
+5. Select **Create verified market**.
+6. Confirm the immutable adapter deployment.
+7. Wait for the adapter receipt.
+8. Confirm pool creation through the manifest-bound factory.
+9. Wait for the pool receipt and verification readback.
+10. Show the success notification, pool address, condition, deadline, and gate.
 
-## Part 2 — Verify the shared market with Wallet B
+Use the five-minute window only if both wallets already hold enough QSCC. Fifteen
+minutes is safer when collateral must be minted and wrapped during the recording.
 
-1. In Browser B, open the shared market link from Part 1.
-2. Let the page finish the wallet-free factory/configuration verification. It should
-   not request a signature just to verify the link.
-3. Connect Wallet B on Sepolia.
-4. Open `Markets` and select the created pool. If it is not immediately in the list,
-   click the small refresh icon beside `Markets`; the factory discovery is public-read
-   only and does not submit a transaction.
-5. Show the same condition, deadline, pool address, and `At least 2 participants`
-   facts in Browser B. This demonstrates that the market is not limited to Wallet A's
-   browser memory.
+The resulting participant link contains public configuration only. It must not contain
+an account, forecast, stake, private key, encrypted handle, or proof.
 
-## Part 3 — Prepare test collateral in both wallets
+## 5. Verify the shared market with Wallet B
 
-Perform the following sequence once in Browser A and once in Browser B. Keep the
-selected created pool unchanged while moving between `Portfolio` and `Markets`.
+1. Open the public participant link in Browser B.
+2. Wait for the factory mapping and immutable configuration checks.
+3. Confirm that link verification requests no signature or transaction.
+4. Connect Wallet B on Sepolia.
+5. Open Markets and select the new pool.
+6. If it is not visible yet, use the compact Markets refresh control.
 
-1. Open `Portfolio`.
-2. In `Amount`, enter `2` QSFC. This leaves room for a `1.00` QSCC forecast stake.
-3. Click `Mint QSFC`, confirm the faucet transaction, and wait for the success toast.
-4. Click `Wrap QSCC`.
-   - If allowance is insufficient, the app requests an exact QSFC approval first.
-   - Confirm the approval transaction and wait for its receipt.
-   - Confirm the wrap transaction and wait for its receipt.
-5. Click `Reveal QSCC` if you want the recording to show the owner-only balance read.
-   The balance is displayed only for the current browser session.
-6. Click the compact balance refresh icon if you want to show the final public QSFC,
-   private QSCC, allowance, and Sepolia gas rows.
+Factory discovery reads public events and contract state only. It must not send a
+transaction.
 
-The Portfolio header should show public ETH/QSFC and masked or explicitly revealed QSCC.
-No confidential balance should appear in the URL, browser storage, terminal, or video
-overlay.
+Show the same public condition, deadline, pool address, and `At least 2 participants`
+rule in Browser B. This demonstrates that the market is public Sepolia state rather
+than browser-local application data.
 
-## Part 4 — Submit two encrypted forecasts
+## 6. Prepare collateral for both wallets
 
-Before recording the transaction sequence, return both browsers to `Markets`, select the
-created pool, and click the Market refresh icon. The forecast panel should say the pool
-is accepting signals.
+Perform these steps in Browser A, then repeat them in Browser B:
+
+1. Open **Portfolio**.
+2. Enter **2** in Amount.
+3. Select **Mint QSFC**, confirm the faucet transaction, and wait for its receipt.
+4. Select **Wrap QSCC**.
+5. If the allowance is insufficient:
+   - confirm the exact-amount approval;
+   - wait for the approval receipt;
+   - confirm the wrap transaction;
+   - wait for the wrap receipt.
+6. Select **Reveal QSCC** to display the private balance for the current browser
+   session.
+7. Optionally use the compact balance refresh control to show the final state.
+
+The final Portfolio view should distinguish:
+
+- public Sepolia ETH used for gas;
+- public valueless QSFC;
+- session-revealed private QSCC;
+- the wrapper allowance.
+
+Wrap at least 2 QSCC for each wallet so both can submit a 1.00 QSCC forecast. Never put
+the private QSCC balance in a URL, terminal, log, or browser store.
+
+## 7. Submit two encrypted forecasts
+
+In both browsers, return to Markets, select the new pool, refresh its public state, and
+confirm that the forecast panel says the commit window is open.
 
 ### Wallet A
 
-1. Enter collateral `1.00`.
-2. Enter probability `70` (the user-facing percentage; the browser converts it to
-   protocol basis points locally).
-3. Click `Encrypt and submit forecast`.
-4. Follow every wallet prompt and wait for each confirmed receipt.
-5. Capture the success toast and the changed state `Forecast already submitted`.
+1. Enter collateral **1.00**.
+2. Enter probability **70**.
+3. Select **Encrypt and submit forecast**.
+4. Follow each explicit wallet request.
+5. Wait for every required receipt.
+6. Show the confirmed notification.
+7. Confirm that the button becomes **Forecast already submitted**.
 
 ### Wallet B
 
-1. Enter collateral `1.00`.
-2. Enter probability `30`.
-3. Click `Encrypt and submit forecast`.
-4. Follow every wallet prompt and wait for the confirmed receipts.
-5. Capture the public participant count reaching `2` after a lifecycle refresh.
+1. Enter collateral **1.00**.
+2. Enter probability **30**.
+3. Select **Encrypt and submit forecast**.
+4. Follow each explicit wallet request.
+5. Wait for every required receipt.
+6. Refresh the public lifecycle.
+7. Show that the participant count is **2**.
 
-The two probabilities must never be shown as public plaintext in a URL, log, or
-recorded developer console. The visible form values are local user input; the protocol
-commit is encrypted before submission.
+The displayed values are user percentages. The browser converts them to integer basis
+points before Nox encryption. Do not open developer tools or expose plaintext values,
+encrypted handles, proofs, or confidential calldata during this sequence.
 
-## Part 5 — Demonstrate the lifecycle controls
+## 8. Show lifecycle prerequisites before the deadline
 
-Open the selected pool's `Lifecycle` panel in either browser. The panel always shows
-all contract-defined controls, but disabled controls expose their exact prerequisite
-on hover or keyboard focus.
+Open Lifecycle for the selected pool. Controls that are not yet eligible remain visible
+but disabled. Hover or focus each disabled control to show its prerequisite:
 
-### Before the deadline
+- **Close window:** waits for the immutable deadline.
+- **Request proof:** waits for close with `participantCount ≥ kMin`.
+- **Finalize aggregate:** waits for a proof request and valid Nox attestations.
+- **Settle from price feed:** waits for aggregate finalization and the observation
+  boundary.
+- **Expire pending:** applies only to a timed-out pending commit.
+- **Refund before resolution:** applies only after aggregate-request timeout.
+- **Refund after grace:** applies only after resolution grace expires.
 
-Record the disabled states and hover/focus explanations:
+Do not attempt a disabled action. Its adjacent copy and keyboard-accessible tooltip
+already explain why the contract will reject it.
 
-- `Close window` waits for the immutable deadline;
-- `Request proof` waits for a successful close with `participantCount ≥ kMin`;
-- `Finalize aggregate` waits for a proof request and valid public attestations;
-- `Settle from price feed` waits for finalized aggregate and the observation boundary;
-- each recovery action waits for its own pending/timeout state.
+## 9. Close the commit window
 
-### After the commit deadline
+Wait for the displayed deadline; do not change the machine clock.
 
-Wait for the displayed deadline. Do not change the system clock. Refresh public state
-with the small Lifecycle refresh icon. With two finalized participants, only
-`Close window` should be enabled.
+1. Refresh Lifecycle.
+2. With two finalized participants, confirm that **Close window** is eligible.
+3. Submit it from either connected wallet.
+4. Confirm the transaction and wait for its receipt.
+5. Refresh public state.
+6. Show **Aggregate pending**.
 
-1. Click `Close window` from Wallet A or Wallet B.
-2. Confirm the transaction and wait for the receipt.
-3. Refresh public state and capture `Aggregate pending`.
+If a `k=2` pool has only one participant, close moves directly to `Refundable`. In that
+case, skip aggregate proof and settlement and follow the recovery journey below.
 
-If only one participant was finalized in a `k=2` pool, the same action instead moves
-the pool directly to `Refundable`; skip the proof/settlement steps and use the optional
-refund branch below.
+## 10. Request and finalize the aggregate
 
-### Request and finalize the aggregate
+After a successful threshold close:
 
-1. When `Request proof` becomes enabled, click it from either connected wallet.
-2. Confirm the transaction and wait for the success toast.
-3. Click `Finalize aggregate`.
-4. The browser obtains the two transient Nox public attestations and requests the
-   wallet transaction. Confirm it and wait for the receipt.
-5. Refresh public state and capture `Resolution pending`.
+1. Wait for **Request proof** to become eligible.
+2. Submit it and wait for the confirmed receipt.
+3. Select **Finalize aggregate**.
+4. Let the browser request the two transient Nox public attestations.
+5. Confirm the finalize transaction and wait for the receipt.
+6. Refresh public state.
+7. Show **Resolution pending** and the public YES/NO aggregate.
 
-Do not record or copy the aggregate handles, proof bytes, or any decrypted aggregate
-value. Only the public lifecycle label and confirmed transaction result belong in the
-video.
+Do not copy or display aggregate handles or proof bytes. Only the permitted aggregate,
+public lifecycle label, and confirmed transaction result belong in the recording.
 
-### Settle from the immutable price feed
+## 11. Settle from the immutable price feed
 
-The adapter's observation boundary is intentionally later than the commit deadline.
-Wait until the UI enables `Settle from price feed`; this may require the configured
-resolution grace interval. Refresh public state before submitting.
+The observation boundary is later than the commit deadline. Wait until **Settle from
+price feed** becomes eligible, then:
 
-1. Click `Settle from price feed`.
-2. Confirm the wallet transaction and wait for its receipt.
-3. Refresh public state and capture `Settled` plus the public settlement facts.
+1. Refresh public state.
+2. Submit settlement.
+3. Confirm the wallet transaction.
+4. Wait for the receipt and refresh again.
+5. Show **Settled**, the observed public price, Chainlink round, aggregate, and
+   resulting outcome.
 
-The browser supplies no caller-selected outcome. The Chainlink adapter and contract
-state are authoritative. If the feed is stale/invalid or the winning aggregate is zero,
-the action remains unavailable or reverts safely; record the retry state rather than
-claiming settlement.
+The user does not choose the outcome. The contract reads the immutable Chainlink
+adapter. If the feed is stale or invalid, or the winning aggregate is zero, show the
+safe retry/recovery state and do not claim settlement.
 
-## Part 6 — Reveal and complete both owner positions
+## 12. Reveal owner results, materialize score, and claim
 
-Repeat the following in Browser A and Browser B, using the wallet that submitted that
-position:
+Repeat this sequence for Wallet A and Wallet B. Each browser must use the wallet that
+submitted that position.
 
-1. Open `Your position` for the selected pool.
-2. Click `Reveal with owner wallet` and approve the owner-only authorization/read if
-   requested.
-3. Capture only the human-readable session state; never expose encrypted handles or
-   proof material.
-4. Click `Materialize score` and wait for the confirmed receipt.
-5. Click `Claim payout` and wait for the confirmed receipt.
-6. Refresh the owner position and capture `Claimed` (or the safe no-payout state if
-   that participant did not win).
+1. Select the pool in Markets.
+2. Open **Your position**.
+3. Select **Reveal with owner wallet**.
+4. Approve the owner-only authorization/read if requested.
+5. Show the human-readable collateral, forecast, and position state.
+6. Show the expected payout card and exact floor-division formula.
+7. Select **Materialize score** and wait for its receipt.
+8. Reveal again if required to display the owner-only score.
+9. Select **Claim payout** and wait for its receipt.
+10. Show the refreshed QSCC balance and **Claimed** terminal status.
 
-No claim is submitted automatically by opening the page. Account changes must mask the
-position again before recording the next wallet.
+Opening the position does not automatically claim or refund. Switching accounts or
+chains must immediately mask the owner view before the other wallet is recorded.
 
-## Optional Part 7 — Record the insufficient-cohort refund branch
+## 13. Recovery journey: below-threshold refund
 
-Use a separate fresh pool so the successful settlement recording remains intact:
+Use a separate fresh pool so the successful settlement market remains intact:
 
-1. Wallet A creates another market with a `5-minute` window and gate `2`.
-2. Prepare collateral for Wallet A only.
-3. Submit one forecast from Wallet A; do not submit from Wallet B.
-4. Wait for the deadline and refresh public state.
-5. Click `Close window` and wait for the receipt.
-6. Capture `Refundable`. The Lifecycle action buttons are now disabled because no
-   further permissionless lifecycle transition is needed.
-7. In `Your position`, click `Reveal with owner wallet`.
-8. Click `Request refund`, confirm the owner transaction, and wait for the receipt.
-9. Refresh and capture `Refunded`.
+1. Wallet A creates a market with a five-minute commit window and gate `2`.
+2. Wallet A submits one encrypted forecast; Wallet B does not participate.
+3. Wait for the immutable deadline and refresh Lifecycle.
+4. Submit **Close window** and wait for the receipt.
+5. Show `Refundable` and confirm that aggregate/settlement actions are unavailable.
+6. In Wallet A, reveal the owner position.
+7. Select **Request refund** and wait for the receipt.
+8. Show the refreshed confidential balance and **Refunded** terminal status.
 
-This branch demonstrates why a `k=2` pool with only one participant does not expose
-`Request proof`, `Finalize aggregate`, or `Settle from price feed` after close.
+This branch demonstrates that a below-threshold cohort never exposes aggregate proof
+or settlement actions.
 
-## Suggested edit order for one polished video
+## 14. Recommended four-minute edit
 
-1. Landing page and navigation (10–15 seconds).
-2. Wallet A connection and Create form.
-3. Adapter and pool receipts.
-4. Wallet B shared-link verification and connection.
-5. Portfolio collateral preparation in both wallets.
-6. Wallet A and Wallet B encrypted forecasts.
-7. Disabled lifecycle tooltips before deadline.
-8. Deadline, close, aggregate proof, and settlement.
-9. Owner reveal, score, and claim in both wallets.
-10. Optional refund branch as a separate chapter or follow-up clip.
+Use jump cuts and a visible `Waiting for immutable deadline` title card. Never change
+the clock or edit a pending transaction to look confirmed.
 
-Use jump cuts or a visible “waiting for deadline” title card instead of changing the
-clock or implying that a transaction finished before its receipt.
+Recommended order:
 
-## Final evidence checklist
+1. Overview, privacy boundary, and navigation.
+2. Wallet A creates a market.
+3. Wallet B verifies the shared public market.
+4. Both wallets prepare collateral.
+5. Wallet A submits 70%; Wallet B submits 30%.
+6. The participant count reaches two.
+7. Close, request proof, and finalize aggregate.
+8. Settle from the price feed.
+9. Reveal owner result, materialize score, and claim.
+10. Briefly show the separate below-threshold refund terminal state if time permits.
 
-Record these public facts in a separate note after filming:
+Long wallet waits, duplicate setup, and the full recovery journey can be accelerated or
+placed in a separate chapter, but every displayed success must come from a real
+confirmed Sepolia operation.
 
-- local app URL and Git revision;
-- Sepolia chain id;
-- created pool address and immutable condition/gate/deadline;
-- transaction hashes and confirmed block numbers for deployment, collateral, forecasts,
-  lifecycle, settlement, claim, and refund steps;
-- which browser/wallet performed each owner action; and
-- any retry or RPC-degraded state that was shown.
+## 15. Final review checklist
 
-Do not include seed phrases, private keys, wallet signatures, confidential plaintext,
-Nox proof bytes, or raw owner handles in the video or evidence note. A user video alone
-is a product demonstration; it should not be labelled G7 evidence unless the separate
-sanitized evidence format and verifier requirements are also satisfied.
+Before exporting the video, verify that it shows:
+
+- Ethereum Sepolia and the QuietSignal application;
+- two independent wallets using the same public pool;
+- the public pool address, condition, gate, and deadline;
+- two confirmed encrypted forecast journeys;
+- participant count `2` in the success market;
+- close, proof request, aggregate finalization, and settlement in order;
+- owner data revealed only by the matching wallet;
+- score materialization and payout claim;
+- the exact payout formula and confirmed terminal status;
+- the below-threshold refundable path if included;
+- no private key, seed phrase, environment value, raw handle, proof, signature, or
+  confidential calldata.
+
+Keep the final competition video at or below four minutes. The public repository URL,
+production URL, Sepolia network, and `@iEx_ec` submission tag should appear in the
+published video description or accompanying X post.
