@@ -28,6 +28,7 @@ plaintext, encrypted handles, proofs, signatures, RPC credentials, or raw traces
 | `npm run verify:evidence` | Pass; G3 read verifier, 47 receipts, 3 recovery slices |
 | `npm run scan:secrets` | Pass; tracked files/history clear |
 | clean `git archive` → `npm ci` → `npm run compile` → `npm run build:web` | Pass; ignored Hardhat artifacts are now generated before typecheck |
+| Vercel production deployment | Pass; `dpl_CUfq8iUNjK1VBbFFZcPeX32Gwf7p` is Ready and `/`, `/markets`, `/portfolio`, `/self-test`, `/position` return HTTP 200 |
 
 ## Blockers
 
