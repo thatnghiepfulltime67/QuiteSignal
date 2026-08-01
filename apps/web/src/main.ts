@@ -1,7 +1,11 @@
 import './styles.css';
 import { parsePublicManifest, type PublicManifest } from './manifest.js';
 import { presentMarket } from './market.js';
-import { probabilityPercentToBps, validateSignalDraft } from './signal.js';
+import {
+  formatProbabilityPercent,
+  probabilityPercentToBps,
+  validateSignalDraft,
+} from './signal.js';
 import { presentVerification } from './verification.js';
 import { presentLifecycle } from './lifecycle.js';
 import {
@@ -1541,7 +1545,7 @@ async function revealOwner(): Promise<void> {
     ]);
     recordOwnerCommitment(pool, position.committed);
     ownerMessage = position.committed
-      ? `Position revealed for this session. Collateral: ${formatTokenAmount(position.stake)} QSCC. Forecast: ${position.probabilityBps.toString()} bps. ${position.scoreAvailable ? `Score: ${position.scoreBps.toString()} bps.` : 'Score has not been materialized.'} ${position.claimed ? 'Claimed.' : position.refunded ? 'Refunded.' : 'No terminal action submitted.'}`
+      ? `Position revealed for this session. Collateral: ${formatTokenAmount(position.stake)} QSCC. Forecast: ${formatProbabilityPercent(position.probabilityBps)}. ${position.scoreAvailable ? `Score: ${formatProbabilityPercent(position.scoreBps)}.` : 'Score has not been materialized.'} ${position.claimed ? 'Claimed.' : position.refunded ? 'Refunded.' : 'No terminal action submitted.'}`
       : 'This wallet has no committed position for the selected public pool.';
     ownerActions = '';
     if (position.committed && !position.claimed && !position.refunded) {

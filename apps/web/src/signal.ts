@@ -19,6 +19,16 @@ export function probabilityPercentToBps(input: string): string {
   return (percent * 100n).toString();
 }
 
+export function formatProbabilityPercent(probabilityBps: bigint): string {
+  if (probabilityBps < 0n || probabilityBps > 10_000n)
+    throw new Error('Probability must be between 0 and 10,000 basis points.');
+  const wholePercent = probabilityBps / 100n;
+  const remainder = probabilityBps % 100n;
+  if (remainder === 0n) return `${wholePercent}%`;
+  const fractionalPercent = remainder.toString().padStart(2, '0').replace(/0+$/, '');
+  return `${wholePercent}.${fractionalPercent}%`;
+}
+
 export function validateSignalDraft(draft: SignalDraft): ValidSignalDraft {
   const stake = parseBaseUnits(decimalInput(draft.stake, 18), 18);
   if (stake === 0n) throw new Error('Collateral must be greater than zero.');
