@@ -103,6 +103,16 @@ let assetBusy = false;
 let selfTestMarket: SelfTestMarket | undefined;
 const selfTestMarkets: SelfTestMarket[] = [];
 let selectedMarketKey = 'canonical';
+type MarketPoolFilter =
+  | 'all'
+  | 'greater-or-equal'
+  | 'less-than'
+  | 'gate-2'
+  | 'gate-3-4'
+  | 'gate-5-plus'
+  | 'short-window'
+  | 'long-window';
+let marketPoolFilter: MarketPoolFilter = 'all';
 let selfTestBusy = false;
 const createdSelfTestMarkets: Array<{ owner: string; market: SelfTestMarket }> = [];
 let selfTestMessage =
@@ -151,6 +161,40 @@ function formatDeadline(timestamp: bigint | number): string {
     minute: '2-digit',
     timeZoneName: 'short',
   }).format(new Date(Number(timestamp) * 1000));
+}
+
+function marketPoolFilterLabel(filter: MarketPoolFilter): string {
+  return {
+    all: 'All pools',
+    'greater-or-equal': '≥ threshold',
+    'less-than': '< threshold',
+    'gate-2': '2 participants',
+    'gate-3-4': '3–4 participants',
+    'gate-5-plus': '5+ participants',
+    'short-window': 'Up to 2 hours',
+    'long-window': '5+ days',
+  }[filter];
+}
+
+function matchesMarketPoolFilter(market: SelfTestMarket): boolean {
+  switch (marketPoolFilter) {
+    case 'greater-or-equal':
+      return market.policy.comparison === 'greater-or-equal';
+    case 'less-than':
+      return market.policy.comparison === 'less-than';
+    case 'gate-2':
+      return market.participantGate === 2;
+    case 'gate-3-4':
+      return market.participantGate >= 3 && market.participantGate <= 4;
+    case 'gate-5-plus':
+      return market.participantGate >= 5;
+    case 'short-window':
+      return market.policy.commitWindowMinutes <= 120;
+    case 'long-window':
+      return market.policy.commitWindowMinutes >= 7_200;
+    case 'all':
+      return true;
+  }
 }
 
 function captureSelfTestDraft(): void {
@@ -676,14 +720,35 @@ function marketDirectoryContent(canonicalMarket: ReturnType<typeof presentMarket
         poolAddress: selectedSelfTest.poolAddress,
       }
     : canonicalMarket;
-  const verifiedPools = selfTestMarkets
+  const visibleSelfTestMarkets = selfTestMarkets.filter(
+    (market) =>
+      matchesMarketPoolFilter(market) || selectedMarketKey === `self-test:${market.poolAddress}`,
+  );
+  const verifiedPools = visibleSelfTestMarkets
     .map(
       (market) =>
         `<button class="market-list-item" type="button" data-select-market="self-test:${market.poolAddress}"${selectedMarketKey === `self-test:${market.poolAddress}` ? ' aria-pressed="true"' : ''}><span class="eyebrow compute">{ verified pool }</span><strong>${market.policy.conditionLabel}</strong><small>Deadline ${formatDeadline(market.deadline)} · ${market.participantGate}-participant gate</small></button>`,
     )
     .join('');
+  const filterOptions = (
+    [
+      ['all', 'All pools'],
+      ['greater-or-equal', '≥ threshold'],
+      ['less-than', '< threshold'],
+      ['gate-2', '2 participants'],
+      ['gate-3-4', '3–4 participants'],
+      ['gate-5-plus', '5+ participants'],
+      ['short-window', 'Up to 2 hours'],
+      ['long-window', '5+ days'],
+    ] as const
+  )
+    .map(
+      ([value, label]) =>
+        `<option value="${value}"${marketPoolFilter === value ? ' selected' : ''}>${label}</option>`,
+    )
+    .join('');
   const detail = marketSurfaceContent(selectedMarket, Boolean(selectedSelfTest));
-  return `<section class="band petal-band market-directory"><div class="band-inner"><p class="eyebrow public">{ market directory }</p><div class="market-directory-heading"><h1>Markets</h1><button class="text-button market-refresh-icon" id="refresh-selected-market" type="button" aria-label="Refresh selected market" title="Refresh selected market">↻</button></div><p class="route-lead">Choose a verified pool on the left. Its facts and actions open here, without leaving the page.</p><div class="market-workspace"><aside class="market-list" aria-label="Verified pools"><p class="eyebrow public">{ verified pools }</p><button class="market-list-item canonical-pool" type="button" data-select-market="canonical"${selectedMarketKey === 'canonical' ? ' aria-pressed="true"' : ''}><span class="eyebrow public">{ verified pool }</span><strong>${canonicalMarket.condition}</strong><small>${canonicalMarket.cohortGate}</small></button>${registryStatusContent(verifiedPools)}<a class="text-action dark-action" href="/self-test?new=1">Create a verified market <span aria-hidden="true">↗</span></a></aside><div class="market-detail-column">${detail}</div></div></div></section>`;
+  return `<section class="band petal-band market-directory"><div class="band-inner"><p class="eyebrow public">{ market directory }</p><div class="market-directory-heading"><h1>Markets</h1><button class="text-button market-refresh-icon" id="refresh-selected-market" type="button" aria-label="Refresh selected market" title="Refresh selected market">↻</button></div><p class="route-lead">Choose a verified pool on the left. Its facts and actions open here, without leaving the page.</p><div class="market-workspace"><aside class="market-list" aria-label="Verified pools"><p class="eyebrow public">{ verified pools }</p><details class="market-pool-filter"><summary>Filter: ${marketPoolFilterLabel(marketPoolFilter)}</summary><label for="market-pool-filter">Pool filter</label><select id="market-pool-filter">${filterOptions}</select></details><button class="market-list-item canonical-pool" type="button" data-select-market="canonical"${selectedMarketKey === 'canonical' ? ' aria-pressed="true"' : ''}><span class="eyebrow public">{ verified pool }</span><strong>${canonicalMarket.condition}</strong><small>${canonicalMarket.cohortGate}</small></button>${registryStatusContent(verifiedPools)}<a class="text-action dark-action" href="/self-test?new=1">Create a verified market <span aria-hidden="true">↗</span></a></aside><div class="market-detail-column">${detail}</div></div></div></section>`;
 }
 
 function portfolioContent(): string {
@@ -1043,6 +1108,13 @@ function render(message?: string): void {
       render();
     });
   });
+  document
+    .querySelector<HTMLSelectElement>('#market-pool-filter')
+    ?.addEventListener('change', (event) => {
+      const value = (event.currentTarget as HTMLSelectElement).value as MarketPoolFilter;
+      marketPoolFilter = value;
+      render();
+    });
   document.querySelectorAll<HTMLButtonElement>('[data-select-self-test-pool]').forEach((button) => {
     button.addEventListener('click', () => {
       const address = button.dataset.selectSelfTestPool;

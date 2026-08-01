@@ -1585,6 +1585,19 @@ tests, all 50 web tests, root typecheck, production web build, targeted Prettier
 protocol Hardhat compile because this runner has Node 20.12.2 while Hardhat requires
 Node 22.13+; no wallet request or Sepolia write was made by this slice.
 
+Compact filter extension: The Market directory keeps `All pools` as its default and
+places one client-only filter inside a collapsed native details control. It offers
+condition direction, participant gate, and short/long commit-window choices without
+changing the selected pool or reading any additional private state. The selected pool
+remains visible while a filter is active so the right-hand action surface never loses
+context.
+
+Output files: `apps/web/src/main.ts`, `apps/web/src/styles.css`,
+`apps/web/test/landing-navigation.test.ts`, and this work-item record.
+
+Checks: focused web tests, production build, typecheck, targeted formatting, and
+`git diff --check`. Intended commit: `feat: add compact market filters`.
+
 Create-surface simplification extension: Replace the user-facing Test Lab name with
 Create, remove the manual address-entry/join control and ten-market batch deployment,
 and label the remaining action `Create verified market`. Keep the direct factory-verified
@@ -1732,6 +1745,38 @@ Rollback/failure action: Restore the text label while retaining the same read-on
 handler if the icon-only control fails accessibility review.
 
 Intended commit: `refactor: compact lifecycle refresh control`.
+
+Production-routing extension: Deploy the Vite application through the existing
+Vercel project with a catch-all SPA rewrite so every documented route remains
+shareable and refresh-safe. The rewrite serves the same production `index.html` for
+client routes while Vercel continues to serve existing static assets and public
+release JSON files directly.
+
+Output files: `vercel.json`, `apps/web/test/resilience.test.ts`, and this work-item
+record.
+
+Acceptance criteria: `/markets`, `/portfolio`, `/self-test`, `/position`, pool, and
+verification URLs return the production application when opened directly or
+refreshed. Existing assets, `active-release.json`, release manifests, and the public
+self-test registry remain independently fetchable. The deployment is created by the
+authorized Vercel CLI account without Git attribution until the repository author is
+linked to the Vercel team.
+
+Privacy/custody and recovery impact: None. Routing changes only static application
+delivery and introduces no backend, signer, storage, confidential input, wallet
+authority, or recovery transition.
+
+Commands/checks: focused rewrite assertion, `npm run test:web`, root typecheck,
+production build, Vercel production deploy, direct-route HTTP/browser inspection,
+and `git diff --check`.
+
+Evidence path: Vercel deployment status and public HTTP smoke checks only. This is
+deployment evidence, not a substitute for the wallet-held G7 journey.
+
+Rollback/failure action: Remove the catch-all rewrite and restore the previous
+deployment; never replace client routing with a stateful application backend.
+
+Intended commit: `fix: preserve application routes on vercel`.
 
 ## WEB-16 work-item record
 
