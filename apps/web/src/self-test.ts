@@ -24,7 +24,9 @@ const SELF_TEST_THRESHOLD_DECIMALS = 8;
 const MIN_SELF_TEST_THRESHOLD = 100_000_000n;
 const MAX_SELF_TEST_THRESHOLD = 100_000_000_000_000n;
 const MIN_SELF_TEST_COMMIT_WINDOW_MINUTES = 5;
-const MAX_SELF_TEST_COMMIT_WINDOW_MINUTES = 180;
+// Public configuration stays bounded so a stale shared link cannot create an
+// effectively unbounded market, while still allowing practical multi-day testing.
+const MAX_SELF_TEST_COMMIT_WINDOW_MINUTES = 20_160;
 const MIN_SELF_TEST_PARTICIPANT_GATE = 2;
 const MAX_SELF_TEST_PARTICIPANT_GATE = 20;
 
@@ -381,7 +383,9 @@ export async function loadSelfTestMarket(
     policy,
   );
   if (observationNotBefore !== config.deadline + RESOLUTION_GRACE_SECONDS)
-    throw new Error('The self-test resolution adapter does not preserve the fixed resolution boundary.');
+    throw new Error(
+      'The self-test resolution adapter does not preserve the fixed resolution boundary.',
+    );
   return {
     poolAddress: pool,
     adapterAddress: config.resolutionAdapter,

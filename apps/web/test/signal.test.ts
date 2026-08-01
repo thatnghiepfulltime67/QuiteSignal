@@ -50,3 +50,11 @@ test('T-WEB-03-04: every submitted stage waits for a receipt and exposes a no-pl
   assert.match(styles, /\.secondary\[hidden\]\s*\{\s*display: none;/);
   assert.match(main, /event\.currentTarget\.reset\(\);/);
 });
+
+test('T-WEB-03-05: a closed pool explains the terminal state and offers a fresh test market', () => {
+  const main = readFileSync(resolve(root, 'src', 'main.ts'), 'utf8');
+
+  assert.match(main, /Commit window closed/);
+  assert.match(main, /Create a fresh test market/);
+  assert.match(main, /after this pool commit window closes/);
+});

@@ -24,6 +24,15 @@ test('T-WEB-10-01: a fresh self-test epoch has a bounded open commit window befo
     'ETH/USD ≥ $3000',
   );
   assert.equal(selfTestPolicyForSelection('greater-or-equal', '300000000000', 4, 5), undefined);
+  assert.equal(
+    selfTestPolicyForSelection('greater-or-equal', '300000000000', 7_200, 2)?.commitWindowMinutes,
+    7_200,
+  );
+  assert.equal(
+    selfTestPolicyForSelection('less-than', '300000000000', 14_400, 2)?.commitWindowMinutes,
+    14_400,
+  );
+  assert.equal(selfTestPolicyForSelection('less-than', '300000000000', 20_161, 2), undefined);
 });
 
 test('T-WEB-10-02: browser launch deploys only an immutable adapter then creates and rereads one pool', () => {
@@ -79,6 +88,8 @@ test('T-WEB-11-02: a shared self-test pool is factory-verified before its partic
   assert.match(main, /const selfTestMarkets: SelfTestMarket\[\] = \[\]/);
   assert.match(main, /function rememberSelfTestMarket/);
   assert.match(main, /data-select-self-test-pool/);
+  assert.match(main, /5 days/);
+  assert.match(main, /10 days/);
   assert.doesNotMatch(
     `${selfTest}\n${main}`,
     /localStorage|sessionStorage|privateKey|mnemonic|seed phrase|console\./i,

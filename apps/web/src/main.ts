@@ -96,12 +96,7 @@ let selectedMarketKey = 'canonical';
 let selfTestBusy = false;
 let selfTestMessage =
   'Create a fresh public test market only when you are ready to approve two Sepolia deployment transactions from your own wallet.';
-const defaultSelfTestPolicy = selfTestPolicyForSelection(
-  'greater-or-equal',
-  '200000000000',
-  25,
-  2,
-);
+const defaultSelfTestPolicy = selfTestPolicyForSelection('greater-or-equal', '200000000000', 25, 2);
 if (!defaultSelfTestPolicy) throw new Error('The default self-test policy is unavailable.');
 let selfTestPolicy = defaultSelfTestPolicy;
 
@@ -306,11 +301,7 @@ function selfTestStartTimestampFromRoute(): bigint | undefined {
   return timestamp > 0n ? timestamp : undefined;
 }
 
-function selfTestSharePath(
-  poolAddress: string,
-  policy: SelfTestPolicy,
-  startedAt: bigint,
-): string {
+function selfTestSharePath(poolAddress: string, policy: SelfTestPolicy, startedAt: bigint): string {
   const parameters = new URLSearchParams({
     comparison: policy.comparison,
     threshold: policy.threshold,
@@ -352,7 +343,9 @@ function headerBalanceContent(): string {
   if (!selectedWallet) return '';
   const eth = headerBalance ? `${formatTokenAmount(headerBalance.nativeBalance)} ETH` : 'ETH —';
   const qsfc = headerBalance ? `QSFC ${formatTokenAmount(headerBalance.publicBalance)}` : 'QSFC —';
-  const qscc = assetState ? `QSCC ${formatTokenAmount(assetState.confidentialBalance)}` : 'QSCC hidden';
+  const qscc = assetState
+    ? `QSCC ${formatTokenAmount(assetState.confidentialBalance)}`
+    : 'QSCC hidden';
   const revealLabel = assetState ? 'Refresh' : 'Reveal';
   return `<section class="balance-strip" aria-label="Connected wallet balances"><span>${eth}</span><span>${qsfc}</span><span>${qscc}</span><button class="header-reveal" id="reveal-header-qscc" type="button"${headerBalanceBusy ? ' disabled' : ''}>${headerBalanceBusy ? 'Reading…' : revealLabel}</button></section>`;
 }
@@ -391,17 +384,20 @@ function assetSetupContent(): string {
 function signalPanelContent(market: ReturnType<typeof presentMarket>, selfTest = false): string {
   const signalPool = selfTest ? selfTestMarket?.poolAddress : market.poolAddress;
   const signalReady = marketActionable && Boolean(signalPool);
-  return `<div class="market-action-panel"><p class="eyebrow compute">{ encrypted locally }</p><p>${signalReady ? marketReadinessMessage : 'This pool is not accepting a new forecast. Refresh public state before retrying.'}</p><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required${signalReady ? '' : ' disabled'} /></label><label>Probability (%) <input name="probability" type="number" min="0" max="100" step="1" inputmode="numeric" autocomplete="off" placeholder="70" required${signalReady ? '' : ' disabled'} /></label><p class="sealed">COMPUTE · Enter a whole percentage from 0 to 100. The browser converts it to protocol basis points before encryption.</p><button class="primary" type="submit"${signalReady ? '' : ' disabled'}>${signalReady ? 'Encrypt and submit forecast' : 'Forecast unavailable'}</button><button class="secondary" id="retry-finalize" type="button" hidden>Retry pending finalization</button><p id="signal-status" class="muted" role="status">${signalReady ? 'No funds moved.' : 'No forecast can be submitted while this pool is unavailable or closed.'}</p></form></div>`;
+  const unavailableMessage = marketReadinessMessage.includes('Checking')
+    ? 'The commit window is unavailable until a direct Sepolia lifecycle read succeeds.'
+    : marketReadinessMessage;
+  const freshPoolAction = signalReady
+    ? ''
+    : '<a class="text-action dark-action" href="/self-test?new=1">Create a fresh test market <span aria-hidden="true">↗</span></a>';
+  return `<div class="market-action-panel"><p class="eyebrow compute">{ encrypted locally }</p><p>${signalReady ? marketReadinessMessage : unavailableMessage}</p><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required${signalReady ? '' : ' disabled'} /></label><label>Probability (%) <input name="probability" type="number" min="0" max="100" step="1" inputmode="numeric" autocomplete="off" placeholder="70" required${signalReady ? '' : ' disabled'} /></label><p class="sealed">COMPUTE · Enter a whole percentage from 0 to 100. The browser converts it to protocol basis points before encryption.</p><button class="primary" type="submit"${signalReady ? '' : ' disabled'}>${signalReady ? 'Encrypt and submit forecast' : 'Commit window closed'}</button><button class="secondary" id="retry-finalize" type="button" hidden>Retry pending finalization</button><p id="signal-status" class="muted" role="status">${signalReady ? 'No funds moved.' : 'No forecast can be submitted after this pool commit window closes.'}</p>${freshPoolAction}</form></div>`;
 }
 
 function positionPanelContent(): string {
   return `<div class="market-action-panel owner-panel"><p class="eyebrow private">{ owner only }</p><p role="status">${ownerMessage}</p><button class="primary" id="reveal-owner">Reveal with owner wallet</button>${ownerActions}</div>`;
 }
 
-function marketSurfaceContent(
-  market: ReturnType<typeof presentMarket>,
-  selfTest = false,
-): string {
+function marketSurfaceContent(market: ReturnType<typeof presentMarket>, selfTest = false): string {
   const mode = selfTest ? 'user-created self-test pool' : 'canonical market';
   return `<section class="market-detail"><p class="eyebrow public">{ ${mode} }</p><h2>${market.condition}</h2><p class="route-lead">Read one market, then expand only the action you need.</p><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><div class="market-disclosures"><details open><summary>Verify this market</summary><p>Manifest-bound chain, pool, and release facts are shown above. Independent verification remains the source of invariant conclusions.</p></details><details><summary>Make forecast</summary>${signalPanelContent(market, selfTest)}</details><details><summary>Lifecycle</summary><div class="market-action-panel"><p id="lifecycle-status" role="status">${lifecycleMessage}</p><button class="secondary" id="refresh-lifecycle" type="button">Refresh public state</button>${lifecycleActionContent()}</div></details><details><summary>Your position</summary>${positionPanelContent()}</details></div></section>`;
 }
@@ -474,16 +470,28 @@ function selfTestContent(market: ReturnType<typeof presentMarket>): string {
   const joinAddress = selfTestJoinAddress();
   const policy = selfTestMarket?.policy ?? selfTestPolicy;
   const sharePath = selfTestMarket
-    ? selfTestSharePath(
-        selfTestMarket.poolAddress,
-        selfTestMarket.policy,
-        selfTestMarket.startedAt,
-      )
+    ? selfTestSharePath(selfTestMarket.poolAddress, selfTestMarket.policy, selfTestMarket.startedAt)
     : undefined;
-  const configuration = `<div class="self-test-configuration"><label>Comparison <select id="self-test-comparison"${busy}><option value="greater-or-equal"${policy.comparison === 'greater-or-equal' ? ' selected' : ''}>ETH/USD ≥ threshold</option><option value="less-than"${policy.comparison === 'less-than' ? ' selected' : ''}>ETH/USD &lt; threshold</option></select></label><label>Threshold (USD) <input id="self-test-threshold" inputmode="decimal" autocomplete="off" value="${formatSelfTestUsdThreshold(policy.threshold)}"${busy} /></label><label>Commit window (minutes) <input id="self-test-duration" type="number" min="5" max="180" step="1" inputmode="numeric" value="${policy.commitWindowMinutes}"${busy} /></label><label>Participant gate <input id="self-test-gate" type="number" min="2" max="20" step="1" inputmode="numeric" value="${policy.participantGate}"${busy} /></label></div>`;
-  const active = selfTestMarket && !creatingNewMarket
-    ? `<div class="route-callout"><p class="eyebrow public">{ self-test market ready }</p><h2>Fresh OPEN epoch created.</h2><p>Pool ${selfTestMarket.poolAddress} is a user-created ${selfTestMarket.policy.conditionLabel} market with a ${selfTestMarket.policy.commitWindowMinutes}-minute commit window and a ${selfTestMarket.participantGate}-participant gate. It is not the canonical release or G7 evidence.</p><dl class="asset-facts self-test-facts"><div><dt>POOL</dt><dd>${selfTestMarket.poolAddress}</dd></div><div><dt>CONDITION</dt><dd>${selfTestMarket.policy.conditionLabel}</dd></div><div><dt>COMMIT WINDOW</dt><dd>Until ${new Date(Number(selfTestMarket.deadline) * 1000).toLocaleTimeString()}</dd></div><div><dt>COHORT</dt><dd>${selfTestMarket.participantGate} participants</dd></div></dl><div class="route-callout self-test-share"><p class="eyebrow public">{ second participant }</p><p>Share this public, read-only entry link with another Sepolia participant. Their browser verifies the factory and immutable configuration before any wallet action.</p><a class="text-action dark-action" href="${sharePath}">${sharePath} <span aria-hidden="true">↗</span></a></div><div class="route-actions"><a class="primary" href="/self-test/assets">Prepare test collateral</a><a class="secondary" href="/self-test/signal">Prepare self-test signal</a><a class="secondary" href="/self-test/lifecycle">Open lifecycle</a><a class="secondary" href="/self-test?new=1">Create more verified pools</a><a class="text-action dark-action" href="/self-test/position">Open self-test position <span aria-hidden="true">↗</span></a></div></div>`
-    : `<div class="panel self-test-panel"><p class="eyebrow compute">{ user-wallet deployment }</p><h2>Create or join a real test market.</h2><p>Choose a bounded public test configuration. This creates one immutable adapter and one pool through the canonical permissionless factory; it uses only your Sepolia gas and no collateral moves during deployment.</p>${configuration}<p class="sealed">The Chainlink feed, collateral wrapper, timeout, recovery policy, and Sepolia network remain fixed.</p><button class="primary" id="launch-self-test" type="button"${busy}>Create self-test market</button><button class="secondary" id="launch-self-test-batch" type="button"${busy}>Create 10 verified pools</button><p class="muted">This sends the required wallet confirmations sequentially. A pool appears in Markets only after its factory registration and immutable configuration are verified on Sepolia.</p><div class="self-test-join"><label>Existing public self-test pool <input id="join-self-test-address" inputmode="text" autocomplete="off" spellcheck="false" placeholder="0x…" value="${joinAddress ? escapeHtml(joinAddress) : ''}" /></label><button class="secondary" id="join-self-test" type="button"${busy}>Verify and join pool</button></div><p role="status" class="asset-status">${selfTestMessage}</p></div>`;
+  const durationOptions = [
+    [5, '5 minutes'],
+    [15, '15 minutes'],
+    [25, '25 minutes'],
+    [60, '1 hour'],
+    [180, '3 hours'],
+    [7_200, '5 days'],
+    [14_400, '10 days'],
+  ] as const;
+  const durationOptionMarkup = durationOptions
+    .map(
+      ([minutes, label]) =>
+        `<option value="${minutes}"${policy.commitWindowMinutes === minutes ? ' selected' : ''}>${label}</option>`,
+    )
+    .join('');
+  const configuration = `<div class="self-test-configuration"><label>Comparison <select id="self-test-comparison"${busy}><option value="greater-or-equal"${policy.comparison === 'greater-or-equal' ? ' selected' : ''}>ETH/USD ≥ threshold</option><option value="less-than"${policy.comparison === 'less-than' ? ' selected' : ''}>ETH/USD &lt; threshold</option></select></label><label>Threshold (USD) <input id="self-test-threshold" inputmode="decimal" autocomplete="off" value="${formatSelfTestUsdThreshold(policy.threshold)}"${busy} /></label><label>Commit window <select id="self-test-duration"${busy}>${durationOptionMarkup}</select></label><label>Participant gate <input id="self-test-gate" type="number" min="2" max="20" step="1" inputmode="numeric" value="${policy.participantGate}"${busy} /></label></div>`;
+  const active =
+    selfTestMarket && !creatingNewMarket
+      ? `<div class="route-callout"><p class="eyebrow public">{ self-test market ready }</p><h2>Fresh OPEN epoch created.</h2><p>Pool ${selfTestMarket.poolAddress} is a user-created ${selfTestMarket.policy.conditionLabel} market with a ${selfTestMarket.policy.commitWindowMinutes}-minute commit window and a ${selfTestMarket.participantGate}-participant gate. It is not the canonical release or G7 evidence.</p><dl class="asset-facts self-test-facts"><div><dt>POOL</dt><dd>${selfTestMarket.poolAddress}</dd></div><div><dt>CONDITION</dt><dd>${selfTestMarket.policy.conditionLabel}</dd></div><div><dt>COMMIT WINDOW</dt><dd>Until ${new Date(Number(selfTestMarket.deadline) * 1000).toLocaleTimeString()}</dd></div><div><dt>COHORT</dt><dd>${selfTestMarket.participantGate} participants</dd></div></dl><div class="route-callout self-test-share"><p class="eyebrow public">{ second participant }</p><p>Share this public, read-only entry link with another Sepolia participant. Their browser verifies the factory and immutable configuration before any wallet action.</p><a class="text-action dark-action" href="${sharePath}">${sharePath} <span aria-hidden="true">↗</span></a></div><div class="route-actions"><a class="primary" href="/self-test/assets">Prepare test collateral</a><a class="secondary" href="/self-test/signal">Prepare self-test signal</a><a class="secondary" href="/self-test/lifecycle">Open lifecycle</a><a class="secondary" href="/self-test?new=1">Create more verified pools</a><a class="text-action dark-action" href="/self-test/position">Open self-test position <span aria-hidden="true">↗</span></a></div></div>`
+      : `<div class="panel self-test-panel"><p class="eyebrow compute">{ user-wallet deployment }</p><h2>Create or join a real test market.</h2><p>Choose a bounded public test configuration. This creates one immutable adapter and one pool through the canonical permissionless factory; it uses only your Sepolia gas and no collateral moves during deployment.</p>${configuration}<p class="sealed">The Chainlink feed, collateral wrapper, timeout, recovery policy, and Sepolia network remain fixed.</p><button class="primary" id="launch-self-test" type="button"${busy}>Create self-test market</button><button class="secondary" id="launch-self-test-batch" type="button"${busy}>Create 10 verified pools</button><p class="muted">This sends the required wallet confirmations sequentially. A pool appears in Markets only after its factory registration and immutable configuration are verified on Sepolia.</p><div class="self-test-join"><label>Existing public self-test pool <input id="join-self-test-address" inputmode="text" autocomplete="off" spellcheck="false" placeholder="0x…" value="${joinAddress ? escapeHtml(joinAddress) : ''}" /></label><button class="secondary" id="join-self-test" type="button"${busy}>Verify and join pool</button></div><p role="status" class="asset-status">${selfTestMessage}</p></div>`;
   return `<section class="band petal-band asset-hero"><div class="band-inner"><p class="eyebrow compute">{ permissionless self-test }</p><h1>Make a fresh test window.</h1><p class="route-lead">The published market has expired. This browser can create one new, public, immutable Sepolia test market from your wallet without changing the canonical release.</p>${active}</div></section><section class="band blush-band asset-workflow"><div class="band-inner"><div class="asset-intro"><p class="eyebrow">{ what this does }</p><h2>Real contracts. Your wallet. No shortcut.</h2><p>The adapter has no asset custody. The factory has no owner. The new pool uses the existing valueless test collateral flow and the same permissionless recovery rules as the product.</p></div><ol class="setup-checklist"><li><strong>01</strong><span>Connect a Sepolia wallet with enough test ETH for two deployment transactions.</span></li><li><strong>02</strong><span>Create the market, then mint and wrap QSFC into confidential QSCC.</span></li><li><strong>03</strong><span>Use two wallets to submit signals before the immutable commit deadline.</span></li><li><strong>04</strong><span>Follow the public lifecycle, settlement, owner score, claim, or refund path.</span></li></ol></div></section>`;
 }
 
@@ -547,21 +555,21 @@ function handleInternalNavigation(event: MouseEvent): void {
 }
 
 function normalizeLegacyRoute(): void {
-  const poolAction = /^\/pool\/(0x[0-9a-f]{40})\/(?:signal|lifecycle)$/i.exec(
-    location.pathname,
-  );
+  const poolAction = /^\/pool\/(0x[0-9a-f]{40})\/(?:signal|lifecycle)$/i.exec(location.pathname);
   if (poolAction) {
-    selectedMarketKey = poolAction[1].toLowerCase() === manifest?.poolAddress.toLowerCase()
-      ? 'canonical'
-      : `self-test:${poolAction[1]}`;
+    selectedMarketKey =
+      poolAction[1].toLowerCase() === manifest?.poolAddress.toLowerCase()
+        ? 'canonical'
+        : `self-test:${poolAction[1]}`;
     history.replaceState({}, '', '/markets');
     return;
   }
   const poolRoute = /^\/pool\/(0x[0-9a-f]{40})$/i.exec(location.pathname);
   if (poolRoute) {
-    selectedMarketKey = poolRoute[1].toLowerCase() === manifest?.poolAddress.toLowerCase()
-      ? 'canonical'
-      : `self-test:${poolRoute[1]}`;
+    selectedMarketKey =
+      poolRoute[1].toLowerCase() === manifest?.poolAddress.toLowerCase()
+        ? 'canonical'
+        : `self-test:${poolRoute[1]}`;
     history.replaceState({}, '', '/markets');
     return;
   }
@@ -579,10 +587,7 @@ function normalizeLegacyRoute(): void {
     history.replaceState({}, '', '/markets');
     return;
   }
-  if (
-    location.pathname.endsWith('/assets') ||
-    location.pathname === '/position'
-  ) {
+  if (location.pathname.endsWith('/assets') || location.pathname === '/position') {
     history.replaceState({}, '', '/portfolio');
     return;
   }
@@ -616,7 +621,10 @@ function render(message?: string): void {
   const isMarketRoute =
     location.pathname.startsWith('/markets') ||
     isSelfTestMarketRoute ||
-    (location.pathname.startsWith('/pool/') && !isSignalRoute && !isAssetRoute && !isLifecycleRoute);
+    (location.pathname.startsWith('/pool/') &&
+      !isSignalRoute &&
+      !isAssetRoute &&
+      !isLifecycleRoute);
   const isPositionRoute =
     location.pathname === '/position' || location.pathname === '/self-test/position';
   const isPortfolioRoute = location.pathname === '/portfolio' || isAssetRoute || isPositionRoute;
@@ -641,35 +649,41 @@ function render(message?: string): void {
         : isLifecycleRoute && market
           ? lifecycleContent(market, isSelfTestRoute)
           : (location.pathname === '/self-test' || Boolean(selfTestJoinAddress())) && market
-          ? selfTestContent(market)
-          : isAssetRoute && market
-            ? assetSetupContent()
-            : isSignalRoute && market
-              ? (() => {
-                  const signalPool = isSelfTestRoute
-                    ? selfTestMarket?.poolAddress
-                    : market.poolAddress;
-                  const signalReady = marketActionable && Boolean(signalPool);
-                  const assetPath = isSelfTestRoute
-                    ? '/self-test/assets'
-                    : `/pool/${market.poolAddress}/assets`;
-                  return `<section class="band plum-band signal-card"><div class="band-inner"><p class="eyebrow compute">{ encrypted locally }</p><h1>Prepare your ${isSelfTestRoute ? 'self-test ' : ''}signal</h1><p class="route-lead">Probability and collateral stay in this browser until Nox encrypts them. The process deliberately separates validation, encryption, and wallet approval.</p><div class="route-callout"><p class="eyebrow ${signalReady ? 'public' : 'private'}">{ signal readiness }</p><h2>${signalReady ? 'Commit window is open' : 'Signal is currently unavailable'}</h2><p>${signalReady ? marketReadinessMessage : isSelfTestRoute ? 'Create a self-test market in this browser session before opening its signal route.' : marketReadinessMessage}</p><a class="text-action" href="${assetPath}">Prepare test collateral <span aria-hidden="true">↗</span></a></div><ol class="journey-steps" aria-label="Signal journey steps"><li><strong>01</strong><span>Validate locally</span><small>No funds move.</small></li><li><strong>02</strong><span>Encrypt in browser</span><small>Separate pool and collateral inputs.</small></li><li><strong>03</strong><span>Confirm in wallet</span><small>Each receipt is awaited before the next stage.</small></li></ol><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required${signalReady ? '' : ' disabled'} /></label><label>Probability (basis points) <input name="probability" inputmode="numeric" autocomplete="off" placeholder="7500" required${signalReady ? '' : ' disabled'} /></label><p class="sealed">COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.</p><button class="primary" type="submit"${signalReady ? '' : ' disabled'}>${signalReady ? 'Encrypt and submit signal' : 'Await a fresh market release'}</button><button class="secondary" id="retry-finalize" type="button" hidden>Retry pending finalization</button><p id="signal-status" class="muted" role="status">${signalReady ? 'No funds moved.' : 'No signal can be submitted while the chain-derived market is unavailable or closed.'}</p></form></div></section>`;
-                })()
-              : isMarketRoute && market
-                ? isSelfTestMarketRoute && !selfTestMarket
-                  ? `<section class="band petal-band asset-hero"><div class="band-inner"><p class="eyebrow public">{ self-test context }</p><h1>No self-test pool is selected.</h1><p class="route-lead">Create or join a verified pool in Test Lab before opening its market, participant, or lifecycle routes.</p><div class="route-actions"><a class="primary" href="/self-test">Open Test Lab</a></div></div></section>`
-                  : `<section class="band blush-band market"><div class="band-inner"><p class="eyebrow public">{ ${isSelfTestRoute ? 'self-test market' : 'canonical MVP market'} }</p><h1>${market.condition}</h1><p class="route-lead">This route holds only the verified market facts and participant entry points. Public operations and recovery actions live on Lifecycle so this page remains easy to inspect.</p><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><ol class="market-path" aria-label="Recommended market path"><li><strong>01</strong><span>Read the verified market facts</span></li><li><strong>02</strong><span>Prepare test collateral</span></li><li><strong>03</strong><span>Submit an encrypted signal</span></li></ol><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><div class="route-callout market-readiness"><p class="eyebrow ${marketActionable ? 'public' : 'private'}">{ actionability }</p><h2>${marketActionable ? 'Ready for participant setup' : 'Signal path is safely paused'}</h2><p>${marketReadinessMessage}</p></div><div class="route-actions"><a class="primary" href="${isSelfTestRoute ? '/self-test/assets' : `/pool/${market.poolAddress}/assets`}">Get test collateral</a>${marketActionable ? `<a class="secondary" href="${isSelfTestRoute ? '/self-test/signal' : `/pool/${market.poolAddress}/signal`}">Prepare encrypted signal</a>` : `<a class="secondary" href="/self-test">Create a fresh self-test market</a>`}<a class="secondary" href="${isSelfTestRoute ? '/self-test/lifecycle' : `/pool/${market.poolAddress}/lifecycle`}">Open lifecycle</a>${isSelfTestRoute ? '' : `<a class="text-action dark-action" href="/verify/${market.poolAddress}">Verify this release <span aria-hidden="true">↗</span></a>`}</div></div></section>`
-                : landingContent(market);
+            ? selfTestContent(market)
+            : isAssetRoute && market
+              ? assetSetupContent()
+              : isSignalRoute && market
+                ? (() => {
+                    const signalPool = isSelfTestRoute
+                      ? selfTestMarket?.poolAddress
+                      : market.poolAddress;
+                    const signalReady = marketActionable && Boolean(signalPool);
+                    const assetPath = isSelfTestRoute
+                      ? '/self-test/assets'
+                      : `/pool/${market.poolAddress}/assets`;
+                    return `<section class="band plum-band signal-card"><div class="band-inner"><p class="eyebrow compute">{ encrypted locally }</p><h1>Prepare your ${isSelfTestRoute ? 'self-test ' : ''}signal</h1><p class="route-lead">Probability and collateral stay in this browser until Nox encrypts them. The process deliberately separates validation, encryption, and wallet approval.</p><div class="route-callout"><p class="eyebrow ${signalReady ? 'public' : 'private'}">{ signal readiness }</p><h2>${signalReady ? 'Commit window is open' : 'Signal is currently unavailable'}</h2><p>${signalReady ? marketReadinessMessage : isSelfTestRoute ? 'Create a self-test market in this browser session before opening its signal route.' : marketReadinessMessage}</p><a class="text-action" href="${assetPath}">Prepare test collateral <span aria-hidden="true">↗</span></a></div><ol class="journey-steps" aria-label="Signal journey steps"><li><strong>01</strong><span>Validate locally</span><small>No funds move.</small></li><li><strong>02</strong><span>Encrypt in browser</span><small>Separate pool and collateral inputs.</small></li><li><strong>03</strong><span>Confirm in wallet</span><small>Each receipt is awaited before the next stage.</small></li></ol><form id="signal-form"><label>Collateral <input name="stake" inputmode="decimal" autocomplete="off" placeholder="1.00" required${signalReady ? '' : ' disabled'} /></label><label>Probability (basis points) <input name="probability" inputmode="numeric" autocomplete="off" placeholder="7500" required${signalReady ? '' : ' disabled'} /></label><p class="sealed">COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.</p><button class="primary" type="submit"${signalReady ? '' : ' disabled'}>${signalReady ? 'Encrypt and submit signal' : 'Await a fresh market release'}</button><button class="secondary" id="retry-finalize" type="button" hidden>Retry pending finalization</button><p id="signal-status" class="muted" role="status">${signalReady ? 'No funds moved.' : 'No signal can be submitted while the chain-derived market is unavailable or closed.'}</p></form></div></section>`;
+                  })()
+                : isMarketRoute && market
+                  ? isSelfTestMarketRoute && !selfTestMarket
+                    ? `<section class="band petal-band asset-hero"><div class="band-inner"><p class="eyebrow public">{ self-test context }</p><h1>No self-test pool is selected.</h1><p class="route-lead">Create or join a verified pool in Test Lab before opening its market, participant, or lifecycle routes.</p><div class="route-actions"><a class="primary" href="/self-test">Open Test Lab</a></div></div></section>`
+                    : `<section class="band blush-band market"><div class="band-inner"><p class="eyebrow public">{ ${isSelfTestRoute ? 'self-test market' : 'canonical MVP market'} }</p><h1>${market.condition}</h1><p class="route-lead">This route holds only the verified market facts and participant entry points. Public operations and recovery actions live on Lifecycle so this page remains easy to inspect.</p><div class="facts"><p><b>Network</b>${market.chainLabel}</p><p><b>Cohort gate</b>${market.cohortGate}</p><p><b>Pool</b>${market.poolAddress}</p></div><ol class="market-path" aria-label="Recommended market path"><li><strong>01</strong><span>Read the verified market facts</span></li><li><strong>02</strong><span>Prepare test collateral</span></li><li><strong>03</strong><span>Submit an encrypted signal</span></li></ol><div class="boundary"><p class="public"><b>PUBLIC</b> ${market.publicNotice}</p><p class="private"><b>PRIVATE</b> ${market.privateNotice}</p><p class="muted">This cohort gate does not provide anonymity or Sybil resistance.</p></div><div class="route-callout market-readiness"><p class="eyebrow ${marketActionable ? 'public' : 'private'}">{ actionability }</p><h2>${marketActionable ? 'Ready for participant setup' : 'Signal path is safely paused'}</h2><p>${marketReadinessMessage}</p></div><div class="route-actions"><a class="primary" href="${isSelfTestRoute ? '/self-test/assets' : `/pool/${market.poolAddress}/assets`}">Get test collateral</a>${marketActionable ? `<a class="secondary" href="${isSelfTestRoute ? '/self-test/signal' : `/pool/${market.poolAddress}/signal`}">Prepare encrypted signal</a>` : `<a class="secondary" href="/self-test">Create a fresh self-test market</a>`}<a class="secondary" href="${isSelfTestRoute ? '/self-test/lifecycle' : `/pool/${market.poolAddress}/lifecycle`}">Open lifecycle</a>${isSelfTestRoute ? '' : `<a class="text-action dark-action" href="/verify/${market.poolAddress}">Verify this release <span aria-hidden="true">↗</span></a>`}</div></div></section>`
+                  : landingContent(market);
   content = content
     .replace('Probability (basis points)', 'Probability (%)')
-    .replace('name="probability" inputmode="numeric" autocomplete="off" placeholder="7500"', 'name="probability" type="number" min="0" max="100" step="1" inputmode="numeric" autocomplete="off" placeholder="70"')
-    .replace('COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.', 'COMPUTE · Enter a whole percentage from 0 to 100. The browser converts it to protocol basis points before encryption.');
+    .replace(
+      'name="probability" inputmode="numeric" autocomplete="off" placeholder="7500"',
+      'name="probability" type="number" min="0" max="100" step="1" inputmode="numeric" autocomplete="off" placeholder="70"',
+    )
+    .replace(
+      'COMPUTE · Validation moves no funds. Encryption and wallet approval are separate.',
+      'COMPUTE · Enter a whole percentage from 0 to 100. The browser converts it to protocol basis points before encryption.',
+    );
   if (isPortfolioRoute) content = portfolioContent();
   else if ((isMarketDirectoryRoute || isMarketRoute) && canonicalMarket)
     content = marketDirectoryContent(canonicalMarket);
-  const isMarketsRoute = isMarketRoute || isSignalRoute || isLifecycleRoute || Boolean(verifyAddress);
-  const isTestLabRoute =
-    location.pathname === '/self-test' || Boolean(selfTestJoinAddress());
+  const isMarketsRoute =
+    isMarketRoute || isSignalRoute || isLifecycleRoute || Boolean(verifyAddress);
+  const isTestLabRoute = location.pathname === '/self-test' || Boolean(selfTestJoinAddress());
   const navigation = [
     navigationLink('/', 'Overview', isHomeRoute),
     navigationLink('/markets', 'Markets', isMarketsRoute),
@@ -961,7 +975,8 @@ async function runAssetAction(action: 'mint' | 'approve' | 'wrap' | 'refresh'): 
     render();
     if (action === 'wrap') {
       if (!assetState || assetState.allowance < amount) {
-        assetMessage = 'Requesting an exact QSFC allowance for this wrap. Confirm approval in the wallet, then wait for its receipt.';
+        assetMessage =
+          'Requesting an exact QSFC allowance for this wrap. Confirm approval in the wallet, then wait for its receipt.';
         render();
         approvalHash = await approveTestAsset(
           provider,
@@ -1047,7 +1062,8 @@ async function runSelfTestLaunch(): Promise<void> {
 async function runSelfTestBatch(): Promise<void> {
   const provider = activeWallet();
   if (!provider || !manifest) {
-    selfTestMessage = 'Connect a Sepolia wallet before creating verified pools. No transaction was sent.';
+    selfTestMessage =
+      'Connect a Sepolia wallet before creating verified pools. No transaction was sent.';
     render();
     return;
   }
@@ -1097,15 +1113,18 @@ async function runSelfTestBatch(): Promise<void> {
     }
     selfTestBusy = false;
     selfTestMessage = `All ${policies.length} pools were created and verified against the Sepolia factory. Opening Markets.`;
-    selectedMarketKey = selfTestMarkets.length ? `self-test:${selfTestMarkets[0].poolAddress}` : 'canonical';
+    selectedMarketKey = selfTestMarkets.length
+      ? `self-test:${selfTestMarkets[0].poolAddress}`
+      : 'canonical';
     history.pushState({}, '', '/markets');
     renderRoute();
     if (selfTestMarkets[0]) await refreshLifecycle(selfTestMarkets[0].poolAddress);
   } catch (error) {
     selfTestBusy = false;
-    selfTestMessage = error instanceof Error
-      ? `${error.message} Pools already confirmed remain listed; inspect the wallet before retrying.`
-      : 'The batch stopped before all pools were confirmed. Confirmed pools remain listed.';
+    selfTestMessage =
+      error instanceof Error
+        ? `${error.message} Pools already confirmed remain listed; inspect the wallet before retrying.`
+        : 'The batch stopped before all pools were confirmed. Confirmed pools remain listed.';
     render();
   }
 }
@@ -1160,11 +1179,7 @@ async function runSelfTestJoin(
       history.pushState(
         {},
         '',
-        selfTestSharePath(
-          joined.poolAddress,
-          joined.policy,
-          joined.startedAt,
-        ),
+        selfTestSharePath(joined.poolAddress, joined.policy, joined.startedAt),
       );
     selfTestBusy = false;
     selfTestMessage = `Verified self-test pool ${joined.poolAddress.slice(0, 10)}…. Refreshing its public lifecycle.`;

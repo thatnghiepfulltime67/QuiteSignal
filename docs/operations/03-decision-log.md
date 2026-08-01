@@ -481,8 +481,8 @@ selection.
 Self-test is a user-owned, permissionless factory path, so its public market
 configuration may be selected without changing the canonical release. WEB-15 permits
 editable but bounded public values: a $1–$1,000,000 ETH/USD threshold with up to 8
-feed decimals, a comparison direction, a 5–180 minute commit window, and a 2–20
-participant gate.
+feed decimals, a comparison direction, a 5-minute to 14-day commit window, and a
+2–20 participant gate.
 The Chainlink feed, collateral wrapper, factory, fixed timeout/recovery rules, and
 Sepolia network stay manifest-bound. The selected condition, window, and gate are
 encoded in the public join URL; no selected value is private or persisted.
@@ -555,3 +555,19 @@ The registry contains no key, account, signature, confidential input, handle, pr
 or owner state. It is a convenience list rather than a source of protocol truth. Pool
 creation remains an explicit guarded Sepolia write that records every receipt in the
 spend ledger.
+
+## ADR-034 — Multi-day bounded self-test windows
+
+**Status:** Accepted before the WEB-15 long-window extension
+
+The public self-test commit-window bound is extended from three hours to fourteen
+days (5–20,160 whole minutes). The browser presents concise presets, including five
+and ten days, rather than asking a user to calculate minute values. The upper bound
+keeps shared links and test-market recovery behaviour finite while allowing a human
+test cohort enough time to complete an end-to-end flow.
+
+This changes only a public pool configuration and its URL encoding. The fixed
+factory, Chainlink feed, collateral wrapper, timeout, recovery rules, Sepolia network,
+confidential inputs, custody, ACLs, and permission model are unchanged. Every
+published long-window pool remains independently verified from immutable on-chain
+state before Market lists it.

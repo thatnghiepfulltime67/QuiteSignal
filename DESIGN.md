@@ -31,18 +31,18 @@ or recovery action has completed before the corresponding public state confirms 
 
 ### Colour
 
-| Name | Value | Token | Role |
-|---|---:|---|---|
-| Cocoa Husk | `#322312` | `--color-cocoa-husk` | Base canvas; cocoa ink on light surfaces |
-| Neon Orchid | `#ff77c9` | `--color-neon-orchid` | Display type, links, icon strokes, active detail |
-| Petal Wash | `#ffdfef` | `--color-petal-wash` | Bright light bands and dark-surface action labels |
-| Plum Velvet | `#470b64` | `--color-plum-velvet` | Deep alternate band |
-| Bubblegum Blush | `#ffc2e1` | `--color-bubblegum-blush` | Light bands and contained cards |
-| Lavender Haze | `#e2c9f8` | `--color-lavender-haze` | Decorative geometry and compute accent |
-| Magenta Spark | `#de8aff` | `--color-magenta-spark` | Rare, high-emphasis detail only |
-| Oxblood Rust | `#481d2a` | `--color-oxblood-rust` | Low-frequency supporting detail, never status |
-| Lilac Whisper | `#eee2ff` | `--color-lilac-whisper` | Dark-surface borders and controls |
-| Walnut Vein | `#5b4f41` | `--color-walnut-vein` | Hairlines and subdued structure |
+| Name            |     Value | Token                     | Role                                              |
+| --------------- | --------: | ------------------------- | ------------------------------------------------- |
+| Cocoa Husk      | `#322312` | `--color-cocoa-husk`      | Base canvas; cocoa ink on light surfaces          |
+| Neon Orchid     | `#ff77c9` | `--color-neon-orchid`     | Display type, links, icon strokes, active detail  |
+| Petal Wash      | `#ffdfef` | `--color-petal-wash`      | Bright light bands and dark-surface action labels |
+| Plum Velvet     | `#470b64` | `--color-plum-velvet`     | Deep alternate band                               |
+| Bubblegum Blush | `#ffc2e1` | `--color-bubblegum-blush` | Light bands and contained cards                   |
+| Lavender Haze   | `#e2c9f8` | `--color-lavender-haze`   | Decorative geometry and compute accent            |
+| Magenta Spark   | `#de8aff` | `--color-magenta-spark`   | Rare, high-emphasis detail only                   |
+| Oxblood Rust    | `#481d2a` | `--color-oxblood-rust`    | Low-frequency supporting detail, never status     |
+| Lilac Whisper   | `#eee2ff` | `--color-lilac-whisper`   | Dark-surface borders and controls                 |
+| Walnut Vein     | `#5b4f41` | `--color-walnut-vein`     | Hairlines and subdued structure                   |
 
 The palette is intentionally closed. Do not introduce white, neutral gray, blue,
 green, orange, a gradient, or an unlabelled semantic status colour. Private,
@@ -55,21 +55,21 @@ not a replacement for accessibility semantics.
 Use the following licensed font names when available; otherwise use the specified
 system-safe substitutes. Never fetch a font from a third-party runtime service.
 
-| Voice | Family token | Substitute | Use |
-|---|---|---|---|
-| Display and body | `--font-gt-planar` | `Inter Tight`, `Arial`, sans-serif | Headline and readable body copy |
-| Monospaced labels | `--font-abcrepromono` | `JetBrains Mono`, ui-monospace | Uppercase eyebrows, tags, controls |
-| UI microcopy | `--font-suisseintl` | `Inter`, ui-sans-serif | Compact navigation and icon labels |
+| Voice             | Family token          | Substitute                         | Use                                |
+| ----------------- | --------------------- | ---------------------------------- | ---------------------------------- |
+| Display and body  | `--font-gt-planar`    | `Inter Tight`, `Arial`, sans-serif | Headline and readable body copy    |
+| Monospaced labels | `--font-abcrepromono` | `JetBrains Mono`, ui-monospace     | Uppercase eyebrows, tags, controls |
+| UI microcopy      | `--font-suisseintl`   | `Inter`, ui-sans-serif             | Compact navigation and icon labels |
 
-| Role | Size | Leading | Tracking |
-|---|---:|---:|---:|
-| Caption | 11px | 0.79 | normal |
-| Body | 18px | 1.4 | normal |
-| Subheading | 22px | 1.2 | normal |
-| Heading small | 42px | 1.0 | `-0.84px` |
-| Heading | 48px | 0.95 | `-0.96px` |
-| Heading large | 59px | 0.95 | `-1.18px` |
-| Display | 95px | 0.90 | `-3.8px` |
+| Role          | Size | Leading |  Tracking |
+| ------------- | ---: | ------: | --------: |
+| Caption       | 11px |    0.79 |    normal |
+| Body          | 18px |     1.4 |    normal |
+| Subheading    | 22px |     1.2 |    normal |
+| Heading small | 42px |     1.0 | `-0.84px` |
+| Heading       | 48px |    0.95 | `-0.96px` |
+| Heading large | 59px |    0.95 | `-1.18px` |
+| Display       | 95px |    0.90 |  `-3.8px` |
 
 Headlines use display type at weight 700 (or 300 only for a deliberate 95px display
 moment), tight tracking, and centred composition. Body copy stays between 16px and
@@ -123,10 +123,12 @@ wallet and chain state are always stated beside it.
 ### Self-test configuration
 
 Self-test creation exposes editable, bounded public values: an ETH/USD threshold and
-comparison, a commit-window duration, and a participant gate. Feed, collateral
-wrapper, timeout, recovery, and network bindings remain fixed and are stated beside
-the form. The shared join link carries the selected public configuration so a second
-participant can verify the immutable pool and adapter facts before any wallet action.
+comparison, a five-minute to fourteen-day commit-window duration, and a participant
+gate. The form uses clear duration presets, including five and ten days. Feed,
+collateral wrapper, timeout, recovery, and network bindings remain fixed and are
+stated beside the form. The shared join link carries the selected public configuration
+so a second participant can verify the immutable pool and adapter facts before any
+wallet action.
 
 ### Hero and section bands
 
@@ -162,12 +164,12 @@ Use flat, geometric decorative shapes—outlined diamonds, hatch lines, and boun
 lavender/pink orbits—rather than photography, screenshots, 3D renders, or gradients.
 Decorations must remain outside form controls and data rows.
 
-| Motion | Duration | Use |
-|---|---:|---|
-| Band/content entrance | 240ms | Opacity and 8px vertical settle when a route appears |
-| Control feedback | 120ms | 1px lift and colour change on hover/focus |
-| Decorative orbit | 10–14s | Slow linear movement of non-interactive geometry only |
-| Compute pulse | 1.6s | Bounded indicator while text says work is pending |
+| Motion                | Duration | Use                                                   |
+| --------------------- | -------: | ----------------------------------------------------- |
+| Band/content entrance |    240ms | Opacity and 8px vertical settle when a route appears  |
+| Control feedback      |    120ms | 1px lift and colour change on hover/focus             |
+| Decorative orbit      |   10–14s | Slow linear movement of non-interactive geometry only |
+| Compute pulse         |     1.6s | Bounded indicator while text says work is pending     |
 
 Never animate a financial or confidential number between values. Never animate a
 pending protocol state as if it were final. With `prefers-reduced-motion: reduce`,
@@ -216,6 +218,6 @@ disable all nonessential animations and transitions.
 - [ ] No shadows, gradients, glass effects, stock imagery, or oversized rounding.
 - [ ] Every stateful component includes loading, error, retry, and recovery copy.
 - [ ] No primary route leaks confidential data into logs, storage, URLs, services,
-  screenshots, or evidence.
+      screenshots, or evidence.
 - [ ] Motion respects reduced-motion preferences and never claims false finality.
 - [ ] Desktop and mobile preserve readable type, keyboard focus, and privacy context.
